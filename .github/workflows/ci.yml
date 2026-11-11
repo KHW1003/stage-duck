@@ -1,0 +1,42 @@
+# PR마다 자동으로 실행되는 검사. job 이름 "test"는 룰셋의 필수 검사로 등록되어 있으므로 바꾸지 않습니다.
+# 기술 스택이 정해지면 "애플리케이션 테스트" 단계를 실제 테스트 명령으로 교체합니다.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 머지 충돌 표시가 남아 있는지 검사
+        run: |
+          if git grep -nE '^(<<<<<<<|>>>>>>>)( |$)' -- . ; then
+            echo "::error::머지 충돌 표시(<<<<<<< / >>>>>>>)가 남아 있습니다."
+            exit 1
+          fi
+
+      - name: GitHub 설정 YAML 문법 검사
+        run: |
+          pip install --quiet pyyaml
+          python3 - <<'PY'
+          import glob, sys, yaml
+          files = glob.glob('.github/**/*.yml', recursive=True)
+          for f in files:
+              with open(f, encoding='utf-8') as fh:
+                  yaml.safe_load(fh)
+          print(f"YAML OK: {len(files)} files")
+          PY
+
+      - name: 애플리케이션 테스트
+        run: |
+          echo "::notice::아직 애플리케이션 코드가 없어 실행할 테스트가 없습니다. 기술 스택 결정 후 이 단계를 실제 테스트로 교체합니다."
