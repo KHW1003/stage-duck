@@ -117,7 +117,10 @@ Settings → Rules → Rulesets 에 적용되어 있습니다. 바꾸려면 팀 
 | 리뷰 대화 모두 해결 | ✅ | ✅ |
 | 머지 방식 | Squash만 | Merge commit만 |
 | force push · 브랜치 삭제 | ❌ | ❌ |
-| 예외(bypass) | 없음 | 관리자 — PR을 통해서만 (직접 push는 관리자도 불가) |
+| 예외(bypass) | 관리자 — PR을 통해서만 | 관리자 — PR을 통해서만 |
+
+관리자(@KHW1003)는 승인 없이 자기 PR을 머지할 수 있습니다 (PR 화면의 "Merge without waiting for requirements to be met").
+직접 push는 관리자도 불가하며, 가능하면 관리자도 팀원 리뷰를 받고 머지합니다.
 
 저장소 설정
 - Default branch: `develop`, 머지된 브랜치 자동 삭제
