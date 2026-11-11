@@ -1,0 +1,28 @@
+name: 작업 / 조사 / 문서
+description: 시장 조사, 자문 질문, 회의, 설정 등 개발 외 작업
+title: "[작업] "
+labels: ["type:task"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 종류
+      options:
+        - 시장 조사
+        - 전문가 자문
+        - 문서
+        - 설정 / 환경
+        - 기타
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: 내용
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 결과물
+      placeholder: docs/research/demand.md

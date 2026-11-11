@@ -1,0 +1,45 @@
+name: 기능
+description: 새 기능 또는 화면 개발
+title: "[기능] "
+labels: ["type:feature"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 담당 영역
+      options:
+        - request (공연 요청·공간 선택)
+        - supplier (공급자 등록·견적)
+        - compare (견적 비교·구성 확인)
+        - payment (수락·결제·확정)
+        - common (공통)
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: 목표
+      description: 누가(역할) 무엇을 할 수 있게 되는지
+      placeholder: 주최자가 공연 요청서를 작성·수정할 수 있다
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: 작업 목록
+      value: |
+        - [ ] 화면
+        - [ ] API
+        - [ ] DB
+        - [ ] 권한 확인
+        - [ ] 테스트
+  - type: textarea
+    id: done
+    attributes:
+      label: 완료 기준
+      placeholder: 관객 501명 입력 시 저장되지 않고 오류가 표시된다
+  - type: textarea
+    id: deps
+    attributes:
+      label: 의존 / 연결
+      description: 다른 영역에서 받아야 하거나 넘겨줘야 하는 데이터·API

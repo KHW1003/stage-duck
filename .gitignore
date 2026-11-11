@@ -1,0 +1,56 @@
+# ===== 환경 변수 / 비밀 =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ===== Node / 프론트엔드 =====
+node_modules/
+.next/
+.nuxt/
+out/
+dist/
+build/
+coverage/
+.turbo/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Java / Spring =====
+.gradle/
+target/
+*.class
+!gradle/wrapper/gradle-wrapper.jar
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ===== DB / 로컬 데이터 =====
+*.sqlite
+*.sqlite3
+*.db
+uploads/
+
+# ===== 로그 =====
+logs/
+*.log
+
+# ===== OS / 에디터 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ===== 로컬 도구 =====
+.claude/
