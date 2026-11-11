@@ -78,6 +78,7 @@
 |---|---|
 | [docs/기획서_총계획서.md](docs/기획서_총계획서.md) | 사업 개요, 시나리오, 검증 규칙, 역할 분담 전체 |
 | [docs/research](docs/research/) | 시장 조사 (수요·공급, 유사 서비스) |
+| [docs/naming](docs/naming/네이밍_자료.md) | 서비스 네이밍 자료 (후보안, 점수표, 결정 절차) |
 | [docs/advisory](docs/advisory/) | 현장 전문가 자문 기록 |
 | [docs/meetings](docs/meetings/) | 회의록 |
 | [docs/decisions](docs/decisions/) | 기술·설계 결정 기록 |
