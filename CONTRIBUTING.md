@@ -15,7 +15,7 @@ main        ← 발표·배포 가능한 상태만. 직접 push 금지
 
 | 브랜치 | 용도 | 만드는 곳 → 합치는 곳 |
 |---|---|---|
-| `main` | 최종본 (마일스톤·발표 시점) | `develop` → `main` (팀 합의 후) |
+| `main` | 최종본 (마일스톤·발표 시점) | `develop` → `main` (팀 합의 후, 해원 승인 필수) |
 | `develop` | 개발 통합 | - |
 | `feat/<영역>-<설명>` | 기능 개발 | `develop` → `develop` |
 | `fix/<영역>-<설명>` | 버그 수정 | `develop` → `develop` |
@@ -80,6 +80,10 @@ chore(common): ESLint 설정 추가
 - 템플릿의 체크리스트를 채우고, 화면 변경은 스크린샷 첨부
 - 리뷰어 1명 이상 승인 필요. 리뷰어는 **다른 영역 담당자**로 지정해 서로의 코드를 알게 합니다
 - 리뷰 요청을 받으면 **24시간 안에** 확인
+- 승인 후 새 커밋을 올리면 승인이 취소됩니다 → 다시 리뷰 요청
+- 머지 방식은 GitHub 룰셋으로 고정되어 있습니다
+  - 작업 브랜치 → `develop`: **Squash and merge** (작업 하나 = 커밋 하나)
+  - `develop` → `main`: **Create a merge commit** (squash하면 develop과 main 이력이 어긋나 다음 반영 때 충돌)
 - 다른 영역의 파일(특히 공통 코드·DB 스키마)을 수정했으면 해당 담당자를 리뷰어에 추가
 
 ## 5. 영역 간 약속 (공통 코드)
@@ -100,12 +104,23 @@ chore(common): ESLint 설정 추가
 - `git push --force` (내 개인 브랜치에서만, 그것도 꼭 필요할 때만)
 - 실제 업체·공간 이름이나 실제 개인정보를 시드 데이터에 사용 (전부 가상 데이터)
 
-## 7. GitHub 저장소 설정 (관리자 1회)
+## 7. GitHub 저장소 보호 (룰셋)
 
-- Settings → Branches → `main`, `develop` 보호 규칙
-  - Require a pull request before merging (Approvals: 1)
-  - Do not allow bypassing / force push 금지
-- Settings → General → Pull Requests: **Allow squash merging만 체크**, Automatically delete head branches 체크
-- Default branch: `develop`
-- 라벨 생성: `bash scripts/setup-labels.sh` (gh CLI 필요)
-- Projects(보드) 생성: `Backlog / Todo / In Progress / In Review / Done`
+Settings → Rules → Rulesets 에 적용되어 있습니다. 바꾸려면 팀 합의 후 관리자가 수정합니다.
+
+| 규칙 | `develop` | `main` |
+|---|---|---|
+| 직접 push | ❌ PR만 가능 | ❌ PR만 가능 |
+| 필요한 승인 | 다른 사람 1명 | **코드 오너(@KHW1003)** 1명 |
+| 승인 후 새 커밋 | 승인 취소 | 승인 취소 |
+| 마지막 push는 다른 사람이 승인 | ✅ | ✅ |
+| 리뷰 대화 모두 해결 | ✅ | ✅ |
+| 머지 방식 | Squash만 | Merge commit만 |
+| force push · 브랜치 삭제 | ❌ | ❌ |
+| 예외(bypass) | 없음 | 관리자 — PR을 통해서만 (직접 push는 관리자도 불가) |
+
+저장소 설정
+- Default branch: `develop`, 머지된 브랜치 자동 삭제
+- Secret scanning push protection: 켜짐 (API 키 등이 포함된 push 거부)
+- 라벨: `bash scripts/setup-labels.sh` (gh CLI 필요)
+- 기술 스택 결정 후 추가 예정: CI 테스트 통과 필수, Dependabot
