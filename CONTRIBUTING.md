@@ -117,13 +117,29 @@ Settings → Rules → Rulesets 에 적용되어 있습니다. 바꾸려면 팀 
 | 리뷰 대화 모두 해결 | ✅ | ✅ |
 | 머지 방식 | Squash만 | Merge commit만 |
 | force push · 브랜치 삭제 | ❌ | ❌ |
+| CI `test` 통과 | ✅ 필수 | ✅ 필수 |
 | 예외(bypass) | 관리자 — PR을 통해서만 | 관리자 — PR을 통해서만 |
 
-관리자(@KHW1003)는 승인 없이 자기 PR을 머지할 수 있습니다 (PR 화면의 "Merge without waiting for requirements to be met").
-직접 push는 관리자도 불가하며, 가능하면 관리자도 팀원 리뷰를 받고 머지합니다.
+룰셋은 세 개입니다: `develop 보호`, `main 보호`, `테스트 필수`.
+
+- 관리자(@KHW1003)는 승인·CI 없이 자기 PR을 머지할 수 있습니다. 관리자 작업은 로컬에서 테스트를 마친 뒤 올립니다.
+- 팀원 PR은 승인과 CI `test` 통과가 모두 필요합니다.
+- 직접 push는 관리자도 불가하며, 가능하면 관리자도 팀원 리뷰를 받고 머지합니다.
+
+### 자동 머지 (auto-merge)
+
+PR 화면에서 **Enable auto-merge** 를 눌러 두면, 조건(승인 + 테스트 통과)이 채워지는 순간 GitHub가 자동으로 머지합니다.
+- PR마다 따로 켭니다. 켜지 않은 PR은 지금처럼 직접 머지 버튼을 누릅니다.
+- 리뷰에서 수정 요청이 오거나 테스트가 실패하면 머지되지 않고 기다립니다.
+
+### CI (자동 검사)
+
+`.github/workflows/ci.yml` — PR을 올리거나 커밋을 추가할 때마다 실행됩니다.
+- 현재: 머지 충돌 표시 검사, GitHub 설정 YAML 문법 검사
+- 기술 스택 결정 후: 실제 애플리케이션 테스트로 교체 (job 이름 `test`는 유지 — 룰셋이 이 이름으로 검사합니다)
 
 저장소 설정
-- Default branch: `develop`, 머지된 브랜치 자동 삭제
+- Default branch: `develop`, 머지된 브랜치 자동 삭제, 자동 머지 허용
 - Secret scanning push protection: 켜짐 (API 키 등이 포함된 push 거부)
 - 라벨: `bash scripts/setup-labels.sh` (gh CLI 필요)
-- 기술 스택 결정 후 추가 예정: CI 테스트 통과 필수, Dependabot
+- 기술 스택 결정 후 추가 예정: Dependabot
