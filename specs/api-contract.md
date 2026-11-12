@@ -282,16 +282,19 @@
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
 
 ### 6.2 관리자
-| 메서드 | 경로 | 권한 | 설명 | AC |
+
+> 관리자 기능은 **REST API가 아니라 SQLAdmin(`/admin`)의 액션**으로 제공한다 ([plan.md 6.5](plan.md)). 아래 표는 각 액션이 부르는 서비스와 AC를 정리한 것이며, React 앱은 이 경로들을 호출하지 않는다.
+
+| 구분 | SQLAdmin 위치 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/admin/applications` | A | 심사 대기 목록 | F1-19 |
-| POST | `/admin/applications/{supplierId}/approve` · `/reject` | A | 승인 / 반려(사유 필수) | F1-19, F1-20 |
-| GET | `/admin/reports` | A | 신고 목록 | |
-| GET | `/admin/reports/{id}/target` | A | 신고된 채팅방·게시글 열람 | |
-| POST | `/admin/users/{userId}/warnings` | A | 경고 (3회째 자동 정지) | F4-08, F5-10 |
-| POST | `/admin/pr-posts/{id}/blind` | A | 블라인드 (사유) | F4-03 |
-| GET | `/admin/performances/{id}/history` | A | 상태 변경·결제·취소 이력 시간순 | F5-13 |
-| POST | `/dev/reset-demo` | A + **T** | 시연 데이터 초기화 | F5-14 |
+| 목록 | 업체 심사 뷰 (필터: 심사 중) | A | 심사 대기 목록 | F1-19 |
+| 액션 | 업체 심사 → [승인] / [반려] | A | 승인 / 반려(사유 필수) | F1-19, F1-20 |
+| 목록 | 신고 뷰 | A | 신고 목록 | |
+| 액션 | 신고 → [대상 열기] | A | 신고된 채팅방·게시글 열람 | |
+| 액션 | 회원 → [경고] | A | 경고 (3회째 자동 정지) | F4-08, F5-10 |
+| 액션 | PR 게시글 → [블라인드] | A | 블라인드 (사유) | F4-03 |
+| 상세 | 공연 상세 → 이력 패널 | A | 상태 변경·결제·취소 이력 시간순 | F5-13 |
+| 액션 | 시연 도구 → [시연 데이터 초기화] | A + **T** | 시연 데이터 초기화 | F5-14 |
 
 ---
 

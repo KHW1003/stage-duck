@@ -20,6 +20,7 @@
 | DB | MariaDB 11.4, InnoDB, utf8mb4 |
 | ORM·마이그레이션 | SQLAlchemy 2.0 (동기) + PyMySQL, Alembic |
 | 실시간 | FastAPI WebSocket |
+| 관리자 화면 | **SQLAdmin** (자동 생성, UI 디자인 없음) |
 | 백엔드 테스트 | pytest, httpx TestClient, pytest-cov, 테스트용 MariaDB |
 | 프론트 테스트 | Vitest + React Testing Library + MSW, (권장) Playwright E2E 1개 |
 | 실행 | Docker Compose (backend · frontend · mariadb) |
@@ -72,7 +73,7 @@ stage-duck/
 │  │  ├─ check/             # 자동 검사 엔진(CHK), 기술 확인                                 (3번 · F3)
 │  │  ├─ payment/           # 청구서, 결제, 장부, 취소·위약금                                (4번 · F5)
 │  │  ├─ policy/            # 반려 카운트, 신고, 경고·정지                                   (4번 · F4)
-│  │  ├─ admin/             # 관리자 조회·처리, 시연 데이터                                  (4번 · F5)
+│  │  ├─ admin/             # SQLAdmin 뷰·액션, 관리자 인증, 시연 데이터                     (2번+4번 · F5)
 │  │  └─ models/            # SQLAlchemy 모델 (테이블 정의는 data-model.md)
 │  ├─ alembic/              # 마이그레이션
 │  └─ tests/                # pytest — 파일 이름에 F 번호, 테스트 이름에 AC ID
@@ -213,7 +214,35 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `/performances/:id/sheet` | 최종 담당표 | 사용자·확정 업체 |
 | `/supplier/onboarding` · `/supplier/profile` · `/supplier/venues` | 입점 2·3단계, 서비스·공간 관리 | 업체 |
 | `/supplier/postings` · `/supplier/postings/:id` · `/supplier/offers` | 공고 목록·상세, 받은 오퍼 | 업체(승인) |
-| `/admin/*` | 심사, 신고·제재, 거래 이력, 시연 데이터 | 관리자 |
+| `/admin` | **React 라우트 아님** — 서버의 SQLAdmin (6.5) | 관리자 |
+
+## 6.5 관리자 화면 — SQLAdmin (UI 디자인 없음)
+
+관리자 화면은 사용자에게 보이는 화면이 아니므로 **Figma 디자인과 React 화면을 만들지 않는다.** FastAPI + SQLAlchemy용 관리자 패널 라이브러리 **SQLAdmin**으로 목록·상세·검색 화면을 자동 생성하고, 업무 처리는 **커스텀 액션 버튼**으로 만든다.
+
+| 항목 | 방식 |
+|---|---|
+| 주소 | `/admin` (FastAPI 앱에 마운트, React와 별개) |
+| 로그인 | SQLAdmin `AuthenticationBackend` — `users.role = 'ADMIN'` 계정만. 비밀번호 검사·잠금은 일반 로그인과 같은 서비스 함수 사용 |
+| 원칙 | 액션 버튼은 **반드시 서비스 함수를 호출**한다 (상태 전이 검사, `status_histories` 기록, 경고 3회 정지). 모델 직접 수정은 막는다 (`can_edit=False`) |
+| 개발 담당 | 각 영역 담당자가 자기 모델의 관리자 뷰를 함께 만든다 (2번: 업체·공간·게시글, 4번: 신고·제재·주문) |
+
+### 관리자 뷰와 액션
+
+| 뷰 (모델) | 목록에서 보는 것 | 액션 버튼 | 호출 서비스 | AC |
+|---|---|---|---|---|
+| 업체 심사 (suppliers) | 상호, 유형, 부문, 심사 상태, 신청일 · 필터: 심사 상태 | [승인] / [반려(사유 입력)] / [정지] / [정지 해제] | `supplier.service.approve / reject / suspend` | F1-19, F1-20 |
+| 회원 (users) | 이메일, 역할, 상태, 경고 수 | [경고(사유)] — 3회째 자동 정지 | `policy.service.warn` | F4-08 |
+| 신고 (reports) | 대상 종류, 사유, 상태, 신고일 | [대상 열기] / [경고 처리] / [기각] | `policy.service.handle_report` | F4-03 |
+| PR 게시글 (pr_posts) | 업체, 부문, 제목, 상태 | [블라인드(사유)] / [블라인드 해제] | `supplier.service.blind_post` | F4-03 |
+| 공간 (venues) | 이름, 지역, 상태 | [숨김] / [숨김 해제] | `supplier.service.hide_venue` | ADMIN-04 |
+| 공연 (performances) | 제목, 사용자, 상태, 공연일 | 상세에 **상태 변경 이력·결제·취소 이력** 시간순 표시 (읽기 전용) | `admin.service.performance_history` | F5-13 |
+| 주문·결제·장부 (orders, payments, ledger_entries) | 금액, 상태 | 읽기 전용 | — | ADMIN-02 |
+| 채팅방 (chat_rooms) | **신고된 방만** 목록에 노출, 메시지 읽기 전용 | — | `admin.service.reported_rooms` | 2.5 권한표 |
+| 시연 도구 | — | [시연 데이터 초기화] — `APP_ENV=test`일 때만 보임 | `admin.service.reset_demo` | F5-14 |
+
+- 관리자는 확정·결제를 대신 처리하는 액션을 **두지 않는다** (constitution 원칙, 2.5 권한표).
+- 사유가 필요한 액션은 SQLAdmin 액션 화면의 입력 폼(사유 텍스트)으로 받는다.
 
 ## 7. 테스트 전략
 
@@ -223,6 +252,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | API 통합 | pytest + TestClient + MariaDB | 수용 기준 대부분 (권한, 상태, 동시성, 멱등) | 테스트마다 트랜잭션 롤백 |
 | 동시성 | pytest + 스레드 2개 | AC-F3-11, AC-F5-06 | 실제 MariaDB에서만 의미 있음 |
 | 컴포넌트 | Vitest + RTL + MSW | 폼 검증, 버튼 활성화 조건, 배지 표시 | API는 MSW 목업 |
+| 관리자 액션 | pytest | 액션이 부르는 서비스 함수 (승인·경고·블라인드·초기화) | SQLAdmin 화면 자체는 테스트하지 않음 |
 | E2E (권장) | Playwright | 대표 시나리오 1개 (가입 → 공연장 → 장비 → 결제) | 시연 리허설 겸용 |
 
 - **이름 규칙**: `test_ac_f3_11_concurrent_confirm_only_one_succeeds` / `it('AC-F2-09 장비 칸에 기본값이 없다')` — 추적표에서 바로 찾게.
