@@ -62,15 +62,16 @@
 
 ## 기술 스택
 
-추후 결정 → 결정되면 [docs/decisions](docs/decisions/)에 기록하고 이 표를 갱신합니다.
+[ADR 0002](docs/decisions/0002-기술스택-선정.md) 참고.
 
 | 영역 | 선택 |
 |---|---|
-| Frontend | TBD |
-| Backend | TBD |
-| DB | TBD |
-| 결제(테스트) | TBD |
-| 배포 | TBD |
+| Frontend | React + Vite (TypeScript) |
+| Backend | FastAPI (Python) + SQLAlchemy |
+| DB | MariaDB |
+| 테스트 | pytest / Vitest + React Testing Library |
+| 결제(테스트) | 자체 에스크로형 모의 결제 |
+| 배포 | Docker Compose |
 
 ## 문서
 
