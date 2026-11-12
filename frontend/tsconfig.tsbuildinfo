@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/pages/homepage.tsx","./src/shared/simulationbanner.tsx","./src/shared/statusbadge.tsx","./src/shared/api/client.ts","./tests/setup.ts","./tests/shared.test.tsx","./vite.config.ts"],"version":"5.9.3"}

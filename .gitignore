@@ -54,3 +54,6 @@ desktop.ini
 
 # ===== 로컬 도구 =====
 .claude/
+
+# TypeScript build info
+*.tsbuildinfo
