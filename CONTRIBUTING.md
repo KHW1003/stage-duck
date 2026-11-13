@@ -8,8 +8,8 @@
 main        ← 발표·배포 가능한 상태만. 직접 push 금지
  └ develop  ← 통합 브랜치. 모든 작업 PR은 여기로
     ├ feat/request-공연요청서-작성
-    ├ feat/supplier-견적-작성
-    ├ fix/compare-일정충돌-계산
+    ├ feat/quote-견적서-작성
+    ├ fix/check-일정충돌-계산
     └ docs/research-수요조사
 ```
 
@@ -23,13 +23,13 @@ main        ← 발표·배포 가능한 상태만. 직접 push 금지
 | `chore/<설명>` | 설정·빌드·의존성 | `develop` → `develop` |
 | `hotfix/<설명>` | main 긴급 수정 | `main` → `main` + `develop` |
 
-`<영역>`: `request` · `supplier` · `compare` · `payment` · `common`
+`<영역>`: 모듈 이름 — `auth` · `supplier` · `board` · `offer` · `profile` · `request` · `quote` · `chat` · `notification` · `check` · `payment` · `policy` · `admin` · `demo` · `common` (묶음별 모듈은 [CLAUDE.md](CLAUDE.md) 5장)
 
 브랜치 이름에는 **이슈 번호**를 붙여도 좋습니다: `feat/12-request-공연요청서-작성`
 
 ## 2. 작업 순서
 
-1. **이슈 만들기** — 템플릿 선택, 담당 영역 라벨(`area:*`) 붙이기, 자기 자신 Assign
+1. **이슈 만들기** — 템플릿 선택, 묶음 라벨(`area:1-…` ~ `area:4-…`, `area:common`) 붙이기, 자기 자신 Assign
 2. **브랜치 만들기** — 항상 최신 `develop`에서
    ```bash
    git switch develop
@@ -68,7 +68,7 @@ main        ← 발표·배포 가능한 상태만. 직접 push 금지
 예시
 ```
 feat(request): 공연 요청서 작성 API 추가
-fix(compare): 설치 완료 시각과 리허설 충돌 판정 오류 수정
+fix(check): 설치 완료 시각과 리허설 충돌 판정 오류 수정
 docs(research): 소규모 공연장 공급 현황 조사 추가
 chore(common): ESLint 설정 추가
 ```
