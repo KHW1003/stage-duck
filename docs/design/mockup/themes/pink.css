@@ -1,0 +1,8 @@
+/* 시안: 핑크 — 포인트 #FB4376. 색만 덮어쓴다 (home.html·home.css는 그대로) */
+:root {
+  --sd-blue: #D42F62;          /* 포인트 글자·링크·단계 번호 (흰 바탕 대비 4.5:1 이상) */
+  --sd-blue-button: #33293A;   /* 주 버튼 */
+  --sd-accent: #FEEFF3;        /* 옅은 바탕 */
+  --sd-featured: #F8AAC0;      /* 선택·추천 테두리 */
+  --sd-focus: #F8AAC0;
+}
