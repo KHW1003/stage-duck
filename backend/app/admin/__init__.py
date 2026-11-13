@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from sqladmin import Admin
 
 from app.admin.auth import AdminAuth
-from app.admin.views import ReasonView, SanctionAdmin, StatusHistoryAdmin, SupplierAdmin, UserAdmin
+from app.admin.views import DemoToolView, ReasonView, SanctionAdmin, StatusHistoryAdmin, SupplierAdmin, UserAdmin
 from app.core.config import get_settings
 from app.core.db import engine
 
@@ -23,4 +23,5 @@ def setup_admin(app: FastAPI) -> Admin:
     for view in (SupplierAdmin, UserAdmin, SanctionAdmin, StatusHistoryAdmin):
         admin.add_view(view)
     admin.add_base_view(ReasonView)
+    admin.add_base_view(DemoToolView)
     return admin
