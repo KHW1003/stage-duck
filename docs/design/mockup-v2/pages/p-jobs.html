@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공고 목록 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+</head>
+<!-- 화면: 공고 목록 · 받은 오퍼 · 보낸 견적서 (업체) · FR-QUOTE-01 · FR-OFFER-02 · AC-F2-11·12·14 · AC-F3-01 · AC-F4-07 · 묶음 3
+     React: pages/SupplierJobsPage.tsx = PageTop + Summary + Tabs + JobTable / OfferList / SentQuoteTable + UserProfileModal
+     내 부문 + 지금 열린 단계 + 내 활동 지역 공고만. 다른 업체 견적서는 보이지 않는다. 사용자 닉네임 옆 이용·반려 횟수. -->
+<body data-layout="partner" data-nav="jobs">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>공고 목록</li></ol><h1>공고 목록</h1><div class="page-top__meta"><span>업체 D</span><span>음향 장비·설치 · 엔지니어</span><span>광주 · 전남</span></div></div><a class="btn btn--sm" href="p-post.html"><span data-icon="edit" class="icon--sm"></span>내 PR 게시글</a></div></div>
+
+<main class="container main">
+  <div class="summary"><div class="has-ico"><span class="ico-box"><span data-icon="ticket"></span></span><div><span>새 공고</span><b>2<small>건</small></b></div></div><div class="has-ico"><span class="ico-box"><span data-icon="offer"></span></span><div><span>받은 오퍼</span><b>1<small>건</small></b></div></div><div class="has-ico"><span class="ico-box"><span data-icon="chat"></span></span><div><span>채팅 중</span><b>1<small>곳</small></b></div></div><div class="has-ico is-on"><span class="ico-box"><span data-icon="clock"></span></span><div><span>확인 카드 대기</span><b>1<small>건</small></b></div></div></div>
+
+  <div class="tab-bar mt-40"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="j1" type="button">공고 <span class="count">2</span></button><button role="tab" aria-selected="false" aria-controls="j2" type="button">받은 오퍼 <span class="count">1</span></button><button role="tab" aria-selected="false" aria-controls="j3" type="button">보낸 견적서 <span class="muted small">3</span></button></div></div>
+
+  <section id="j1" class="mt-24">
+    <div class="row row--between mb-16"><div class="row"><select class="select select--sm" aria-label="부문"><option>음향 장비·설치</option><option>엔지니어</option></select><select class="select select--sm" aria-label="지역"><option>광주·전남 전체</option><option>광주</option><option>전남</option></select></div><div class="filters"><button type="button" aria-pressed="true">공연일 가까운 순</button><button type="button" aria-pressed="false">최근 게시 순</button></div></div>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>공연 날짜</th><th>공고</th><th>앞 단계 (공간)</th><th>사용자</th><th>내 견적서</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="num"><b>11월 28일(토)</b><small>D-15</small></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1598387993441-a364f854c3e1.jpg')"></span><div><b>가을밤 밴드 공연</b><small>광주 동구 · 밴드 · 관객 80명 · 리허설 17:00</small></div></div></td><td>공간 C<small>입실 15:00</small></td><td><button class="link link--point" type="button" data-open="profile">가을밤밴드</button><small>이용 0 · 반려 0</small></td><td><span class="state state--on">v2 · 확인 카드 보냄</span></td><td><a class="btn btn--xs" href="p-job.html">상세</a></td></tr>
+        <tr><td class="num"><b>12월 5일(토)</b><small>D-22</small></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1471478331149-c72f17e33c73.jpg')"></span><div><b>겨울 어쿠스틱 공연</b><small>광주 서구 · 밴드 · 관객 40명 · 리허설 16:00</small></div></div></td><td>공간 B<small>입실 17:00</small></td><td><span>봄날</span><small>이용 2 · 반려 1</small></td><td><span class="state">보내기 전</span></td><td><a class="btn btn--xs btn--primary" href="p-job.html">상세</a></td></tr>
+      </tbody></table></div>
+    <ul class="bullets mt-16"><li>공연장 단계가 아직 컨펌되지 않은 공고는 장비 업체에게 보이지 않아요. 단계가 열리면 알림이 가요.</li><li>심사 중이거나 정지된 업체는 공고를 볼 수 없어요.</li></ul>
+  </section>
+
+  <section id="j2" class="mt-24" hidden>
+    <div class="list" style="--list-cols: 64px minmax(0,1fr) auto">
+      <div class="list__item is-new"><span class="date-box"><small>12월</small><b>12</b><small>토</small></span><div><p class="list__title">연말 합동 공연 <span class="tag tag--point">오퍼</span></p><div class="list__meta"><span>광주 북구</span><span>관객 120명</span><span>공간 A 컨펌</span><span>"드럼 세트는 저희가 가져가요."</span></div></div><div class="list__side"><span class="timer"><span data-icon="clock" class="icon--sm"></span>응답 기한 47시간</span><button class="btn btn--sm btn--ghost" type="button">거절</button><a class="btn btn--sm btn--primary" href="p-quote.html">견적서 쓰기</a></div></div>
+    </div>
+  </section>
+
+  <section id="j3" class="mt-24" hidden>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>공고</th><th>견적서</th><th>총액</th><th>상태</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="l"><b>가을밤 밴드 공연</b><small>11월 28일(토)</small></td><td>기본형 <span class="tag">v2</span></td><td class="r">1,350,000원</td><td><span class="state state--on">확인 카드 보냄 · 47:12</span></td><td><a class="btn btn--xs" href="p-chat.html">채팅</a></td></tr>
+        <tr><td class="l"><b>재즈 트리오 공연</b><small>11월 14일(토)</small></td><td>기본형 <span class="tag">v1</span></td><td class="r">700,000원</td><td><span class="state state--done">컨펌 · 결제 완료</span></td><td><a class="btn btn--xs" href="sheet.html?as=partner">담당표</a></td></tr>
+        <tr class="is-off"><td class="l"><b>포크 페스티벌</b><small>11월 21일(토)</small></td><td>고급형 <span class="tag">v1</span></td><td class="r">1,800,000원</td><td><span class="state">마감</span><small>다른 업체와 진행하기로 했어요</small></td><td></td></tr>
+      </tbody></table></div>
+  </section>
+</main>
+
+<div class="layer" id="profile" hidden><div class="modal"><div class="modal__head"><h2>사용자 프로필</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><div class="who"><span class="avatar avatar--lg">가</span><div><b style="font-size:18px">가을밤밴드</b><small>2026년 11월 가입</small></div></div>
+    <table class="info-table mt-16"><tr><th>이용 횟수</th><td>0회</td></tr><tr><th>반려 횟수</th><td>0회</td></tr></table>
+    <p class="field__hint mt-12">이름·전화번호·이메일·생년월일은 보이지 않아요. 결제 뒤 최종 담당표에서 공개돼요.</p></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>닫기</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

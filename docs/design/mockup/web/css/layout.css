@@ -50,11 +50,11 @@
 .side-nav__title { padding-bottom: 12px; border-bottom: 2px solid var(--sd-rule); font-size: 17px; font-weight: 700; }
 .side-nav__group { padding: 12px 0; border-bottom: 1px solid var(--sd-line); }
 .side-nav__label { padding: 4px 0 6px; font-size: var(--sd-text-meta); color: var(--sd-muted); }
-.side-nav a { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; font-size: var(--sd-text-body); color: var(--sd-muted); }
+.side-nav a { display: flex; justify-content: flex-start; align-items: center; gap: 8px; min-height: 38px; font-size: var(--sd-text-body); color: var(--sd-muted); }
 .side-nav a:hover { color: var(--sd-ink); }
 .side-nav a[aria-current="page"] { color: var(--sd-ink); font-weight: 700; }
 .side-nav a[aria-current="page"]::before { content: ""; width: 3px; height: 14px; margin-right: 8px; background: var(--sd-blue); }
-.side-nav a[aria-current="page"] > span:first-child { flex: 1; }
+.side-nav a > .count, .side-nav a > .tag { margin-left: auto; }
 
 /* 바닥글 */
 .footer { margin-top: 0; background: var(--sd-footer-bg); color: var(--sd-footer-ink); font-size: var(--sd-text-small); }
