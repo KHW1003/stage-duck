@@ -181,7 +181,7 @@ a.list__item:hover, .list__item.is-link:hover { background: var(--sd-hover); }
 .summary { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
 .summary > div { padding: 18px 22px; }
 .summary > div + div { border-left: 1px solid var(--sd-line); }
-.summary span { display: block; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.summary span:not(.avatar) { display: block; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .summary b { display: block; margin-top: 4px; font-size: 24px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
 .summary b small { font-size: var(--sd-text-desc); font-weight: 500; color: var(--sd-muted); margin-left: 2px; }
 .summary .is-on b { color: var(--sd-blue); }

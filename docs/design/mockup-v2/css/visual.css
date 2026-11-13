@@ -103,10 +103,10 @@
 .choice--photo .choice__item > span:last-child { display: flex; gap: 12px; }
 
 /* 정보 칩 (아이콘 + 짧은 값) */
-.chips-ico { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
-.chips-ico > div { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 140px; padding: 14px 16px; }
+.chips-ico { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
+.chips-ico > div { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 14px; }
 .chips-ico > div + div { border-left: 1px solid var(--sd-line); }
-.chips-ico span { display: block; font-size: var(--sd-text-meta); color: var(--sd-muted); }
+.chips-ico span:not(.ico-box) { display: block; font-size: var(--sd-text-meta); color: var(--sd-muted); }
 .chips-ico b { display: block; font-size: var(--sd-text-body); }
 
 /* 아이콘 목록 (컴포넌트 시안) */
