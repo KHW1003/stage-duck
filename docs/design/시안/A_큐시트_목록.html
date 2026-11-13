@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시안 A — 큐시트 목록 · 공연장 비교</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  /* 견적서 한 장 = 큐시트 한 구간. 위에 요약 한 줄, 아래에 시각 열 + 검사 메모 */
+  .quote { padding: 16px 0 18px; border-bottom: 1px solid var(--hair); }
+  .quote:last-of-type { border-bottom: 2px solid var(--rule); }
+  .q-head { display: grid; grid-template-columns: 1fr 150px auto; gap: 16px; align-items: baseline; }
+  .q-name { font-size: 16px; font-weight: 700; }
+  .q-name .tag { margin-left: 8px; vertical-align: 2px; }
+  .q-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+  .q-price { text-align: right; font-size: 18px; font-weight: 700; }
+  .q-price small { display: block; font-size: 12px; font-weight: 400; color: var(--ink-3); }
+  .cue { margin: 12px 0 0; display: grid; grid-template-columns: 110px 1fr auto; column-gap: 16px; row-gap: 4px; font-size: 13px; }
+  .cue time { font-family: var(--mono); color: var(--ink-2); }
+  .cue .what { color: var(--ink); }
+  .cue .memo { text-align: right; }
+  .cue .memo .note { margin-left: 8px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="logo.webp" alt="STAGE DUCK">
+  <b>STAGE DUCK</b>
+  <nav><a href="#" aria-current="page">내 공연</a><a href="#">채팅</a><a href="#">PR 게시판</a><a href="#">마이페이지</a></nav>
+</header>
+<div class="sim">포트폴리오 시뮬레이션 · 업체·가격은 가상이며 결제는 테스트로만 동작해요</div>
+
+<main class="wrap">
+  <section class="show">
+    <h1>가을밤 밴드 공연</h1>
+    <div class="meta" style="text-align:right">요청서 v1</div>
+    <div class="meta"><span>11월 21일(토)</span><span><time>19:00–21:00</time></span><span>리허설 <time>17:00</time></span><span>관객 80명</span><span>광주 동구</span></div>
+    <div class="meta" style="text-align:right">공연장 예산 <span class="num">600,000원</span></div>
+  </section>
+
+  <ol class="setlist">
+    <li aria-current="step"><span class="no">01</span><span class="name">공연장</span><span class="state">비교 중 · 견적 3</span></li>
+    <li><span class="no">02</span><span class="name">장비</span><span class="state">대기</span></li>
+    <li><span class="no">03</span><span class="name">엔지니어</span><span class="state">대기</span></li>
+  </ol>
+
+  <p class="sec">받은 견적서 3 · 싼 순서</p>
+
+  <article class="quote">
+    <div class="q-head">
+      <div>
+        <div class="q-name">공연장 B 라이브홀</div>
+        <div class="q-sub">수용 100명 · 밴드 공연 가능</div>
+      </div>
+      <div class="q-price num">400,000원<small>부가세 포함</small></div>
+      <button class="btn">채팅 시작</button>
+    </div>
+    <div class="cue">
+      <time>17:00</time><span class="what">입실 · 장비 설치 가능</span><span class="memo"><span class="st warn">경고</span><span class="note">리허설까지 설치 시간 0분</span></span>
+      <time>17:00</time><span class="what">리허설</span><span class="memo"></span>
+      <time>23:00</time><span class="what">퇴실 마감</span><span class="memo"><span class="st ok">통과</span></span>
+    </div>
+  </article>
+
+  <article class="quote">
+    <div class="q-head">
+      <div>
+        <div class="q-name">공연장 C 컬처스페이스 <span class="tag">내가 오퍼한 업체</span></div>
+        <div class="q-sub">수용 120명 · 밴드 공연 가능</div>
+      </div>
+      <div class="q-price num">500,000원<small>부가세 포함</small></div>
+      <button class="btn">채팅 시작</button>
+    </div>
+    <div class="cue">
+      <time>15:00</time><span class="what">입실 · 장비 설치 가능</span><span class="memo"><span class="st ok">통과</span><span class="note">리허설까지 120분</span></span>
+      <time>17:00</time><span class="what">리허설</span><span class="memo"></span>
+      <time>23:00</time><span class="what">퇴실 마감</span><span class="memo"><span class="st ok">통과</span></span>
+    </div>
+  </article>
+
+  <article class="quote">
+    <div class="q-head">
+      <div>
+        <div class="q-name">공연장 A 아트홀 <span class="tag">풀스펙</span></div>
+        <div class="q-sub">수용 150명 · 장비·엔지니어 포함 — 컨펌하면 다음 두 단계를 건너뛸 수 있어요</div>
+      </div>
+      <div class="q-price num">4,000,000원<small>부가세 포함</small></div>
+      <button class="btn">채팅 시작</button>
+    </div>
+    <div class="cue">
+      <time>13:00</time><span class="what">입실 · 장비 설치 가능</span><span class="memo"><span class="st ok">통과</span><span class="note">리허설까지 240분</span></span>
+      <time>17:00</time><span class="what">리허설</span><span class="memo"></span>
+      <time>—</time><span class="what">예산</span><span class="memo"><span class="st warn">경고</span><span class="note">예산보다 3,400,000원 많아요</span></span>
+    </div>
+  </article>
+
+  <p class="foot">자동 검사는 입력된 시간·인원·조건끼리만 비교해요. 소리·장비 호환은 업체가 확인해요. 업체가 컨펌하기 전에는 예약이 확정되지 않아요.</p>
+</main>
+<div class="label">시안 A · 큐시트 목록</div>
+</body>
+</html>

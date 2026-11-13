@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시안 C — 타임라인 · 공연장 비교</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  /* 공연 큐(리허설·공연)를 세로 기준선으로 깔고, 견적서마다 한 줄의 시간 막대를 겹친다.
+     축: 13:00(0%) ~ 24:00(100%), 1시간 = 9.0909% */
+  .tl { margin-top: 8px; border-bottom: 2px solid var(--rule); }
+  .row { display: grid; grid-template-columns: 240px 1fr 130px 110px; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--hair); }
+  .row.axis { border-top: 0; padding: 6px 0 4px; }
+  .who b { display: block; font-size: 15px; }
+  .who .note { display: block; margin-top: 2px; }
+  .who .tag { margin-left: 6px; vertical-align: 1px; }
+  .track { position: relative; height: 34px; }
+  .axis .track { height: 18px; }
+  .tick { position: absolute; top: 0; font-family: var(--mono); font-size: 11px; color: var(--ink-3); transform: translateX(-50%); }
+  .guide { position: absolute; top: -14px; bottom: -14px; width: 0; border-left: 1px dashed var(--ink-3); }
+  .guide.show { border-left: 1px solid var(--ink); }
+  .avail { position: absolute; top: 13px; height: 8px; background: var(--hair); border-radius: 2px; }
+  .setup { position: absolute; top: 9px; height: 16px; background: var(--ink-2); border-radius: 2px; }
+  .setup.zero { width: 3px !important; background: var(--warn); }
+  .cap { position: absolute; top: -2px; font-size: 11px; color: var(--ink-2); white-space: nowrap; transform: translateY(-100%); }
+  .show-block { position: absolute; top: 9px; height: 16px; background: var(--ink); border-radius: 2px; color: var(--paper); font-size: 11px; line-height: 16px; padding-left: 6px; }
+  .price { text-align: right; font-size: 16px; font-weight: 700; }
+  .checks { grid-column: 1 / -1; display: flex; gap: 18px; flex-wrap: wrap; padding-left: 256px; }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--ink-2); margin-top: 10px; }
+  .legend i { display: inline-block; width: 18px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="logo.webp" alt="STAGE DUCK">
+  <b>STAGE DUCK</b>
+  <nav><a href="#" aria-current="page">내 공연</a><a href="#">채팅</a><a href="#">PR 게시판</a><a href="#">마이페이지</a></nav>
+</header>
+<div class="sim">포트폴리오 시뮬레이션 · 업체·가격은 가상이며 결제는 테스트로만 동작해요</div>
+
+<main class="wrap">
+  <section class="show">
+    <h1>가을밤 밴드 공연</h1>
+    <div class="meta" style="text-align:right">요청서 v1</div>
+    <div class="meta"><span>11월 21일(토)</span><span><time>19:00–21:00</time></span><span>리허설 <time>17:00</time></span><span>관객 80명</span><span>광주 동구</span></div>
+    <div class="meta" style="text-align:right">공연장 예산 <span class="num">600,000원</span></div>
+  </section>
+
+  <ol class="setlist">
+    <li aria-current="step"><span class="no">01</span><span class="name">공연장</span><span class="state">비교 중 · 견적 3</span></li>
+    <li><span class="no">02</span><span class="name">장비</span><span class="state">대기</span></li>
+    <li><span class="no">03</span><span class="name">엔지니어</span><span class="state">대기</span></li>
+  </ol>
+
+  <div class="tl">
+    <div class="row axis">
+      <span class="sec" style="margin:0">견적서 3</span>
+      <div class="track">
+        <span class="tick" style="left:0%">13</span><span class="tick" style="left:18.18%">15</span><span class="tick" style="left:36.36%">17</span>
+        <span class="tick" style="left:54.55%">19</span><span class="tick" style="left:72.73%">21</span><span class="tick" style="left:90.91%">23</span>
+      </div>
+      <span></span><span></span>
+    </div>
+
+    <div class="row">
+      <div class="who"><b>공연 큐</b><span class="note">리허설 17:00 · 공연 19:00–21:00</span></div>
+      <div class="track">
+        <span class="guide" style="left:36.36%"></span>
+        <span class="show-block" style="left:36.36%;width:18.18%;background:var(--ink-3)">리허설</span>
+        <span class="show-block" style="left:54.55%;width:18.18%">공연</span>
+      </div>
+      <span></span><span></span>
+    </div>
+
+    <div class="row">
+      <div class="who"><b>공연장 B 라이브홀</b><span class="note">수용 100명 · 밴드 가능</span></div>
+      <div class="track">
+        <span class="guide" style="left:36.36%"></span>
+        <span class="avail" style="left:36.36%;width:54.55%"></span>
+        <span class="setup zero" style="left:36.36%"></span>
+        <span class="cap" style="left:36.36%">입실 17:00</span>
+      </div>
+      <div class="price num">400,000원</div>
+      <button class="btn">채팅 시작</button>
+      <div class="checks"><span><span class="st warn">경고</span> <span class="note">설치 시간 0분 — 입실과 리허설이 같은 시각이에요</span></span><span class="st ok">인원·조건·퇴실 통과</span></div>
+    </div>
+
+    <div class="row">
+      <div class="who"><b>공연장 C 컬처스페이스</b><span class="note">수용 120명 · 밴드 가능</span><span class="tag">내가 오퍼한 업체</span></div>
+      <div class="track">
+        <span class="guide" style="left:36.36%"></span>
+        <span class="avail" style="left:18.18%;width:72.73%"></span>
+        <span class="setup" style="left:18.18%;width:18.18%"></span>
+        <span class="cap" style="left:18.18%">입실 15:00 · 설치 120분</span>
+      </div>
+      <div class="price num">500,000원</div>
+      <button class="btn">채팅 시작</button>
+      <div class="checks"><span class="st ok">모두 통과</span></div>
+    </div>
+
+    <div class="row">
+      <div class="who"><b>공연장 A 아트홀</b><span class="note">수용 150명 · 장비·엔지니어 포함</span><span class="tag">풀스펙</span></div>
+      <div class="track">
+        <span class="guide" style="left:36.36%"></span>
+        <span class="avail" style="left:0%;width:95.45%"></span>
+        <span class="setup" style="left:0%;width:36.36%"></span>
+        <span class="cap" style="left:0%">입실 13:00 · 설치 240분</span>
+      </div>
+      <div class="price num">4,000,000원</div>
+      <button class="btn">채팅 시작</button>
+      <div class="checks"><span><span class="st warn">경고</span> <span class="note">예산보다 3,400,000원 많아요</span></span><span class="note">컨펌하면 장비·엔지니어 단계를 건너뛸 수 있어요</span></div>
+    </div>
+  </div>
+
+  <div class="legend"><span><i style="background:var(--hair)"></i>공간 사용 가능</span><span><i style="background:var(--ink-2)"></i>리허설 전 장비 설치 시간</span><span><i style="background:var(--ink)"></i>공연</span></div>
+  <p class="foot">자동 검사는 입력된 시간·인원·조건끼리만 비교해요. 소리·장비 호환은 업체가 확인해요. 업체가 컨펌하기 전에는 예약이 확정되지 않아요.</p>
+</main>
+<div class="label">시안 C · 타임라인</div>
+</body>
+</html>

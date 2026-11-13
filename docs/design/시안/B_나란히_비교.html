@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시안 B — 나란히 비교 · 공연장 비교</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  /* 견적서가 세로 칸으로 나란히 선다 (믹서 채널처럼). 줄마다 같은 항목 → 가로로 읽으면 비교 */
+  table.cmp { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .cmp th, .cmp td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--hair); }
+  .cmp thead th { border-bottom: 2px solid var(--rule); padding-bottom: 12px; }
+  .cmp tbody th { width: 170px; font-weight: 500; color: var(--ink-2); font-size: 13px; }
+  .cmp td + td, .cmp th + td, .cmp thead th + th { border-left: 1px solid var(--hair); }
+  .cmp .q-name { font-size: 15px; font-weight: 700; }
+  .cmp .q-tags { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .cmp .price { font-size: 18px; font-weight: 700; }
+  .cmp td.r { text-align: right; }
+  .cmp time { font-family: var(--mono); }
+  .cmp .cell-note { display: block; margin-top: 2px; }
+  .cmp tr.total td, .cmp tr.total th { border-bottom: 2px solid var(--rule); }
+  .cmp tfoot td { border: 0; padding-top: 14px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="logo.webp" alt="STAGE DUCK">
+  <b>STAGE DUCK</b>
+  <nav><a href="#" aria-current="page">내 공연</a><a href="#">채팅</a><a href="#">PR 게시판</a><a href="#">마이페이지</a></nav>
+</header>
+<div class="sim">포트폴리오 시뮬레이션 · 업체·가격은 가상이며 결제는 테스트로만 동작해요</div>
+
+<main class="wrap">
+  <section class="show">
+    <h1>가을밤 밴드 공연</h1>
+    <div class="meta" style="text-align:right">요청서 v1</div>
+    <div class="meta"><span>11월 21일(토)</span><span><time>19:00–21:00</time></span><span>리허설 <time>17:00</time></span><span>관객 80명</span><span>광주 동구</span></div>
+    <div class="meta" style="text-align:right">공연장 예산 <span class="num">600,000원</span></div>
+  </section>
+
+  <ol class="setlist">
+    <li aria-current="step"><span class="no">01</span><span class="name">공연장</span><span class="state">비교 중 · 견적 3</span></li>
+    <li><span class="no">02</span><span class="name">장비</span><span class="state">대기</span></li>
+    <li><span class="no">03</span><span class="name">엔지니어</span><span class="state">대기</span></li>
+  </ol>
+
+  <table class="cmp">
+    <thead>
+      <tr>
+        <th scope="col" class="sec" style="margin:0">견적서 3</th>
+        <th scope="col"><div class="q-name">공연장 B 라이브홀</div></th>
+        <th scope="col"><div class="q-name">공연장 C 컬처스페이스</div><div class="q-tags"><span class="tag">내가 오퍼한 업체</span></div></th>
+        <th scope="col"><div class="q-name">공연장 A 아트홀</div><div class="q-tags"><span class="tag">풀스펙</span></div></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="total"><th scope="row">금액 (부가세 포함)</th>
+        <td class="r"><span class="price num">400,000원</span></td>
+        <td class="r"><span class="price num">500,000원</span></td>
+        <td class="r"><span class="price num">4,000,000원</span><span class="cell-note"><span class="st warn">경고</span> <span class="note">예산보다 3,400,000원 많아요</span></span></td></tr>
+      <tr><th scope="row">수용 인원 · 관객 80명</th>
+        <td class="r num">100명 <span class="st ok">통과</span></td>
+        <td class="r num">120명 <span class="st ok">통과</span></td>
+        <td class="r num">150명 <span class="st ok">통과</span></td></tr>
+      <tr><th scope="row">입실 · 장비 설치 가능</th>
+        <td><time>17:00</time><span class="cell-note"><span class="st warn">경고</span> <span class="note">리허설(17:00)까지 설치 시간 0분</span></span></td>
+        <td><time>15:00</time><span class="cell-note"><span class="st ok">통과</span> <span class="note">리허설까지 120분</span></span></td>
+        <td><time>13:00</time><span class="cell-note"><span class="st ok">통과</span> <span class="note">리허설까지 240분</span></span></td></tr>
+      <tr><th scope="row">퇴실 마감 · 철수 포함</th>
+        <td><time>23:00</time> <span class="st ok">통과</span></td>
+        <td><time>23:00</time> <span class="st ok">통과</span></td>
+        <td><time>23:30</time> <span class="st ok">통과</span></td></tr>
+      <tr><th scope="row">밴드 공연 (꼭 필요)</th>
+        <td>가능 <span class="st ok">통과</span></td>
+        <td>가능 <span class="st ok">통과</span></td>
+        <td>가능 <span class="st ok">통과</span></td></tr>
+      <tr><th scope="row">포함</th>
+        <td class="note">공간만</td>
+        <td class="note">공간만</td>
+        <td class="note">공간 + 장비 + 엔지니어 — 컨펌하면 다음 두 단계를 건너뛸 수 있어요</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td></td>
+        <td><button class="btn">채팅 시작</button></td>
+        <td><button class="btn">채팅 시작</button></td>
+        <td><button class="btn">채팅 시작</button></td></tr>
+    </tfoot>
+  </table>
+
+  <p class="foot">자동 검사는 입력된 시간·인원·조건끼리만 비교해요. 소리·장비 호환은 업체가 확인해요. 업체가 컨펌하기 전에는 예약이 확정되지 않아요.</p>
+</main>
+<div class="label">시안 B · 나란히 비교</div>
+</body>
+</html>
