@@ -1,76 +1,94 @@
 /*
- * STAGE DUCK 관리자 화면 테마 (SQLAdmin / Tabler 1.4 위에 덮어쓴다).
- * - 왼쪽 메뉴: 로고 바탕과 같은 주황. 주황 위 글자는 검정(대비 확보).
- * - 기본은 다크 모드. 메뉴 아래 버튼으로 라이트 모드로 바꿀 수 있고 브라우저에 기억한다 (theme.js).
+ * STAGE DUCK 관리자 화면 — 미니멀 테마 (SQLAdmin / Tabler 1.4 위에 덮어쓴다).
+ *
+ * 원칙: 눈이 편하게.
+ * - 넓은 면은 따뜻한 무채색만. 주황(로고 색)은 "포인트"로만 쓴다: 선택된 메뉴 표시선, 주 버튼, 포커스, 링크.
+ * - 순수한 검정·흰색을 쓰지 않는다 (대비가 너무 세면 눈이 피곤하다). 글자는 약간 낮춘 흰색/검정.
+ * - 굵기는 500~600, 모서리 8px, 그림자 없음.
+ * - 기본은 다크 모드. 메뉴 아래 버튼으로 라이트 모드 (theme.js, 브라우저에 기억).
+ * 색은 로고에서 뽑았다: 주황 #FA4F00, 오리 검정 #1C1716.
  */
 :root {
-  --sd-orange: #fa4f00;   /* 로고 바탕에서 뽑은 색 */
-  --sd-orange-strong: #e04600;
-  --sd-orange-soft: #ff7a3d;
-  --sd-ink: #1c1716;      /* 로고 오리 색 */
-  --sd-radius: 14px;
+  --sd-accent: #fa4f00;
+  --sd-accent-hover: #e04600;
+  --sd-on-accent: #1c1716;
+  --sd-radius: 8px;
 
-  --tblr-primary: var(--sd-orange);
+  --tblr-primary: var(--sd-accent);
   --tblr-primary-rgb: 250, 79, 0;
-  --tblr-border-radius: 10px;
+  --tblr-border-radius: var(--sd-radius);
   --tblr-font-sans-serif: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
-/* ---------- 다크 (기본) ---------- */
+/* 다크 (기본): 로고의 오리 검정에서 이어지는 따뜻한 회색 단계 */
 :root[data-bs-theme="dark"] {
-  --sd-bg: #120e0c;
-  --sd-surface: #1c1512;
-  --sd-surface-2: #261d19;
-  --sd-line: #3a2e28;
-  --sd-text: #f3e9e3;
-  --sd-muted: #b3a59d;
+  --sd-bg: #151211;
+  --sd-surface: #1b1716;
+  --sd-surface-2: #231e1c;
+  --sd-line: #2f2825;
+  --sd-text: #e9e3df;
+  --sd-muted: #9a8e88;
+  --sd-accent-text: #ff8a57;            /* 어두운 바탕 위 주황 글자는 조금 밝게 */
+  --sd-accent-soft: rgba(250, 79, 0, 0.12);
+}
+
+/* 라이트 */
+:root[data-bs-theme="light"] {
+  --sd-bg: #f6f4f2;
+  --sd-surface: #ffffff;
+  --sd-surface-2: #f1edea;
+  --sd-line: #e6e0dc;
+  --sd-text: #2a2321;
+  --sd-muted: #7a6e68;
+  --sd-accent-text: #c63f00;
+  --sd-accent-soft: rgba(250, 79, 0, 0.08);
+}
+
+:root[data-bs-theme] {
   --tblr-body-bg: var(--sd-bg);
   --tblr-body-color: var(--sd-text);
   --tblr-bg-surface: var(--sd-surface);
   --tblr-bg-surface-secondary: var(--sd-surface-2);
   --tblr-border-color: var(--sd-line);
   --tblr-secondary-color: var(--sd-muted);
-  --tblr-link-color: var(--sd-orange-soft);
-  --tblr-link-hover-color: #fff;
-}
-
-/* ---------- 라이트 ---------- */
-:root[data-bs-theme="light"] {
-  --sd-bg: #faf7f5;
-  --sd-surface: #ffffff;
-  --sd-surface-2: #fff1e8;
-  --sd-line: #eee3dc;
-  --sd-text: #1c1512;
-  --sd-muted: #6b5d56;
-  --tblr-body-bg: var(--sd-bg);
-  --tblr-link-color: var(--sd-orange-strong);
-  --tblr-link-hover-color: var(--sd-ink);
+  --tblr-link-color: var(--sd-accent-text);
+  --tblr-link-hover-color: var(--sd-text);
 }
 
 body {
   background: var(--sd-bg);
   color: var(--sd-text);
   font-family: var(--tblr-font-sans-serif);
-  letter-spacing: -0.01em;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
 }
 .page-wrapper, .page-body { background: var(--sd-bg); }
+a { text-underline-offset: 2px; }
 
 /* ---------- 버튼·입력 ---------- */
+.btn { border-radius: var(--sd-radius); font-weight: 500; box-shadow: none; }
 .btn-primary {
-  --tblr-btn-color: var(--sd-ink);
-  --tblr-btn-bg: var(--sd-orange);
-  --tblr-btn-border-color: var(--sd-orange);
-  --tblr-btn-hover-color: var(--sd-ink);
-  --tblr-btn-hover-bg: var(--sd-orange-strong);
-  --tblr-btn-hover-border-color: var(--sd-orange-strong);
-  --tblr-btn-active-color: var(--sd-ink);
-  --tblr-btn-active-bg: var(--sd-orange-strong);
-  --tblr-btn-active-border-color: var(--sd-orange-strong);
-  font-weight: 700;
+  --tblr-btn-color: var(--sd-on-accent);
+  --tblr-btn-bg: var(--sd-accent);
+  --tblr-btn-border-color: var(--sd-accent);
+  --tblr-btn-hover-color: var(--sd-on-accent);
+  --tblr-btn-hover-bg: var(--sd-accent-hover);
+  --tblr-btn-hover-border-color: var(--sd-accent-hover);
+  --tblr-btn-active-color: var(--sd-on-accent);
+  --tblr-btn-active-bg: var(--sd-accent-hover);
+  --tblr-btn-active-border-color: var(--sd-accent-hover);
+  font-weight: 600;
 }
-.btn { border-radius: 999px; }
+.btn-secondary, .btn-outline-secondary, .btn-light {
+  --tblr-btn-bg: transparent;
+  --tblr-btn-color: var(--sd-text);
+  --tblr-btn-border-color: var(--sd-line);
+  --tblr-btn-hover-bg: var(--sd-surface-2);
+  --tblr-btn-hover-color: var(--sd-text);
+  --tblr-btn-hover-border-color: var(--sd-line);
+}
 .form-control, .form-select {
-  border-radius: 10px;
+  border-radius: var(--sd-radius);
   background-color: var(--sd-surface-2);
   border-color: var(--sd-line);
   color: var(--sd-text);
@@ -79,179 +97,175 @@ body {
 .form-control:focus, .form-select:focus {
   background-color: var(--sd-surface-2);
   color: var(--sd-text);
-  border-color: var(--sd-orange);
-  box-shadow: 0 0 0 0.2rem rgba(250, 79, 0, 0.25);
+  border-color: var(--sd-accent);
+  box-shadow: 0 0 0 3px var(--sd-accent-soft);
 }
 
-/* ---------- 왼쪽 메뉴: 로고 바탕과 같은 주황 ---------- */
+/* ---------- 왼쪽 메뉴: 본문과 같은 계열의 조용한 면 ---------- */
 .navbar-vertical,
 .navbar-vertical.navbar-dark,
-.navbar-vertical[data-bs-theme="dark"] {
-  --tblr-navbar-bg: var(--sd-orange);
-  --tblr-navbar-color: var(--sd-ink);
-  --tblr-navbar-hover-color: var(--sd-ink);
-  --tblr-navbar-active-color: #fff;
-  background: var(--sd-orange) !important;
-  border-right: 0 !important;
-  color: var(--sd-ink);
-}
-.navbar-vertical .navbar-brand {
-  padding: 1rem 0 0.5rem;
-  justify-content: center;
-}
-.navbar-vertical .navbar-brand-logo {
-  width: 120px !important;
-  height: 120px !important;
-  /* 로고 바탕이 메뉴와 같은 주황이라 테두리 없이 이어 보이게 둔다 */
-}
-/* SQLAdmin 메뉴 묶음(#navbar-menu)은 자체 어두운 바탕이 있어 메뉴 전체를 주황으로 덮는다 */
+.navbar-vertical[data-bs-theme="dark"],
 .navbar-vertical #navbar-menu,
 .navbar-vertical .navbar-collapse {
-  --tblr-navbar-bg: transparent;
-  background: transparent !important;
-  color: var(--sd-ink);
+  --tblr-navbar-bg: var(--sd-surface);
+  background: var(--sd-surface) !important;
+  color: var(--sd-text);
 }
-.navbar-vertical .navbar-toggler-icon { background-color: var(--sd-ink) !important; }
-.navbar-vertical .nav-link,
-.navbar-vertical .nav-link .nav-link-title,
-.navbar-vertical .nav-link i,
-.navbar-vertical .dropdown-item {
-  color: var(--sd-ink) !important;
-  font-weight: 600;
+.navbar-vertical { border-right: 1px solid var(--sd-line) !important; box-shadow: none !important; }
+.navbar-vertical .navbar-brand { padding: 1.25rem 0 1rem; justify-content: center; }
+.navbar-vertical .navbar-brand-logo {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 14px;   /* 로고는 주황 타일 하나 — 화면에서 주황이 가장 많이 보이는 곳이 여기뿐이게 */
 }
 .navbar-vertical .nav-link {
-  border-radius: 10px;
-  margin: 2px 8px;
+  position: relative;
+  margin: 1px 10px;
+  padding-left: 14px;
+  border-radius: var(--sd-radius);
+  color: var(--sd-muted) !important;
+  font-weight: 500;
 }
-.navbar-vertical .nav-link:hover,
-.navbar-vertical .dropdown-item:hover {
-  background: rgba(28, 21, 18, 0.12) !important;
+.navbar-vertical .nav-link .nav-link-title,
+.navbar-vertical .nav-link .nav-link-icon,
+.navbar-vertical .nav-link i { color: inherit !important; }
+.navbar-vertical .nav-link:hover { background: var(--sd-surface-2) !important; color: var(--sd-text) !important; }
+/* 선택된 메뉴: 글자를 밝게 + 왼쪽에 주황 선 하나 */
+.navbar-vertical .nav-link.active {
+  background: var(--sd-accent-soft) !important;
+  color: var(--sd-text) !important;
 }
-.navbar-vertical .nav-item.active > .nav-link,
-.navbar-vertical .nav-link.active,
-.navbar-vertical .dropdown-item.active,
-.navbar-vertical .nav-item.active > .nav-link .nav-link-title,
-.navbar-vertical .nav-item.active > .nav-link i {
-  background: var(--sd-ink) !important;
-  color: #fff !important;
+.navbar-vertical .nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--sd-accent);
 }
-.navbar-vertical .dropdown-menu { background: transparent; border: 0; box-shadow: none; }
-
+.navbar-vertical .navbar-toggler-icon { background-color: var(--sd-text) !important; }
 .navbar-vertical .btn-secondary,
 .navbar-vertical .sd-theme-toggle {
   background: transparent;
-  border: 1.5px solid var(--sd-ink);
-  color: var(--sd-ink);
-  font-weight: 700;
+  border: 1px solid var(--sd-line);
+  color: var(--sd-muted);
+  font-weight: 500;
+  font-size: 13px;
 }
 .navbar-vertical .btn-secondary:hover,
-.navbar-vertical .sd-theme-toggle:hover {
-  background: var(--sd-ink);
-  color: var(--sd-orange);
-}
-.sd-theme-toggle { margin: 0 8px 12px; border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.navbar-vertical .sd-theme-toggle:hover { background: var(--sd-surface-2); color: var(--sd-text); }
+.sd-theme-toggle { margin: 0 8px 12px; border-radius: var(--sd-radius); padding: 6px 12px; }
 
 /* ---------- 본문 ---------- */
-.page-title { font-weight: 800; color: var(--sd-text); }
+.page-header { margin-top: 0.5rem; }
+.page-title { font-weight: 600; color: var(--sd-text); }
 .page-pretitle { color: var(--sd-muted); }
 .card {
   background: var(--sd-surface);
   color: var(--sd-text);
-  border-radius: var(--sd-radius);
-  border-color: var(--sd-line);
-}
-.card-header, .card-footer { background: transparent; border-color: var(--sd-line); }
-.table { --tblr-table-bg: transparent; --tblr-table-color: var(--sd-text); --tblr-table-border-color: var(--sd-line); color: var(--sd-text); }
-.table thead th {
-  background: var(--sd-surface-2);
-  color: var(--sd-orange-soft);
-  font-weight: 700;
-  border-color: var(--sd-line);
-}
-:root[data-bs-theme="light"] .table thead th { color: var(--sd-ink); }
-.table-hover > tbody > tr:hover > * { --tblr-table-bg-state: rgba(250, 79, 0, 0.08); }
-.badge.bg-primary, .bg-primary { background-color: var(--sd-orange) !important; color: var(--sd-ink) !important; }
-.page-link { background: var(--sd-surface); border-color: var(--sd-line); color: var(--sd-text); }
-.page-item.active .page-link { background: var(--sd-orange); border-color: var(--sd-orange); color: var(--sd-ink); }
-.dropdown-menu { background: var(--sd-surface); border-color: var(--sd-line); }
-.dropdown-item { color: var(--sd-text); }
-.dropdown-item:hover { background: var(--sd-surface-2); color: var(--sd-text); }
-.modal-content { background: var(--sd-surface); color: var(--sd-text); }
-
-/* 시뮬레이션 표시 */
-.sd-sim-banner {
-  background: var(--sd-surface-2);
-  color: var(--sd-text);
   border: 1px solid var(--sd-line);
   border-radius: 10px;
-  font-size: 13px;
-  text-align: center;
-  padding: 6px 12px;
+  box-shadow: none;
 }
-.sd-sim-banner b { color: var(--sd-orange); }
+.card-header, .card-footer { background: transparent; border-color: var(--sd-line); }
+.card-title { font-weight: 600; }
+.table {
+  --tblr-table-bg: transparent;
+  --tblr-table-color: var(--sd-text);
+  --tblr-table-border-color: var(--sd-line);
+  color: var(--sd-text);
+}
+.table thead th {
+  background: transparent;
+  color: var(--sd-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--sd-line);
+}
+.table thead th a { color: var(--sd-muted); }
+.table-hover > tbody > tr:hover > * { --tblr-table-bg-state: var(--sd-surface-2); }
+.badge.bg-primary, .bg-primary { background-color: var(--sd-accent-soft) !important; color: var(--sd-accent-text) !important; }
+.page-link { background: transparent; border-color: var(--sd-line); color: var(--sd-text); }
+.page-item.active .page-link { background: var(--sd-accent-soft); border-color: var(--sd-accent); color: var(--sd-accent-text); }
+.dropdown-menu { background: var(--sd-surface); border-color: var(--sd-line); box-shadow: none; }
+.dropdown-item { color: var(--sd-text); }
+.dropdown-item:hover { background: var(--sd-surface-2); color: var(--sd-text); }
+.modal-content { background: var(--sd-surface); color: var(--sd-text); border-color: var(--sd-line); }
 
-/* ---------- 로그인 (언제나 주황 바탕 + 검은 카드) ---------- */
+/* 시뮬레이션 표시: 한 줄, 조용하게 */
+.sd-sim-banner {
+  color: var(--sd-muted);
+  font-size: 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--sd-line);
+  margin-bottom: 20px;
+}
+.sd-sim-banner b { color: var(--sd-accent-text); font-weight: 600; }
+
+/* ---------- 로그인 ---------- */
 .sd-login {
   min-height: 100vh;
-  background: var(--sd-orange);
+  background: var(--sd-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
 }
-.sd-login__box { width: 100%; max-width: 400px; }
-.sd-login__logo { display: block; width: 180px; height: 180px; margin: 0 auto 12px; }
+.sd-login__box { width: 100%; max-width: 360px; }
+.sd-login__logo { display: block; width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 18px; }
+.sd-login__title { margin: 0; text-align: center; font-size: 18px; font-weight: 600; color: var(--sd-text); letter-spacing: 0.04em; }
+.sd-login__sub { margin: 4px 0 24px; text-align: center; font-size: 13px; color: var(--sd-muted); }
 .sd-login__card {
-  background: var(--sd-ink);
-  color: #f3e9e3;
-  border-radius: 22px;
-  padding: 28px 24px 24px;
-  box-shadow: 0 16px 40px rgba(28, 21, 18, 0.35);
-}
-.sd-login__title { margin: 0; text-align: center; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 0.02em; }
-.sd-login__sub { margin: 4px 0 20px; text-align: center; font-size: 13px; color: #bfb2ab; }
-.sd-login__card .form-label { color: #e8ddd7; font-weight: 600; }
-.sd-login__card .form-control { background: #261d19; border-color: #3a2e28; color: #fff; min-height: 44px; }
-.sd-login__card .form-control::placeholder { color: #8f827b; }
-.sd-login__card .invalid-feedback { color: #ffb38f; }
-.sd-login__card .btn-primary { min-height: 44px; font-size: 15px; }
-.sd-login__foot { margin-top: 14px; text-align: center; font-size: 12px; color: var(--sd-ink); }
-
-/* ---------- 첫 화면 ---------- */
-.sd-home {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  background: var(--sd-orange);
-  color: var(--sd-ink);
-  border-radius: 20px;
-  padding: 20px 24px;
-}
-.sd-home img { width: 120px; height: 120px; flex: none; }
-.sd-home h2 { margin: 0 0 6px; font-weight: 800; font-size: 24px; color: var(--sd-ink); }
-.sd-home p { margin: 0; font-size: 14px; }
-.sd-shortcuts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
-.sd-shortcut {
-  display: block;
   background: var(--sd-surface);
   border: 1px solid var(--sd-line);
-  border-radius: var(--sd-radius);
+  border-radius: 12px;
+  padding: 24px;
+}
+.sd-login__card .form-label { color: var(--sd-text); font-weight: 500; font-size: 13px; }
+.sd-login__card .form-control { min-height: 42px; }
+.sd-login__card .invalid-feedback { color: var(--sd-accent-text); }
+.sd-login__card .btn-primary { min-height: 42px; }
+.sd-login__foot { margin-top: 16px; text-align: center; font-size: 12px; color: var(--sd-muted); }
+
+/* ---------- 첫 화면 ---------- */
+.row-deck > .sd-index { display: block; }   /* Tabler row-deck 이 열을 가로 flex 로 만드는 것을 막는다 */
+.sd-home { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+.sd-home img { width: 48px; height: 48px; border-radius: 12px; flex: none; }
+.sd-home h2 { margin: 0; font-weight: 600; font-size: 20px; color: var(--sd-text); }
+.sd-home p { margin: 2px 0 0; font-size: 13px; color: var(--sd-muted); }
+.sd-shortcuts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.sd-shortcut {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-line);
+  border-radius: 10px;
   padding: 16px;
   color: var(--sd-text);
   text-decoration: none;
+  transition: border-color 0.15s;
 }
-.sd-shortcut:hover { border-color: var(--sd-orange); color: var(--sd-text); text-decoration: none; }
-.sd-shortcut b { display: block; font-size: 15px; margin-bottom: 4px; }
-.sd-shortcut span { font-size: 13px; color: var(--sd-muted); }
+.sd-shortcut::after { content: "→"; color: var(--sd-muted); transition: color 0.15s, transform 0.15s; }
+.sd-shortcut:hover { border-color: var(--sd-accent); color: var(--sd-text); text-decoration: none; }
+.sd-shortcut:hover::after { color: var(--sd-accent-text); transform: translateX(2px); }
+.sd-shortcut b { display: block; font-size: 14px; font-weight: 600; }
+.sd-shortcut span { display: block; font-size: 12px; color: var(--sd-muted); margin-top: 2px; }
 
-@media (max-width: 576px) {
-  .sd-home { flex-direction: column; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .sd-shortcut, .sd-shortcut::after { transition: none; }
 }
 
-/* Tabler의 row-deck 이 열(col)을 가로 flex 로 만들어 첫 화면 블록이 옆으로 붙는 것을 막는다 */
-.row-deck > .sd-index { display: block; }
-
-/* 선택된 메뉴: SQLAdmin 은 a.nav-link 에 active 를 붙인다 → 검은 바탕 + 흰 글자 */
-.navbar-vertical .nav-link.active .nav-link-title,
-.navbar-vertical .nav-link.active .nav-link-icon,
-.navbar-vertical .nav-link.active i { color: #fff !important; }
+/* 체크박스: 무채색 상자, 체크하면 주황 */
+.form-check-input {
+  background-color: var(--sd-surface-2);
+  border: 1px solid var(--sd-line);
+}
+.form-check-input:checked {
+  background-color: var(--sd-accent);
+  border-color: var(--sd-accent);
+}
+.form-check-input:focus { border-color: var(--sd-accent); box-shadow: 0 0 0 3px var(--sd-accent-soft); }

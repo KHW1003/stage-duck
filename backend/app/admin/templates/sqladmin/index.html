@@ -2,19 +2,18 @@
 {% extends "sqladmin/layout.html" %}
 {% block content %}
 <div class="col-12 sd-index">
-  <div class="sd-sim-banner mb-3"><b>포트폴리오 시뮬레이션</b> — 업체·가격은 가상이며 결제는 테스트로만 동작해요.</div>
+  <p class="sd-sim-banner"><b>포트폴리오 시뮬레이션</b> · 업체·가격은 가상이며 결제는 테스트로만 동작해요.</p>
   <div class="sd-home">
     <img src="/admin-static/logo.webp" alt="STAGE DUCK 로고 — 기타를 든 오리">
     <div>
       <h2>STAGE DUCK 관리자</h2>
-      <p>업체 심사, 신고·경고, 거래 이력을 여기서 처리해요. 컨펌·결제는 관리자가 대신 처리하지 않아요.</p>
+      <p>업체 심사, 신고·경고, 거래 이력을 처리해요. 컨펌·결제는 관리자가 대신 처리하지 않아요.</p>
     </div>
   </div>
   <div class="sd-shortcuts">
     {% for view in admin.views if view.is_model and view.is_visible(request) and view.is_accessible(request) %}
     <a class="sd-shortcut" href="{{ url_for('admin:list', identity=view.identity) }}">
-      <b>{{ view.name_plural }}</b>
-      <span>{{ view.name_plural }} 목록 열기</span>
+      <div><b>{{ view.name_plural }}</b><span>목록 열기</span></div>
     </a>
     {% endfor %}
   </div>
