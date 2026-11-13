@@ -49,7 +49,7 @@ body.is-user .now.only-user { display: flex !important; }
 .chip--on { border-color: var(--sd-featured); background: var(--sd-accent); color: var(--sd-blue); font-weight: 600; }
 
 /* 1. 헤더 */
-.gnb { position: sticky; top: 0; z-index: 40; background: var(--sd-bg); border-bottom: 1px solid var(--sd-line); }
+.gnb { position: sticky; top: 0; z-index: 40; background: var(--sd-bg); }
 .gnb__inner { max-width: calc(var(--sd-page-width) + var(--sd-page-pad) * 2); margin: 0 auto; padding: 0 var(--sd-page-pad); height: var(--sd-gnb-height); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .logo { display: inline-flex; align-items: center; gap: 9px; }
 .logo__mark { display: inline-grid; place-items: center; width: var(--sd-logo-mark); height: var(--sd-logo-mark); border: 1px dashed var(--sd-photo-line); background: var(--sd-photo); color: var(--sd-photo-text); border-radius: var(--sd-r-label); font-size: 9px; }
@@ -107,7 +107,7 @@ body.is-user .now.only-user { display: flex !important; }
 @keyframes sd-bar { to { width: 100%; } }
 
 /* 로그인: 진행 중인 공연 */
-.now { flex-direction: column; background: var(--sd-soft); border: 1px solid var(--sd-line); border-radius: var(--sd-r-sample); padding: 34px 36px 28px; }
+.now { flex-direction: column; background: var(--sd-soft); border: 1px solid var(--sd-line); border-radius: var(--sd-r-sample); padding: 34px 36px 28px; aspect-ratio: 1.12; justify-content: center; } /* 슬라이드와 같은 크기라 로그인 여부와 상관없이 배치가 같다 */
 .now__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .now__label { font-size: var(--sd-text-desc); color: var(--sd-muted); }
 .now h2 { font-size: 24px; font-weight: 800; margin-top: 4px; }
