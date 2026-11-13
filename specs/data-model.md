@@ -73,7 +73,8 @@ erDiagram
 | name | VARCHAR(50) | NOT NULL | 사용자 이름 / 업체 담당자 이름 |
 | phone | VARCHAR(20) | NOT NULL | 숫자만 저장 |
 | birth_date | DATE | NULL | 사용자 필수(서비스 검사), 업체 NULL |
-| nickname | VARCHAR(30) | NULL, UNIQUE | 사용자 필수 |
+| nickname | VARCHAR(30) | NULL, UNIQUE | 사용자 필수, 마이페이지에서 변경 (FR-PROFILE-02) |
+| profile_image_url | VARCHAR(255) | NULL | 개인 프로필 사진 (선택) |
 | signup_purpose | VARCHAR(30) | NULL | 사용자 필수 |
 | musician_type | VARCHAR(20) | NULL | 밴드 / 극단 / 교회 / 학원 / 기타 |
 | signup_channel | VARCHAR(30) | NULL | 가입 경로 |
@@ -359,7 +360,7 @@ erDiagram
 | 테이블 | 주요 컬럼 | 제약·설명 |
 |---|---|---|
 | rejection_events | id, user_id, performance_id, kind CHECK IN ('AFTER_CHAT','NO_CHAT'), created_at | 인덱스 (user_id, created_at). 최근 180일만 계산 (AC-F4-05·06) |
-| pr_posts | id, supplier_id, category CHECK IN ('VENUE','EQUIPMENT','ENGINEER'), title, body, photos JSON(최대 10), sido, price_range, status CHECK IN ('ACTIVE','HIDDEN','BLINDED','DELETED'), bumped_at | **active_guard PERSISTENT = IF(status='ACTIVE', CONCAT(supplier_id,'-',category), NULL) UNIQUE** → 부문당 활성 1개 (AC-F4-02) |
+| pr_posts | id, supplier_id, category CHECK IN ('VENUE','EQUIPMENT','ENGINEER'), title, body, photos JSON(최대 10), sido, price_range, status CHECK IN ('ACTIVE','HIDDEN','BLINDED','DELETED'), blind_reason NULL, bumped_at | **active_guard PERSISTENT = IF(status IN ('ACTIVE','BLINDED'), CONCAT(supplier_id,'-',category), NULL) UNIQUE** → 부문당 활성 1개 (AC-F4-02), 블라인드 글이 있으면 새 글 불가 (AC-F4-10). 정지 업체 글은 조회할 때 `suppliers.review_status <> 'SUSPENDED'`로 걸러 숨긴다 — 상태를 바꾸지 않으므로 정지가 풀리면 그대로 다시 보인다 (AC-F4-11) |
 | reports | id, reporter_user_id, target_type CHECK IN ('CHAT_ROOM','PR_POST','USER'), target_id, reason, status CHECK IN ('OPEN','WARNED','DISMISSED'), handled_by, handled_at | |
 | sanctions | id, user_id, type CHECK IN ('WARNING','SUSPENSION','BLIND','UNSUSPEND'), reason, report_id NULL, created_by | 경고 3회 → SUSPENSION 자동 기록 (AC-F4-08) |
 

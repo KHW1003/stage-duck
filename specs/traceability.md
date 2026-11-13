@@ -2,9 +2,9 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | 0.1 (초안) |
+| 버전 | 0.2 (초안) |
 | 작성일 | 2026-11-12 |
-| 목적 | spec.md의 **모든 수용 기준(87개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
+| 목적 | spec.md의 **모든 수용 기준(93개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
 | 입력 | [spec.md](spec.md) · [plan.md](plan.md) · [data-model.md](data-model.md) · [api-contract.md](api-contract.md) · [user-flow.md](user-flow.md) |
 
 표기: 테스트 `BE` = pytest (`backend/tests/`), `FE` = Vitest (`frontend/tests/`), `E2E` = Playwright. 테스트 이름에 AC ID를 넣는다 (예: `test_ac_f1_01_...`).
@@ -96,14 +96,17 @@ API 경로의 `/api/v1`은 생략했다.
 
 | AC | 요약 | FR | API | 테이블 | 화면 | 테스트 |
 |---|---|---|---|---|---|---|
-| F4-01 | 미승인 부문 탭 작성 불가 | BOARD-02 | POST /pr-posts (`CATEGORY_NOT_APPROVED`) | supplier_categories | PR 게시글 작성 | BE |
+| F4-01 | 미승인 부문 말머리 작성 불가 | BOARD-02 | POST /pr-posts (`CATEGORY_NOT_APPROVED`) | supplier_categories | PR 게시글 작성 | BE, FE |
 | F4-02 | 부문당 활성 글 1개 | BOARD-03 | POST /pr-posts (`ACTIVE_POST_EXISTS`) | pr_posts.active_guard | PR 게시글 작성 | BE |
-| F4-03 | 연락처 경고·신고·블라인드 | BOARD-03, POL-04 | POST /pr-posts, POST /reports, SQLAdmin [블라인드] | pr_posts, reports, sanctions | PR 게시판, SQLAdmin | BE |
+| F4-03 | 연락처 경고·신고·블라인드 + 경고 1회 | BOARD-03, POL-04 | POST /pr-posts, POST /reports, SQLAdmin [블라인드] → `blind_post()` | pr_posts, reports, sanctions | PR 게시판, SQLAdmin | BE |
 | F4-04 | 방문자도 게시판 열람 | BOARD-01 | GET /pr-posts | pr_posts | /board | BE, FE |
 | F4-05 | 채팅 후 반려 5회 → 24시간 대기 | POL-02 | POST /performances/{id}/withdraw, …/publish (`POSTING_RATE_LIMITED`), GET /me/posting-limit | rejection_events | 내 공연 | BE (시간 고정) |
 | F4-06 | 180일 지나면 0 | POL-02 | GET /me/posting-limit | rejection_events.created_at | 내 공연 | BE (시간 고정) |
 | F4-07 | 공고 목록에 반려·이용 횟수 | POL-02·03 | GET /postings | rejection_events, performances | /supplier/postings | BE, FE |
 | F4-08 | 경고 3회 → 정지, 견적 불가 | POL-04 | SQLAdmin [경고] → `warn()` | users.warning_count·status, sanctions | SQLAdmin 회원 | BE |
+| F4-09 | 말머리 필터 (엔지니어만 / 전체) | BOARD-01 | GET /pr-posts?category= | pr_posts.category | /board | BE, FE |
+| F4-10 | 블라인드 부문 새 글 불가, 해제 후 가능 | BOARD-03 | POST /pr-posts (`BLINDED_POST_EXISTS`), SQLAdmin [블라인드 해제] | pr_posts.active_guard (ACTIVE·BLINDED) | PR 게시글 작성 | BE |
+| F4-11 | 정지 업체 글 숨김·복귀 | BOARD-03, SUP-03 | GET /pr-posts (정지 업체 제외) | suppliers.review_status, pr_posts | /board | BE |
 
 ## F5 부가 기능
 
@@ -111,18 +114,21 @@ API 경로의 `/api/v1`은 생략했다.
 |---|---|---|---|---|---|---|
 | F5-01 | 공간 필터 → A·B·C | SPACE-03 | GET /venues | venues 인덱스(sido, sigungu) | /venues | BE, FE |
 | F5-02 | 내 공연 단계 현황 | REQ-05 | GET /performances?mine=true | performances, stages | /me/performances | BE, FE |
-| F5-03 | 185만 + 수수료 청구서 | PAY-01 | POST·GET /performances/{id}/order | orders, order_lines | /performances/:id/order | BE |
+| F5-03 | 185만 + 이용료 5% = 194만 2,500원 청구서 | PAY-01 | POST·GET /performances/{id}/order | orders (items_total, fee_amount, total) | /performances/:id/order | BE (단위: 계산) |
 | F5-04 | 미컨펌 단계 있으면 청구서 없음 | PAY-01 | POST /performances/{id}/order (`INVALID_STATE`) | stages | — | BE |
 | F5-05 | 금액 조작 결제 거부 | PAY-02 | POST /orders/{id}/payments (`AMOUNT_MISMATCH`) | payments | — | BE |
 | F5-06 | 중복 응답·더블 클릭 1회만 | PAY-02 | POST /orders/{id}/payments (`Idempotency-Key`), POST /payments/mock/callback | payments UNIQUE(idempotency_key, provider_tx_id) | 결제 화면 | BE (동시성), FE |
 | F5-07 | 보관 중 → 정산 예정 | PAY-02 | 스케줄러(공연 완료), GET …/order | ledger_entries (HOLD, SETTLE_SCHEDULED) | /performances/:id/order | BE (시간 고정) |
-| F5-08 | D-1 취소 70% 배분 | PAY-03 | GET …/cancel-quote, POST …/cancel | cancellations, ledger_entries (PENALTY, REFUND) | 취소 화면 | BE (단위: 계산) |
+| F5-08 | D-1 취소 70% 배분, 이용료 환불 없음 | PAY-03 | GET …/cancel-quote, POST …/cancel | cancellations, ledger_entries (PENALTY, REFUND) | 취소 화면 | BE (단위: 계산) |
 | F5-09 | 결제 전 취소 10% 배분 | PAY-03 | POST …/cancel | cancellations, ledger_entries (CANCEL_FEE) | 취소 화면 | BE (단위) |
 | F5-10 | 업체 사정 취소 → 전액 환불 + 경고 | PAY-03, POL-04 | POST …/cancel-by-supplier | cancellations, sanctions, users.warning_count | 업체 확정 내역 | BE |
 | F5-11 | 결제 후 담당표·연락처, 미확정 업체 불가 | PAY-04 | GET /performances/{id}/sheet | orders, stages | /performances/:id/sheet | BE |
 | F5-12 | 결제 전 연락처 비공개 | CHAT-06, PAY-04 | GET /postings/{id}, GET …/sheet | performances.contact_phone | 공고 상세 | BE |
 | F5-13 | 이력 시간순 | ADMIN-02 | SQLAdmin 공연 상세 → `performance_history()` | status_histories | SQLAdmin 공연 | BE, E2E |
 | F5-14 | 운영 설정에서 초기화 불가 | DEMO-02 | SQLAdmin [초기화] → `reset_demo()` | — | SQLAdmin 시연 도구 | BE |
+| F5-15 | 업체 프로필, 연락처 비공개 | PROFILE-01 | GET /suppliers/{id}/profile | suppliers, pr_posts, venues | /suppliers/:id | BE, FE |
+| F5-16 | 개인 프로필 공개 항목 | PROFILE-02 | GET /users/{id}/profile | users (nickname, profile_image_url, created_at), rejection_events | 사용자 프로필 (업체 화면) | BE, FE |
+| F5-17 | 관계없는 업체는 개인 프로필 404 | PROFILE-02 | GET /users/{id}/profile (`404`) | performances, offers, chat_rooms | — | BE |
 
 ---
 
@@ -130,9 +136,9 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 87개 중 API가 연결된 것 | 86개 (F2-09는 화면 동작 — FE 테스트로 확인) |
-| 테이블이 연결된 것 | 77개 (나머지 10개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **87개 전부** (BE 83 · FE 25 · E2E 4, 한 기준에 여러 종류 가능) |
+| 수용 기준 93개 중 API가 연결된 것 | 92개 (F2-09는 화면 동작 — FE 테스트로 확인) |
+| 테이블이 연결된 것 | 83개 (나머지 10개는 권한·화면 동작) |
+| 테스트가 정해진 것 | **93개 전부** (BE 89 · FE 29 · E2E 4, 한 기준에 여러 종류 가능) |
 | 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`, `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 

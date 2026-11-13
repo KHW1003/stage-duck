@@ -245,11 +245,14 @@
 
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/pr-posts` | 🌐 | `?category=&sido=&type=&minCapacity=&sort=latest` | F4-04 |
+| GET | `/pr-posts` | 🌐 | `?category=&sido=&page=` — category 생략 시 전체, 최신순(끌어올린 시각). 정지 업체 글 제외 | F4-04, F4-09, F4-11 |
 | GET | `/pr-posts/{id}` | 🌐 | 상세 | F4-04 |
-| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 연락처 패턴 경고 | F4-01~03 |
+| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`), 연락처 패턴 경고 | F4-01~03, F4-10 |
 | PUT · DELETE | `/pr-posts/{id}` | S(본인) | 수정·삭제 | |
-| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회 (제안)) | |
+| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회, `429 BUMP_TOO_SOON`) | |
+| GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
+| GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
+| PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
 | POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` | F4-03 |
 
 ---
@@ -268,17 +271,17 @@
 | POST | `/performances/{id}/cancel-by-supplier` | S(확정 업체) | 업체 사정 취소 → 전액 환불 + 경고 | F5-10 |
 | GET | `/performances/{id}/sheet` | U, 확정 업체 | 최종 담당표 — **결제 후에만 연락처 포함**, 확정 안 된 업체 404 | F5-11, F5-12 |
 
-**GET /performances/{id}/cancel-quote** (D-1, 185만 원 + 수수료 5% 예)
+**GET /performances/{id}/cancel-quote** (D-1, 업체 금액 185만 원 + 이용료 5% 예)
 ```json
 {
   "phase": "D1", "ratePercent": 70,
   "paid": 1942500, "penaltyBase": 1850000, "penaltyTotal": 1295000,
   "penaltyBySupplier": [ {"supplierId": 3, "name": "C 컬처스페이스", "amount": 350000},
                          {"supplierId": 4, "name": "D 사운드", "amount": 945000} ],
-  "refundTotal": 647500
+  "feeRefunded": 0, "refundTotal": 555000
 }
 ```
-- 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 수수료 환불 여부는 [열린 질문].
+- 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고, 업체 사정 취소 시 전액 환불한다 (D-39).
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
 
 ### 6.2 관리자
@@ -292,7 +295,7 @@
 | 목록 | 신고 뷰 | A | 신고 목록 | |
 | 액션 | 신고 → [대상 열기] | A | 신고된 채팅방·게시글 열람 | |
 | 액션 | 회원 → [경고] | A | 경고 (3회째 자동 정지) | F4-08, F5-10 |
-| 액션 | PR 게시글 → [블라인드] | A | 블라인드 (사유) | F4-03 |
+| 액션 | PR 게시글 → [블라인드] / [블라인드 해제] | A | 블라인드 (사유) + 업체 경고 1회 / 해제 | F4-03, F4-10 |
 | 상세 | 공연 상세 → 이력 패널 | A | 상태 변경·결제·취소 이력 시간순 | F5-13 |
 | 액션 | 시연 도구 → [시연 데이터 초기화] | A + **T** | 시연 데이터 초기화 | F5-14 |
 
@@ -319,5 +322,4 @@
 ---
 
 ## 8. 열린 질문
-- 사용자 취소 시 플랫폼 수수료도 환불하는지 (제안: 결제 전 취소는 수수료 없음, 결제 후 취소는 수수료 환불)
 - 파일 업로드 크기 제한 (제안 10MB)
