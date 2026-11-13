@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>거래 이력 · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 이 화면만: 상태 변경 기록 (StatusHistory) */
+  .hist { border-top: 2px solid var(--sd-rule); }
+  .hist li { display: grid; grid-template-columns: 120px 110px minmax(0, 1fr) 90px; gap: 12px; align-items: center; min-height: var(--sd-row); padding: 10px 8px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .hist time { font-variant-numeric: tabular-nums; color: var(--sd-muted); }
+  .hist small { color: var(--sd-muted); }
+</style>
+</head>
+<!-- 화면: 거래 이력 · FR-ADMIN-02 · FR-PAY-01~03 · 묶음 4
+     React 아님: SQLAdmin (StatusHistoryAdmin + 공연별 모아 보기). 조회만 한다. 확정·결제·환불을 관리자가 대신 하지 않는다.
+     값은 docs/guides/시연_예시값.md (공간 C + 장비 D, 엔지니어 건너뜀, D-1 사용자 취소). -->
+<body data-layout="admin" data-nav="orders">
+
+<div class="mock-switch" data-group="case">
+  <span>목업 보기</span>
+  <button type="button" data-value="paid" aria-pressed="true">결제 · 보관 중</button>
+  <button type="button" data-value="cancel">D-1 사용자 취소</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>거래 이력</li></ol><h1>거래 이력</h1><p class="page-top__desc">공연별 단계 · 컨펌 · 결제 · 취소 · 위약금 기록을 봐요. 조회만 할 수 있어요.</p></div></div></div>
+
+<main class="container main">
+  <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">섭외 중</button><button type="button" aria-pressed="false">결제 완료</button><button type="button" aria-pressed="false">취소</button></div><input class="input" style="width:260px;height:36px" placeholder="공연 이름·사용자" aria-label="공연 찾기"></div>
+  <div class="table-box"><table class="table">
+    <thead><tr><th>공연</th><th>사용자</th><th>공연장</th><th>장비</th><th>엔지니어</th><th>결제</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr class="is-on"><td class="l"><b>가을밤 밴드 공연</b><small>11월 28일(토) · 광주</small></td><td>가을밤밴드</td><td>업체 C<small>500,000원</small></td><td>업체 D<small>1,350,000원</small></td><td><span class="state state--off">건너뜀</span></td><td class="r">1,942,500원</td><td><span class="state state--done" data-when="case:paid">보관 중</span><span class="state state--warn" data-when="case:cancel">취소 · 위약금</span></td></tr>
+      <tr><td class="l"><b>겨울 어쿠스틱 공연</b><small>12월 5일(토) · 광주</small></td><td>봄날</td><td>업체 B<small>조율 중</small></td><td><span class="state">대기</span></td><td><span class="state">대기</span></td><td class="r">-</td><td><span class="state state--on">섭외 중</span></td></tr>
+      <tr><td class="l"><b>재즈 트리오 공연</b><small>11월 14일(토) · 광주</small></td><td>하모니</td><td>업체 A<small>풀스펙</small></td><td><span class="state state--off">포함</span></td><td><span class="state state--off">포함</span></td><td class="r">-</td><td><span class="state">결제 전</span></td></tr>
+    </tbody></table></div>
+
+  <div class="with-aside mt-40">
+    <section>
+      <div class="sec-head"><h2><span data-icon="clock"></span>가을밤 밴드 공연 · 기록</h2><p>서버가 남긴 상태 변경 순서예요.</p></div>
+      <ol class="hist">
+        <li><time>11월 12일 09:30</time><span class="tag">요청서</span><span>요청서 v1 게시 · 공연장 모집 시작</span><small>가을밤밴드</small></li>
+        <li><time>11월 12일 10:22</time><span class="tag">공연장</span><span>업체 C 견적서 v1 컨펌 · 500,000원 · 다른 공연장 견적서 마감</span><small>가을밤밴드</small></li>
+        <li><time>11월 13일 13:18</time><span class="tag">장비</span><span>업체 D 견적서 v2 (v1 1,250,000원 → 1,350,000원)</span><small>업체 D</small></li>
+        <li><time>11월 13일 15:02</time><span class="tag">장비</span><span>업체 D 견적서 v2 컨펌 · 1,350,000원</span><small>가을밤밴드</small></li>
+        <li><time>11월 13일 15:04</time><span class="tag">엔지니어</span><span>건너뜀 (장비 견적서에 포함)</span><small>가을밤밴드</small></li>
+        <li><time>11월 13일 15:05</time><span class="tag">청구서</span><span>통합 청구서 발행 · 1,850,000원 + 이용료 92,500원 = 1,942,500원</span><small>서버</small></li>
+        <li><time>11월 13일 15:20</time><span class="tag tag--fill">결제</span><span>테스트 결제 성공 · 보관 중 · 섭외 확정</span><small>서버</small></li>
+        <li data-when="case:cancel"><time>11월 27일 11:00</time><span class="tag tag--fill">취소</span><span>사용자 취소 (D-1) · 위약금 70% 1,295,000원</span><small>가을밤밴드</small></li>
+      </ol>
+    </section>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">결제</p><dl class="sum-rows"><div><dt>업체 금액</dt><dd>1,850,000원</dd></div><div><dt>플랫폼 이용료</dt><dd>92,500원</dd></div><div><dt>결제 금액</dt><dd class="strong">1,942,500원</dd></div></dl></div>
+      <div class="side-box__sec" data-when="case:paid"><p class="side-box__title">보관 → 정산</p><dl class="sum-rows"><div><dt>상태</dt><dd><span class="state state--done">보관 중</span></dd></div><div><dt>정산 예정</dt><dd>공연 뒤</dd></div><div><dt>업체 C</dt><dd>500,000원</dd></div><div><dt>업체 D</dt><dd>1,350,000원</dd></div></dl></div>
+      <div class="side-box__sec" data-when="case:cancel"><p class="side-box__title">취소 배분 (D-1, 70%)</p><dl class="sum-rows"><div><dt>위약금</dt><dd class="strong">1,295,000원</dd></div><div><dt>업체 C</dt><dd>350,000원</dd></div><div><dt>업체 D</dt><dd>945,000원</dd></div><div><dt>사용자 환불 예정</dt><dd class="strong">555,000원</dd></div><div><dt>이용료</dt><dd>환불 없음</dd></div></dl><p class="field__hint mt-8">업체별 금액 비율로 나눠요. 원 단위 나머지는 금액이 큰 업체에.</p></div>
+      <div class="side-box__sec side-box__sec--gray"><p class="small muted">관리자는 기록을 보기만 해요. 금액 조정·환불은 서버 규칙으로만 처리돼요.</p></div>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

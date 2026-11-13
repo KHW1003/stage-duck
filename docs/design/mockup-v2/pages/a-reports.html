@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>신고·제재 · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 이 화면만: 신고된 채팅 열람 상자 */
+  .report-chat { border: 1px solid var(--sd-line-strong); border-top: 2px solid var(--sd-rule); }
+  .report-chat__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 48px; padding: 0 16px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .report-chat .room__msgs { max-height: 380px; }
+  .msg.is-flag .msg__b { outline: 2px solid var(--sd-warn-text); outline-offset: 2px; }
+</style>
+</head>
+<!-- 화면: 신고·제재 · FR-ADMIN-03 · FR-POL-04 · FR-CHAT-06 · 묶음 4
+     React 아님: SQLAdmin (UserAdmin.warn, SanctionAdmin, 신고 열람 화면). 신고된 채팅방은 관리자만 열람한다.
+     처리: 신고 → 관리자 확인 → 경고 (3회째 이용 정지, 사용자·업체 모두). 문제 없으면 '처리 안 함'. -->
+<body data-layout="admin" data-nav="reports">
+
+<div class="mock-switch" data-group="who">
+  <span>목업 보기</span>
+  <button type="button" data-value="d" aria-pressed="true">업체 D 신고 (경고 0회)</button>
+  <button type="button" data-value="b">업체 B 신고 (경고 2회)</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>신고·제재</li></ol><h1>신고·제재</h1><p class="page-top__desc">채팅 신고를 확인하고 경고를 줘요. 경고가 3회 쌓이면 계정이 정지돼요.</p></div></div></div>
+
+<main class="container main">
+  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="s1" type="button">신고 <span class="count">2</span></button><button role="tab" aria-selected="false" aria-controls="s2" type="button">제재 이력</button><button role="tab" aria-selected="false" aria-controls="s3" type="button">회원</button></div></div>
+
+  <section id="s1" class="mt-24">
+    <div class="table-box"><table class="table">
+      <thead><tr><th>접수</th><th>신고 대상</th><th>사유</th><th>신고한 사람</th><th>채팅방</th><th>대상 경고</th><th>상태</th></tr></thead>
+      <tbody>
+        <tr class="is-on"><td class="num">11월 13일<small>13:25</small></td><td class="l"><b>업체 D</b><small>장비</small></td><td>외부 거래 유도</td><td>가을밤밴드</td><td>가을밤 밴드 공연 · 장비</td><td>0회</td><td><span class="state state--on">접수</span></td></tr>
+        <tr><td class="num">11월 12일<small>20:10</small></td><td class="l"><b>업체 B</b><small>공연장</small></td><td>외부 거래 유도</td><td>봄날</td><td>겨울 어쿠스틱 공연 · 공연장</td><td><span class="state state--warn">2회</span></td><td><span class="state state--on">접수</span></td></tr>
+        <tr class="is-off"><td class="num">11월 10일<small>09:02</small></td><td class="l"><b>하모니</b><small>사용자</small></td><td>욕설·불쾌한 말</td><td>업체 E</td><td>포크 페스티벌 · 장비</td><td>0회</td><td><span class="state">처리 안 함</span></td></tr>
+      </tbody></table></div>
+
+    <div class="with-aside mt-40">
+      <section class="report-chat">
+        <div class="report-chat__head"><b><span data-when="who:d">가을밤 밴드 공연 · 장비 · 업체 D ↔ 가을밤밴드</span><span data-when="who:b">겨울 어쿠스틱 공연 · 공연장 · 업체 B ↔ 봄날</span></b><span class="muted small">관리자 열람 · 기록 남음</span></div>
+        <div class="room__msgs" data-when="who:d">
+          <span class="room__day">11월 13일 (금)</span>
+          <div class="msg"><p class="msg__b">설치 인원을 한 명 더 붙이면 15:45에 끝나요. 견적서를 고쳐서 다시 보낼게요.</p><span class="msg__t">업체 D · 13:15</span></div>
+          <div class="msg is-flag"><p class="msg__b">급하면 010-0000-0000으로 연락 주셔도 돼요.</p><span class="msg__t">업체 D · 13:20</span></div>
+          <div class="room__warn" role="note"><span data-icon="warn" class="icon--sm"></span><span>자동 경고가 붙은 메시지예요 (전화번호). 사용자에게 외부 거래 주의 안내가 보였어요.</span></div>
+          <div class="msg msg--me"><p class="msg__b">플랫폼 안에서만 진행할게요.</p><span class="msg__t">가을밤밴드 · 13:24</span></div>
+        </div>
+        <div class="room__msgs" data-when="who:b">
+          <span class="room__day">11월 12일 (목)</span>
+          <div class="msg is-flag"><p class="msg__b">수수료 아끼시려면 계좌로 바로 보내 주셔도 돼요.</p><span class="msg__t">업체 B · 20:02</span></div>
+          <div class="room__warn" role="note"><span data-icon="warn" class="icon--sm"></span><span>자동 경고가 붙은 메시지예요 (계좌 이체 유도).</span></div>
+          <div class="msg msg--me"><p class="msg__b">플랫폼으로 결제할게요.</p><span class="msg__t">봄날 · 20:08</span></div>
+        </div>
+      </section>
+
+      <aside class="side-box sticky">
+        <div class="side-box__sec"><p class="side-box__title">신고 내용</p><dl class="sum-rows"><div><dt>대상</dt><dd><span data-when="who:d">업체 D</span><span data-when="who:b">업체 B</span></dd></div><div><dt>사유</dt><dd>외부 거래 유도</dd></div><div><dt>지금 경고</dt><dd><span data-when="who:d">0회</span><span class="state state--warn" data-when="who:b">2회</span></dd></div></dl>
+          <p class="desc mt-12" data-when="who:d">"전화번호를 주면서 연락하라고 했어요."</p><p class="desc mt-12" data-when="who:b">"계좌로 바로 보내 달라고 했어요."</p></div>
+        <div class="side-box__sec" data-when="who:b"><div class="notice notice--conflict"><span data-icon="conflict"></span><div><b>이번 경고로 3회가 돼요.</b> 경고하면 업체 B는 바로 이용 정지돼요. 진행 중인 섭외 1건은 거래 이력에서 확인하세요.</div></div></div>
+        <div class="side-box__sec"><div class="btns btns--fill"><button class="btn" type="button" data-open="dismiss">처리 안 함</button><button class="btn btn--primary" type="button" data-open="warn">경고 주기</button></div><p class="field__hint mt-8">관리자는 경고·정지만 해요. 견적서·결제는 바꾸지 않아요.</p></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="s2" class="mt-24" hidden>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>날짜</th><th>대상</th><th>종류</th><th>사유</th><th>누적 경고</th><th>처리한 사람</th></tr></thead>
+      <tbody>
+        <tr><td class="num">11월 5일</td><td class="l"><b>업체 B</b></td><td><span class="tag">경고</span></td><td class="l">PR 게시글 블라인드 (다른 업체 사진 사용)</td><td>2회</td><td>운영자</td></tr>
+        <tr><td class="num">10월 28일</td><td class="l"><b>업체 B</b></td><td><span class="tag">경고</span></td><td class="l">업체 사정 취소 (공연 3일 전)</td><td>1회</td><td>자동</td></tr>
+      </tbody></table></div>
+    <ul class="bullets mt-16"><li>업체 사정으로 취소하면 사용자에게 전액 환불하고 그 업체에 경고 1회가 자동으로 쌓여요.</li><li>PR 게시글을 블라인드하면 경고 1회가 쌓여요.</li><li>경고 3회째 정지돼요. 정지 해제는 업체 심사 · 전체 업체에서 해요.</li></ul>
+  </section>
+
+  <section id="s3" class="mt-24" hidden>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>회원</th><th>역할</th><th>상태</th><th>경고</th><th>가입</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="l"><b>가을밤밴드</b><small>host@stageduck.test</small></td><td>사용자</td><td><span class="state state--done">정상</span></td><td>0</td><td class="num">10월 1일</td><td><button class="btn btn--xs" type="button" data-open="warn">경고</button></td></tr>
+        <tr><td class="l"><b>봄날</b><small>시연 외 계정</small></td><td>사용자</td><td><span class="state state--done">정상</span></td><td>0</td><td class="num">10월 9일</td><td><button class="btn btn--xs" type="button" data-open="warn">경고</button></td></tr>
+        <tr><td class="l"><b>하모니</b><small>시연 외 계정</small></td><td>사용자</td><td><span class="state state--done">정상</span></td><td>0</td><td class="num">10월 11일</td><td><button class="btn btn--xs" type="button" data-open="warn">경고</button></td></tr>
+      </tbody></table></div>
+  </section>
+</main>
+
+<div class="layer" id="warn" hidden><div class="modal"><div class="modal__head"><h2>경고 주기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">경고 사유를 적어 주세요</p><p>대상에게 알림이 가고 제재 이력에 남아요. 경고가 3회 쌓이면 이용 정지돼요.</p>
+    <textarea class="textarea mt-12" aria-label="경고 사유" style="height:96px">채팅에서 전화번호를 주며 플랫폼 밖 연락을 유도했어요.</textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>경고 주기</button></div></div></div>
+<div class="layer" id="dismiss" hidden><div class="modal"><div class="modal__head"><h2>처리 안 함</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 신고를 처리하지 않을까요?</p><p>신고한 사람에게 결과 알림이 가요. 이유는 기록에 남아요.</p><textarea class="textarea mt-12" aria-label="이유" placeholder="이유 (필수)"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>처리 안 함</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

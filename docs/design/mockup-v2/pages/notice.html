@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>안내 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 이 화면만: 가운데 안내 */
+  .gate { max-width: 560px; margin: 40px auto 80px; }
+  .gate .result__icon--bad { border-color: var(--sd-conflict-text); color: var(--sd-conflict-text); }
+  .gate .info-table { margin-top: 24px; text-align: left; }
+</style>
+</head>
+<!-- 화면: 공통 안내 · FR-AUTH-06·07 · FR-POL-04 · 묶음 1·4
+     React: pages/NoticePage.tsx (+ ErrorBoundary). 상태: notfound(권한 없음도 같은 화면 — 있는지조차 알리지 않음, 404) / suspended(경고 3회 정지)
+     / login(로그인 필요·만료, 돌아올 주소 기억) / error(서버 오류). -->
+<body data-layout="guest">
+
+<div class="mock-switch" data-group="kind">
+  <span>목업 보기</span>
+  <button type="button" data-value="notfound" aria-pressed="true">찾을 수 없음 (404)</button>
+  <button type="button" data-value="suspended">이용 정지</button>
+  <button type="button" data-value="login">로그인 필요</button>
+  <button type="button" data-value="error">서버 오류</button>
+</div>
+
+<main class="container main">
+  <section class="result gate" data-when="kind:notfound">
+    <span class="result__icon"><span data-icon="search"></span></span>
+    <h1>페이지를 찾을 수 없어요</h1><p>주소가 바뀌었거나, 볼 수 없는 화면이에요.</p>
+    <div class="btns btns--center mt-24"><a class="btn btn--lg" href="javascript:history.back()">이전 화면</a><a class="btn btn--primary btn--lg" href="../../mockup/home.html">처음으로</a></div>
+  </section>
+
+  <section class="result gate" data-when="kind:suspended">
+    <span class="result__icon result__icon--bad"><span data-icon="lock"></span></span>
+    <h1>이용이 정지된 계정이에요</h1><p>경고가 3회 쌓여 공고·견적서·채팅을 쓸 수 없어요.</p>
+    <table class="info-table"><tr><th>계정</th><td>업체 B · supplier-b@stageduck.test</td></tr><tr><th>정지일</th><td>11월 13일</td></tr><tr><th>마지막 경고</th><td>채팅에서 계좌 이체 유도 (외부 거래)</td></tr><tr><th>진행 중인 섭외</th><td>관리자가 확인한 뒤 사용자에게 안내해요</td></tr></table>
+    <div class="btns btns--center mt-24"><a class="btn btn--lg" href="login.html">로그아웃</a><a class="btn btn--primary btn--lg" href="#">1:1 문의</a></div>
+  </section>
+
+  <section class="result gate" data-when="kind:login">
+    <span class="result__icon"><span data-icon="user"></span></span>
+    <h1>로그인이 필요해요</h1><p>로그인하면 보던 화면으로 돌아가요.</p>
+    <div class="btns btns--center mt-24"><a class="btn btn--lg" href="signup.html">가입하기</a><a class="btn btn--primary btn--lg" href="login.html">로그인</a></div>
+  </section>
+
+  <section class="result gate" data-when="kind:error">
+    <span class="result__icon result__icon--bad"><span data-icon="warn"></span></span>
+    <h1>잠시 문제가 생겼어요</h1><p>요청을 처리하지 못했어요. 결제·컨펌은 반영되지 않았으니 다시 시도해 주세요.</p>
+    <div class="btns btns--center mt-24"><a class="btn btn--lg" href="javascript:history.back()">이전 화면</a><a class="btn btn--primary btn--lg" href="javascript:location.reload()">다시 시도</a></div>
+  </section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

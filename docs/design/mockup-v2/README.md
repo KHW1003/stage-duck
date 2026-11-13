@@ -16,6 +16,39 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 | 청구서·담당표·기술 확인 | 업체 작은 사진, 시간표·항목 아이콘 |
 | 알림 | 종류별 아이콘 (견적·채팅, 오퍼, 공고, 결제) |
 | 컴포넌트 시안 9번 | 아이콘 전체 목록, 아이콘 상자·분류 타일·기능 줄·사진 규칙 |
+| **채팅** | 채팅 화면(`chat.html`, `p-chat.html`)을 없애고 **채팅 위젯**으로 바꿈 (아래) |
+
+## 새로 더한 화면 (명세 8장 중 빠져 있던 것)
+
+| 화면 | 파일 | 상태 (목업 보기) |
+|---|---|---|
+| 테스트 결제 | `pages/pay.html` | 결제 수단 / 처리 중 / 결제 전 검사 실패 / 결제 실패 |
+| 공통 안내 | `pages/notice.html` | 찾을 수 없음(404) / 이용 정지 / 로그인 필요 / 서버 오류 |
+| 관리자: 업체 심사 (첫 화면) | `pages/a-review.html` | 서류 갖춤 / 보완 필요 |
+| 관리자: 신고·제재 | `pages/a-reports.html` | 경고 0회 / 경고 2회 (이번이 3회째 → 정지) |
+| 관리자: 게시글·공간 | `pages/a-posts.html` | 블라인드·해제, 공간 숨김 |
+| 관리자: 거래 이력 | `pages/a-orders.html` | 결제·보관 중 / D-1 사용자 취소 |
+| 관리자: 시연 도구 | `pages/a-demo.html` | 기본 / 초기화한 뒤 |
+
+- 관리자 화면은 `data-layout="admin"`이에요. 실제로는 SQLAdmin(`backend/app/admin`)이라 React로 옮기지 않고, `admin.css`로 이 모양을 입힐지 팀이 정해요.
+- 값은 시드 데이터(host@, supplier-a~g@stageduck.test, 업체 A~G 모두 승인)와 `docs/guides/시연_예시값.md`에 맞췄어요. 심사 대기 업체 H·I는 "시연 중 가입" 예시예요.
+
+## 채팅 위젯
+
+로그인한 모든 화면(사용자·승인된 업체) 오른쪽 아래에 둥근 채팅 버튼이 있어요. 누르면 페이지 이동 없이 화면 위층(`--sd-z-float`)에 채팅 창이 떠요.
+
+| 화면 | 머리줄 | 탭 (머리줄 바로 아래) | 내용 |
+|---|---|---|---|
+| 목록 | 채팅 · 안 읽음 수 · 닫기 | 사용자: 전체·공연장·장비·엔지니어 / 업체: 전체·진행 중·시작 전·마감 | 공연 고르기(사용자), 대화 목록 |
+| 대화 | 뒤로 · 상대 · 내역서 · 신고 · 닫기 | 대화 · 견적 정보 | 대화: 말풍선·견적서 카드·확인 카드·입력칸 / 견적 정보: 예전 3단 화면의 오른쪽 칸 |
+
+- 파일: `chat-widget.js`(그리기·동작, `layout.js`가 불러옴), `css/chat.css`(창·버튼). 말풍선·카드 같은 대화 안 부품은 `css/domain.css` 그대로이고, 창 안에서는 **둥글기만** 키웠어요 (창 16px, 말풍선 16px, 카드·입력칸 12px).
+- React: `shared/chat/ChatWidget.tsx` = `ChatFab` + `ChatPanel`(view: list | room) > `ChatList` · `Room`(탭: 대화 | 견적 정보). `AppLayout`에 한 번만 둔다.
+- 다른 화면의 [채팅] 버튼(알림·견적함·내 공연·내역서·공고)은 `useChat().open(방 id)`를 불러요. 목업에서는 `data-chat="d"`.
+- 화면을 옮겨도 열린 창·방·탭이 이어져요 (목업: sessionStorage).
+- 비로그인·심사 중 업체 화면에는 버튼이 없어요. 알림 토스트는 버튼 위로 올라가요. 560px 이하에서는 창이 화면을 꽉 채워요.
+- 목업 주소: `?chat=list`, `?chat=d`(방 id: 사용자 d·e·c·a / 업체 ga·bom·ha), `&pane=info`, `?card=opened` · `?card=done`(업체 D 확인 카드)
+- 그림자 없이(DESIGN.md 8장) 진한 테두리와 진한 머리줄로 층을 나눠요.
 
 - 새 부품 CSS는 `css/visual.css` 하나에 있어요 (나머지 CSS는 v1과 같음).
 - 글꼴·로고·사진은 `../mockup/`의 것을 함께 써요 (`../mockup/tokens.css`, `../mockup/assets/`).
@@ -28,7 +61,7 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 메인(`../home.html`, `../partner.html`)을 뺀 나머지 화면의 HTML 목업이에요. 나중에 React로 옮기기 쉽게 **부품 단위**로 나눠 만들었어요.
 
 - 전체 목록: [`index.html`](index.html)
-- 컴포넌트 시안 고르기: [`components.html`](components.html) (알림·결제창·채팅창·확인 팝업·단계 표시·목록을 모양 A·B·C로)
+- 컴포넌트 시안 고르기: [`components.html`](components.html) (알림·결제창·확인 팝업·단계 표시·목록을 모양 A·B·C로, 채팅 위젯 상태 모음)
 - 화면마다 왼쪽 아래 **목업 보기**로 상태를 바꿔 볼 수 있어요. 주소 끝 `?그룹=값`으로도 돼요 (예: `invoice.html?pay=paid`).
 
 ## 디자인 원칙
@@ -49,7 +82,7 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 |---|---|---|
 | `../tokens.css` | `src/shared/styles/tokens.css` | 색·크기·간격 변수. 업체 색은 `[data-theme="partner"]`로 |
 | `css/base.css` | `src/shared/styles/base.css` | 기본 스타일, `.container`, `.with-aside`, `.sec` |
-| `css/layout.css` | `src/shared/layout/` | `SimulationBanner`, `Gnb`, `PageTop`, `SideNav`, `Footer` |
+| `css/layout.css` | `src/shared/layout/` | `Gnb`, `PageTop`, `SideNav`, `Footer` |
 | `css/ui.css` | `src/shared/ui/` | `Button`, `Tag`, `StatusBadge`, `StateText`, `Field`, `Choice`, `Toggle`, `FormTable`, `Tabs`, `Filters`, `DataTable`, `InfoTable`, `List`, `Summary`, `Notice`, `Empty`, `Photo`, `Gallery`, `Avatar`, `Pagination`, `Fold`, `Modal`, `Drawer`, `NotificationPanel`, `Toast` |
 | `css/domain.css` | `src/features/*` | `StepBar`, `StageTrack`, `SideBox`, `QuoteColumns`, `QuoteLines`, `PriorInfo`, `Versions`, `ChatLayout`·`ChatCard`, `Invoice`, `Escrow`, `PenaltyScale`, `Timeline`, `Contacts` |
 | `css/theme-partner.css` | `tokens.css`의 `[data-theme="partner"]` | 업체 화면 주조색 `#0368B6` |
@@ -61,7 +94,7 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 
 ## 지킨 규칙 (CLAUDE.md · DESIGN.md)
 
-- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (맨 위 시뮬레이션 안내 띠는 팀장 요청으로 목업에서 뺐다. CLAUDE.md 3장 26·spec 0.2는 아직 그대로)
+- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (모든 화면 맨 위 안내 띠는 두지 않는다, D-41)
 - 용어: 사용자·업체·공고·견적서·컨펌·견적 내역 확인 카드·플랫폼 이용료·통합 청구서
 - 예시 값은 `docs/guides/시연_예시값.md` (공간 A·B·C, 업체 A~G, 1,850,000 / 92,500 / 1,942,500원, D-1 위약금 1,295,000원)
 - 이메일은 `@stageduck.test`, 전화는 `010-0000-00xx`

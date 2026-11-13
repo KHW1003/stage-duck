@@ -20,7 +20,9 @@
   .g-var__head code { font-size: var(--sd-text-small); color: var(--sd-muted); }
   .g-var__head span { margin-left: auto; font-size: var(--sd-text-small); color: var(--sd-muted); }
   .frame { position: relative; overflow: hidden; height: var(--h, 480px); border: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
-  .frame .layer, .frame .toasts, .frame .chat-float { position: absolute; }
+  .frame .layer, .frame .toasts, .frame .chat-fab, .frame .chat-panel { position: absolute; }
+  .frame .chat-panel--static { right: 24px; bottom: 96px; width: 400px; height: calc(var(--h) - 172px); }
+  .cw-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
   .frame .modal { max-height: calc(var(--h, 480px) - 48px); }
   .frame__bar { display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 16px; border-bottom: 1px solid var(--sd-line); }
   .frame__bar img { height: 20px; }
@@ -39,29 +41,29 @@
 </div>
 
 <main class="container main">
-  <nav class="g-index" aria-label="시안 목록"><a href="#noti">1. 알림</a><a href="#pay">2. 결제창</a><a href="#chat">3. 채팅창</a><a href="#confirm">4. 확인 팝업</a><a href="#stage">5. 단계 표시</a><a href="#list">6. 목록</a><a href="#cards">7. 채팅 카드</a><a href="#base">8. 기본 부품</a><a href="#icons">9. 아이콘·사진</a></nav>
+  <nav class="g-index" aria-label="시안 목록"><a href="#noti">1. 알림</a><a href="#pay">2. 결제창</a><a href="#chat">3. 채팅 위젯</a><a href="#confirm">4. 확인 팝업</a><a href="#stage">5. 단계 표시</a><a href="#list">6. 목록</a><a href="#cards">7. 채팅 카드</a><a href="#base">8. 기본 부품</a><a href="#icons">9. 아이콘·사진</a></nav>
 
   <!-- 1. 알림 -->
   <section class="g-sec" id="noti">
     <h2>1. 알림</h2><p>사이트 안 알림이에요 (메일·문자는 범위 밖). 견적서 도착, 확인 카드, 컨펌, 오퍼, 자동 마감.</p>
     <div class="g-var">
       <div class="g-var__head"><b><em>A</em>종 아래 상자</b><code>&lt;NotificationPanel variant="dropdown" /&gt;</code><span>보던 화면을 떠나지 않아요 · 5~6개까지</span></div>
-      <div class="frame" style="--h:430px"><div class="frame__bar"><img src="../logo.svg" alt="STAGE DUCK"><div class="gnb__pop"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span><span class="icon-btn__badge">2</span></button>
+      <div class="frame" style="--h:430px"><div class="frame__bar"><img src="../mockup/logo.svg" alt="STAGE DUCK"><div class="gnb__pop"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span><span class="icon-btn__badge">2</span></button>
         <div class="noti-panel"><div class="noti-panel__head"><b>알림</b><button class="link" type="button">모두 읽음</button></div><div class="noti-panel__list" data-notis="0-4"></div><div class="noti-panel__foot"><a href="pages/notifications.html">알림 전체 보기</a></div></div></div></div>
         <div class="frame__page"><i style="width:40%"></i><i></i><i style="width:70%"></i></div></div>
     </div>
     <div class="g-var">
       <div class="g-var__head"><b><em>B</em>오른쪽 서랍</b><code>&lt;NotificationPanel variant="drawer" /&gt;</code><span>날짜별로 많이 보여요 · 화면 일부를 덮어요</span></div>
-      <div class="frame" style="--h:480px"><div class="frame__bar"><img src="../logo.svg" alt="STAGE DUCK"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span></button></div><div class="frame__page"><i style="width:40%"></i><i></i></div>
+      <div class="frame" style="--h:480px"><div class="frame__bar"><img src="../mockup/logo.svg" alt="STAGE DUCK"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span></button></div><div class="frame__page"><i style="width:40%"></i><i></i></div>
         <div class="layer layer--drawer"><div class="drawer"><div class="modal__head"><h2>알림</h2><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x"></span></button></div>
           <div class="tab-bar"><div class="tabs"><button role="tab" aria-selected="true" type="button">전체</button><button role="tab" aria-selected="false" type="button">견적·채팅</button><button role="tab" aria-selected="false" type="button">결제</button></div></div>
           <div class="drawer__body"><p class="noti-day">오늘</p><div data-notis="0-2"></div><p class="noti-day">이전</p><div data-notis="2-4"></div></div></div></div></div>
     </div>
     <div class="g-var">
       <div class="g-var__head"><b><em>C</em>오른쪽 아래 토스트</b><code>&lt;NotificationToast /&gt;</code><span>새 알림이 오는 순간만 · A나 B와 함께 써요</span></div>
-      <div class="frame" style="--h:300px"><div class="frame__bar"><img src="../logo.svg" alt="STAGE DUCK"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span><span class="icon-btn__badge">3</span></button></div><div class="frame__page"><i style="width:40%"></i><i></i></div>
+      <div class="frame" style="--h:300px"><div class="frame__bar"><img src="../mockup/logo.svg" alt="STAGE DUCK"><button class="icon-btn" type="button" aria-label="알림"><span data-icon="bell"></span><span class="icon-btn__badge">3</span></button></div><div class="frame__page"><i style="width:40%"></i><i></i></div>
         <div class="toasts"><div class="toast" role="status"><div><b>공연장 단계를 컨펌했어요</b><small>공간 C · 500,000원</small><a href="pages/next.html">다음 단계로</a></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x" class="icon--sm"></span></button></div>
-          <div class="toast" role="status"><div><b>업체 D가 견적 내역 확인 카드를 보냈어요</b><small>장비 · 48시간 안에 컨펌</small><a href="pages/chat.html">채팅에서 보기</a></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x" class="icon--sm"></span></button></div></div></div>
+          <div class="toast" role="status"><div><b>업체 D가 견적 내역 확인 카드를 보냈어요</b><small>장비 · 48시간 안에 컨펌</small><a href="#chat" data-chat="d">채팅에서 보기</a></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x" class="icon--sm"></span></button></div></div></div>
     </div>
   </section>
 
@@ -92,22 +94,27 @@
     </div>
   </section>
 
-  <!-- 3. 채팅창 -->
+  <!-- 3. 채팅 위젯 -->
   <section class="g-sec" id="chat">
-    <h2>3. 채팅창</h2><p>사용자가 [채팅 시작]을 눌러야 열려요. 견적서 · 견적 내역 확인 · 컨펌 완료 · 안내 카드가 대화 사이에 들어가요.</p>
+    <h2>3. 채팅 위젯</h2><p>로그인한 모든 화면 오른쪽 아래 둥근 버튼으로 열어요. 페이지가 아니라 화면 위층(z-index)에 뜨는 부품이에요. 이 페이지 오른쪽 아래 버튼도 눌러 볼 수 있어요.</p>
     <div class="g-var">
-      <div class="g-var__head"><b><em>A</em>목록 | 대화 | 견적 요약</b><code>&lt;ChatLayout variant="three" /&gt;</code><span>금액·검사 결과를 계속 보며 대화 · 넓은 화면 필요</span></div>
-      <div class="chat"><div data-tpl="tpl-list"></div><div data-tpl="tpl-room"></div><div data-tpl="tpl-side"></div></div>
+      <div class="g-var__head"><b>닫힘 · 열림</b><code>&lt;ChatWidget /&gt; = &lt;ChatFab /&gt; + &lt;ChatPanel /&gt;</code><span>안 읽은 수는 버튼 배지 · 알림 토스트는 버튼 위로</span></div>
+      <div class="two">
+        <div class="frame" style="--h:760px"><div class="frame__bar"><img src="../mockup/logo.svg" alt="STAGE DUCK"><span class="small muted">내 공연</span></div><div class="frame__page"><p class="strong">내 공연 (뒤에 보이는 화면)</p><i></i><i style="width:72%"></i><i style="width:86%"></i><i style="width:60%"></i><i></i><i style="width:78%"></i></div><div class="toasts"><div class="toast" role="status"><div><b>업체 D가 견적 내역 확인 카드를 보냈어요</b><small>장비 · 48시간 안에 컨펌</small><a href="#chat" data-chat="d">채팅에서 보기</a></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x" class="icon--sm"></span></button></div></div><button class="chat-fab" type="button" tabindex="-1" aria-hidden="true" aria-expanded="false"><span data-icon="talk" class="chat-fab__open"></span><span data-icon="x" class="chat-fab__close"></span><span class="chat-fab__badge">1</span></button></div>
+        <div class="frame" style="--h:760px"><div class="frame__bar"><img src="../mockup/logo.svg" alt="STAGE DUCK"><span class="small muted">내 공연</span></div><div class="frame__page"><p class="strong">내 공연 (뒤에 보이는 화면)</p><i></i><i style="width:72%"></i><i style="width:86%"></i><i style="width:60%"></i><i></i><i style="width:78%"></i></div><div data-chat-demo="user" data-view="list"></div><button class="chat-fab" type="button" tabindex="-1" aria-hidden="true" aria-expanded="true"><span data-icon="talk" class="chat-fab__open"></span><span data-icon="x" class="chat-fab__close"></span></button></div>
+      </div>
     </div>
     <div class="g-var">
-      <div class="g-var__head"><b><em>B</em>목록 | 대화 + 내역서 서랍</b><code>&lt;ChatLayout variant="drawer" /&gt;</code><span>대화 칸이 넓어요 · 내역서는 필요할 때 열어요</span></div>
-      <div class="frame" style="--h:722px"><div class="chat chat--two" style="border:0;height:720px"><div data-tpl="tpl-list"></div><div data-tpl="tpl-room"></div></div>
-        <div class="layer layer--drawer"><div class="drawer" style="--w:440px"><div class="modal__head"><h2>내역서 · 업체 D 견적서 v2</h2><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x"></span></button></div><div class="drawer__body" style="padding:20px 24px" data-tpl="tpl-lines" data-keep></div><div class="drawer__foot btns btns--fill"><button class="btn" type="button">다시 조율</button><button class="btn btn--primary" type="button">컨펌</button></div></div></div></div>
+      <div class="g-var__head"><b>창 3가지</b><code>view="list" · view="room" pane="talk" · pane="info"</code><span>탭은 머리줄 바로 아래 · 눌러서 바꿔 볼 수 있어요</span></div>
+      <div class="cw-row"><div data-chat-demo="user" data-view="list"></div><div data-chat-demo="user" data-view="room" data-room="d"></div><div data-chat-demo="user" data-view="room" data-room="d" data-pane="info"></div></div>
     </div>
     <div class="g-var">
-      <div class="g-var__head"><b><em>C</em>떠 있는 채팅 창</b><code>&lt;ChatLayout variant="float" /&gt;</code><span>어느 화면에서든 오른쪽 아래 · 다른 화면과 층이 달라요</span></div>
-      <div class="frame" style="--h:700px"><div class="frame__page"><p class="strong">단계별 견적 비교 (뒤에 보이는 화면)</p><div class="q-cols mt-12" style="--cols:2;max-width:560px"><div class="q-col"><div class="q-col__head"><p class="q-col__name">업체 D</p><p class="q-col__total">1,350,000<small>원</small></p></div></div><div class="q-col"><div class="q-col__head"><p class="q-col__name">업체 E</p><p class="q-col__total">980,000<small>원</small></p></div></div></div></div>
-        <div class="chat-float"><div class="chat-float__bar"><span data-icon="chat"></span><span class="grow">업체 D</span><button class="icon-btn" type="button" aria-label="목록"><span data-icon="list"></span></button><button class="icon-btn" type="button" aria-label="크게"><span data-icon="expand"></span></button><button class="icon-btn" type="button" aria-label="접기"><span data-icon="min"></span></button></div><div data-tpl="tpl-room"></div></div></div>
+      <div class="g-var__head"><b>방 상태</b><code>업체 화면 채팅 시작 전 · 마감 · 빈 탭</code><span>업체 화면은 주조색만 파랑 (theme-partner.css)</span></div>
+      <div class="cw-row"><div data-chat-demo="partner" data-view="room" data-room="bom"></div><div data-chat-demo="user" data-view="room" data-room="a"></div><div data-chat-demo="user" data-view="list" data-filter="엔지니어"></div></div>
+    </div>
+    <div class="g-var">
+      <div class="g-var__head"><b>바뀐 둥글기</b><code>css/chat.css</code><span>나머지 스타일은 그대로</span></div>
+      <table class="info-table"><tr><th>창</th><td>16px · 진한 테두리 1px (그림자 없음)</td></tr><tr><th>둥근 버튼</th><td>원 60px · 주조 버튼색 (사용자 진한 회색, 업체 파랑)</td></tr><tr><th>말풍선</th><td>16px (말꼬리 쪽 4px)</td></tr><tr><th>카드 · 입력칸 · 보내기</th><td>12px</td></tr><tr><th>목록 프로필</th><td>12px (머리줄 프로필 10px)</td></tr><tr><th>탭</th><td>머리줄 바로 아래, 칸을 똑같이 나눠 꽉 채움 (예전: 목록 머리 오른쪽 버튼 묶음 / 오른쪽 칸)</td></tr></table>
     </div>
   </section>
 
@@ -130,7 +137,7 @@
     <div class="g-var"><div class="g-var__head"><b><em>B</em>글자 줄</b><code>&lt;StageTrack variant="inline" /&gt;</code><span>목록 한 줄 안, 좁은 곳</span></div>
       <ol class="track-line"><li class="is-done">공연장 </li><li class="is-now">장비 · 견적서 2</li><li>엔지니어</li></ol></div>
     <div class="g-var"><div class="g-var__head"><b><em>C</em>단계 표</b><code>&lt;StageTrack variant="table" /&gt;</code><span>업체·금액·다음 할 일까지</span></div>
-      <div class="table-box"><table class="table table--fit"><thead><tr><th>단계</th><th>상태</th><th>업체</th><th>금액</th><th>다음 할 일</th></tr></thead><tbody><tr><td class="strong">공연장</td><td><span class="state state--done">컨펌</span></td><td>업체 C</td><td class="r">500,000원</td><td>-</td></tr><tr class="is-on"><td>장비</td><td><span class="state state--on">조율 중</span></td><td>업체 D</td><td class="r">1,350,000원</td><td><a class="btn btn--xs btn--primary" href="pages/chat.html">컨펌하기</a></td></tr><tr class="is-off"><td class="strong">엔지니어</td><td><span class="state">대기</span></td><td>-</td><td class="r">-</td><td class="small">장비 컨펌 뒤</td></tr></tbody></table></div></div>
+      <div class="table-box"><table class="table table--fit"><thead><tr><th>단계</th><th>상태</th><th>업체</th><th>금액</th><th>다음 할 일</th></tr></thead><tbody><tr><td class="strong">공연장</td><td><span class="state state--done">컨펌</span></td><td>업체 C</td><td class="r">500,000원</td><td>-</td></tr><tr class="is-on"><td>장비</td><td><span class="state state--on">조율 중</span></td><td>업체 D</td><td class="r">1,350,000원</td><td><a class="btn btn--xs btn--primary" href="#chat" data-chat="d">컨펌하기</a></td></tr><tr class="is-off"><td class="strong">엔지니어</td><td><span class="state">대기</span></td><td>-</td><td class="r">-</td><td class="small">장비 컨펌 뒤</td></tr></tbody></table></div></div>
   </section>
 
   <!-- 6. 목록 -->
@@ -188,39 +195,8 @@
 </main>
 
 <!-- 여러 번 쓰는 조각 (목업 전용) -->
-<template id="tpl-list"><div class="chat-list">
-  <div class="chat-list__head"><b>채팅</b><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">장비</button></div></div>
-  <div class="chat-list__items">
-    <div class="chat-item" aria-current="true"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')" role="img" aria-label="업체 D 사진">D</span><div style="min-width:0"><p class="chat-item__name">업체 D <span class="tag tag--point">장비</span></p><p class="chat-item__last">견적 내역 확인 카드를 보냈어요</p></div><div class="chat-item__side">13:24<span class="count">1</span></div></div>
-    <div class="chat-item"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')" role="img" aria-label="업체 E 사진">E</span><div style="min-width:0"><p class="chat-item__name">업체 E <span class="tag tag--point">장비</span></p><p class="chat-item__last">무선 마이크는 확인 후 알려 드릴게요</p></div><div class="chat-item__side">11:40</div></div>
-    <div class="chat-item"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1514320291840-2e0a9bf2a9ae.jpg')" role="img" aria-label="업체 C 사진">C</span><div style="min-width:0"><p class="chat-item__name">업체 C <span class="tag">공연장</span></p><p class="chat-item__last">컨펌 완료</p></div><div class="chat-item__side">어제</div></div>
-    <div class="chat-item"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1501612780327-45045538702b.jpg')" role="img" aria-label="업체 A 사진">A</span><div style="min-width:0"><p class="chat-item__name">업체 A <span class="tag">공연장</span></p><p class="chat-item__last">다른 업체와 진행하기로 했어요</p></div><div class="chat-item__side">어제</div></div>
-  </div></div></template>
 
-<template id="tpl-room"><div class="room">
-  <div class="room__head"><div class="who"><span class="avatar avatar--sm" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')" role="img" aria-label="업체 D 사진">D</span><div><b>업체 D <span class="tag tag--point">장비</span></b><small>견적서 v2 · 1,350,000원 · 조율 중</small></div></div><button class="icon-btn" type="button" aria-label="내역서"><span data-icon="doc"></span></button><button class="icon-btn" type="button" aria-label="신고"><span data-icon="flag"></span></button></div>
-  <div class="room__msgs">
-    <span class="room__day">11월 13일 (금)</span>
-    <div class="c-card c-card--off"><div class="c-card__head"><span>견적서 v1</span><span class="tag">이전 버전</span></div><div class="c-card__body"><p class="c-card__total">1,250,000<small>원</small></p><p class="c-card__meta">추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함</p></div></div>
-    <span class="room__sys">가을밤밴드님이 채팅을 시작했어요</span>
-    <div class="msg"><p class="msg__b">안녕하세요, 업체 D예요. 공간 C 입실이 15:00이라 그때부터 설치하면 16:30에 끝나요.</p><span class="msg__t">13:10</span></div>
-    <div class="msg msg--me"><p class="msg__b">리허설을 16:00으로 당길 수도 있어요. 설치를 더 빨리 끝낼 수 있을까요?</p><span class="msg__t"><span class="msg__read">읽음</span>13:12</span></div>
-    <div class="msg"><p class="msg__b">설치 인원을 한 명 더 붙이면 15:45에 끝나요. 견적서를 고쳐서 다시 보낼게요.</p><span class="msg__t">13:15</span></div>
-    <div class="c-card"><div class="c-card__head"><span>견적서 v2</span><span class="status status--pass"><span data-icon="pass"></span>통과</span></div><div class="c-card__body"><p class="c-card__total">1,350,000<small>원</small></p><p class="c-card__diff">v1 → v2 · 설치 인원 +1 · 설치 완료 16:30 → 15:45 · +100,000원</p></div><div class="c-card__foot"><button type="button">자세히 보기</button></div></div>
-    <div class="msg"><p class="msg__b">급하면 010-0000-0000으로 연락 주셔도 돼요.</p><span class="msg__t">13:20</span></div>
-    <div class="room__warn"><span data-icon="warn" class="icon--sm"></span><span>플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.</span></div>
-    <div class="c-card c-card--confirm"><div class="c-card__head"><span>견적 내역 확인</span><span class="timer" style="color:#fff">47:12 남음</span></div><div class="c-card__body"><p class="c-card__meta">업체 D · 장비 · 견적서 v2 고정</p><p class="c-card__total">1,350,000<small>원</small></p></div><div class="c-card__foot"><button type="button">다시 조율</button><button type="button">내역서 보기</button><button type="button" disabled>컨펌</button></div><p class="c-card__why">내역서를 끝까지 보면 컨펌할 수 있어요.</p></div>
-  </div>
-  <div class="composer"><button class="icon-btn" type="button" aria-label="사진"><span data-icon="image"></span></button><button class="icon-btn" type="button" aria-label="파일"><span data-icon="clip"></span></button><textarea rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea><button class="btn btn--primary btn--sm" type="button" aria-label="보내기"><span data-icon="send" class="icon--sm"></span></button></div>
-</div></template>
 
-<template id="tpl-side"><aside class="chat-side">
-  <div class="chat-side__sec"><p class="chat-side__title">이 단계</p><p class="strong">장비 · 조율 중</p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p></div>
-  <div class="chat-side__sec"><p class="chat-side__title">지금 견적서 (v2)</p><p class="sum-total" style="justify-content:flex-start"><b>1,350,000<small>원</small></b></p><p class="small muted">추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함</p><a class="link link--point mt-4" href="pages/quote.html">내역서 보기<span data-icon="right" class="icon--sm"></span></a></div>
-  <div class="chat-side__sec"><p class="chat-side__title">자동 검사</p><dl class="sum-rows"><div><dt>설치 완료</dt><dd><span class="status status--pass"><span data-icon="pass"></span>15:45</span></dd></div><div><dt>공간 반입</dt><dd><span class="status status--pass"><span data-icon="pass"></span>통과</span></dd></div><div><dt>엔지니어</dt><dd><span class="status status--warn"><span data-icon="warn"></span>포함</span></dd></div></dl></div>
-  <div class="chat-side__sec"><p class="chat-side__title">앞 단계</p><p class="desc">공간 C · 입실 15:00 · 기본 마이크 2</p></div>
-  <div class="chat-side__sec"><a class="btn btn--sm btn--block" href="pages/compare.html">단계별 비교 보기</a></div>
-</aside></template>
 
 <template id="tpl-lines">
   <table class="lines"><thead><tr><th>항목</th><th class="r">금액</th></tr></thead><tbody>
