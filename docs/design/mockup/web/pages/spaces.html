@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공간 찾기 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* SpacesPage.module.css: 위쪽 조건표 (티켓 사이트 상세 검색처럼 줄마다 이름 칸) */
+  .cond { border-top: 2px solid var(--sd-rule); }
+  .cond > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }
+  .cond__th { display: flex; align-items: center; padding: 0 18px; background: var(--sd-th); font-size: var(--sd-text-desc); font-weight: 700; }
+  .cond__td { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; min-height: 52px; padding: 8px 18px; }
+  .cond__foot { display: flex; justify-content: center; gap: 8px; padding: 18px 0 0; }
+  .list-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-line); margin-bottom: 24px; }
+</style>
+</head>
+<!-- 화면: 공간 목록 · FR-SPACE-03 · AC-F5-01 · 묶음 1
+     React: pages/SpacesPage.tsx = ConditionTable + ResultBar + SpaceItem[] + Pagination (+ Empty)
+     날짜를 넣어도 "업체 확인 전" (사이트는 판정하지 않는다, CLAUDE.md 4장). -->
+<body data-layout="guest" data-nav="spaces">
+
+<div class="mock-switch" data-group="res">
+  <span>목업 보기</span>
+  <button type="button" data-value="list" aria-pressed="true">결과 있음</button>
+  <button type="button" data-value="none">결과 없음</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>공간 찾기</li></ol><h1>공간 찾기</h1><p class="page-top__desc">수용 인원과 입실 시각, 기본 장비를 먼저 살펴보세요.</p></div></div></div>
+
+<main class="container main">
+  <section class="sec">
+    <div class="cond">
+      <div><span class="cond__th">지역</span><span class="cond__td"><div class="filters"><button type="button" aria-pressed="true">광주</button><button type="button" aria-pressed="false">전남</button><button type="button" aria-pressed="false">서울</button><button type="button" aria-pressed="false">부산</button><button type="button" aria-pressed="false">전체</button></div></span></div>
+      <div><span class="cond__th">관객 수</span><span class="cond__td"><span class="unit" style="width:180px"><input class="input input--num" value="80"><span>명 이상</span></span></span></div>
+      <div><span class="cond__th">공간 유형</span><span class="cond__td"><label class="check"><input type="checkbox" checked>전문 공연장</label><label class="check"><input type="checkbox" checked>복합문화공간</label><label class="check"><input type="checkbox" checked>루프탑</label><label class="check"><input type="checkbox">정원</label><label class="check"><input type="checkbox">창고</label></span></div>
+      <div><span class="cond__th">조건</span><span class="cond__td"><label class="check"><input type="checkbox" checked>밴드 공연 가능</label><label class="check"><input type="checkbox">외부 음향 장비 반입</label><label class="check"><input type="checkbox">외부 엔지니어 허용</label><label class="check"><input type="checkbox">대기실</label><label class="check"><input type="checkbox">주차</label></span></div>
+      <div><span class="cond__th">공연 날짜</span><span class="cond__td"><input class="input" type="date" value="2026-11-28" style="width:200px"><span class="field__hint">날짜를 넣어도 업체 확인 전이에요.</span></span></div>
+    </div>
+    <div class="cond__foot"><button class="btn" type="button" style="min-width:120px">초기화</button><button class="btn btn--primary" type="button" style="min-width:200px"><span data-icon="search" class="icon--sm"></span>공간 찾기</button></div>
+  </section>
+
+  <section class="sec">
+    <div class="list-top">
+      <p class="desc" data-when="res:list">광주 · 80명 이상 · 밴드 공연 가능 <b>3곳</b> <span class="tag">업체 확인 전</span></p>
+      <p class="desc" data-when="res:none">광주 · 300명 이상 · 정원 <b>0곳</b></p>
+      <div class="filters"><button type="button" aria-pressed="true">대관료 낮은 순</button><button type="button" aria-pressed="false">수용 인원 순</button><button type="button" aria-pressed="false">최근 등록 순</button></div>
+    </div>
+
+    <div class="grid" data-when="res:list">
+      <a class="item-card" href="space.html"><div class="photo" role="img" aria-label="공간 B 루프탑 무대" style="--img:url('../../assets/photos/photo-1506157786151-b8491531f063.jpg')"></div><p class="item-card__meta">광주 서구 · 루프탑 · 업체 B</p><p class="item-card__title">공간 B</p><div class="item-card__specs"><span>최대 100명</span><span>17:00 입실</span><span>밴드 공연 가능</span></div><p class="item-card__price">400,000원<small>대관료 · 부가세 포함</small></p></a>
+      <a class="item-card" href="space.html"><div class="photo" role="img" aria-label="공간 C 복합문화공간 내부" style="--img:url('../../assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"></div><p class="item-card__meta">광주 동구 · 복합문화공간 · 업체 C</p><p class="item-card__title">공간 C</p><div class="item-card__specs"><span>최대 120명</span><span>15:00 입실</span><span>기본 마이크 2</span></div><p class="item-card__price">500,000원<small>대관료 · 부가세 포함</small></p></a>
+      <a class="item-card" href="space.html"><div class="photo" role="img" aria-label="공간 A 공연장 무대" style="--img:url('../../assets/photos/photo-1470229722913-7c0e2dbbafd3.jpg')"><span class="photo__tag tag tag--fill">풀스펙</span></div><p class="item-card__meta">광주 북구 · 전문 공연장 · 업체 A</p><p class="item-card__title">공간 A</p><div class="item-card__specs"><span>최대 150명</span><span>13:00 입실</span><span>장비·엔지니어 포함</span></div><p class="item-card__price">4,000,000원<small>공간·장비·엔지니어</small></p></a>
+    </div>
+    <div class="empty" data-when="res:none"><span data-icon="search"></span><b>조건에 맞는 공간이 없어요</b><p>관객 수를 줄이거나 공간 유형을 더 골라 보세요.</p><button class="btn btn--sm" type="button">조건 초기화</button></div>
+    <nav class="pagination" aria-label="쪽" data-when="res:list"><span aria-current="page">1</span></nav>
+  </section>
+
+  <section class="sec">
+    <div class="notice"><span data-icon="info"></span><div class="grow">공간을 고른다고 예약되지 않아요. 요청서를 올리면 공연장 업체가 견적서를 보내고, 채팅으로 조건을 맞춘 뒤 컨펌해야 정해져요.</div><a class="btn btn--sm btn--primary" href="request-1.html">요청서 쓰기</a></div>
+  </section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

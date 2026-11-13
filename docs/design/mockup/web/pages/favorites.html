@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>관심 업체 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 관심 업체 + 오퍼 보내기 · FR-OFFER-01~03 · AC-F3-16·17·19 · 묶음 1
+     React: pages/FavoritesPage.tsx = SideNav(마이페이지) + SectorTabs + FavoriteTable(선택) + OfferBar
+     오퍼는 지금 열린 단계 부문의 업체에게만, 한 단계 10곳까지, 응답 기한 48시간. -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="mypage.html">마이페이지</a></li><li>관심 업체</li></ol><h1>관심 업체</h1><p class="page-top__desc">저장한 업체에 내 공고를 먼저 보여 줄 수 있어요. 지금 열린 단계의 업체에게만 보낼 수 있어요.</p></div></div></div>
+
+<main class="container main">
+  <div class="with-nav">
+    <nav class="side-nav" aria-label="마이페이지"><p class="side-nav__title">마이페이지</p><div class="side-nav__group"><a href="mypage.html">내 프로필</a><a href="favorites.html" aria-current="page"><span>관심 업체</span><span class="count count--muted">4</span></a><a href="notifications.html"><span>알림</span><span class="count">2</span></a><a href="sheet.html">최종 담당표</a></div></nav>
+    <div>
+      <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="false">공연장 1</button><button type="button" aria-pressed="true">장비 2</button><button type="button" aria-pressed="false">엔지니어 1</button></div><select class="select select--sm" aria-label="공연"><option>가을밤 밴드 공연 · 장비 단계 모집 중</option></select></div>
+      <div class="table-box"><table class="table">
+        <thead><tr><th style="width:48px"><input type="checkbox" aria-label="모두 고르기" style="width:16px;height:16px"></th><th>업체</th><th>부문</th><th>거래</th><th>이 공연 오퍼</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><input type="checkbox" checked aria-label="업체 E 고르기" style="width:16px;height:16px;accent-color:var(--sd-blue-button)"></td><td class="l"><div class="who"><span class="avatar avatar--sm">E</span><div><b>업체 E</b><small>소규모 어쿠스틱 공연용 음향 세트</small></div></div></td><td>장비</td><td>3건</td><td><span class="state">보내기 전</span></td><td><a class="btn btn--xs" href="post.html">게시글</a></td></tr>
+          <tr class="is-off"><td><input type="checkbox" disabled aria-label="업체 D"></td><td class="l"><div class="who"><span class="avatar avatar--sm">D</span><div><b>업체 D</b><small>밴드 공연 음향, 설치부터 철수까지</small></div></div></td><td>장비 · 엔지니어</td><td>15건</td><td><span class="state state--on">보냄 · 견적서 받음</span></td><td><a class="btn btn--xs" href="chat.html">채팅</a></td></tr>
+        </tbody></table></div>
+      <div class="row row--between mt-16" style="padding:16px 20px;background:var(--sd-band)"><p class="desc"><b>1곳</b>을 골랐어요 · 이 단계 오퍼 <b>1 / 10곳</b> 보냄</p><button class="btn btn--primary" type="button" data-open="offer"><span data-icon="offer" class="icon--sm"></span>오퍼 보내기</button></div>
+      <ul class="bullets mt-16"><li>업체는 48시간 안에 견적서를 보내거나 거절해요. 오퍼로 온 견적서에는 "내가 오퍼한 업체" 표시가 붙어요.</li><li>공연장·엔지니어 업체는 그 단계가 열리면 오퍼를 보낼 수 있어요.</li></ul>
+    </div>
+  </div>
+</main>
+
+<div class="layer" id="offer" hidden><div class="modal"><div class="modal__head"><h2>오퍼 보내기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 E에 오퍼를 보낼까요?</p><p>가을밤 밴드 공연 · 장비 단계 공고와 공간 C 정보가 함께 가요.</p><label class="field mt-16"><span class="field__label">한마디<span class="opt">선택</span></span><textarea class="textarea" placeholder="예: 드럼 세트는 저희가 가져가요."></textarea><span class="field__hint">전화번호·계좌번호는 적을 수 없어요.</span></label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>오퍼 보내기 (2/10곳)</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

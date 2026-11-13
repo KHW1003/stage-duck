@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통합 청구서 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 통합 청구서 + 테스트 결제 · FR-PAY-01·02 · AC-F5-03~07 · 묶음 4
+     React: pages/InvoicePage.tsx = StepBar + Invoice + PayBox(SideBox) + Escrow. 결제창 모양 A. B·C는 components.html 2번.
+     금액은 서버 응답 그대로. 결제 요청은 Idempotency-Key 필수, 서버가 금액을 다시 계산한다 (AMOUNT_MISMATCH). -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="pay">
+  <span>목업 보기</span>
+  <button type="button" data-value="issued" aria-pressed="true">결제 전</button>
+  <button type="button" data-value="paid">결제 완료 · 보관 중</button>
+  <button type="button" data-value="settle">공연 뒤 · 정산 예정</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="my.html">내 공연</a></li><li>통합 청구서</li></ol><h1>통합 청구서</h1><div class="page-top__meta"><span>가을밤 밴드 공연</span><span>11월 28일(토)</span><span>11월 13일 15:05 발행</span></div></div><a class="btn btn--sm btn--ghost" href="cancel.html">취소·위약금 안내</a></div></div>
+
+<main class="container main">
+  <ol class="step-bar" data-when="pay:issued"><li class="is-done"><b>01</b>단계별 컨펌</li><li class="is-now"><b>02</b>청구서 확인·결제</li><li><b>03</b>섭외 확정</li></ol>
+  <ol class="step-bar" data-when="pay:paid pay:settle"><li class="is-done"><b>01</b>단계별 컨펌</li><li class="is-done"><b>02</b>청구서 확인·결제</li><li class="is-now"><b>03</b>섭외 확정</li></ol>
+
+  <div class="with-aside mt-40">
+    <div>
+      <section class="sec">
+        <div class="sec-head"><h2>청구 내역</h2><p data-when="pay:issued">컨펌한 업체 금액과 플랫폼 이용료예요.</p><p data-when="pay:paid pay:settle"><span class="state state--done">결제 완료</span></p></div>
+        <div class="invoice">
+          <div class="invoice__row"><span class="invoice__stage">공연장</span><div class="invoice__what"><b>업체 C · 공간 C 대관</b><small>15:00 입실 · 22:00 퇴실 · 견적서 v1 · 11월 12일 컨펌</small></div><span class="invoice__amt">500,000원</span></div>
+          <div class="invoice__row"><span class="invoice__stage">장비</span><div class="invoice__what"><b>업체 D · 음향 장비·설치·철수</b><small>엔지니어 1명 포함 · 견적서 v2 · 11월 13일 컨펌</small></div><span class="invoice__amt">1,350,000원</span></div>
+          <div class="invoice__row"><span class="invoice__stage muted">엔지니어</span><div class="invoice__what"><span class="state state--off">건너뜀</span><small>업체 D 견적서에 포함 · 11월 13일 동의</small></div><span class="invoice__amt muted">-</span></div>
+          <div class="invoice__calc"><div><span>업체 금액 합계</span><span class="num">1,850,000원</span></div><div><span>플랫폼 이용료<small>업체 금액의 5%, 원 미만 버림</small></span><span class="num">92,500원</span></div></div>
+          <div class="invoice__total"><span>결제할 금액</span><b>1,942,500원</b></div>
+        </div>
+      </section>
+
+      <section class="sec" data-when="pay:paid pay:settle">
+        <div class="sec-head"><h2>결제금 상태</h2></div>
+        <ol class="escrow">
+          <li class="is-done"><b>결제</b>11월 13일 15:20</li>
+          <li class="is-now" data-when="pay:paid"><b>보관 중</b><small>공연이 끝날 때까지 STAGE DUCK이 보관해요</small></li>
+          <li class="is-done" data-when="pay:settle"><b>보관 중</b>11월 13일 ~ 11월 28일</li>
+          <li data-when="pay:paid"><b>정산 예정</b>공연 뒤 업체별로</li>
+          <li class="is-now" data-when="pay:settle"><b>정산 예정</b><small>업체 C 500,000원 · 업체 D 1,350,000원</small></li>
+        </ol>
+      </section>
+
+      <section class="sec"><div class="sec-head"><h2>꼭 확인하세요</h2></div>
+        <ul class="bullets"><li>결제 금액은 공연이 끝날 때까지 STAGE DUCK이 보관하고, 공연 뒤 업체별로 정산 예정이 돼요.</li><li>결제가 끝나면 업체 연락처가 최종 담당표에 공개돼요.</li><li>취소하면 시점에 따라 업체 금액의 10~100%가 위약금으로 나가요. 플랫폼 이용료는 환불하지 않아요.</li><li>결제 뒤에는 내용을 바꾸거나 추가 결제를 할 수 없어요.</li></ul></section>
+    </div>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">결제 정보</p><dl class="sum-rows"><div><dt>업체 금액</dt><dd>1,850,000원</dd></div><div><dt>플랫폼 이용료</dt><dd>92,500원</dd></div></dl></div>
+      <div class="side-box__sec"><div class="sum-total sum-total--point"><span>총 결제 금액</span><b>1,942,500<small>원</small></b></div></div>
+      <div data-when="pay:issued">
+        <div class="side-box__sec side-box__sec--gray"><p class="small strong">결제 방법</p><p class="desc mt-4">테스트 결제 <span class="muted">· 실제 카드·계좌를 쓰지 않아요</span></p></div>
+        <div class="side-box__sec"><div class="stack" style="--gap:8px"><label class="check"><input type="checkbox" checked>취소 수수료·위약금 규정 확인 (필수)</label><label class="check"><input type="checkbox" checked>공연이 끝날 때까지 결제 금액 보관에 동의 (필수)</label></div>
+          <a class="btn btn--primary btn--lg btn--block mt-16" href="invoice.html?pay=paid">결제하기</a><p class="test-pay mt-8"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 실제 청구되지 않습니다</p><p class="field__hint mt-8">버튼을 두 번 눌러도 한 번만 결제돼요.</p></div>
+      </div>
+      <div class="side-box__sec" data-when="pay:paid pay:settle"><p class="strong">섭외가 확정됐어요</p><p class="small muted mt-4">업체 연락처가 최종 담당표에 공개됐어요.</p><a class="btn btn--primary btn--block mt-16" href="sheet.html">최종 담당표 보기</a><a class="btn btn--block mt-8" href="cancel.html" data-when="pay:paid">취소 요청</a></div>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

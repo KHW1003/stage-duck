@@ -1,0 +1,10 @@
+/* 업체 화면 색 (팀 결정: 주조색 #0368B6). 업체 페이지에서 app.css 뒤에 불러온다.
+   React: <AppLayout role="SUPPLIER">가 data-theme="partner"를 달고 tokens.css의 [data-theme="partner"] 값으로 바꾼다. */
+:root {
+  --sd-blue: #0368b6;
+  --sd-blue-button: #0368b6;
+  --sd-accent: #f4f6f8;
+  --sd-featured: #202e3d;
+  --sd-focus: #677583;
+}
+.btn--primary:hover { background: #02579a; border-color: #02579a; }
