@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>테스트 결제 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 이 화면만: 결제 진행 상자 */
+  .pay-wrap { max-width: 640px; margin: 0 auto; }
+  .pay-amt { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 4px; border-top: 2px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line); }
+  .pay-amt b { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--sd-blue); font-variant-numeric: tabular-nums; }
+  .spin { width: 40px; height: 40px; border: 3px solid var(--sd-line); border-top-color: var(--sd-ink); border-radius: 50%; animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result__icon--bad { border-color: var(--sd-conflict-text); color: var(--sd-conflict-text); }
+</style>
+</head>
+<!-- 화면: 테스트 결제 진행 · FR-PAY-02 · 묶음 4
+     React: pages/PaymentPage.tsx = StepBar + PayMethod + PayProgress + PayResult. 통합 청구서 [결제하기] 다음 화면.
+     결제 직전 서버가 다시 검사: 모든 단계 확정, 재확인 대기 없음, 견적서 버전이 확정 당시와 같음. 금액은 서버가 확정 견적서 스냅샷으로 계산.
+     같은 결제 응답은 한 번만 반영 (버튼 두 번 눌러도 한 번). 성공은 서버 확인 뒤에만 섭외 확정. -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="step">
+  <span>목업 보기</span>
+  <button type="button" data-value="method" aria-pressed="true">결제 수단</button>
+  <button type="button" data-value="wait">처리 중</button>
+  <button type="button" data-value="recheck">결제 전 검사 실패</button>
+  <button type="button" data-value="fail">결제 실패</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="my.html">내 공연</a></li><li><a href="invoice.html">통합 청구서</a></li><li>테스트 결제</li></ol><h1>테스트 결제</h1><div class="page-top__meta"><span>가을밤 밴드 공연</span><span>11월 28일(토)</span></div></div></div></div>
+
+<main class="container main">
+  <ol class="step-bar"><li class="is-done"><b>01</b><span data-icon="pass"></span>단계별 컨펌</li><li class="is-now"><b>02</b><span data-icon="receipt"></span>청구서 확인·결제</li><li><b>03</b><span data-icon="ticket"></span>섭외 확정</li></ol>
+
+  <div class="pay-wrap mt-40">
+    <div class="pay-amt"><span class="strong">결제할 금액</span><b>1,942,500원</b></div>
+    <dl class="sum-rows mt-12" style="padding:0 4px"><div><dt>업체 금액 (공간 C 500,000 + 장비 D 1,350,000)</dt><dd>1,850,000원</dd></div><div><dt>플랫폼 이용료 (5%)</dt><dd>92,500원</dd></div></dl>
+
+    <section class="sec mt-40" data-when="step:method">
+      <div class="sec-head"><h2><span data-icon="wallet"></span>결제 수단</h2></div>
+      <div class="choice choice--col">
+        <label class="choice__item"><input type="radio" name="pm" checked><span class="choice__mark"></span><span><b>테스트 카드</b><small>실제 카드 정보를 받지 않아요. 누르면 바로 승인돼요.</small></span></label>
+        <label class="choice__item"><input type="radio" name="pm"><span class="choice__mark"></span><span><b>테스트 계좌이체</b><small>실제 계좌를 쓰지 않아요.</small></span></label>
+      </div>
+      <p class="test-pay mt-16"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 실제 청구되지 않습니다</p>
+      <div class="btns btns--fill mt-16"><a class="btn btn--lg" href="invoice.html">청구서로</a><a class="btn btn--primary btn--lg" href="pay.html?step=wait">1,942,500원 결제</a></div>
+      <p class="field__hint mt-8">결제 직전에 단계 확정·견적서 버전을 서버가 다시 확인해요.</p>
+    </section>
+
+    <section class="result mt-40" data-when="step:wait">
+      <div style="display:grid;place-items:center"><span class="spin" role="img" aria-label="처리 중"></span></div>
+      <h2>결제를 확인하고 있어요</h2><p>창을 닫거나 새로 고쳐도 결제는 한 번만 돼요.</p>
+      <div class="btns btns--center mt-24"><button class="btn btn--lg" type="button" disabled>처리 중</button><a class="btn btn--primary btn--lg" href="invoice.html?pay=paid">결과 보기 (목업)</a></div>
+    </section>
+
+    <section class="result mt-40" data-when="step:recheck">
+      <span class="result__icon result__icon--bad"><span data-icon="conflict"></span></span>
+      <h2>결제 전에 바뀐 내용이 있어요</h2><p>결제하지 않았어요. 청구서를 다시 확인해 주세요.</p>
+      <div class="notice notice--conflict mt-24" style="text-align:left"><span data-icon="conflict"></span><div><b>업체 D 견적서가 v2 → v3으로 바뀌었어요.</b> 컨펌한 버전과 달라서 결제할 수 없어요. 채팅에서 다시 컨펌하면 청구서가 새로 만들어져요.</div></div>
+      <div class="btns btns--center mt-24"><a class="btn btn--lg" href="#chat" data-chat="d">업체 D 채팅</a><a class="btn btn--primary btn--lg" href="invoice.html">청구서 다시 보기</a></div>
+    </section>
+
+    <section class="result mt-40" data-when="step:fail">
+      <span class="result__icon result__icon--bad"><span data-icon="x"></span></span>
+      <h2>결제가 되지 않았어요</h2><p>테스트 결제 승인이 거절됐어요. 섭외는 확정되지 않았고, 돈은 나가지 않았어요.</p>
+      <div class="btns btns--center mt-24"><a class="btn btn--lg" href="invoice.html">청구서로</a><a class="btn btn--primary btn--lg" href="pay.html">다시 결제</a></div>
+    </section>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>업체 심사 · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 업체 심사 (관리자 첫 화면) · FR-ADMIN-01 · FR-SUP-03 · FR-AUTH-06 · 묶음 1·4
+     React 아님: SQLAdmin (backend/app/admin/views.py SupplierAdmin + 사유 입력 ReasonView). 이 목업은 admin.css로 맞출 모양.
+     승인 / 반려(사유 필수, 업체에 알림) / 정지·해제. 관리자는 조회·제재만 하고 확정·결제를 대신 하지 않는다. -->
+<body data-layout="admin" data-nav="review">
+
+<div class="mock-switch" data-group="pick">
+  <span>목업 보기</span>
+  <button type="button" data-value="g" aria-pressed="true">업체 H 서류</button>
+  <button type="button" data-value="f">업체 I 서류 (보완 필요)</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>업체 심사</li></ol><h1>업체 심사</h1><p class="page-top__desc">입점 2단계(사업자 정보)를 마친 업체를 확인해요. 승인하면 3단계(서비스 등록)가 열려요.</p></div></div></div>
+
+<main class="container main">
+  <div class="summary">
+    <div class="has-ico"><span class="ico-box"><span data-icon="clock"></span></span><div><span>심사 대기</span><b>2<small>곳</small></b></div></div>
+    <div class="has-ico"><span class="ico-box"><span data-icon="pass"></span></span><div><span>승인</span><b>7<small>곳</small></b></div></div>
+    <div class="has-ico"><span class="ico-box"><span data-icon="refresh"></span></span><div><span>반려 · 보완 중</span><b>0<small>곳</small></b></div></div>
+    <div class="has-ico"><span class="ico-box"><span data-icon="lock"></span></span><div><span>정지</span><b>0<small>곳</small></b></div></div>
+  </div>
+
+  <div class="tab-bar mt-40"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="r1" type="button">심사 대기 <span class="count">2</span></button><button role="tab" aria-selected="false" aria-controls="r2" type="button">전체 업체</button></div></div>
+
+  <section id="r1" class="mt-24">
+    <div class="with-aside">
+      <div>
+        <div class="table-box"><table class="table">
+          <thead><tr><th>업체</th><th>부문</th><th>활동 지역</th><th>신청</th><th>서류</th><th></th></tr></thead>
+          <tbody>
+            <tr class="is-on"><td class="l"><div class="who"><span class="avatar avatar--sm">H</span><div><b>업체 H</b><small>supplier-h@stageduck.test · 시연 중 가입</small></div></div></td><td>엔지니어</td><td>광주 · 전남</td><td class="num">11월 13일<small>14:02</small></td><td><span class="status status--pass"><span data-icon="pass"></span>3/3</span></td><td><span class="state state--on">보는 중</span></td></tr>
+            <tr><td class="l"><div class="who"><span class="avatar avatar--sm">I</span><div><b>업체 I</b><small>supplier-i@stageduck.test · 시연 중 가입</small></div></div></td><td>장비</td><td>광주</td><td class="num">11월 13일<small>10:40</small></td><td><span class="status status--warn"><span data-icon="warn"></span>2/3</span></td><td><button class="btn btn--xs" type="button">보기</button></td></tr>
+          </tbody></table></div>
+        <ul class="bullets mt-16"><li>오래 기다린 순서로 보여요. 반려하면 사유가 업체 화면과 알림에 그대로 보여요.</li><li>심사 중인 업체는 공고를 보거나 견적서를 보낼 수 없어요 (서버에서 막음).</li></ul>
+      </div>
+
+      <aside class="side-box sticky">
+        <div class="side-box__sec"><div class="who"><span class="avatar" data-when="pick:g">H</span><span class="avatar" data-when="pick:f">I</span><div><b><span data-when="pick:g">업체 H</span><span data-when="pick:f">업체 I</span></b><small>신청 11월 13일 · 시연 중 가입</small></div></div></div>
+        <div class="side-box__sec"><p class="side-box__title">사업자 정보</p>
+          <dl class="sum-rows"><div><dt>상호</dt><dd><span data-when="pick:g">업체 H</span><span data-when="pick:f">업체 I</span></dd></div><div><dt>사업자 번호</dt><dd class="num"><span data-when="pick:g">000-00-00008</span><span data-when="pick:f">000-00-00009</span></dd></div><div><dt>대표자</dt><dd>시연 대표</dd></div><div><dt>연락처</dt><dd class="num"><span data-when="pick:g">010-0000-0008</span><span data-when="pick:f">010-0000-0009</span></dd></div></dl></div>
+        <div class="side-box__sec"><p class="side-box__title">제출 서류</p>
+          <div class="stack" style="--gap:8px">
+            <div class="msg__file"><span data-icon="file"></span><div>사업자등록증.pdf<small>확인함</small></div></div>
+            <div class="msg__file"><span data-icon="file"></span><div>통장 사본.pdf<small>확인함</small></div></div>
+            <div class="msg__file" data-when="pick:g"><span data-icon="file"></span><div>장비 목록.pdf<small>확인함</small></div></div>
+            <div class="notice notice--warn" data-when="pick:f"><span data-icon="warn"></span><div>장비 목록이 없어요. 반려하고 보완을 요청하세요.</div></div>
+          </div></div>
+        <div class="side-box__sec"><div class="btns btns--fill"><button class="btn" type="button" data-open="reject">반려</button><button class="btn btn--primary" type="button" data-open="approve">승인</button></div><p class="field__hint mt-8">승인하면 업체에게 알림이 가고 서비스 등록이 열려요.</p></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="r2" class="mt-24" hidden>
+    <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">승인</button><button type="button" aria-pressed="false">심사 중</button><button type="button" aria-pressed="false">정지</button></div><input class="input" style="width:260px;height:36px" placeholder="업체 이름·이메일" aria-label="업체 찾기"></div>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>업체</th><th>부문</th><th>상태</th><th>경고</th><th>거래</th><th>승인일</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="l"><b>업체 A</b><small>supplier-a@stageduck.test</small></td><td>공연장 (공간 A)</td><td><span class="state state--done">승인</span></td><td>0</td><td>12건</td><td class="num">10월 2일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 B</b><small>supplier-b@stageduck.test</small></td><td>공연장 (공간 B)</td><td><span class="state state--done">승인</span></td><td><span class="state state--warn">2</span></td><td>8건</td><td class="num">10월 2일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 C</b><small>supplier-c@stageduck.test</small></td><td>공연장 (공간 C)</td><td><span class="state state--done">승인</span></td><td>0</td><td>21건</td><td class="num">10월 3일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 D</b><small>supplier-d@stageduck.test</small></td><td>장비 · 엔지니어</td><td><span class="state state--done">승인</span></td><td>0</td><td>15건</td><td class="num">10월 5일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 E</b><small>supplier-e@stageduck.test</small></td><td>장비</td><td><span class="state state--done">승인</span></td><td>0</td><td>3건</td><td class="num">10월 8일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 F</b><small>supplier-f@stageduck.test</small></td><td>엔지니어</td><td><span class="state state--done">승인</span></td><td>0</td><td>4건</td><td class="num">10월 9일</td><td><button class="btn btn--xs" type="button" data-open="suspend">정지</button></td></tr>
+        <tr><td class="l"><b>업체 H</b><small>supplier-h@stageduck.test · 시연 중 가입</small></td><td>엔지니어</td><td><span class="state state--on">심사 중</span></td><td>0</td><td>-</td><td>-</td><td></td></tr>
+      </tbody></table></div>
+    <p class="field__hint mt-12">경고·거래 수는 시드 데이터 값이에요. 정지한 업체는 견적서를 보낼 수 없고, 진행 중인 섭외는 거래 이력에서 따로 확인해요.</p>
+  </section>
+</main>
+
+<div class="layer" id="approve" hidden><div class="modal"><div class="modal__head"><h2>승인</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 H를 승인할까요?</p><p>업체에게 승인 알림이 가고, 입점 3단계(서비스 등록)를 할 수 있어요.</p></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>승인</button></div></div></div>
+<div class="layer" id="reject" hidden><div class="modal"><div class="modal__head"><h2>반려</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">반려 사유를 적어 주세요</p><p>사유는 업체 화면(입점 신청 · 반려)과 알림에 그대로 보여요. 업체는 고쳐서 다시 신청할 수 있어요.</p>
+    <div class="stack mt-16" style="--gap:8px"><label class="check"><input type="radio" name="rj" checked>서류 부족</label><label class="check"><input type="radio" name="rj">사업자 정보 불일치</label><label class="check"><input type="radio" name="rj">기타</label></div>
+    <textarea class="textarea mt-12" aria-label="반려 사유" style="height:96px">장비 목록 서류를 올려 주세요. 보유 장비와 수량이 보이면 돼요.</textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>반려하기</button></div></div></div>
+<div class="layer" id="suspend" hidden><div class="modal"><div class="modal__head"><h2>정지</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 업체를 정지할까요?</p><p>정지하면 로그인은 되지만 공고·견적서·채팅을 쓸 수 없어요. 사유는 제재 이력에 남아요.</p><textarea class="textarea mt-12" aria-label="정지 사유" placeholder="사유 (필수)"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>정지하기</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

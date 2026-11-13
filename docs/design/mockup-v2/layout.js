@@ -5,7 +5,7 @@
    - data-open / data-close → Modal·Drawer open 상태, data-pop → 드롭다운
    - 채팅 → chat-widget.js (shared/chat/ChatWidget.tsx). 로그인 화면이면 오른쪽 아래 둥근 버튼으로 뜬다
    - .mock-switch + data-when → 목업 전용 (옮기지 않는다)
-   body 속성: data-layout="guest | user | partner | partner-review", data-nav="메뉴 키" */
+   body 속성: data-layout="guest | user | partner | partner-review | admin", data-nav="메뉴 키" */
 (function () {
   var SRC = document.currentScript ? document.currentScript.src : '';
   var I = {
@@ -88,7 +88,8 @@
     guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['how', '이용 방법', '../../mockup/home.html#flow']],
     user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html']],
     partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html']],
-    'partner-review': []
+    'partner-review': [],
+    admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['demo', '시연 도구', 'a-demo.html']]
   };
 
   /* 알림 (notifications 테이블 모양: type, payload, read_at) */
@@ -113,10 +114,13 @@
   };
 
   var logo = partner ? '../../mockup/logo-partner.svg' : '../../mockup/logo.svg';
-  var home = partner ? (layout === 'partner' ? 'p-jobs.html' : 'p-onboarding.html') : (layout === 'user' ? 'my.html' : '../../mockup/home.html');
+  var home = partner ? (layout === 'partner' ? 'p-jobs.html' : 'p-onboarding.html') : (layout === 'user' ? 'my.html' : layout === 'admin' ? 'a-review.html' : '../../mockup/home.html');
   var menu = (MENU[layout] || []).map(function (m) { return '<a href="' + m[2] + '"' + (m[2] === '#chat' ? ' data-chat=""' : '') + (m[0] === nav ? ' aria-current="page"' : '') + '>' + m[1] + '</a>'; }).join('');
   var right;
-  if (layout === 'guest') {
+  if (layout === 'admin') {   /* 관리자: SQLAdmin 화면을 같은 모양으로 (backend/app/admin). 알림·채팅 없음 */
+    right = '<span class="tag tag--tbd">테스트 환경</span><div class="gnb__pop"><button class="gnb__user" type="button" data-pop="pop-user"><span class="avatar">관</span>운영자' + icon('down', 'icon--sm') + '</button>' +
+      '<div class="dropdown" id="pop-user" hidden><div class="dropdown__head"><b>운영자</b>관리자 계정 · admin@stageduck.test</div><a href="login.html">' + icon('out') + '로그아웃</a></div></div>';
+  } else if (layout === 'guest') {
     right = '<a class="gnb__text" href="../../mockup/partner.html">업체신가요?</a><span class="gnb__sep"></span><a class="gnb__text" href="login.html">로그인</a><a class="btn btn--sm btn--primary" href="signup.html">가입하기</a>';
   } else {
     var who = partner ? ['D', '업체 D', '업체 계정 · ' + (layout === 'partner-review' ? '심사 중' : '승인')] : ['가', '가을밤밴드', '사용자 계정'];
@@ -133,7 +137,7 @@
 
   var sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="display:none">' + Object.keys(I).map(function (k) { return '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + I[k] + '</symbol>'; }).join('') + '</svg>';
   body.insertAdjacentHTML('afterbegin', sprite +
-    '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : '') + '</a>' +
+    '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : layout === 'admin' ? '<span class="gnb__role gnb__role--admin">관리자</span>' : '') + '</a>' +
     '<nav class="gnb__menu" aria-label="주 메뉴">' + menu + '</nav><div class="gnb__right">' + right + '</div></div></header>');
   body.insertAdjacentHTML('beforeend', '<footer class="footer"><div class="container"><div class="footer__top"><img src="' + logo + '" alt="STAGE DUCK">' +
     '<nav class="footer__links" aria-label="바닥글"><a href="#">이용약관</a><a href="#"><b>개인정보처리방침</b></a><a href="#">업체 이용약관</a><a href="#">공지사항</a><a href="#">1:1 문의</a></nav></div>' +
