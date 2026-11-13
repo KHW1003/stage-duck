@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>채팅 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 채팅 (사용자) · FR-CHAT-01~06 · AC-F3-06~15 · 묶음 3
+     React: pages/ChatPage.tsx = ChatLayout(variant) > ChatList + Room + ChatSide. 이 목업은 모양 A(3단). B·C는 components.html 3번.
+     새 메시지·읽음은 WebSocket으로 새로고침 없이 바뀐다 (AC-F3-08). -->
+<body data-layout="user" data-nav="chat">
+
+<div class="mock-switch" data-group="card">
+  <span>목업 보기</span>
+  <button type="button" data-value="pending" aria-pressed="true">확인 카드 받음</button>
+  <button type="button" data-value="opened">내역서 본 뒤</button>
+  <button type="button" data-value="done">컨펌 완료</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>채팅</li></ol><h1>채팅</h1></div><select class="select select--sm" aria-label="공연"><option>가을밤 밴드 공연 · 11월 28일(토)</option></select></div></div>
+
+<main class="container main">
+  <div class="chat">
+    <div class="chat-list">
+      <div class="chat-list__head"><b>대화 <span class="muted small">3</span></b><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">장비</button><button type="button" aria-pressed="false">공연장</button></div></div>
+      <div class="chat-list__items">
+        <div class="chat-item" aria-current="true"><span class="avatar">D</span><div style="min-width:0"><p class="chat-item__name">업체 D <span class="tag tag--point">장비</span></p><p class="chat-item__last">견적 내역 확인 카드를 보냈어요</p></div><div class="chat-item__side">13:24<span class="count">1</span></div></div>
+        <div class="chat-item"><span class="avatar">C</span><div style="min-width:0"><p class="chat-item__name">업체 C <span class="tag">공연장</span></p><p class="chat-item__last">컨펌 완료</p></div><div class="chat-item__side">어제</div></div>
+        <div class="chat-item"><span class="avatar">A</span><div style="min-width:0"><p class="chat-item__name">업체 A <span class="tag">공연장</span></p><p class="chat-item__last">다른 업체와 진행하기로 했어요</p></div><div class="chat-item__side">어제</div></div>
+      </div>
+    </div>
+
+    <div class="room">
+      <div class="room__head"><div class="who"><span class="avatar avatar--sm">D</span><div><b>업체 D <span class="tag tag--point">장비</span></b><small>견적서 v2 · 1,350,000원 · 조율 중</small></div></div><a class="icon-btn" href="quote.html" aria-label="내역서"><span data-icon="doc"></span></a><button class="icon-btn" type="button" aria-label="신고" data-open="report"><span data-icon="flag"></span></button></div>
+      <div class="room__msgs">
+        <span class="room__day">11월 13일 (금)</span>
+        <div class="c-card c-card--off"><div class="c-card__head"><span>견적서 v1</span><span class="tag">이전 버전</span></div><div class="c-card__body"><p class="c-card__total">1,250,000<small>원</small></p><p class="c-card__meta">추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함 · 설치 90분</p></div></div>
+        <span class="room__sys">가을밤밴드님이 채팅을 시작했어요</span>
+        <div class="msg"><p class="msg__b">안녕하세요, 업체 D예요. 공간 C 입실이 15:00이라 그때부터 설치하면 16:30에 끝나요.</p><span class="msg__t">13:10</span></div>
+        <div class="msg msg--me"><p class="msg__b">리허설을 16:00으로 당길 수도 있어요. 설치를 더 빨리 끝낼 수 있을까요?</p><span class="msg__t"><span class="msg__read">읽음</span>13:12</span></div>
+        <div class="msg"><p class="msg__b">설치 인원을 한 명 더 붙이면 15:45에 끝나요. 견적서를 고쳐서 다시 보낼게요.</p><span class="msg__t">13:15</span></div>
+        <div class="msg"><span class="msg__photo" role="img" aria-label="업체 D가 보낸 무대 설치 예시 사진" style="--img:url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&q=60')"></span><span class="msg__t">13:16</span></div>
+        <div class="msg"><div class="msg__file"><span data-icon="file"></span><div>무대 배치도.pdf<small>412KB</small></div></div><span class="msg__t">13:16</span></div>
+        <div class="c-card"><div class="c-card__head"><span>견적서 v2</span><span class="status status--pass"><span data-icon="pass"></span>통과</span></div><div class="c-card__body"><p class="c-card__total">1,350,000<small>원</small></p><p class="c-card__diff">v1 → v2 · 설치 인원 +1 · 설치 완료 16:30 → 15:45 · +100,000원</p></div><div class="c-card__foot"><a href="quote.html">자세히 보기</a></div></div>
+        <div class="msg"><p class="msg__b">급하면 010-0000-0000으로 연락 주셔도 돼요.</p><span class="msg__t">13:20</span></div>
+        <div class="room__warn" role="note"><span data-icon="warn" class="icon--sm"></span><span>플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.</span></div>
+        <div class="c-card c-card--confirm" data-when="card:pending"><div class="c-card__head"><span>견적 내역 확인</span><span class="timer" style="color:#fff"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><div class="c-card__body"><p class="c-card__meta">업체 D · 장비 · 견적서 v2 고정</p><p class="c-card__total">1,350,000<small>원</small></p><p class="mt-4"><span class="status status--pass"><span data-icon="pass"></span>자동 검사 통과</span></p></div><div class="c-card__foot"><button type="button">다시 조율</button><a href="quote.html">내역서 보기</a><button type="button" disabled>컨펌</button></div><p class="c-card__why">내역서를 끝까지 보면 컨펌할 수 있어요.</p></div>
+        <div class="c-card c-card--confirm" data-when="card:opened"><div class="c-card__head"><span>견적 내역 확인</span><span class="timer" style="color:#fff"><span data-icon="clock" class="icon--sm"></span>46:58 남음</span></div><div class="c-card__body"><p class="c-card__meta">업체 D · 장비 · 견적서 v2 고정 · 내역서 확인함</p><p class="c-card__total">1,350,000<small>원</small></p></div><div class="c-card__foot"><button type="button">다시 조율</button><a href="quote.html">내역서 보기</a><button class="is-primary" type="button" data-open="confirm">컨펌</button></div></div>
+        <div class="msg msg--me" data-when="card:done"><p class="msg__b">내역서 확인했어요. 이대로 진행할게요.</p><span class="msg__t"><span class="msg__read">읽음</span>15:01</span></div>
+        <div class="c-card c-card--done" data-when="card:done"><div class="c-card__head"><span>컨펌 완료</span><span class="muted">15:02</span></div><div class="c-card__body"><p class="c-card__meta">업체 D · 장비 · 견적서 v2</p><p class="c-card__total">1,350,000<small>원</small></p></div><div class="c-card__foot"><a class="is-primary" href="next.html">다음 단계로</a></div></div>
+      </div>
+      <div class="composer"><button class="icon-btn" type="button" aria-label="사진 보내기"><span data-icon="image"></span></button><button class="icon-btn" type="button" aria-label="파일 보내기"><span data-icon="clip"></span></button><textarea rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea><button class="btn btn--primary btn--sm" type="button" aria-label="보내기"><span data-icon="send" class="icon--sm"></span></button></div>
+    </div>
+
+    <aside class="chat-side">
+      <div class="chat-side__sec"><p class="chat-side__title">이 단계</p><p class="strong">장비 · <span data-when="card:pending card:opened">조율 중</span><span data-when="card:done">컨펌</span></p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p></div>
+      <div class="chat-side__sec"><p class="chat-side__title">지금 견적서 (v2)</p><p class="sum-total" style="justify-content:flex-start"><b>1,350,000<small>원</small></b></p><p class="small muted">추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함</p><a class="link link--point mt-4" href="quote.html">내역서 보기<span data-icon="right" class="icon--sm"></span></a></div>
+      <div class="chat-side__sec"><p class="chat-side__title">자동 검사</p><dl class="sum-rows"><div><dt>설치 완료</dt><dd><span class="status status--pass"><span data-icon="pass"></span>15:45</span></dd></div><div><dt>공간 반입</dt><dd><span class="status status--pass"><span data-icon="pass"></span>통과</span></dd></div><div><dt>엔지니어</dt><dd><span class="status status--warn"><span data-icon="warn"></span>포함</span></dd></div></dl></div>
+      <div class="chat-side__sec"><p class="chat-side__title">앞 단계</p><p class="desc">공간 C · 입실 15:00 · 기본 마이크 2 · 전원 4구</p></div>
+      <div class="chat-side__sec"><a class="btn btn--sm btn--block" href="compare.html">단계별 비교 보기</a></div>
+    </aside>
+  </div>
+</main>
+
+<div class="layer" id="confirm" hidden><div class="modal"><div class="modal__head"><h2>컨펌</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 D 견적서 v2를 컨펌할까요?</p><p>같은 장비 단계의 다른 견적서는 자동으로 마감돼요.</p>
+    <table class="info-table mt-16"><tr><th>단계</th><td>장비</td></tr><tr><th>견적서</th><td>v2 · 11월 13일 13:18</td></tr><tr><th>금액</th><td class="num strong">1,350,000원</td></tr><tr><th>자동 검사</th><td><span class="status status--pass"><span data-icon="pass"></span>통과</span></td></tr></table>
+    <p class="field__hint mt-12">결제는 모든 단계를 정한 뒤 통합 청구서로 한 번에 해요.</p></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><a class="btn btn--primary" href="next.html">컨펌</a></div></div></div>
+<div class="layer" id="report" hidden><div class="modal"><div class="modal__head"><h2>신고하기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 채팅방을 신고할까요?</p><p>관리자가 대화를 확인한 뒤 경고를 줄 수 있어요. 경고 3회면 이용이 정지돼요.</p><div class="stack mt-16" style="--gap:8px"><label class="check"><input type="radio" name="r" checked>외부 거래 유도</label><label class="check"><input type="radio" name="r">욕설·불쾌한 말</label><label class="check"><input type="radio" name="r">기타</label></div><textarea class="textarea mt-12" aria-label="내용"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>신고하기</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

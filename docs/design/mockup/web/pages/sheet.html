@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>최종 담당표 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 최종 담당표 (사용자·업체 공통) · FR-PAY-04 · AC-F5-11 · 묶음 4
+     React: pages/SheetPage.tsx = PageTop + Timeline + ScopeTable + Contacts
+     연락처는 결제 후 이 화면(GET /performances/{id}/sheet)에서만. 업체 쪽은 주소 끝 ?as=partner. 컨펌 업체(C·D)와 사용자만 본다. -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>최종 담당표</li></ol><h1>가을밤 밴드 공연 최종 담당표</h1><div class="page-top__meta"><span>11월 28일(토)</span><span>공간 C · 광주 동구</span><span>관객 80명</span><span>결제 11월 13일 15:20</span></div></div><button class="btn btn--sm" type="button" onclick="print()"><span data-icon="print" class="icon--sm"></span>인쇄</button></div></div>
+
+<main class="container main">
+  <div class="with-aside">
+    <div>
+      <section class="sec"><div class="sec-head"><h2>당일 일정</h2></div>
+        <ol class="timeline">
+          <li><span class="timeline__t">15:00</span><span class="timeline__dot"></span><div class="timeline__body"><b>공간 C 입실 · 장비 설치 시작</b><small>업체 C (공간) · 업체 D (장비)</small></div></li>
+          <li><span class="timeline__t">15:45</span><span class="timeline__dot"></span><div class="timeline__body"><b>장비 설치 완료</b><small>업체 D</small></div></li>
+          <li><span class="timeline__t">17:00</span><span class="timeline__dot"></span><div class="timeline__body"><b>리허설 · 사운드체크</b><small>업체 D 엔지니어 · 사용자</small></div></li>
+          <li><span class="timeline__t">19:00</span><span class="timeline__dot"></span><div class="timeline__body"><b>공연 시작</b><small>FOH 믹싱: 업체 D 엔지니어</small></div></li>
+          <li><span class="timeline__t">21:00</span><span class="timeline__dot"></span><div class="timeline__body"><b>공연 끝 · 철수 시작</b><small>업체 D</small></div></li>
+          <li><span class="timeline__t">22:00</span><span class="timeline__dot"></span><div class="timeline__body"><b>퇴실 마감</b><small>업체 C</small></div></li>
+        </ol></section>
+      <section class="sec"><div class="sec-head"><h2>담당 범위</h2><p>컨펌할 때의 조건을 그대로 보관했어요. 업체가 나중에 정보를 바꿔도 이 표는 바뀌지 않아요.</p></div>
+        <div class="table-box"><table class="table table--fit"><thead><tr><th>단계</th><th>업체</th><th>맡는 일</th><th>금액</th></tr></thead><tbody>
+          <tr><td class="strong">공연장</td><td>업체 C</td><td class="l">공간 C 대관 · 기본 마이크 2 · 현장 관리자</td><td class="r">500,000원</td></tr>
+          <tr><td class="strong">장비</td><td>업체 D</td><td class="l">음향 장비 · 운반 · 설치·철수 · 엔지니어 1명</td><td class="r">1,350,000원</td></tr>
+          <tr class="is-off"><td class="strong">엔지니어</td><td>건너뜀</td><td class="l">업체 D 견적서에 포함</td><td class="r">-</td></tr>
+        </tbody></table></div></section>
+    </div>
+    <aside>
+      <div class="sec-head"><h2>연락처</h2></div>
+      <ul class="contacts">
+        <li><p class="contacts__role">사용자</p><p class="contacts__name">가을밤밴드</p><dl><dt>이름</dt><dd>시연 사용자</dd><dt>전화</dt><dd>010-0000-0000</dd><dt>이메일</dt><dd>user@stageduck.test</dd></dl></li>
+        <li><p class="contacts__role">공연장</p><p class="contacts__name">업체 C</p><dl><dt>전화</dt><dd>010-0000-0003</dd><dt>이메일</dt><dd>c@stageduck.test</dd></dl></li>
+        <li><p class="contacts__role">장비 · 엔지니어</p><p class="contacts__name">업체 D</p><dl><dt>전화</dt><dd>010-0000-0004</dd><dt>이메일</dt><dd>d@stageduck.test</dd></dl></li>
+      </ul>
+      <p class="field__hint mt-12">이 공연에서 컨펌된 업체와 사용자만 볼 수 있어요.</p>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

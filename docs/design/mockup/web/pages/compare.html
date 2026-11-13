@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>단계별 견적 비교 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 단계별 견적 비교 (대표 화면) · FR-CHK-01 · AC-F3-20~24 · 묶음 4
+     React: pages/ComparePage.tsx = StageTabs + QuoteColumns + CompareTable
+     검사 결과는 서버 run_checks() 결과를 그대로 그린다. 견적서는 떠 있는 카드 대신 붙은 칸(q-cols)으로 나란히. -->
+<body data-layout="user" data-nav="inbox">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="inbox.html">견적함</a></li><li>단계별 비교</li></ol><h1>단계별 견적 비교</h1><div class="page-top__meta"><span>가을밤 밴드 공연</span><span>11월 28일(토)</span><span>리허설 17:00</span><span>관객 80명</span></div></div></div></div>
+<div class="tab-bar"><div class="container"><div class="tabs" role="tablist" data-tabs>
+  <button role="tab" aria-selected="true" aria-controls="c1" type="button">01 공연장 <span class="state state--done">컨펌</span></button>
+  <button role="tab" aria-selected="false" aria-controls="c2" type="button">02 장비 <span class="state state--on">조율 중</span></button>
+  <button role="tab" aria-selected="false" aria-disabled="true" type="button">03 엔지니어 · 대기</button>
+</div></div></div>
+
+<main class="container main">
+  <section id="c1">
+    <p class="desc muted mb-16">같은 기준으로 자동 검사한 결과예요. 실제 가능 여부는 업체와 채팅으로 확인해 주세요.</p>
+    <div class="q-cols">
+      <div class="q-col is-off"><div class="q-col__head"><p class="q-col__kind">공간 + 장비 + 엔지니어 <span class="tag tag--fill">풀스펙</span></p><p class="q-col__name">업체 A · 공간 A</p><p class="q-col__total">4,000,000<small>원</small></p><p class="q-col__incl">부가세 포함</p></div>
+        <ul class="q-col__checks"><li><span class="status status--pass"><span data-icon="pass"></span>수용 인원</span><span>150명</span></li><li><span class="status status--pass"><span data-icon="pass"></span>설치 시간</span><span>13:00 입실 · 240분</span></li><li><span class="status status--warn"><span data-icon="warn"></span>예산</span><span>대관 예산 넘음</span></li></ul>
+        <div class="q-col__foot"><span class="state">마감</span><a class="link" href="quote.html">견적서</a></div></div>
+      <div class="q-col is-off"><div class="q-col__head"><p class="q-col__kind">공간</p><p class="q-col__name">업체 B · 공간 B</p><p class="q-col__total">400,000<small>원</small></p><p class="q-col__incl">대관료 · 부가세 포함</p></div>
+        <ul class="q-col__checks"><li><span class="status status--pass"><span data-icon="pass"></span>수용 인원</span><span>100명</span></li><li><span class="status status--warn"><span data-icon="warn"></span>설치 시간</span><span>17:00 입실 · 0분</span></li><li><span class="status status--pass"><span data-icon="pass"></span>밴드 공연</span><span>가능</span></li></ul>
+        <div class="q-col__foot"><span class="state">마감</span><a class="link" href="quote.html">견적서</a></div></div>
+      <div class="q-col is-on"><div class="q-col__head"><p class="q-col__kind">공간 <span class="state state--done">컨펌</span></p><p class="q-col__name">업체 C · 공간 C</p><p class="q-col__total">500,000<small>원</small></p><p class="q-col__incl">대관료 · 부가세 포함</p></div>
+        <ul class="q-col__checks"><li><span class="status status--pass"><span data-icon="pass"></span>수용 인원</span><span>120명</span></li><li><span class="status status--pass"><span data-icon="pass"></span>설치 시간</span><span>15:00 입실 · 120분</span></li><li><span class="status status--pass"><span data-icon="pass"></span>밴드 공연</span><span>가능</span></li></ul>
+        <div class="q-col__foot"><span class="small strong">11월 12일 컨펌</span><a class="link link--point" href="quote.html">내역서</a></div></div>
+    </div>
+
+    <div class="sec-head mt-40"><h2>항목별로 나란히 보기</h2></div>
+    <div class="table-box"><table class="table">
+      <thead><tr><th style="width:180px">항목</th><th>업체 A · 공간 A</th><th>업체 B · 공간 B</th><th>업체 C · 공간 C</th></tr></thead>
+      <tbody>
+        <tr><td class="l strong">총액</td><td class="r">4,000,000원</td><td class="r">400,000원</td><td class="r strong">500,000원</td></tr>
+        <tr><td class="l strong">입실 · 설치 가능</td><td>13:00</td><td>17:00</td><td class="strong">15:00</td></tr>
+        <tr><td class="l strong">리허설 전 설치 시간</td><td><span class="status status--pass"><span data-icon="pass"></span>240분</span></td><td><span class="status status--warn"><span data-icon="warn"></span>0분</span><small>입실과 리허설이 같은 시각</small></td><td><span class="status status--pass"><span data-icon="pass"></span>120분</span></td></tr>
+        <tr><td class="l strong">수용 인원</td><td>150명</td><td>100명</td><td>120명</td></tr>
+        <tr><td class="l strong">포함</td><td>공간 · 장비 · 엔지니어</td><td>공간</td><td>공간 · 기본 마이크 2</td></tr>
+        <tr><td class="l strong">퇴실 마감</td><td>22:00</td><td>22:00</td><td>22:00</td></tr>
+        <tr><td class="l strong">요청서 버전</td><td>v1 기준</td><td>v1 기준</td><td>v1 기준</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <section id="c2" hidden>
+    <div class="notice mb-16"><span data-icon="venue"></span><div>앞 단계에서 정한 <b>공간 C (입실 15:00)</b> 기준으로 검사했어요.</div></div>
+    <div class="q-cols">
+      <div class="q-col is-on"><div class="q-col__head"><p class="q-col__kind">장비 + 엔지니어 <span class="tag">v2</span></p><p class="q-col__name">업체 D · 기본형</p><p class="q-col__total">1,350,000<small>원</small></p><p class="q-col__incl">v1 1,250,000원에서 수정</p></div>
+        <ul class="q-col__checks"><li><span class="status status--pass"><span data-icon="pass"></span>설치 완료</span><span>15:45 · 리허설 17:00</span></li><li><span class="status status--pass"><span data-icon="pass"></span>공간 반입</span><span>외부 장비 허용</span></li><li><span class="status status--warn"><span data-icon="warn"></span>엔지니어</span><span>포함 · 건너뛰기 제안</span></li></ul>
+        <div class="q-col__foot"><span class="state state--on">확인 카드 받음</span><a class="link link--point" href="chat.html">채팅</a></div></div>
+      <div class="q-col"><div class="q-col__head"><p class="q-col__kind">장비 <span class="tag">v1</span></p><p class="q-col__name">업체 E · 기본형</p><p class="q-col__total">980,000<small>원</small></p><p class="q-col__incl">부가세 포함</p></div>
+        <ul class="q-col__checks"><li><span class="status status--pass"><span data-icon="pass"></span>설치 완료</span><span>16:30 · 리허설 17:00</span></li><li><span class="status status--info"><span data-icon="info"></span>무선 마이크</span><span>수량 확인 필요</span></li><li><span class="status status--pass"><span data-icon="pass"></span>공간 반입</span><span>외부 장비 허용</span></li></ul>
+        <div class="q-col__foot"><span class="state">채팅 전</span><a class="link" href="inbox.html">채팅 시작</a></div></div>
+      <div class="q-col"><div class="q-col__head" style="border:0"><p class="q-col__kind">더 받아 보기</p><p class="q-col__name">저장한 업체나 PR 게시판의 장비 업체에 오퍼를 보낼 수 있어요.</p><a class="btn btn--sm mt-16" href="favorites.html">오퍼 보내기 · 0/10곳</a></div></div>
+    </div>
+    <div class="notice notice--conflict mt-16"><span data-icon="conflict"></span><div><b>참고:</b> 공연장이 공간 B(입실 17:00)였다면 업체 D의 설치 완료는 18:30이라 <b>충돌 · 90분 늦음</b>이고 컨펌할 수 없어요.</div></div>
+  </section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

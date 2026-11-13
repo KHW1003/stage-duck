@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>업체 D · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 업체 프로필 · FR-PROFILE-01 · AC-F5-15 · 묶음 1
+     React: pages/SupplierProfilePage.tsx = PageTop(프로필) + Tabs(소개 / PR 게시글) + InfoTable + PostItem[]
+     보이는 것: 상호·승인 부문·소개·PR 게시글·거래 n건. 전화번호·사업자 서류는 보이지 않는다. 평점·후기 없음(후속). -->
+<body data-layout="guest" data-nav="board">
+
+<div class="page-top"><div class="container page-top__inner">
+  <div class="who"><span class="avatar avatar--lg">D</span><div><ol class="page-top__crumb"><li><a href="board.html">PR 게시판</a></li><li>업체 프로필</li></ol><h1>업체 D</h1><div class="page-top__meta"><span>음향 장비·설치 · 엔지니어</span><span>광주 · 전남</span><span>거래 15건</span><span>2026년 9월 입점</span></div></div></div>
+  <div class="page-top__actions"><button class="btn btn--sm" type="button"><span data-icon="heart" class="icon--sm"></span>관심 업체 저장</button></div>
+</div></div>
+
+<main class="container main">
+  <section class="sec"><div class="sec-head"><h2>소개</h2></div><p class="desc" style="line-height:1.8">관객 50~150명 밴드 공연 음향을 맡아요. 설치·철수와 현장 엔지니어를 함께 보내요.</p></section>
+  <section class="sec"><div class="sec-head"><h2>업체 정보</h2></div>
+    <table class="info-table"><tr><th>승인 부문</th><td>음향 장비·설치, 엔지니어</td><th>활동 지역</th><td>광주, 전남</td></tr><tr><th>기본 설치</th><td>90분</td><th>엔지니어 경력</th><td>7년</td></tr><tr><th>배상책임보험</th><td>가입 <span class="tag">업체 입력</span></td><th>거래</th><td>15건</td></tr></table>
+    <p class="field__hint mt-8">전화번호와 사업자 서류는 공개하지 않아요.</p></section>
+  <section class="sec"><div class="sec-head"><h2>PR 게시글 <em>2</em></h2></div>
+    <div class="list" style="--list-cols: 160px minmax(0,1fr) auto">
+      <a class="list__item" href="post.html"><div class="photo" style="--img:url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=60')" role="img" aria-label="업체 D 장비 사진"></div><div><p class="list__title"><span class="prefix">[장비]</span>밴드 공연 음향, 설치부터 철수까지 맡아요</p><div class="list__meta"><span>3일 전 끌어올림</span><span>조회 312</span></div></div><span class="link">보기<span data-icon="right" class="icon--sm"></span></span></a>
+      <a class="list__item" href="post.html"><div class="photo" style="--img:url('https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=60')" role="img" aria-label="업체 D 엔지니어 사진"></div><div><p class="list__title"><span class="prefix">[엔지니어]</span>리허설부터 공연 운영까지</p><div class="list__meta"><span>1주 전</span><span>조회 121</span></div></div><span class="link">보기<span data-icon="right" class="icon--sm"></span></span></a>
+    </div></section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

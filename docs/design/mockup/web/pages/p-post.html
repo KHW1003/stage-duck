@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 PR 게시글 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+<style>
+  /* MyPostPage.module.css: 사진 올리기 칸 */
+  .photos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .photos > div, .photos > label { position: relative; aspect-ratio: 1; border-radius: 4px; background: var(--sd-photo) var(--img) center / cover no-repeat; }
+  .photos button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 3px; background: rgba(32,46,61,.7); color: #fff; cursor: pointer; }
+  .photos label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px dashed var(--sd-line-strong); background: var(--sd-th); color: var(--sd-muted); font-size: var(--sd-text-small); cursor: pointer; }
+</style>
+</head>
+<!-- 화면: 내 PR 게시글 (작성·수정·내리기·끌어올리기) · FR-BOARD-01~03 · AC-F4-01~03·10 · 묶음 1
+     React: pages/MyPostPage.tsx = SectorTabs + FormTable(말머리 · 제목 · 사진 최대 10장 · 본문) + ContactWarning + BumpButton
+     승인 부문만 말머리로 고른다. 부문당 활성 글 1개. 끌어올리기 7일에 1회. 연락처·외부 링크 경고. -->
+<body data-layout="partner" data-nav="board">
+
+<div class="mock-switch" data-group="st">
+  <span>목업 보기</span>
+  <button type="button" data-value="edit" aria-pressed="true">글 고치기</button>
+  <button type="button" data-value="blind">블라인드됨</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="board.html">PR 게시판</a></li><li>내 PR 게시글</li></ol><h1>내 PR 게시글</h1><p class="page-top__desc">승인된 부문마다 글을 하나씩 올릴 수 있어요.</p></div><a class="btn btn--sm" href="post.html">게시판에서 보기</a></div></div>
+<div class="tab-bar"><div class="container"><div class="tabs"><button role="tab" aria-selected="true" type="button">[장비] 게시 중</button><button role="tab" aria-selected="false" type="button">[엔지니어] 게시 중</button><button role="tab" aria-selected="false" aria-disabled="true" type="button">[공연장] 승인 안 됨</button></div></div></div>
+
+<main class="container container--narrow main">
+  <div class="notice notice--conflict mb-16" data-when="st:blind"><span data-icon="conflict"></span><div><b>이 글은 관리자가 블라인드했어요.</b> 사유: 본문에 외부 연락처가 있어요. 경고 1회가 기록됐어요. 관리자가 블라인드를 풀면 고쳐서 다시 올릴 수 있어요.</div></div>
+  <div class="summary" data-when="st:edit"><div><span>조회</span><b>312</b></div><div><span>관심 저장</span><b>18</b></div><div><span>마지막 끌어올리기</span><b>3<small>일 전</small></b></div><div style="display:flex;align-items:center"><button class="btn btn--sm btn--block" type="button" disabled><span data-icon="up" class="icon--sm"></span>4일 뒤 끌어올리기</button></div></div>
+
+  <section class="sec mt-40"><div class="sec-head"><h2>글</h2></div>
+    <div class="form-table">
+      <div><span class="form-table__th">말머리<span class="req">*</span></span><span class="form-table__td"><select class="select" style="max-width:280px"><option>[장비]</option><option>[엔지니어]</option><option disabled>[공연장] · 승인된 부문이 아니에요</option></select></span></div>
+      <div><span class="form-table__th">제목<span class="req">*</span></span><span class="form-table__td"><input class="input wide" value="밴드 공연 음향, 설치부터 철수까지 맡아요"></span></div>
+      <div><span class="form-table__th">사진 <span class="muted small" style="font-weight:400">4/10</span></span><span class="form-table__td"><div class="photos">
+        <div style="--img:url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=60')"><button type="button" aria-label="사진 지우기"><span data-icon="x" class="icon--sm"></span></button></div>
+        <div style="--img:url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=60')"><button type="button" aria-label="사진 지우기"><span data-icon="x" class="icon--sm"></span></button></div>
+        <div style="--img:url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&q=60')"><button type="button" aria-label="사진 지우기"><span data-icon="x" class="icon--sm"></span></button></div>
+        <div style="--img:url('https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=400&q=60')"><button type="button" aria-label="사진 지우기"><span data-icon="x" class="icon--sm"></span></button></div>
+        <label><span data-icon="plus"></span>추가</label></div><span class="field__hint">첫 사진이 게시판 목록에 크게 보여요.</span></span></div>
+      <div><span class="form-table__th">본문<span class="req">*</span></span><span class="form-table__td"><textarea class="textarea" rows="7">관객 50~150명 밴드 공연을 주로 해요. 공간 입실 시각에 맞춰 설치하고, 공연이 끝나면 철수까지 해요. 엔지니어 1명이 함께 가는 구성도 있어요.
+문의는 카톡 abc123으로 주세요.</textarea>
+        <div class="notice notice--warn"><span data-icon="warn"></span><div>외부 연락처로 보이는 글자가 있어요 ("카톡 abc123"). 전화번호·계좌번호·외부 링크는 쓸 수 없어요. 신고되면 블라인드되고 경고가 기록돼요.</div></div></span></div>
+    </div></section>
+
+  <div class="row row--between mt-40"><button class="btn btn--ghost btn--danger" type="button"><span data-icon="trash" class="icon--sm"></span>글 내리기</button><button class="btn btn--primary btn--lg" type="button" style="min-width:240px">저장</button></div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>다음 단계로 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: [다음 단계로] · 건너뛰기 · 전부 구했어요 · FR-CHAT-04 · FR-ASSIGN-03 · AC-F3-02·04·05·14·19·23 · 묶음 2
+     React: pages/NextStagePage.tsx = Result + StageTrack + NextChoice(choice) + SkipModal + AllFoundModal
+     버튼은 Idempotency-Key를 넘기고 응답이 올 때까지 끈다. -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="case">
+  <span>목업 보기</span>
+  <button type="button" data-value="venue">공연장 컨펌 뒤</button>
+  <button type="button" data-value="gear" aria-pressed="true">장비 컨펌 뒤 (엔지니어 포함)</button>
+  <button type="button" data-value="last">마지막 단계 뒤</button>
+</div>
+
+<main class="container container--narrow main">
+  <div class="result">
+    <span class="result__icon"><span data-icon="check"></span></span>
+    <h1 data-when="case:venue">공연장을 컨펌했어요</h1><h1 data-when="case:gear">장비를 컨펌했어요</h1><h1 data-when="case:last">모든 단계를 정했어요</h1>
+    <p data-when="case:venue">공간 C · 업체 C · 500,000원</p><p data-when="case:gear">업체 D · 견적서 v2 · 1,350,000원</p><p data-when="case:last">통합 청구서로 한 번에 결제하면 섭외가 끝나요.</p>
+  </div>
+
+  <ol class="track">
+    <li class="is-done"><span class="track__bar"></span><p class="track__no">STEP 01</p><p class="track__name">공연장</p><p class="track__info">공간 C</p></li>
+    <li data-when="case:venue"><span class="track__bar"></span><p class="track__no">STEP 02</p><p class="track__name">장비</p><p class="track__info">다음 차례</p></li>
+    <li class="is-done" data-when="case:gear case:last"><span class="track__bar"></span><p class="track__no">STEP 02</p><p class="track__name">장비</p><p class="track__info">업체 D</p></li>
+    <li data-when="case:venue case:gear"><span class="track__bar"></span><p class="track__no">STEP 03</p><p class="track__name">엔지니어</p><p class="track__info">대기</p></li>
+    <li class="is-skip" data-when="case:last"><span class="track__bar"></span><p class="track__no">STEP 03</p><p class="track__name">엔지니어</p><p class="track__info">건너뜀</p></li>
+  </ol>
+
+  <section class="sec mt-40" data-when="case:venue">
+    <div class="sec-head"><h2>다음은 장비예요</h2></div>
+    <div class="choice choice--col">
+      <label class="choice__item"><input type="radio" name="n1" checked><span class="choice__mark"></span><span><b>장비 업체 모집 시작</b><small>장비 업체에게 공고와 공간 C 정보(입실 15:00, 기본 장비, 전원)가 보여요.</small></span></label>
+      <label class="choice__item"><input type="radio" name="n1"><span class="choice__mark"></span><span><b>장비는 이미 있어요 · 건너뛰기</b><small>책임 고지에 동의하면 바로 엔지니어 단계로 가요.</small></span></label>
+    </div>
+    <div class="notice mt-16"><span data-icon="heart"></span><div class="grow">관심 업체로 저장한 <b>업체 D</b>가 장비 업체예요. 오퍼를 보낼까요?</div><a class="btn btn--sm" href="favorites.html">오퍼 보내기</a></div>
+    <div class="btns btns--center mt-40"><button class="btn btn--lg" type="button" data-open="allfound" style="min-width:160px">전부 구했어요</button><a class="btn btn--primary btn--lg" href="my.html" style="min-width:240px">장비 업체 모집 시작</a></div>
+  </section>
+
+  <section class="sec mt-40" data-when="case:gear">
+    <div class="notice notice--warn"><span data-icon="warn"></span><div><b>업체 D의 견적서에 엔지니어가 포함돼 있어요.</b> 엔지니어 단계를 건너뛰는 것을 제안해요.</div></div>
+    <div class="choice choice--col mt-16">
+      <label class="choice__item"><input type="radio" name="n2" checked><span class="choice__mark"></span><span><b>엔지니어 단계 건너뛰기</b><small>업체 D가 현장 운영까지 맡아요. 바로 통합 결제로 가요.</small></span></label>
+      <label class="choice__item"><input type="radio" name="n2"><span class="choice__mark"></span><span><b>엔지니어 업체도 모집하기</b><small>엔지니어 업체에게 공고와 공간 C·업체 D 정보가 보여요.</small></span></label>
+    </div>
+    <div class="btns btns--center mt-40"><a class="btn btn--lg" href="my.html" style="min-width:160px">나중에 정할게요</a><button class="btn btn--primary btn--lg" type="button" data-open="skip" style="min-width:240px">다음</button></div>
+  </section>
+
+  <section class="sec mt-40" data-when="case:last">
+    <div class="invoice">
+      <div class="invoice__row"><span class="invoice__stage">공연장</span><div class="invoice__what"><b>업체 C · 공간 C</b></div><span class="invoice__amt">500,000원</span></div>
+      <div class="invoice__row"><span class="invoice__stage">장비</span><div class="invoice__what"><b>업체 D · 엔지니어 포함</b></div><span class="invoice__amt">1,350,000원</span></div>
+      <div class="invoice__row"><span class="invoice__stage muted">엔지니어</span><div class="invoice__what"><span class="state state--off">건너뜀</span></div><span class="invoice__amt muted">-</span></div>
+      <div class="invoice__total"><span>결제할 금액 <small class="muted" style="font-weight:400;font-size:var(--sd-text-small)">플랫폼 이용료 포함</small></span><b>1,942,500원</b></div>
+    </div>
+    <div class="btns btns--center mt-40"><a class="btn btn--lg" href="my.html" style="min-width:160px">내 공연으로</a><a class="btn btn--primary btn--lg" href="invoice.html" style="min-width:240px">통합 결제하기</a></div>
+  </section>
+</main>
+
+<div class="layer" id="skip" hidden><div class="modal"><div class="modal__head"><h2>건너뛰기 확인</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">엔지니어 단계를 건너뛸까요?</p><p>업체 D의 견적서에 엔지니어가 포함돼 있어요.</p><div class="notice notice--warn mt-16"><span data-icon="warn"></span><div>건너뛰면 엔지니어 업체를 따로 모집하지 않아요. 현장 운영은 업체 D가 맡는 것으로 기록되고, 동의한 시각이 남아요.</div></div><label class="check mt-16"><input type="checkbox" checked>위 내용을 확인했고 동의해요</label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>모집할래요</button><a class="btn btn--primary" href="next.html?case=last">건너뛰기</a></div></div></div>
+<div class="layer" id="allfound" hidden><div class="modal"><div class="modal__head"><h2>전부 구했어요</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">남은 단계를 모두 건너뛸까요?</p><p>장비·엔지니어 단계가 모두 건너뜀이 되고 바로 결제로 가요.</p><div class="notice notice--warn mt-16"><span data-icon="warn"></span><div>건너뛴 단계의 장비·인력은 직접 준비해야 해요. STAGE DUCK은 그 부분을 확인하지 않아요.</div></div><label class="check mt-16"><input type="checkbox">위 내용을 확인했어요</label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" disabled>모두 건너뛰기</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>
