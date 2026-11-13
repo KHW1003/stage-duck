@@ -297,3 +297,7 @@ body.is-user .now.only-user { display: flex !important; }
   .cmp td:nth-child(3), .cmp th:nth-child(3) { display: none; }
   .gnb__right .pill.only-guest { padding: 0 12px; }
 }
+
+/* 로고: logo.svg (팀 로고 이미지를 그대로 따라 그린 SVG). 높이만 정하고 너비는 비율대로 */
+.logo__img { display: block; height: 30px; width: auto; }
+.footer .logo__img { height: 26px; }

@@ -25,12 +25,12 @@
   --sd-ink: #202e3d;         /* 본문, 제목 */
   --sd-muted: #677583;       /* 설명, 단위, 메타 */
 
-  /* 강조 (파랑) */
-  --sd-blue: #397db3;        /* 머리말, 링크, 아이콘 */
-  --sd-blue-button: #3574a8; /* 주 버튼 바탕. 흰 글자 대비 5.0:1 (DESIGN.md 2.1 선택지) */
-  --sd-accent: #eaf4fc;      /* 아이콘 뒤 바탕, 단계 번호, 하단 안내 띠, 안내 상자 */
-  --sd-featured: #93bfdf;    /* 추천·선택된 카드 테두리 */
-  --sd-focus: #8cc8ed;       /* 키보드 포커스 테두리 */
+  /* 강조 (레드 시안 확정) */
+  --sd-blue: #d62c2c;        /* 포인트 (레드 시안 #F23636, 글자용으로 조금 어둡게) */
+  --sd-blue-button: #2b3138; /* 주 버튼 바탕 (차콜). 레드는 포인트에만 */
+  --sd-accent: #fdf0f0;      /* 아이콘 뒤 바탕, 단계 번호, 하단 안내 띠, 안내 상자 */
+  --sd-featured: #f5a9a9;    /* 추천·선택된 카드 테두리 */
+  --sd-focus: #f5a9a9;       /* 키보드 포커스 테두리 */
   --sd-on-blue: #ffffff;
 
   /* 상태: 자동 검사 결과 4종. 색만으로 구분하지 않고 아이콘 + 글자를 함께 쓴다 */
@@ -55,7 +55,7 @@
   --sd-text-logo: 20px;
 
   /* 간격 (DESIGN.md 2.4) */
-  --sd-page-width: 1100px;
+  --sd-page-width: 1300px;
   --sd-page-pad: 42px;
   --sd-header-pad: 22px;
   --sd-section-top: 41px;
