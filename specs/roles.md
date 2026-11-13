@@ -46,7 +46,7 @@
 
 ## 3. 묶음 사이의 약속 (인터페이스)
 
-먼저 정해 두면 서로 기다리지 않고 동시에 개발할 수 있다. 정한 함수 이름·형식은 각 모듈의 `service.py`에 먼저 빈 함수로 만들어 둔다.
+먼저 정해 두면 서로 기다리지 않고 동시에 개발할 수 있다. **빈 함수와 돌려주는 모양은 코드에 있다** (#35): `app/supplier/service.py`(`get_venue_snapshot`, `VenueSnapshot`), `app/request/service.py`(`get_open_stage`, `stage_confirmed`, `confirmed_lines`), `app/check/calc.py`(`run_checks`, `CheckResult`), `app/policy/service.py`(`report`, `blind_post`). 모양이 바뀌면 `tests/test_contracts.py`가 실패한다. 아직 구현 전인 함수는 테스트에서 목업으로 바꿔 쓴다. 대표 시나리오는 `tests/scenario/`(xfail)가 끝까지 따라간다.
 
 | 주는 쪽 → 받는 쪽 | 약속 | 언제 필요 |
 |---|---|---|

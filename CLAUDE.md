@@ -143,17 +143,18 @@
 | `.github/`, `CONTRIBUTING.md`, `CLAUDE.md`, `specs/`, `docs/요구사항_명세서.md` | 해원만 고친다. 고칠 점은 이슈로 올린다 |
 
 - 다른 묶음의 기능이 필요하면 **그 묶음의 `service.py` 함수만 부른다.** 남의 router를 HTTP로 부르거나, 남의 테이블을 직접 `select`·수정하지 않는다.
-- 묶음 사이에 부르는 함수는 `specs/roles.md` 3장에 정해져 있다. 아직 없으면 **그 이름 그대로 빈 함수(`raise NotImplementedError`)를 만들어 달라고** 담당에게 요청하고, 내 테스트에서는 그 함수를 목업으로 바꿔 진행한다.
+- 묶음 사이에 부르는 함수는 **이미 빈 함수로 있다** (아래 표의 파일). 본문이 `NotImplementedError`면 내 테스트에서 `monkeypatch`로 바꿔 진행한다. 이름·인자·돌려주는 칸을 바꾸면 `tests/test_contracts.py`가 실패한다 — 바꾸려면 쓰는 쪽과 합의하고 그 테스트도 같은 PR에서 고친다.
+- 대표 시나리오 통합 테스트 `tests/scenario/`는 지금 `xfail`이다. 내 API를 만들면 `pytest tests/scenario --runxfail --tb=line`으로 어디까지 가는지 본다. 계약서에 예시가 없어 테스트에 짐작으로 적힌 요청·응답 칸(`# 계약 예시 없음`)은 내가 만든 실제 모양에 맞춰 고친다.
 
 | 함수 | 주는 쪽 | 쓰는 쪽 |
 |---|---|---|
 | `current_user`, `require_role(...)` 의존성 | 1 | 전원 |
 | `supplier.service.can_send_quotes(supplier)` (있음) | 1 | 3 |
-| `get_venue_snapshot(venue_id)` | 1 | 2 |
-| `get_open_stage(performance_id)` | 2 | 1(오퍼), 3(공고·견적) |
-| `stage_confirmed(stage_id, quote_version_id)` | 2 (3이 부름) | 3 |
-| `run_checks(...) -> list[CheckResult]` | 4 | 3 (컨펌 전), 4 (비교 화면) |
-| `confirmed_lines(performance_id)` | 2·3 | 4 |
+| `supplier.service.get_venue_snapshot(db, venue_id)` | 1 | 2 |
+| `request.service.get_open_stage(db, performance_id)` | 2 | 1(오퍼), 3(공고·견적) |
+| `request.service.stage_confirmed(db, stage_id, quote_version_id, *, actor_id)` — 커밋 안 함 | 2 (3이 부름) | 3 |
+| `check.calc.run_checks(performance, quote, confirmed)`, `has_conflict(results)` | 4 | 3 (컨펌 전), 4 (비교 화면) |
+| `request.service.confirmed_lines(db, performance_id)` | 2 | 4 |
 | `policy.service.warn(...)` (있음), `report(...)`, `blind_post(...)` | 4 | 1·3 |
 
 ## 6. 코드를 쓰는 방법
