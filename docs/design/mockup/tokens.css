@@ -1,0 +1,84 @@
+/* STAGE DUCK 디자인 값 (목업용). 값은 DESIGN.md 2장 기본값이다.
+   목업이 확정되면 이 파일을 frontend/src/shared/styles/tokens.css 로 옮긴다.
+   화면 CSS에는 색·크기 숫자를 직접 적지 않고 아래 이름만 쓴다 (DESIGN.md 2장).
+
+   색 이름 규칙 (머니 to 홈과 같은 방식):
+     --sd-이름        띠·아이콘·테두리에 쓰는 기본 색
+     --sd-이름-text   흰 바탕 위 글자로 쓸 때 (대비 4.5:1 이상)
+     --sd-이름-soft   옅은 바탕으로 쓸 때 */
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root {
+  color-scheme: only light; /* 늘 밝은 화면 (DESIGN.md 1장). 브라우저가 강제로 어둡게 바꾸지 않게 */
+
+  /* 바탕과 선 */
+  --sd-bg: #ffffff;
+  --sd-soft: #f5f8fb;        /* 회색 구간 바탕, 데모 안내 띠, 예시 카드 */
+  --sd-line: #dde5eb;        /* 구분선, 카드·입력칸 테두리 */
+  --sd-line-strong: #c9d4dd; /* 입력칸에 마우스를 올렸을 때 테두리 */
+  --sd-photo: #eef2f6;       /* 사진 자리 바탕 */
+  --sd-photo-line: #e0e6ec;
+  --sd-photo-text: #8a97a4;
+
+  /* 글자 */
+  --sd-ink: #202e3d;         /* 본문, 제목 */
+  --sd-muted: #677583;       /* 설명, 단위, 메타 */
+
+  /* 강조 (파랑) */
+  --sd-blue: #397db3;        /* 머리말, 링크, 아이콘 */
+  --sd-blue-button: #3574a8; /* 주 버튼 바탕. 흰 글자 대비 5.0:1 (DESIGN.md 2.1 선택지) */
+  --sd-accent: #eaf4fc;      /* 아이콘 뒤 바탕, 단계 번호, 하단 안내 띠, 안내 상자 */
+  --sd-featured: #93bfdf;    /* 추천·선택된 카드 테두리 */
+  --sd-focus: #8cc8ed;       /* 키보드 포커스 테두리 */
+  --sd-on-blue: #ffffff;
+
+  /* 상태: 자동 검사 결과 4종. 색만으로 구분하지 않고 아이콘 + 글자를 함께 쓴다 */
+  --sd-pass-text: #43647b;     --sd-pass-soft: #edf3f7;
+  --sd-warn-text: #96601f;     --sd-warn-soft: #fbf3e8;
+  --sd-info-text: #677583;     --sd-info-soft: #f1f4f7;
+  --sd-conflict-text: #b3261e; --sd-conflict-soft: #fdf0ef; /* 제안값 (DESIGN.md 2.1) */
+
+  /* 글꼴 */
+  --sd-font: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  /* 글자 크기 (DESIGN.md 2.3, 데스크톱) */
+  --sd-text-hero: 36px;    /* 히어로 큰 제목 */
+  --sd-text-section: 24px; /* 구간 제목 */
+  --sd-text-total: 29px;   /* 견적 카드 총액 숫자 */
+  --sd-text-price: 17px;   /* 공간 카드 가격 */
+  --sd-text-card: 15px;    /* 카드 제목 */
+  --sd-text-body: 14px;    /* 본문 */
+  --sd-text-desc: 13px;    /* 설명 문단, 머리말, 메뉴 */
+  --sd-text-small: 12px;   /* 카드 안 설명, 목록 머리 */
+  --sd-text-meta: 11px;    /* 메타 정보, 라벨, 단위, 데모 띠 */
+  --sd-text-logo: 20px;
+
+  /* 간격 (DESIGN.md 2.4) */
+  --sd-page-width: 1100px;
+  --sd-page-pad: 42px;
+  --sd-header-pad: 22px;
+  --sd-section-top: 41px;
+  --sd-section-bottom: 48px;
+  --sd-hero-top: 58px;
+  --sd-hero-bottom: 50px;
+  --sd-gap-space: 20px;    /* 공간 카드 사이 */
+  --sd-gap-quote: 13px;    /* 견적 카드 사이 */
+
+  /* 모서리 */
+  --sd-r-card: 12px;
+  --sd-r-sample: 16px;
+  --sd-r-band: 14px;
+  --sd-r-button: 9px;
+  --sd-r-input: 8px;
+  --sd-r-label: 5px;
+
+  /* 크기 */
+  --sd-touch: 44px;        /* 누르는 곳 최소 높이 */
+  --sd-button-sm: 36px;
+  --sd-icon: 18px;
+  --sd-icon-sm: 14px;
+  --sd-icon-photo: 26px;
+  --sd-photo-ratio: 1.7;
+  --sd-logo-mark: 28px;    /* 로고 이미지 높이 (제안, DESIGN.md 3장) */
+}
