@@ -94,4 +94,5 @@
   --sd-on-photo-muted: rgba(255,255,255,.82);
   --sd-gnb-height: 72px;
   --sd-text-nav: 16px;
+  --sd-logo-duck: #e54502;  /* 로고 DUCK 주황 (로고 이미지에서 뽑은 색) */
 }
