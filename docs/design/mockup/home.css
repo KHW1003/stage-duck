@@ -297,3 +297,13 @@ body.is-user .now.only-user { display: flex !important; }
   .cmp td:nth-child(3), .cmp th:nth-child(3) { display: none; }
   .gnb__right .pill.only-guest { padding: 0 12px; }
 }
+
+/* 로고: 헤드폰 쓴 오리 (목산님 제작 stage-duck.html). 크기는 --duck-size 하나로 조절 */
+.stage-duck { --duck-size: 36px; --duck-orange: #ff6714; --duck-black: #000; --duck-white: #fff; position: relative; display: inline-block; width: var(--duck-size); height: var(--duck-size); flex-shrink: 0; }
+.footer .stage-duck { --duck-size: 32px; }
+.stage-duck__band { position: absolute; top: 2%; left: 16%; width: 66%; height: 71%; box-sizing: border-box; border: calc(var(--duck-size) * .075) solid var(--duck-black); border-radius: 50%; }
+.stage-duck__body { position: absolute; inset: 0; background: var(--duck-black); clip-path: shape(from 13% 100%, curve to 31% 69% with 14% 85% / 20% 75%, curve to 25% 45% with 23% 64% / 22% 54%, curve to 55% 20% with 25% 29% / 39% 20%, curve to 86% 47% with 73% 20% / 86% 31%, curve to 70% 72% with 87% 59% / 80% 68%, curve to 88% 100% with 81% 78% / 88% 89%, close); }
+.stage-duck__body::after { content: ""; position: absolute; inset: 0; background: var(--duck-white); clip-path: shape(from 20% 93%, curve to 42% 69% with 23% 81% / 32% 75%, curve to 32% 45% with 32% 64% / 29% 54%, curve to 55% 27% with 32% 34% / 42% 27%, curve to 79% 47% with 69% 27% / 79% 36%, curve to 60% 73% with 80% 59% / 70% 68%, curve to 80% 93% with 71% 78% / 77% 85%, close); }
+.stage-duck__eye { position: absolute; top: 40%; left: 61%; width: 9%; height: 9%; border-radius: 50%; background: var(--duck-black); }
+.stage-duck__bill { position: absolute; top: 49%; left: 75%; width: 25%; height: 16%; border-radius: 45% 40% 65% 40%; background: var(--duck-orange); transform: rotate(-8deg); }
+.stage-duck__ear { position: absolute; top: 41%; left: 10%; width: 29%; height: 38%; box-sizing: border-box; border: calc(var(--duck-size) * .065) solid var(--duck-black); border-radius: 50%; background: var(--duck-orange); }
