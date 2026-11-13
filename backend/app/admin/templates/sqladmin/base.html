@@ -1,0 +1,7 @@
+{#- SQLAdmin 원본 base 위에 STAGE DUCK 테마만 더한다. 원본은 sqladmin_original/ 로 불러온다.
+    theme.js 는 head 에서 바로 실행해 다크 모드를 먼저 적용한다 (흰 화면이 번쩍이지 않게). -#}
+{% extends "sqladmin_original/base.html" %}
+{% block head_tail %}
+<link rel="stylesheet" href="/admin-static/admin.css">
+<script src="/admin-static/theme.js"></script>
+{% endblock %}

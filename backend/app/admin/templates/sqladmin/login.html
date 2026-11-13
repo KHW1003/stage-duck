@@ -1,0 +1,26 @@
+{#- 관리자 로그인 (STAGE DUCK 테마). 필드 이름(username, password)은 SQLAdmin 원본과 같아야 한다. -#}
+{% extends "sqladmin/base.html" %}
+{% block body %}
+<div class="sd-login">
+  <div class="sd-login__box">
+    <img class="sd-login__logo" src="/admin-static/logo.webp" alt="STAGE DUCK 로고 — 기타를 든 오리">
+    <form class="sd-login__card" action="{{ url_for('admin:login') }}" method="POST" autocomplete="off">
+      <h1 class="sd-login__title">STAGE DUCK</h1>
+      <p class="sd-login__sub">관리자 화면</p>
+      <div class="mb-3">
+        <label class="form-label" for="sd-username">이메일</label>
+        <input id="sd-username" name="username" type="email" inputmode="email"
+          class="form-control{% if error %} is-invalid{% endif %}" placeholder="admin@stageduck.test" autocomplete="username" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="sd-password">비밀번호</label>
+        <input id="sd-password" name="password" type="password"
+          class="form-control{% if error %} is-invalid{% endif %}" placeholder="비밀번호" autocomplete="current-password" required>
+        {% if error %}<div class="invalid-feedback d-block">이메일이나 비밀번호가 맞지 않아요.</div>{% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary w-100">로그인</button>
+    </form>
+    <p class="sd-login__foot">포트폴리오 시뮬레이션 · 실제 거래가 아닙니다</p>
+  </div>
+</div>
+{% endblock %}
