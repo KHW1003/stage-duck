@@ -18,6 +18,21 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 | 컴포넌트 시안 9번 | 아이콘 전체 목록, 아이콘 상자·분류 타일·기능 줄·사진 규칙 |
 | **채팅** | 채팅 화면(`chat.html`, `p-chat.html`)을 없애고 **채팅 위젯**으로 바꿈 (아래) |
 
+## 새로 더한 화면 (명세 8장 중 빠져 있던 것)
+
+| 화면 | 파일 | 상태 (목업 보기) |
+|---|---|---|
+| 테스트 결제 | `pages/pay.html` | 결제 수단 / 처리 중 / 결제 전 검사 실패 / 결제 실패 |
+| 공통 안내 | `pages/notice.html` | 찾을 수 없음(404) / 이용 정지 / 로그인 필요 / 서버 오류 |
+| 관리자: 업체 심사 (첫 화면) | `pages/a-review.html` | 서류 갖춤 / 보완 필요 |
+| 관리자: 신고·제재 | `pages/a-reports.html` | 경고 0회 / 경고 2회 (이번이 3회째 → 정지) |
+| 관리자: 게시글·공간 | `pages/a-posts.html` | 블라인드·해제, 공간 숨김 |
+| 관리자: 거래 이력 | `pages/a-orders.html` | 결제·보관 중 / D-1 사용자 취소 |
+| 관리자: 시연 도구 | `pages/a-demo.html` | 기본 / 초기화한 뒤 |
+
+- 관리자 화면은 `data-layout="admin"`이에요. 실제로는 SQLAdmin(`backend/app/admin`)이라 React로 옮기지 않고, `admin.css`로 이 모양을 입힐지 팀이 정해요.
+- 값은 시드 데이터(host@, supplier-a~g@stageduck.test, 업체 A~G 모두 승인)와 `docs/guides/시연_예시값.md`에 맞췄어요. 심사 대기 업체 H·I는 "시연 중 가입" 예시예요.
+
 ## 채팅 위젯
 
 로그인한 모든 화면(사용자·승인된 업체) 오른쪽 아래에 둥근 채팅 버튼이 있어요. 누르면 페이지 이동 없이 화면 위층(`--sd-z-float`)에 채팅 창이 떠요.
@@ -67,7 +82,7 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 |---|---|---|
 | `../tokens.css` | `src/shared/styles/tokens.css` | 색·크기·간격 변수. 업체 색은 `[data-theme="partner"]`로 |
 | `css/base.css` | `src/shared/styles/base.css` | 기본 스타일, `.container`, `.with-aside`, `.sec` |
-| `css/layout.css` | `src/shared/layout/` | `SimulationBanner`, `Gnb`, `PageTop`, `SideNav`, `Footer` |
+| `css/layout.css` | `src/shared/layout/` | `Gnb`, `PageTop`, `SideNav`, `Footer` |
 | `css/ui.css` | `src/shared/ui/` | `Button`, `Tag`, `StatusBadge`, `StateText`, `Field`, `Choice`, `Toggle`, `FormTable`, `Tabs`, `Filters`, `DataTable`, `InfoTable`, `List`, `Summary`, `Notice`, `Empty`, `Photo`, `Gallery`, `Avatar`, `Pagination`, `Fold`, `Modal`, `Drawer`, `NotificationPanel`, `Toast` |
 | `css/domain.css` | `src/features/*` | `StepBar`, `StageTrack`, `SideBox`, `QuoteColumns`, `QuoteLines`, `PriorInfo`, `Versions`, `ChatLayout`·`ChatCard`, `Invoice`, `Escrow`, `PenaltyScale`, `Timeline`, `Contacts` |
 | `css/theme-partner.css` | `tokens.css`의 `[data-theme="partner"]` | 업체 화면 주조색 `#0368B6` |
@@ -79,7 +94,7 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 
 ## 지킨 규칙 (CLAUDE.md · DESIGN.md)
 
-- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (맨 위 시뮬레이션 안내 띠는 팀장 요청으로 목업에서 뺐다. CLAUDE.md 3장 26·spec 0.2는 아직 그대로)
+- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (모든 화면 맨 위 안내 띠는 두지 않는다, D-41)
 - 용어: 사용자·업체·공고·견적서·컨펌·견적 내역 확인 카드·플랫폼 이용료·통합 청구서
 - 예시 값은 `docs/guides/시연_예시값.md` (공간 A·B·C, 업체 A~G, 1,850,000 / 92,500 / 1,942,500원, D-1 위약금 1,295,000원)
 - 이메일은 `@stageduck.test`, 전화는 `010-0000-00xx`
