@@ -63,24 +63,26 @@ flowchart LR
 stage-duck/
 ├─ backend/
 │  ├─ app/
-│  │  ├─ main.py            # FastAPI 앱, 라우터 등록
-│  │  ├─ core/              # 설정, DB 세션, 보안(쿠키·CSRF·해시), 오류 형식, 시간·금액 유틸   (공통)
-│  │  ├─ auth/              # 가입, 로그인, 네이버·카카오, 약관                               (공통 · F1)
-│  │  ├─ supplier/          # 입점, 심사, 서비스, 공간(venues), PR 게시판                     (2번 · F1 F2 F4)
-│  │  ├─ request/           # 요청서·버전, 공고, 단계(stages), 오퍼, 관심 업체                (1번 · F2 F3)
-│  │  ├─ quote/             # 견적서·버전                                                    (2번 · F2)
-│  │  ├─ chat/              # 채팅방, 메시지, WebSocket, 확인 카드, 컨펌, 다음 단계            (3번 전담 · F3)
-│  │  ├─ check/             # 자동 검사 엔진(CHK), 기술 확인                                 (3번 · F3)
-│  │  ├─ payment/           # 청구서, 결제, 장부, 취소·위약금                                (4번 · F5)
-│  │  ├─ policy/            # 반려 카운트, 신고, 경고·정지                                   (4번 · F4)
-│  │  ├─ admin/             # SQLAdmin 뷰·액션, 관리자 인증, 시연 데이터                     (2번+4번 · F5)
-│  │  └─ models/            # SQLAlchemy 모델 (테이블 정의는 data-model.md)
+│  │  ├─ main.py            # FastAPI 앱, 라우터 등록                                         (공통)
+│  │  ├─ core/              # 설정, DB 세션, 보안, 오류 형식, 상태 이력                        (공통 · 해원 리뷰)
+│  │  ├─ auth/  dev/        # 가입·로그인·네이버·카카오·약관, 개발용 가짜 로그인                (1번)
+│  │  ├─ supplier/          # 입점, 심사, 서비스, 공간(venues)                                (1번)
+│  │  ├─ board/ offer/ profile/ files/  # PR 게시판, 직접 오퍼·관심 업체, 프로필, 파일 업로드  (1번)
+│  │  ├─ request/           # 요청서·버전, 공고, 단계(stages), 다음 단계, 반려 카운트, 내 공연  (2번)
+│  │  ├─ quote/             # 견적서·버전                                                    (3번)
+│  │  ├─ chat/              # 채팅방, 메시지, WebSocket, 확인 카드, 컨펌                      (3번 전담)
+│  │  ├─ notification/      # 사이트 안 알림                                                 (3번)
+│  │  ├─ check/             # 자동 검사 엔진(CHK), 기술 확인                                 (4번)
+│  │  ├─ payment/           # 청구서, 결제, 장부, 취소·위약금, 플랫폼 이용료                  (4번)
+│  │  ├─ policy/            # 신고, 경고·정지, 블라인드                                      (4번)
+│  │  ├─ admin/  demo/      # SQLAdmin 뷰·액션(각 묶음이 자기 뷰), 시드·시연 초기화           (4번)
+│  │  └─ models/            # SQLAlchemy 모델 (묶음별 파일, 테이블 정의는 data-model.md)
 │  ├─ alembic/              # 마이그레이션
 │  └─ tests/                # pytest — 파일 이름에 F 번호, 테스트 이름에 AC ID
 ├─ frontend/
 │  ├─ src/
 │  │  ├─ shared/            # api 클라이언트, StatusBadge, StageStepper, QuoteCard, MoneyText
-│  │  ├─ features/          # auth, supplier, request, quote, chat, payment, board, admin
+│  │  ├─ features/          # 1: auth·supplier·venue·board·offer·profile / 2: request·performance / 3: quote·chat·notification / 4: compare·tech·payment·sheet
 │  │  ├─ pages/             # 라우트별 화면
 │  │  └─ mocks/             # MSW 핸들러 (api-contract.md 기준)
 │  └─ tests/
@@ -225,7 +227,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 주소 | `/admin` (FastAPI 앱에 마운트, React와 별개) |
 | 로그인 | SQLAdmin `AuthenticationBackend` — `users.role = 'ADMIN'` 계정만. 비밀번호 검사·잠금은 일반 로그인과 같은 서비스 함수 사용 |
 | 원칙 | 액션 버튼은 **반드시 서비스 함수를 호출**한다 (상태 전이 검사, `status_histories` 기록, 경고 3회 정지). 모델 직접 수정은 막는다 (`can_edit=False`) |
-| 개발 담당 | 각 영역 담당자가 자기 모델의 관리자 뷰를 함께 만든다 (2번: 업체·공간·게시글, 4번: 신고·제재·주문) |
+| 개발 담당 | 각 묶음 담당자가 자기 모델의 관리자 뷰를 함께 만든다 (1번: 업체·공간·게시글, 4번: 신고·제재·주문·시연 도구) |
 
 ### 관리자 뷰와 액션
 

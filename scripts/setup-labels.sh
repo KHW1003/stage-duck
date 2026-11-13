@@ -4,10 +4,10 @@ set -e
 label() { gh label create "$1" --color "$2" --description "$3" --force; }
 
 # 담당 영역
-label "area:request"  "1f77b4" "1. 공연 요청·공간 선택"
-label "area:supplier" "2ca02c" "2. 공급자 등록·전문가 견적"
-label "area:compare"  "ff7f0e" "3. 견적 비교·구성 확인"
-label "area:payment"  "9467bd" "4. 업체 수락·결제·확정"
+label "area:1-회원·업체·게시판" "2ca02c" "묶음 1: 가입·입점·공간·PR 게시판·오퍼·프로필"
+label "area:2-요청·배정"       "1f77b4" "묶음 2: 요청서·공고·순차 배정·반려 카운트"
+label "area:3-견적·채팅"       "ff7f0e" "묶음 3: 견적서·채팅·컨펌·알림"
+label "area:4-검사·결제·운영"  "9467bd" "묶음 4: 자동 검사·결제·취소·신고·관리자·시드"
 label "area:common"   "7f7f7f" "공통 (계정·레이아웃·규칙)"
 
 # 종류

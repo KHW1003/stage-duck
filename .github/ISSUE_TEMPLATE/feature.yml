@@ -8,10 +8,10 @@ body:
     attributes:
       label: 담당 영역
       options:
-        - request (공연 요청·공간 선택)
-        - supplier (공급자 등록·견적)
-        - compare (견적 비교·구성 확인)
-        - payment (수락·결제·확정)
+        - 1 회원·업체·게시판
+        - 2 공연 요청·배정
+        - 3 견적·채팅 확정
+        - 4 검사·결제·운영
         - common (공통)
     validations:
       required: true
