@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>입점 신청 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+</head>
+<!-- 화면: 업체 입점 1·2·3단계 + 심사 상태 + 반려 · FR-SUP-01~04 · AC-F1-17~20 · 묶음 1
+     React: pages/SupplierOnboardingPage.tsx = StepBar + AccountForm + BusinessForm + ReviewStatus + ServiceForm
+     suppliers.review_status: PENDING · APPROVED · REJECTED(사유) · SUSPENDED.
+     "개인(프리랜서)"면 등록번호·등록증 칸이 사라진다 (AC-F1-17). 국세청 조회 없음(범위 밖). -->
+<body data-layout="partner-review">
+
+<div class="mock-switch" data-group="step">
+  <span>목업 보기</span>
+  <button type="button" data-value="account">1 계정</button>
+  <button type="button" data-value="biz" aria-pressed="true">2 사업자 정보</button>
+  <button type="button" data-value="review">심사 중</button>
+  <button type="button" data-value="reject">반려</button>
+  <button type="button" data-value="service">3 서비스 등록</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>STAGE DUCK 파트너</li><li>입점 신청</li></ol><h1>입점 신청</h1><p class="page-top__desc">관리자 심사를 거쳐 승인되면 서비스를 등록하고 공고를 볼 수 있어요.</p></div></div></div>
+
+<main class="container container--narrow main">
+  <ol class="step-bar" style="--steps:4">
+    <li class="is-now" data-when="step:account"><b>01</b><span data-icon="user"></span>계정</li><li class="is-done" data-when="step:biz step:review step:reject step:service"><b>01</b><span data-icon="user"></span>계정</li>
+    <li data-when="step:account"><b>02</b><span data-icon="receipt"></span>사업자 정보</li><li class="is-now" data-when="step:biz step:reject"><b>02</b><span data-icon="receipt"></span>사업자 정보</li><li class="is-done" data-when="step:review step:service"><b>02</b><span data-icon="receipt"></span>사업자 정보</li>
+    <li data-when="step:account step:biz step:reject"><b>심사</b><span data-icon="clock"></span>관리자 확인</li><li class="is-now" data-when="step:review"><b>심사</b><span data-icon="clock"></span>관리자 확인</li><li class="is-done" data-when="step:service"><b>심사</b><span data-icon="pass"></span>승인</li>
+    <li data-when="step:account step:biz step:review step:reject"><b>03</b><span data-icon="tool"></span>서비스 등록</li><li class="is-now" data-when="step:service"><b>03</b><span data-icon="tool"></span>서비스 등록</li>
+  </ol>
+
+  <!-- 1 계정 -->
+  <section class="sec mt-40" data-when="step:account"><div class="sec-head"><h2><span data-icon="user"></span>업체 계정</h2><p>업체는 이메일로만 가입해요. 담당자 한 명이 계정을 써요.</p></div>
+    <div class="form-table">
+      <div><span class="form-table__th">회사 이메일<span class="req">*</span></span><span class="form-table__td"><input class="input" type="email" value="d@stageduck.test"></span></div>
+      <div><span class="form-table__th">비밀번호<span class="req">*</span></span><span class="form-table__td"><input class="input" type="password"><span class="field__hint">8자 이상, 영문과 숫자를 함께 써 주세요.</span></span></div>
+      <div><span class="form-table__th">담당자 이름<span class="req">*</span></span><span class="form-table__td"><input class="input" value="시연 담당자"></span></div>
+      <div><span class="form-table__th">담당자 전화<span class="req">*</span></span><span class="form-table__td"><input class="input" value="010-0000-0004"><span class="field__hint">결제가 끝난 공연의 최종 담당표에만 공개돼요.</span></span></div>
+    </div>
+    <div class="btns btns--center mt-40"><a class="btn btn--lg" href="login.html" style="min-width:160px">취소</a><a class="btn btn--primary btn--lg" href="p-onboarding.html?step=biz" style="min-width:240px">다음</a></div></section>
+
+  <!-- 2 사업자 정보 (반려면 사유 먼저) -->
+  <div data-when="step:biz step:reject">
+    <div class="notice notice--conflict mt-40" data-when="step:reject"><span data-icon="conflict"></span><div><b>입점 신청이 반려됐어요.</b> 사유: 사업자등록증 사진이 흐려서 번호를 읽을 수 없어요. 고쳐서 다시 신청해 주세요.</div></div>
+    <section class="sec mt-40"><div class="sec-head"><h2><span data-icon="receipt"></span>사업자 유형</h2></div>
+      <div class="choice" style="--cols:3"><label class="choice__item"><input type="radio" name="bt" checked><span class="choice__mark"></span><span><b>개인사업자</b><small>사업자등록번호가 있어요</small></span></label><label class="choice__item"><input type="radio" name="bt"><span class="choice__mark"></span><span><b>법인사업자</b><small>법인 등록이 있어요</small></span></label><label class="choice__item"><input type="radio" name="bt"><span class="choice__mark"></span><span><b>개인 (프리랜서)</b><small>등록번호·등록증 칸이 사라져요</small></span></label></div></section>
+    <section class="sec"><div class="sec-head"><h2><span data-icon="receipt"></span>사업자 정보</h2><p>관리자만 봐요. 다른 사용자에게는 공개하지 않아요.</p></div>
+      <div class="form-table">
+        <div><span class="form-table__th">상호<span class="req">*</span></span><span class="form-table__td"><input class="input" value="업체 D"></span></div>
+        <div><span class="form-table__th">대표자<span class="req">*</span></span><span class="form-table__td"><input class="input" value="시연 대표"></span></div>
+        <div><span class="form-table__th">사업자등록번호<span class="req">*</span></span><span class="form-table__td"><input class="input" value="123-45-67891" aria-invalid="true" style="max-width:260px"><span class="field__error"><span data-icon="warn" class="icon--sm"></span>번호가 맞지 않아요. 등록증의 10자리를 다시 확인해 주세요.</span></span></div>
+        <div><span class="form-table__th">사업자등록증<span class="req">*</span></span><span class="form-table__td"><span class="form-table__inline"><button class="btn btn--sm" type="button"><span data-icon="upload" class="icon--sm"></span>파일 올리기</button><span class="small muted">PDF, JPG · 10MB까지</span></span></span></div>
+      </div></section>
+    <div class="btns btns--center mt-40"><a class="btn btn--lg" href="p-onboarding.html?step=account" style="min-width:160px">이전</a><a class="btn btn--primary btn--lg" href="p-onboarding.html?step=review" style="min-width:240px">심사 신청</a></div>
+  </div>
+
+  <!-- 심사 중 -->
+  <section class="sec mt-40" data-when="step:review">
+    <div class="result"><span class="result__icon"><span data-icon="clock"></span></span><h2>입점 심사 중이에요</h2><p>관리자가 사업자 정보를 확인하고 있어요. 승인되면 알림으로 알려 드려요.<br>심사 중에는 공고 목록이 보이지 않고 견적서를 보낼 수 없어요.</p></div>
+    <table class="info-table"><tr><th>신청</th><td class="num">11월 12일 14:20</td><th>상호</th><td>업체 D</td></tr><tr><th>사업자 유형</th><td>개인사업자</td><th>담당자 이메일</th><td>d@stageduck.test</td></tr></table>
+    <div class="btns btns--center mt-40"><a class="btn btn--lg" href="login.html" style="min-width:160px">로그아웃</a><a class="btn btn--lg" href="p-onboarding.html?step=biz" style="min-width:200px">신청 내용 고치기</a></div>
+  </section>
+
+  <!-- 3 서비스 등록 -->
+  <div data-when="step:service">
+    <div class="notice notice--point mt-40"><span data-icon="pass"></span><div><b>입점이 승인됐어요.</b> 서비스를 등록하면 내 부문의 공고 목록이 열려요.</div></div>
+    <section class="sec mt-40"><div class="sec-head"><h2><span data-icon="tool"></span>서비스 정보</h2></div>
+      <div class="form-table">
+        <div><span class="form-table__th">부문<span class="req">*</span></span><span class="form-table__td"><div class="checks"><label class="check"><input type="checkbox">공연장</label><label class="check"><input type="checkbox" checked>음향 장비·설치</label><label class="check"><input type="checkbox" checked>엔지니어</label></div><span class="field__hint">공연장 부문이면 공간을 따로 등록해요.</span></span></div>
+        <div><span class="form-table__th">활동 지역<span class="req">*</span></span><span class="form-table__td"><div class="checks"><label class="check"><input type="checkbox" checked>광주</label><label class="check"><input type="checkbox" checked>전남</label><label class="check"><input type="checkbox">전북</label></div></span></div>
+        <div><span class="form-table__th">소개<span class="req">*</span></span><span class="form-table__td"><textarea class="textarea">관객 50~150명 밴드 공연 음향을 맡아요. 설치·철수와 현장 엔지니어를 함께 보내요.</textarea></span></div>
+        <div><span class="form-table__th">설치 · 철수</span><span class="form-table__td"><span class="form-table__inline"><span class="small muted">설치</span><span class="unit" style="width:140px"><input class="input input--num" value="90"><span>분</span></span><span class="small muted">철수</span><span class="unit" style="width:140px"><input class="input input--num" value="60"><span>분</span></span></span></span></div>
+        <div><span class="form-table__th">엔지니어</span><span class="form-table__td"><span class="form-table__inline"><span class="small muted">경력</span><span class="unit" style="width:140px"><input class="input input--num" value="7"><span>년</span></span><label class="check"><input type="checkbox" checked>밴드 공연 경험</label></span>
+          <div class="checks mt-8" style="--cols:2"><label class="check"><input type="checkbox" checked>메인 음향 (FOH 믹싱)</label><label class="check"><input type="checkbox" checked>설치 및 철수 보조</label><label class="check"><input type="checkbox" checked>사운드체크·리허설 진행</label><label class="check"><input type="checkbox">모니터 믹싱</label><label class="check"><input type="checkbox">무선 마이크 채널 관리</label><label class="check"><input type="checkbox">녹음 / 라이브 스트리밍</label><label class="check"><input type="checkbox" checked>공연 중 장비 문제 대응</label></div></span></div>
+        <div><span class="form-table__th">배상책임보험</span><span class="form-table__td"><label class="check"><input type="checkbox" checked>가입했어요 <small>선택 · 업체 프로필에 보여요</small></label></span></div>
+      </div></section>
+    <div class="btns btns--center mt-40"><a class="btn btn--primary btn--lg" href="p-jobs.html" style="min-width:280px">등록하고 공고 보기</a></div>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

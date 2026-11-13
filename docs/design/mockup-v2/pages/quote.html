@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내역서 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 내역서 (견적서 상세 + 버전) · FR-QUOTE-03 · FR-CHAT-03 · AC-F2-20 · AC-F3-09·10 · 묶음 3
+     React: pages/QuoteSheetPage.tsx = PageTop + VersionTabs + QuoteLines + InfoTable + CheckTable + ConfirmBox(SideBox)
+     끝까지 읽어야 [컨펌]이 켜진다: 맨 아래 확인 줄이 화면에 들어오면 서버에 열람을 기록 (AC-F3-10). -->
+<body data-layout="user" data-nav="chat">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="chat.html">채팅</a></li><li><a href="chat.html">업체 D</a></li><li>내역서</li></ol><h1>견적서 내역서</h1><div class="page-top__meta"><span>장비 · 업체 D · 기본형</span><span>11월 13일 13:18 수정</span><span>요청서 v1 기준</span></div></div></div></div>
+<div class="tab-bar"><div class="container"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="v2" type="button">v2 · 지금</button><button role="tab" aria-selected="false" aria-controls="v1" type="button">v1</button></div></div></div>
+
+<main class="container main">
+  <div class="with-aside">
+    <div>
+      <section class="sec" id="v2">
+        <div class="sec-head"><h2><span data-icon="list"></span>항목</h2><p>금액은 부가세 포함이에요.</p></div>
+        <table class="lines"><thead><tr><th>항목</th><th>내용</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>
+          <tr><td><b>메인 스피커</b></td><td>중형 2웨이</td><td class="r">2</td><td class="r">420,000원</td></tr>
+          <tr><td><b>믹서</b></td><td>디지털 16채널</td><td class="r">1</td><td class="r">200,000원</td></tr>
+          <tr><td><b>마이크</b></td><td>보컬·악기용 (요청 추가 2 포함)</td><td class="r">8</td><td class="r">160,000원</td></tr>
+          <tr><td><b>모니터 스피커</b></td><td>바닥형</td><td class="r">4</td><td class="r">120,000원</td></tr>
+          <tr><td><b>설치·철수</b></td><td>설치 15:00~15:45 · 철수 21:00~22:00</td><td class="r">1</td><td class="r">200,000원</td></tr>
+          <tr class="is-added"><td><b>설치 인원</b></td><td>설치를 15:45까지 끝내기 위한 추가 1명</td><td class="r">1</td><td class="r">100,000원</td></tr>
+          <tr><td><b>현장 엔지니어</b></td><td>FOH 믹싱 · 사운드체크·리허설 · 설치 보조</td><td class="r">1</td><td class="r">150,000원</td></tr>
+        </tbody><tfoot><tr><td colspan="3">합계 (부가세 포함)</td><td class="r">1,350,000원</td></tr></tfoot></table>
+        <p class="field__hint mt-8">합계는 업체가 적은 항목을 서버가 더해 확인한 값이에요.</p>
+      </section>
+      <section class="sec" id="v1" hidden>
+        <div class="sec-head"><h2><span data-icon="list"></span>항목 (v1)</h2><p>이전 버전이에요. v1로 보낸 확인 카드는 무효가 됐어요.</p></div>
+        <table class="lines"><thead><tr><th>항목</th><th>내용</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>
+          <tr><td><b>메인 스피커</b></td><td>중형 2웨이</td><td class="r">2</td><td class="r">420,000원</td></tr><tr><td><b>믹서</b></td><td>디지털 16채널</td><td class="r">1</td><td class="r">200,000원</td></tr><tr><td><b>마이크</b></td><td>보컬·악기용</td><td class="r">8</td><td class="r">160,000원</td></tr><tr><td><b>모니터 스피커</b></td><td>바닥형</td><td class="r">4</td><td class="r">120,000원</td></tr><tr><td><b>설치·철수</b></td><td>설치 15:00~16:30 · 철수 21:00~22:00</td><td class="r">1</td><td class="r">200,000원</td></tr><tr><td><b>현장 엔지니어</b></td><td>FOH 믹싱 · 사운드체크·리허설</td><td class="r">1</td><td class="r">150,000원</td></tr>
+        </tbody><tfoot><tr><td colspan="3">합계 (부가세 포함)</td><td class="r">1,250,000원</td></tr></tfoot></table>
+      </section>
+
+      <section class="sec"><div class="sec-head"><h2><span data-icon="clock"></span>설치·운영 조건</h2></div>
+        <table class="info-table"><tr><th>설치</th><td class="num">15:00 시작 · 15:45 완료</td><th>철수</th><td class="num">21:00~22:00</td></tr><tr><th>엔지니어</th><td>포함 1명</td><th>운반</th><td>포함</td></tr><tr><th>사용자 보유 장비</th><td colspan="3">드럼 세트 1 · 기타 앰프 2</td></tr></table></section>
+
+      <section class="sec"><div class="sec-head"><h2><span data-icon="pass"></span>자동 검사</h2><p>소리 크기·장비 호환성은 자동으로 판단하지 않아요.</p></div>
+        <div class="table-box"><table class="table table--fit"><thead><tr><th style="width:140px">항목</th><th>내용</th><th style="width:120px">결과</th></tr></thead><tbody>
+          <tr><td class="strong">설치 시간</td><td class="l">설치 완료 15:45 · 리허설 17:00 · 여유 75분</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span></td></tr>
+          <tr><td class="strong">공간 반입</td><td class="l">공간 C 외부 음향 장비 반입 가능</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span></td></tr>
+          <tr><td class="strong">퇴실</td><td class="l">철수 22:00 · 퇴실 마감 22:00</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span></td></tr>
+          <tr><td class="strong">엔지니어</td><td class="l">견적서에 엔지니어 포함 · 엔지니어 단계 건너뛰기 제안</td><td><span class="status status--warn"><span data-icon="warn"></span>경고</span></td></tr>
+          <tr><td class="strong">요청서 버전</td><td class="l">요청서 v1 기준으로 작성</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span></td></tr>
+        </tbody></table></div></section>
+
+      <p class="notice mt-24"><span data-icon="check"></span><span>내역서를 끝까지 봤어요. 이제 컨펌할 수 있어요.</span></p>
+    </div>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">견적서 v2</p><div class="sum-total"><span>합계</span><b>1,350,000<small>원</small></b></div><p class="small point mt-4">v1보다 100,000원 늘었어요 · 설치 인원 +1</p></div>
+      <div class="side-box__sec"><p class="small strong mb-8">버전 기록</p><ul class="versions"><li class="is-now"><span><span class="versions__v">v2</span>설치 인원 +1</span><span class="num">1,350,000원</span></li><li><span><span class="versions__v">v1</span>처음 보냄</span><span class="num muted">1,250,000원</span></li></ul></div>
+      <div class="side-box__sec side-box__sec--gray"><p class="small">확인 카드 남은 시간 <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12</span></p><p class="small muted mt-4">지나면 만료되고 업체가 다시 보낼 수 있어요.</p></div>
+      <div class="side-box__sec"><button class="btn btn--primary btn--lg btn--block" type="button" data-open="confirm">컨펌</button><a class="btn btn--block mt-8" href="chat.html">다시 조율</a></div>
+    </aside>
+  </div>
+</main>
+
+<div class="layer" id="confirm" hidden><div class="modal"><div class="modal__head"><h2>컨펌</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 D 견적서 v2를 컨펌할까요?</p><p>같은 장비 단계의 다른 견적서는 자동으로 마감돼요.</p></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><a class="btn btn--primary" href="next.html">컨펌</a></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

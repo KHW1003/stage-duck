@@ -1,0 +1,67 @@
+/* SimulationBanner · Gnb · PageTop · SideNav · Footer
+   React: shared/layout/AppLayout.tsx, shared/layout/PageTop.tsx, shared/layout/SideNav.tsx
+   헤더는 메인(home.html)과 같은 모양. 안쪽 화면은 헤더 아래 회색 "페이지 제목 띠"로 시작한다. */
+
+
+.gnb { position: sticky; top: 0; z-index: var(--sd-z-header); background: var(--sd-bg); border-bottom: 1px solid var(--sd-line); }
+.gnb__inner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 40px; height: var(--sd-gnb-height); }
+.gnb__logo { display: inline-flex; align-items: center; gap: 8px; }
+.gnb__logo img { height: 28px; width: auto; }
+.gnb__role { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--sd-r-tag); background: var(--sd-blue-button); color: #fff; font-size: 10px; font-weight: 700; }
+.gnb__menu { display: flex; gap: 36px; justify-content: center; }
+.gnb__menu a { position: relative; display: inline-flex; align-items: center; height: var(--sd-gnb-height); font-size: var(--sd-text-nav); font-weight: 700; }
+.gnb__menu a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sd-ink); transform: scaleX(0); transition: transform .15s; }
+.gnb__menu a:hover::after { transform: scaleX(1); }
+.gnb__menu a[aria-current="page"] { color: var(--sd-blue); }
+.gnb__menu a[aria-current="page"]::after { background: var(--sd-blue); transform: scaleX(1); }
+.gnb__right { display: flex; align-items: center; gap: 4px; }
+.gnb__text { padding: 0 10px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.gnb__text:hover { color: var(--sd-ink); }
+.gnb__sep { width: 1px; height: 14px; background: var(--sd-line); margin: 0 4px; }
+.gnb__pop { position: relative; }
+.gnb__user { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 6px 0 4px; border: 0; border-radius: var(--sd-r-btn); background: transparent; font-size: var(--sd-text-desc); font-weight: 600; cursor: pointer; }
+.gnb__user:hover { background: var(--sd-band); }
+.gnb__user .avatar { --size: 30px; font-size: var(--sd-text-small); }
+
+/* 드롭다운 (계정 메뉴) */
+.dropdown { position: absolute; top: calc(100% + 8px); right: 0; z-index: calc(var(--sd-z-header) + 1); min-width: 220px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); }
+.dropdown__head { padding: 14px 16px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
+.dropdown__head b { display: block; color: var(--sd-ink); font-size: var(--sd-text-body); }
+.dropdown a, .dropdown button.dropdown__item { display: flex; align-items: center; gap: 10px; width: 100%; height: 44px; padding: 0 16px; border: 0; background: transparent; font-size: var(--sd-text-desc); text-align: left; cursor: pointer; }
+.dropdown a:hover { background: var(--sd-hover); }
+.dropdown hr { border: 0; height: 1px; margin: 0; background: var(--sd-line); }
+
+/* 페이지 제목 띠: 브레드크럼 · 제목 · 정보 · 행동 */
+.page-top { background: var(--sd-band); border-bottom: 1px solid var(--sd-line); }
+.page-top__inner { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding-top: 28px; padding-bottom: 28px; }
+.page-top__crumb { display: flex; gap: 6px; margin-bottom: 8px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.page-top__crumb li + li::before { content: "›"; margin-right: 6px; color: var(--sd-line-strong); }
+.page-top__crumb a:hover { color: var(--sd-ink); text-decoration: underline; }
+.page-top h1 { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.35; }
+.page-top__desc { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.page-top__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0; margin-top: 10px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.page-top__meta > span { display: inline-flex; align-items: center; gap: 4px; }
+.page-top__meta > span + span::before { content: ""; width: 1px; height: 11px; margin: 0 12px; background: var(--sd-line-strong); }
+.page-top__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 제목 띠 아래 붙는 탭 줄 (상세 화면의 구간 이동) */
+.page-top + .tab-bar { background: var(--sd-bg); }
+
+/* 왼쪽 메뉴 (마이페이지, 내 공연 목록) */
+.side-nav__title { padding-bottom: 12px; border-bottom: 2px solid var(--sd-rule); font-size: 17px; font-weight: 700; }
+.side-nav__group { padding: 12px 0; border-bottom: 1px solid var(--sd-line); }
+.side-nav__label { padding: 4px 0 6px; font-size: var(--sd-text-meta); color: var(--sd-muted); }
+.side-nav a { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 38px; font-size: var(--sd-text-body); color: var(--sd-muted); }
+.side-nav a:hover { color: var(--sd-ink); }
+.side-nav a[aria-current="page"] { color: var(--sd-ink); font-weight: 700; }
+.side-nav a[aria-current="page"]::before { content: ""; width: 3px; height: 14px; margin-right: 8px; background: var(--sd-blue); }
+.side-nav a[aria-current="page"] > span:first-child { flex: 1; }
+
+/* 바닥글 */
+.footer { margin-top: 0; background: var(--sd-footer-bg); color: var(--sd-footer-ink); font-size: var(--sd-text-small); }
+.footer__top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 0; border-bottom: 1px solid var(--sd-footer-line); }
+.footer__top img { height: 22px; width: auto; }
+.footer__links { display: flex; flex-wrap: wrap; gap: 4px 0; }
+.footer__links a + a::before { content: ""; display: inline-block; width: 1px; height: 10px; margin: 0 12px; background: var(--sd-footer-line); }
+.footer__biz { padding: 18px 0 28px; color: var(--sd-footer-muted); line-height: 1.85; }
+.side-nav a.btn { justify-content: center; color: #fff; min-height: 0; }
+.side-nav a.btn::before { display: none; }

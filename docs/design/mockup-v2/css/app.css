@@ -1,0 +1,8 @@
+/* 안쪽 화면 목업 묶음. 페이지는 이 파일 하나만 불러온다.
+   React로 옮길 때: base·layout은 shared/styles·shared/layout, ui는 shared/ui, domain은 features/<기능> (web/README.md 표) */
+@import url("../../mockup/tokens.css");
+@import url("base.css");
+@import url("layout.css");
+@import url("ui.css");
+@import url("domain.css");
+@import url("visual.css");
