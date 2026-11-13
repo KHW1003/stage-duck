@@ -116,7 +116,7 @@ npm test        # Vitest
 | `backend/app/<영역>/` | 영역별 `router.py` · `schemas.py` · `service.py` (specs/plan.md 3장) |
 | `backend/app/admin/` | SQLAdmin 관리자 화면 — 액션은 서비스 함수만 호출 |
 | `backend/tests/f1 … f5/` | 테스트 이름에 AC ID (`test_ac_f1_19_...`) |
-| `frontend/src/shared/` | API 클라이언트, StatusBadge, SimulationBanner |
+| `frontend/src/shared/` | API 클라이언트, StatusBadge |
 
 ## 문서
 
