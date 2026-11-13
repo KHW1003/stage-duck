@@ -2,8 +2,6 @@
    React: shared/layout/AppLayout.tsx, shared/layout/PageTop.tsx, shared/layout/SideNav.tsx
    헤더는 메인(home.html)과 같은 모양. 안쪽 화면은 헤더 아래 회색 "페이지 제목 띠"로 시작한다. */
 
-.sim-banner { display: flex; justify-content: center; align-items: center; gap: 6px; height: 30px; background: var(--sd-ink); color: rgba(255,255,255,.8); font-size: var(--sd-text-meta); }
-.sim-banner .icon { width: 13px; height: 13px; }
 
 .gnb { position: sticky; top: 0; z-index: var(--sd-z-header); background: var(--sd-bg); border-bottom: 1px solid var(--sd-line); }
 .gnb__inner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 40px; height: var(--sd-gnb-height); }

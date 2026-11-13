@@ -1,6 +1,6 @@
 /* 목업 공통 스크립트 (페이지 맨 아래에서 불러온다).
    React 대응:
-   - banner/gnb/footer → shared/layout/AppLayout.tsx (<SimulationBanner/><Gnb role/><Footer/>)
+   - banner/gnb/footer → shared/layout/AppLayout.tsx (<Gnb role/><Footer/>)
    - ICONS → shared/ui/Icon.tsx (24 격자, 선 1.5. DESIGN.md 2.4 아이콘 세트 미정이라 Lucide 모양을 따라 그림)
    - data-open / data-close → Modal·Drawer open 상태, data-pop → 드롭다운
    - .mock-switch + data-when → 목업 전용 (옮기지 않는다)
@@ -103,7 +103,6 @@
 
   var sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="display:none">' + Object.keys(I).map(function (k) { return '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + I[k] + '</symbol>'; }).join('') + '</svg>';
   body.insertAdjacentHTML('afterbegin', sprite +
-    '<div class="sim-banner" role="note">' + icon('info') + '포트폴리오 시뮬레이션 — 실제 거래가 아닙니다</div>' +
     '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : '') + '</a>' +
     '<nav class="gnb__menu" aria-label="주 메뉴">' + menu + '</nav><div class="gnb__right">' + right + '</div></div></header>');
   body.insertAdjacentHTML('beforeend', '<footer class="footer"><div class="container"><div class="footer__top"><img src="' + logo + '" alt="STAGE DUCK">' +

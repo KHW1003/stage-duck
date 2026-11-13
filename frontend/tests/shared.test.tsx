@@ -22,11 +22,9 @@ describe("공통 화면", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it("NFR-UX-05 모든 화면에 시뮬레이션 안내가 보인다", () => {
+  it("D-41 화면 맨 위에 시뮬레이션 안내 띠를 두지 않는다", () => {
     renderApp("/");
-    expect(screen.getByRole("note")).toHaveTextContent("포트폴리오 시뮬레이션");
-    renderApp("/없는-페이지");
-    expect(screen.getAllByRole("note")).toHaveLength(2);
+    expect(screen.queryByText(/포트폴리오 시뮬레이션/)).not.toBeInTheDocument();
   });
 
   it("서버 상태를 불러와 보여준다", async () => {
