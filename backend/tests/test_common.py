@@ -53,3 +53,29 @@ def test_migrations_match_models(tmp_path):
     migrated = {t: {c["name"] for c in insp.get_columns(t)} for t in insp.get_table_names() if t != "alembic_version"}
     modeled = {t.name: {c.name for c in t.columns} for t in Base.metadata.sorted_tables}
     assert migrated == modeled
+
+
+def test_admin_theme_login_page_and_static(client):
+    """관리자 테마: 로그인 화면은 한국어·이메일 칸·로고, 테마 파일은 로그인 없이 받을 수 있다."""
+    page = client.get("/admin/login")
+    assert page.status_code == 200
+    assert 'name="username"' in page.text and 'name="password"' in page.text  # SQLAdmin 로그인 필드 이름 유지
+    assert "이메일" in page.text and "/admin-static/logo.webp" in page.text
+    assert "/admin-static/admin.css" in page.text
+    assert client.get("/admin-static/admin.css").status_code == 200
+    assert "/admin-static/theme.js" in page.text and client.get("/admin-static/theme.js").status_code == 200
+    assert client.get("/admin-static/logo.webp").headers["content-type"] == "image/webp"
+
+
+def test_admin_theme_wrong_password_message(client, admin_user):
+    res = client.post("/admin/login", data={"username": admin_user.email, "password": "wrong-pass-0000"})
+    assert res.status_code == 400
+    assert "이메일이나 비밀번호가 맞지 않아요." in res.text
+
+
+def test_admin_home_shows_logo_and_menu_shortcuts(admin_client):
+    page = admin_client.get("/admin/")
+    assert page.status_code == 200
+    for name in ("업체 심사", "회원", "제재 이력", "상태 변경 이력"):
+        assert name in page.text
+    assert "사유 입력" not in page.text  # 메뉴에 숨긴 화면은 바로가기에도 없다
