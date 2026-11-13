@@ -62,15 +62,16 @@
 
 ## 기술 스택
 
-추후 결정 → 결정되면 [docs/decisions](docs/decisions/)에 기록하고 이 표를 갱신합니다.
+[ADR 0002](docs/decisions/0002-기술스택-선정.md) 참고.
 
 | 영역 | 선택 |
 |---|---|
-| Frontend | TBD |
-| Backend | TBD |
-| DB | TBD |
-| 결제(테스트) | TBD |
-| 배포 | TBD |
+| Frontend | React + Vite (TypeScript) |
+| Backend | FastAPI (Python) + SQLAlchemy |
+| DB | MariaDB |
+| 테스트 | pytest / Vitest + React Testing Library |
+| 결제(테스트) | 자체 에스크로형 모의 결제 |
+| 배포 | Docker Compose |
 
 ## 개발 환경 실행
 
@@ -120,6 +121,7 @@ npm test        # Vitest
 | 문서 | 내용 |
 |---|---|
 | [docs/기획서_총계획서.md](docs/기획서_총계획서.md) | 사업 개요, 시나리오, 검증 규칙, 역할 분담 전체 |
+| [docs/요구사항_명세서.md](docs/요구사항_명세서.md) | MVP 기능·비기능 요구사항, 상태 흐름, 대표 시나리오 추적표 |
 | [docs/research](docs/research/) | 시장 조사 (수요·공급, 유사 서비스) |
 | [docs/naming](docs/naming/네이밍_자료.md) | 서비스 네이밍 자료 (후보안, 점수표, 결정 절차) |
 | [docs/advisory](docs/advisory/) | 현장 전문가 자문 기록 |
