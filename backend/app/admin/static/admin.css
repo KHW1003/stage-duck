@@ -195,16 +195,6 @@ a { text-underline-offset: 2px; }
 .dropdown-item:hover { background: var(--sd-surface-2); color: var(--sd-text); }
 .modal-content { background: var(--sd-surface); color: var(--sd-text); border-color: var(--sd-line); }
 
-/* 시뮬레이션 표시: 한 줄, 조용하게 */
-.sd-sim-banner {
-  color: var(--sd-muted);
-  font-size: 12px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid var(--sd-line);
-  margin-bottom: 20px;
-}
-.sd-sim-banner b { color: var(--sd-accent-text); font-weight: 600; }
-
 /* ---------- 로그인 ---------- */
 .sd-login {
   min-height: 100vh;
@@ -228,7 +218,6 @@ a { text-underline-offset: 2px; }
 .sd-login__card .form-control { min-height: 42px; }
 .sd-login__card .invalid-feedback { color: var(--sd-accent-text); }
 .sd-login__card .btn-primary { min-height: 42px; }
-.sd-login__foot { margin-top: 16px; text-align: center; font-size: 12px; color: var(--sd-muted); }
 
 /* ---------- 첫 화면 ---------- */
 .row-deck > .sd-index { display: block; }   /* Tabler row-deck 이 열을 가로 flex 로 만드는 것을 막는다 */
