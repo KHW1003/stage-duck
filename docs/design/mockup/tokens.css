@@ -82,3 +82,16 @@
   --sd-photo-ratio: 1.7;
   --sd-logo-mark: 28px;    /* 로고 이미지 높이 (제안, DESIGN.md 3장) */
 }
+
+/* 홈 목업 추가 값 (제안, DESIGN.md 확정 전) */
+:root {
+  --sd-footer-bg: #d3d9df;     /* 푸터 바탕. 회색 계열 (#ccc 근처) */
+  --sd-footer-ink: #1f2b37;    /* 푸터 제목·링크 (대비 10:1 이상) */
+  --sd-footer-muted: #44525f;  /* 푸터 사업자 정보 (대비 5.5:1 이상) */
+  --sd-footer-line: #bcc5cd;
+  --sd-overlay: linear-gradient(90deg, rgba(12,22,33,.78) 0%, rgba(12,22,33,.45) 55%, rgba(12,22,33,.1) 100%);
+  --sd-on-photo: #ffffff;
+  --sd-on-photo-muted: rgba(255,255,255,.82);
+  --sd-gnb-height: 72px;
+  --sd-text-nav: 16px;
+}
