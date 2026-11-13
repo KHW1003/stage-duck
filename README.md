@@ -75,6 +75,8 @@
 
 ## 개발 환경 실행
 
+> **처음 세팅하는 팀원은 [docs/guides/로컬_개발환경_세팅.md](docs/guides/로컬_개발환경_세팅.md)를 따라 한다** (설치 → DB → 백엔드 → 프론트 → Claude Code → 자주 나는 오류). 아래는 요약이다.
+
 ### 준비물
 Python 3.12, Node 22, MariaDB 11.4 (직접 설치 또는 `docker compose up -d mariadb`)
 
