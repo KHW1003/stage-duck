@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STAGE DUCK 파트너 목업</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="partner.css">
+</head>
+<body data-state="approved">
+
+<!-- 목업 전용: 업체 상태 전환 (실서비스에는 없음) -->
+<div class="mock-switch" role="group" aria-label="목업 보기 전환">
+  <span>목업 보기</span>
+  <button type="button" data-state="guest" aria-pressed="false">입점 안내</button>
+  <button type="button" data-state="review" aria-pressed="false">심사 중</button>
+  <button type="button" data-state="approved" aria-pressed="true">승인 업체</button>
+</div>
+
+<!-- 헤더: 주최자 홈과 같은 틀, 메뉴만 업체용 -->
+<header class="gnb">
+  <div class="gnb__inner">
+    <a class="logo" href="#" aria-label="STAGE DUCK 파트너 홈">
+      <img class="logo__img" src="logo-partner.svg" alt="STAGE DUCK">
+      <span class="partner-chip">파트너</span>
+    </a>
+    <nav class="gnb__menu" aria-label="업체 메뉴">
+      <a href="#jobs">공고 찾기</a>
+      <a href="#">내 견적</a>
+      <a href="#">채팅</a>
+      <a href="#calendar">일정·정산</a>
+      <a href="#">PR 게시판</a>
+    </nav>
+    <div class="gnb__right">
+      <a class="gnb__text st-guest" href="home.html">주최자 홈</a>
+      <a class="pill st-guest" href="#">로그인</a>
+      <a class="btn btn--sm btn--primary st-guest" href="#">입점 신청</a>
+      <button class="icon-btn st-member" type="button" aria-label="채팅 2개">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5Z"/></svg>
+        <span class="dot" aria-hidden="true"></span>
+      </button>
+      <button class="icon-btn st-member" type="button" aria-label="알림">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="avatar st-member" aria-label="내 업체">D</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ───────── 1. 입점 안내 (비로그인) ───────── -->
+<div class="st-guest">
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div class="hero__copy">
+        <p class="eyebrow">STAGE DUCK <b>파트너</b></p>
+        <h1>공연이 필요한 곳에<br>우리 장비와 기술을.</h1>
+        <p class="hero__desc">공간·음향 장비·현장 엔지니어 업체라면 입점하세요.<br>내 부문과 활동 지역에 맞는 공고가 바로 도착해요.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#">입점 신청하기</a>
+          <a class="btn btn--ghost" href="#join">입점 절차 보기</a>
+        </div>
+        <a class="hero__sub" href="#">이미 가입했어요 · 로그인 <span aria-hidden="true">→</span></a>
+        <dl class="hero__stats">
+          <div><dt>이번 달 새 공고</dt><dd>214<small>건</small></dd></div>
+          <div><dt>평균 첫 응답</dt><dd>3.2<small>시간</small></dd></div>
+          <div><dt>서비스 수수료</dt><dd>5<small>%</small></dd></div>
+        </dl>
+        <p class="hero__note">수치는 목업용 예시예요.</p>
+      </div>
+
+      <div class="p-visual" style="--img:url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1400&q=70')">
+        <div class="p-visual__card">
+          <p class="p-visual__label">새 공고가 도착했어요</p>
+          <div class="job-mini">
+            <span class="badge badge--express">⚡ 익스프레스</span>
+            <b>11월 15일(토) · 광주 · 밴드 80명</b>
+            <small>음향 장비·설치 단계 · 기준 공연장 C 컬처스페이스</small>
+            <span class="btn btn--sm btn--primary">견적 보내기</span>
+          </div>
+        </div>
+        <div class="toast p-visual__toast"><span class="toast__icon" aria-hidden="true">✅</span><div><b>락스피릿님이 컨펌했어요</b><small>980,000원 · 공연 후 정산</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="p-why">
+    <div class="wrap">
+      <div class="sec-head sec-head--center">
+        <h2 class="sec-title">영업은 줄이고, 공연에 집중하세요.</h2>
+        <p class="sec-desc">STAGE DUCK이 공고를 모으고, 계약과 정산을 대신 챙겨요.</p>
+      </div>
+      <div class="p-why__grid">
+        <article class="p-why__card">
+          <span class="p-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span>
+          <h3>내 부문 공고만 도착</h3>
+          <p>공간·음향·엔지니어 중 내 부문과 활동 지역, 지금 열린 단계에 맞는 공고만 보여요.</p>
+        </article>
+        <article class="p-why__card">
+          <span class="p-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M8 15h3"/></svg></span>
+          <h3>안전 결제 후 정산</h3>
+          <p>주최자가 결제한 금액은 STAGE DUCK이 보관하고, 공연이 끝나면 업체에 정산돼요.</p>
+        </article>
+        <article class="p-why__card">
+          <span class="p-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V9l7-4 7 4v10"/><path d="M9 19v-5h6v5"/></svg></span>
+          <h3>PR 게시판으로 홍보</h3>
+          <p>장비 목록과 현장 사진으로 업체를 소개하면, 주최자가 직접 오퍼를 보낼 수 있어요.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="p-join" id="join">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2 class="sec-title">입점은 3단계면 끝나요.</h2>
+          <p class="sec-desc">신청 후 관리자 심사를 거쳐 보통 1~2영업일 안에 공고 목록이 열려요.</p>
+        </div>
+        <a class="more" href="#">업체 이용 가이드 <span aria-hidden="true">→</span></a>
+      </div>
+      <ol class="p-steps">
+        <li><span class="p-steps__no">1</span><b>기본 정보</b><small>업체명, 부문, 활동 지역, 대표 사진</small></li>
+        <li><span class="p-steps__no">2</span><b>사업자 정보</b><small>사업자 유형과 등록번호. 개인(프리랜서)은 생략</small></li>
+        <li><span class="p-steps__no">3</span><b>서비스 등록</b><small>제공하는 장비·공간·인력과 기본 가격</small></li>
+        <li class="is-end"><span class="p-steps__no">✓</span><b>관리자 심사</b><small>승인되면 알림으로 알려드려요</small></li>
+      </ol>
+      <div class="p-fee">
+        <div class="p-fee__item"><span>서비스 수수료</span><b>결제 금액의 5%</b><small>입점비·월 이용료 없음</small></div>
+        <div class="p-fee__item"><span>정산 시점</span><b>공연 종료 후 3영업일</b><small>예시 값 · 정산 정책 확정 전</small></div>
+        <div class="p-fee__item"><span>노쇼·취소</span><b>위약금 규정에 따라 보상</b><small>주최자 취소 시 단계별 위약금</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <div class="wrap faq__grid">
+      <div>
+        <h2 class="sec-title">업체 자주 묻는 질문</h2>
+        <p class="sec-desc">입점 상담은 1:1 문의로 남겨주세요.</p>
+        <a class="btn btn--ghost btn--sm faq__ask" href="#">입점 상담하기</a>
+      </div>
+      <div class="faq__list">
+        <details open><summary>프리랜서 엔지니어도 입점할 수 있나요?</summary><p>네. 사업자 유형에서 "개인(프리랜서)"을 고르면 사업자등록번호 없이 신청할 수 있어요.</p></details>
+        <details><summary>견적을 보낸 뒤에 금액을 바꿀 수 있나요?</summary><p>채팅으로 조율하면서 새 버전(v2, v3…)으로 수정할 수 있어요. 견적 내역 확인 카드를 보낸 뒤 수정하면 이전 카드는 무효가 돼요.</p></details>
+        <details><summary>주최자가 다른 업체를 고르면 어떻게 되나요?</summary><p>같은 단계의 다른 견적은 자동으로 마감되고 알림이 가요. 이 경우는 업체 평판에 영향을 주지 않아요.</p></details>
+        <details><summary>연락처는 언제 공유되나요?</summary><p>주최자가 결제를 마치면 양쪽에 공개돼요. 그전에 채팅에 전화번호나 계좌번호를 적으면 경고가 표시돼요.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="p-cta">
+    <div class="wrap">
+      <div class="p-cta__box">
+        <div><h2>지금 입점하고 첫 공고를 받아보세요</h2><p>신청은 10분이면 끝나요.</p></div>
+        <a class="btn btn--primary" href="#">입점 신청하기</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ───────── 2. 심사 중 (메인 전체가 심사 대기 화면) ───────── -->
+<section class="p-review st-review">
+  <div class="wrap">
+    <div class="p-review__card">
+      <span class="p-icon p-icon--lg" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
+      <h1>입점 심사 중이에요</h1>
+      <p class="p-review__desc">보통 1~2영업일 걸려요. 승인되면 알림과 이메일로 알려드려요.<br>심사 중에는 공고 목록이 보이지 않아요.</p>
+      <ol class="p-track">
+        <li class="is-done"><span>✓</span><b>신청 접수</b><small>11월 12일 14:20</small></li>
+        <li class="is-now"><span>2</span><b>서류 심사</b><small>진행 중</small></li>
+        <li><span>3</span><b>승인</b><small>예정</small></li>
+      </ol>
+      <dl class="p-review__info">
+        <div><dt>업체명</dt><dd>D 사운드</dd></div>
+        <div><dt>부문</dt><dd>음향 장비·설치</dd></div>
+        <div><dt>활동 지역</dt><dd>광주 · 전남</dd></div>
+        <div><dt>사업자 유형</dt><dd>개인사업자</dd></div>
+      </dl>
+      <div class="p-review__btns">
+        <a class="btn btn--ghost" href="#">제출 내용 보기</a>
+        <a class="btn btn--primary" href="#">신청 수정하기</a>
+      </div>
+      <p class="p-review__help">급하게 확인이 필요하면 <a href="#">1:1 문의</a>를 남겨주세요.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 3. 승인 업체 대시보드 ───────── -->
+<div class="st-approved">
+  <section class="p-top">
+    <div class="wrap">
+      <div class="p-hello">
+        <div>
+          <p class="eyebrow">11월 13일 금요일</p>
+          <h1>D 사운드님, 오늘 확인할 일이 <em>3건</em> 있어요</h1>
+          <div class="p-tags"><span class="status status--pass">✓ 승인 업체</span><span class="chip">음향 장비·설치</span><span class="chip">광주 · 전남</span></div>
+        </div>
+        <div class="p-hello__btns">
+          <a class="btn btn--ghost btn--sm" href="#">PR 글 수정</a>
+          <a class="btn btn--primary btn--sm" href="#jobs">공고 찾기</a>
+        </div>
+      </div>
+
+      <div class="p-board">
+        <div class="p-panel">
+          <div class="p-panel__head"><h2>지금 할 일</h2><a class="more" href="#">전체 알림 <span aria-hidden="true">→</span></a></div>
+          <ul class="todo">
+            <li class="todo__item is-hot">
+              <span class="todo__icon" aria-hidden="true">📩</span>
+              <div><b>직접 오퍼 1건이 도착했어요</b><small>가을밤 밴드 공연 · 응답 기한 30시간</small></div>
+              <a class="btn btn--sm btn--primary" href="#">공고 보기</a>
+            </li>
+            <li class="todo__item">
+              <span class="todo__icon" aria-hidden="true">💬</span>
+              <div><b>락스피릿님이 채팅을 시작했어요</b><small>11월 22일 공연 · 5분 전</small></div>
+              <a class="btn btn--sm btn--ghost" href="#">채팅</a>
+            </li>
+            <li class="todo__item">
+              <span class="todo__icon" aria-hidden="true">✅</span>
+              <div><b>홍길동님이 견적을 컨펌했어요</b><small>980,000원 · 결제 대기</small></div>
+              <a class="btn btn--sm btn--ghost" href="#">확정 내역</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="p-panel">
+          <div class="p-panel__head"><h2>내 견적 현황</h2><a class="more" href="#">내 견적 <span aria-hidden="true">→</span></a></div>
+          <div class="kpi">
+            <a class="kpi__item" href="#"><span>보낸 견적</span><b>5</b></a>
+            <a class="kpi__item" href="#"><span>채팅 중</span><b>2</b></a>
+            <a class="kpi__item is-warn" href="#"><span>확인 대기</span><b>1</b></a>
+            <a class="kpi__item is-done" href="#"><span>확정</span><b>3</b></a>
+          </div>
+          <div class="settle">
+            <div><span>11월 정산 예정</span><b>2,340,000원</b></div>
+            <div class="settle__bar" aria-label="3건 중 1건 정산 완료"><span style="width:34%"></span></div>
+            <small>공연 3건 중 1건 정산 완료 · 테스트 표시</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="p-jobs" id="jobs">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2 class="sec-title">나에게 맞는 공고</h2>
+          <p class="sec-desc">음향 장비·설치 · 광주·전남 · 지금 열린 단계 기준이에요.</p>
+        </div>
+        <a class="more" href="#">공고 전체 보기 <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="p-filter">
+        <div class="seg" role="tablist" aria-label="공고 필터">
+          <button class="is-on" type="button" role="tab" aria-selected="true">전체 <b>12</b></button>
+          <button type="button" role="tab" aria-selected="false">⚡ 익스프레스 <b>3</b></button>
+          <button type="button" role="tab" aria-selected="false">이번 주 <b>5</b></button>
+          <button type="button" role="tab" aria-selected="false">직접 오퍼 <b>1</b></button>
+        </div>
+        <label class="p-sort"><span class="sr">정렬</span><select><option>익스프레스 → 공연일 임박순</option><option>최신 등록순</option><option>관객 많은 순</option></select></label>
+      </div>
+
+      <ul class="jobs">
+        <li class="job is-offer">
+          <div class="job__date"><small>11월</small><b>22</b><span>토</span></div>
+          <div class="job__main">
+            <div class="job__tags"><span class="badge badge--blue">📩 직접 오퍼</span><span class="chip">음향 장비 단계</span></div>
+            <h3>가을밤 밴드 공연 · 광주 동구 · 관객 80명</h3>
+            <p>기준 공연장 C 컬처스페이스 (입실 15:00) · 주최자 락스피릿 (3회 이용)</p>
+          </div>
+          <div class="job__side"><span class="job__due">응답 기한 30시간</span><a class="btn btn--sm btn--primary" href="#">견적 보내기</a></div>
+        </li>
+        <li class="job">
+          <div class="job__date"><small>11월</small><b>15</b><span>토</span></div>
+          <div class="job__main">
+            <div class="job__tags"><span class="badge badge--express">⚡ 익스프레스</span><span class="chip">음향 장비 단계</span></div>
+            <h3>인디 밴드 합동 공연 · 광주 서구 · 관객 120명</h3>
+            <p>기준 공연장 A 라이브홀 (입실 13:00) · 주최자 소리마을 (첫 이용)</p>
+          </div>
+          <div class="job__side"><span class="job__due is-urgent">견적 마감 D-1 · 받은 견적 2</span><a class="btn btn--sm btn--primary" href="#">견적 보내기</a></div>
+        </li>
+        <li class="job">
+          <div class="job__date"><small>11월</small><b>20</b><span>목</span></div>
+          <div class="job__main">
+            <div class="job__tags"><span class="chip">음향 장비 단계</span></div>
+            <h3>대학 동아리 정기 공연 · 광주 북구 · 관객 60명</h3>
+            <p>기준 공연장 B 루프탑 (입실 17:00) · 주최자 하모니 (1회 이용)</p>
+          </div>
+          <div class="job__side"><span class="job__due">견적 마감 D-4 · 받은 견적 1</span><a class="btn btn--sm btn--ghost" href="#">상세 보기</a></div>
+        </li>
+        <li class="job">
+          <div class="job__date"><small>11월</small><b>29</b><span>토</span></div>
+          <div class="job__main">
+            <div class="job__tags"><span class="chip">음향 장비 단계</span></div>
+            <h3>어쿠스틱 듀오 소규모 공연 · 전남 나주 · 관객 40명</h3>
+            <p>기준 공연장 나주 문화공간 (입실 16:00) · 주최자 봄날 (2회 이용)</p>
+          </div>
+          <div class="job__side"><span class="job__due">견적 마감 D-9 · 받은 견적 0</span><a class="btn btn--sm btn--ghost" href="#">상세 보기</a></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="p-bottom" id="calendar">
+    <div class="wrap p-bottom__grid">
+      <div class="p-panel">
+        <div class="p-panel__head"><h2>이번 달 일정</h2><span class="muted">2026년 11월 · 확정 3건</span></div>
+        <div class="cal" aria-label="2026년 11월 달력">
+          <span class="cal__dow">일</span><span class="cal__dow">월</span><span class="cal__dow">화</span><span class="cal__dow">수</span><span class="cal__dow">목</span><span class="cal__dow">금</span><span class="cal__dow">토</span>
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+          <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span class="is-today">13</span><span class="is-event">14</span>
+          <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="is-event">21</span>
+          <span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span class="is-event">28</span>
+          <span>29</span><span>30</span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <ul class="cal__list">
+          <li><b>14 (토)</b><span>재즈 트리오 공연 · 설치 13:00</span><span class="status status--pass">확정</span></li>
+          <li><b>21 (토)</b><span>포크 페스티벌 · 설치 15:00</span><span class="status status--pass">확정</span></li>
+          <li><b>28 (토)</b><span>연말 합동 공연 · 설치 12:00</span><span class="status status--warn">결제 대기</span></li>
+        </ul>
+      </div>
+
+      <div class="p-panel">
+        <div class="p-panel__head"><h2>내 평판</h2><a class="more" href="#">후기 전체 <span aria-hidden="true">→</span></a></div>
+        <div class="rep">
+          <div class="rep__score"><b>4.8</b><span class="rep__stars" aria-label="5점 만점에 4.8점">★★★★★</span><small>후기 12건 · 거래 15건</small></div>
+          <blockquote class="rep__quote">"리허설 시간에 맞춰 세팅이 끝나 있었고, 모니터 밸런스까지 꼼꼼하게 잡아주셨어요."<cite>락스피릿 · 11월 8일 · 실거래 후기</cite></blockquote>
+        </div>
+        <div class="pr-box">
+          <div><b>PR 게시판 글</b><small>조회 312 · 관심 저장 18 · 마지막 끌어올리기 6일 전</small></div>
+          <div class="pr-box__btns"><a class="btn btn--sm btn--ghost" href="#">글 수정</a><a class="btn btn--sm btn--primary" href="#">끌어올리기</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<!-- 푸터: 주최자 홈과 같음 -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a class="logo" href="#"><img class="logo__img" src="logo-partner.svg" alt="STAGE DUCK"></a>
+        <p>작은 공연의 시작부터 끝까지.<br>공간·음향·엔지니어를 한 번에 비교하세요.</p>
+        <div class="sns">
+          <a href="#" aria-label="인스타그램"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".8" class="fill"/></svg></a>
+          <a href="#" aria-label="유튜브"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="m10 9 5 3-5 3Z" class="fill"/></svg></a>
+          <a href="#" aria-label="네이버 블로그"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="13" rx="3"/><path d="m10 17.5 2 2.5 2-2.5"/><path d="M9 13.5v-5l6 5v-5"/></svg></a>
+          <a href="#" aria-label="카카오톡 채널"><svg viewBox="0 0 24 24"><path d="M12 4.5c-4.7 0-8.5 2.9-8.5 6.5 0 2.3 1.6 4.4 4 5.5l-.9 3.3 3.8-2.4c.5.1 1 .1 1.6.1 4.7 0 8.5-2.9 8.5-6.5S16.7 4.5 12 4.5Z"/></svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="m5 4.5 14 15M19 4.5l-14 15"/></svg></a>
+        </div>
+      </div>
+      <nav class="footer__cols" aria-label="푸터 메뉴">
+        <div><h3>서비스</h3><a href="#">공간 찾기</a><a href="#">공연 요청</a><a href="#">PR 게시판</a><a href="#">이용 방법</a></div>
+        <div><h3>업체</h3><a href="#">입점 신청</a><a href="#">업체 이용 가이드</a><a href="#">정산 안내</a><a href="#">수수료 안내</a></div>
+        <div><h3>고객지원</h3><a href="#">공지사항</a><a href="#">자주 묻는 질문</a><a href="#">1:1 문의</a><a href="#">신고·제재 안내</a></div>
+        <div><h3>회사</h3><a href="#">회사 소개</a><a href="#">제휴 문의</a><a href="#">채용</a></div>
+      </nav>
+      <div class="footer__cs">
+        <h3>고객센터</h3>
+        <p class="footer__tel">1588-0000</p>
+        <p>평일 10:00 ~ 18:00<br>점심 12:30 ~ 13:30 · 주말·공휴일 휴무</p>
+        <a class="pill pill--dark" href="#">1:1 문의하기</a>
+      </div>
+    </div>
+    <div class="footer__legal">
+      <a href="#">이용약관</a><a href="#"><b>개인정보처리방침</b></a><a href="#">업체 이용약관</a><a href="#">안전 결제 이용약관</a><a href="#">청소년 보호정책</a>
+    </div>
+    <div class="footer__biz">
+      <p><span>(주)스테이지덕</span><span>대표 홍길동</span><span>사업자등록번호 000-00-00000</span><span>통신판매업 신고 제2026-광주동구-0000호</span></p>
+      <p><span>광주광역시 동구 예시로 00, 0층</span><span>help@stageduck.example</span></p>
+      <p class="footer__notice">STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니며, 업체가 등록한 서비스 정보와 거래에 대한 책임은 각 업체에 있어요. 사업자 정보는 목업용 예시예요.</p>
+      <p class="footer__copy">© 2026 STAGE DUCK. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var sw = document.querySelectorAll('.mock-switch button');
+  sw.forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.body.dataset.state = b.dataset.state;
+      sw.forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      window.scrollTo(0, 0);
+    });
+  });
+  document.querySelectorAll('.seg button').forEach(function (b, _, all) {
+    b.addEventListener('click', function () {
+      all.forEach(function (x) { x.classList.toggle('is-on', x === b); x.setAttribute('aria-selected', x === b); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
