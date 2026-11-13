@@ -1,8 +1,0 @@
-/* 시안: 틸 그린 — 포인트 #1F8A84. 색만 덮어쓴다 (home.html·home.css는 그대로) */
-:root {
-  --sd-blue: #1A7C77;          /* 포인트 글자·링크·단계 번호 (흰 바탕 대비 4.5:1 이상) */
-  --sd-blue-button: #187570;   /* 주 버튼 */
-  --sd-accent: #E8F4F3;        /* 옅은 바탕 */
-  --sd-featured: #92CBC7;      /* 선택·추천 테두리 */
-  --sd-focus: #92CBC7;
-}

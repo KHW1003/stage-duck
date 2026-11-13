@@ -1,8 +1,0 @@
-/* 시안: 스카이 블루 — 포인트 #157FE8. 색만 덮어쓴다 (home.html·home.css는 그대로) */
-:root {
-  --sd-blue: #1271D2;          /* 포인트 글자·링크·단계 번호 (흰 바탕 대비 4.5:1 이상) */
-  --sd-blue-button: #1268BE;   /* 주 버튼 */
-  --sd-accent: #EBF4FD;        /* 옅은 바탕 */
-  --sd-featured: #93C2F2;      /* 선택·추천 테두리 */
-  --sd-focus: #93C2F2;
-}
