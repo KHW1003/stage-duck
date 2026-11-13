@@ -1,4 +1,4 @@
-# stage-link (가칭)
+# STAGE DUCK 🦆
 
 > 공연 공간을 고르고, 그 공간에 맞는 **음향 장비·설치·엔지니어** 제안을 받아 비교한 뒤
 > 한 사이트에서 섭외와 결제까지 진행하는 **소규모 공연 준비 중개 플랫폼**
@@ -72,6 +72,49 @@
 | 테스트 | pytest / Vitest + React Testing Library |
 | 결제(테스트) | 자체 에스크로형 모의 결제 |
 | 배포 | Docker Compose |
+
+## 개발 환경 실행
+
+### 준비물
+Python 3.12, Node 22, MariaDB 11.4 (직접 설치 또는 `docker compose up -d mariadb`)
+
+### 1. DB 만들기 (최초 1번, MariaDB root로 접속해서)
+```sql
+CREATE DATABASE stageduck CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'stageduck'@'localhost' IDENTIFIED BY '원하는_비밀번호';
+GRANT ALL PRIVILEGES ON stageduck.* TO 'stageduck'@'localhost';
+```
+
+### 2. 백엔드 (FastAPI)
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements-dev.txt
+copy .env.example .env             # macOS/Linux: cp .env.example .env  → DATABASE_URL 비밀번호 수정
+alembic upgrade head               # 테이블 만들기
+python -m app.cli create-admin --email admin@stageduck.test   # 관리자 계정
+uvicorn app.main:app --reload      # http://localhost:8000
+```
+- API 문서: http://localhost:8000/docs
+- **관리자 화면: http://localhost:8000/admin** (SQLAdmin — 업체 심사, 회원 경고, 이력)
+- 테스트: `pytest` (DB 설정 없이 실행하면 임시 SQLite, `TEST_DATABASE_URL`을 주면 MariaDB)
+
+### 3. 프론트엔드 (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev     # http://localhost:5173  (/api, /admin 은 8000으로 프록시)
+npm test        # Vitest
+```
+
+### 폴더
+| 경로 | 내용 |
+|---|---|
+| `backend/app/<영역>/` | 영역별 `router.py` · `schemas.py` · `service.py` (specs/plan.md 3장) |
+| `backend/app/admin/` | SQLAdmin 관리자 화면 — 액션은 서비스 함수만 호출 |
+| `backend/tests/f1 … f5/` | 테스트 이름에 AC ID (`test_ac_f1_19_...`) |
+| `frontend/src/shared/` | API 클라이언트, StatusBadge, SimulationBanner |
 
 ## 문서
 
