@@ -17,6 +17,7 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
+from app.auth.tokens import ACCESS_COOKIE, issue_access_token  # noqa: E402
 from app.core.db import Base, SessionLocal, engine  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.main import app  # noqa: E402
@@ -92,6 +93,12 @@ def make_supplier(db: Session, *, review_status: str = "PENDING", categories=("E
     db.add(supplier)
     db.commit()
     return supplier
+
+
+def login_as(client: TestClient, user: User) -> TestClient:
+    """user 로 로그인한 쿠키를 넣는다 (#22). 사용: login_as(client, make_user(db)).get("/api/v1/...")"""
+    client.cookies.set(ACCESS_COOKIE, issue_access_token(user.id))
+    return client
 
 
 @pytest.fixture

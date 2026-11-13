@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     app_env: str = "local"  # local / test / prod
     database_url: str = "mariadb+pymysql://stageduck:stageduck@localhost:3306/stageduck?charset=utf8mb4"
     admin_session_secret: str = "dev-only-change-me"
+    jwt_secret: str = "dev-only-change-me-jwt"  # 로그인 쿠키 서명 (#22 임시 itsdangerous, #24 JWT)
+    access_token_minutes: int = 30  # plan.md 4장 Access 30분
 
     @property
     def is_test_env(self) -> bool:
