@@ -2,6 +2,17 @@
    주최자 홈과 같은 디자인 값·버튼·헤더·푸터를 쓰고, 화면 구성만 업체 일에 맞춘다.
    상태 3가지: guest(입점 안내) / review(심사 중) / approved(승인 업체 대시보드) */
 
+/* 업체 화면 색: 주조색 #007ADA (신뢰감, 주최자 화면의 레드와 구분). 영역·스타일은 그대로, 색만 덮어쓴다 */
+:root {
+  --sd-blue: #0070c9;        /* 포인트 글자·링크·숫자. #007ADA는 흰 바탕 글자 대비가 4.3:1이라 조금 어둡게 (4.9:1) */
+  --sd-blue-button: #007ada; /* 주 버튼 바탕 = 주조색 */
+  --sd-accent: #e8f3fc;      /* 옅은 바탕 */
+  --sd-featured: #8cc4f0;    /* 강조 카드 테두리 */
+  --sd-focus: #8cc4f0;
+}
+.btn--primary:hover { background: #006bc0; }
+.logo .partner-chip { background: var(--sd-blue-button); }
+
 /* 상태 전환 */
 .st-guest, .st-review, .st-approved, .st-member { display: none !important; }
 body[data-state="guest"] .st-guest { display: block !important; }
