@@ -1,4 +1,5 @@
 """경고·정지 서비스 (FR-POL-04, Q-34). 경고 3회면 이용 정지."""
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errors import invalid_state, not_found
@@ -43,6 +44,19 @@ def warn(db: Session, user_id: int, *, actor_id: int | None, reason: str | None,
 # 묶음 사이 약속 (roles.md 3장, CLAUDE.md 5장) — 4번 → 1·3번
 # 이름·인자를 바꾸려면 쓰는 쪽(1번 세환: PR 게시판, 3번 채은: 채팅)과 먼저 합의한다.
 # ---------------------------------------------------------------------------
+
+def suspension_reason(db: Session, user_id: int) -> str | None:
+    """[약속 4 → 1] 그 회원의 가장 최근 SUSPENSION 제재 사유. 없으면 None.
+
+    쓰는 곳: 1번 정지된 계정 로그인 안내 (#24).
+    """
+    return db.scalar(
+        select(Sanction.reason)
+        .where(Sanction.user_id == user_id, Sanction.type == "SUSPENSION")
+        .order_by(Sanction.created_at.desc(), Sanction.id.desc())
+        .limit(1)
+    )
+
 
 REPORT_TARGET_TYPES = ("CHAT_ROOM", "PR_POST", "USER")  # data-model.md reports.target_type
 

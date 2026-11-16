@@ -43,6 +43,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (policy.warn, [("db", POS), ("user_id", POS), ("actor_id", KW), ("reason", KW), ("report_id", KW)]),
         (policy.report, [("db", POS), ("reporter_id", KW), ("target_type", KW), ("target_id", KW), ("reason", KW)]),
         (policy.blind_post, [("db", POS), ("post_id", POS), ("actor_id", KW), ("reason", KW)]),
+        (policy.suspension_reason, [("db", POS), ("user_id", POS)]),
     ],
     ids=lambda v: getattr(v, "__qualname__", ""),
 )
