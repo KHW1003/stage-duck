@@ -28,7 +28,7 @@
   }
   function tot(n) { return '<p class="c-card__total">' + n + '<small>원</small></p>'; }
   function meta(t) { return '<p class="c-card__meta">' + t + '</p>'; }
-  function disc(n) { return '<p class="c-card__discount"><span class="discount">− ' + n + '원</span> <span class="muted">할인 반영</span></p>'; }
+  function disc(n) { return '<p class="c-card__discount"><span class="discount">− ' + n + '원</span> <span class="muted">업체할인</span></p>'; }
   function diff(t) { return '<p class="c-card__diff">' + t + '</p>'; }
   var WARN = '<div class="room__warn" role="note">' + I('warn', 'icon--sm') + '<span>플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.</span></div>';
   var CLOSED = '마감된 채팅방이에요. 기록은 공연 뒤 1년까지 볼 수 있어요.';

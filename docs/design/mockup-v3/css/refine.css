@@ -88,7 +88,7 @@
 .sum-total--point b, .invoice__total b { color: var(--sd-ink); }
 .c-card__diff { color: var(--sd-ink); }
 
-/* 할인: 업체가 조율하면서 깎은 금액. 주조색 + "− 0원" 모양 (금액 자체는 검정) */
+/* 업체할인: 업체가 조율하면서 깎은 금액. 주조색 + "− 0원" 모양 (금액 자체는 검정) */
 .discount { color: var(--sd-blue); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .lines tr.is-discount td { background: transparent; }
 .lines tr.is-discount td:first-child b { color: var(--sd-blue); }
