@@ -17,7 +17,7 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
-from app.auth.tokens import ACCESS_COOKIE, issue_access_token  # noqa: E402
+from app.auth.tokens import ACCESS_COOKIE, CSRF_COOKIE, issue_access_token  # noqa: E402
 from app.core.db import Base, SessionLocal, engine  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.main import app  # noqa: E402
@@ -95,9 +95,17 @@ def make_supplier(db: Session, *, review_status: str = "PENDING", categories=("E
     return supplier
 
 
+TEST_CSRF_TOKEN = "test-csrf-token"
+
+
 def login_as(client: TestClient, user: User) -> TestClient:
-    """user 로 로그인한 쿠키를 넣는다 (#22). 사용: login_as(client, make_user(db)).get("/api/v1/...")"""
+    """user 로 로그인한 쿠키를 넣는다 (#22). 사용: login_as(client, make_user(db)).post("/api/v1/...")
+
+    #24부터 POST·PUT·PATCH·DELETE 는 CSRF 검사를 하므로, csrf_token 쿠키와 X-CSRF-Token 헤더도 같이 넣는다.
+    """
     client.cookies.set(ACCESS_COOKIE, issue_access_token(user.id))
+    client.cookies.set(CSRF_COOKIE, TEST_CSRF_TOKEN)
+    client.headers["X-CSRF-Token"] = TEST_CSRF_TOKEN
     return client
 
 
