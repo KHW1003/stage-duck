@@ -87,3 +87,14 @@
 /* 금액은 주조색(빨강)으로 쓰지 않는다 — 오류·할인가처럼 읽힌다. 크고 굵은 검정으로만 강조한다 */
 .sum-total--point b, .invoice__total b { color: var(--sd-ink); }
 .c-card__diff { color: var(--sd-ink); }
+
+/* 할인: 업체가 조율하면서 깎은 금액. 주조색 + "− 0원" 모양 (금액 자체는 검정) */
+.discount { color: var(--sd-blue); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lines tr.is-discount td { background: transparent; }
+.lines tr.is-discount td:first-child b { color: var(--sd-blue); }
+.lines tfoot tr.is-sub td { padding: 10px 12px; border-top: 0; background: transparent; font-weight: 500; }
+.lines tfoot tr.is-sub:first-child td { border-top: 1px solid var(--sd-rule); padding-top: 14px; }
+.lines tfoot tr.is-sub .r { font-size: var(--sd-text-body); letter-spacing: 0; }
+.lines tfoot tr.is-sub + tr:not(.is-sub) td { border-top: 1px solid var(--sd-line); }
+.c-card__discount { margin-top: 4px; font-size: var(--sd-text-small); }
+.sum-rows .discount { font-weight: 700; }
