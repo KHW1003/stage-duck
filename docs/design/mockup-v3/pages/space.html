@@ -7,18 +7,25 @@
 <link rel="stylesheet" href="../css/app.css">
 <style>
   /* SpaceDetailPage.module.css: 티켓 상세처럼 위쪽 = 사진 + 요약표 + 오른쪽 행동 상자 */
-  .detail-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) var(--sd-aside); gap: 32px; align-items: start; }
-  .detail-top .gallery__main { aspect-ratio: auto; height: 340px; }   /* 대표 사진을 100px쯤 키움 (기존 약 240px) */
-  .detail-top h1 { font-size: 26px; font-weight: 700; letter-spacing: -.8px; }
-  .detail-top__meta { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
-  .detail-top .info-table { margin-top: 18px; }
+  /* 왼쪽 = 사진 + 대표 정보, 그 아래 상세. 오른쪽 = 오퍼 상자가 화면에 붙어 스크롤을 따라온다 */
+  .space-page .main, .space-page .tab-bar > .container { padding-right: calc(var(--sd-page-pad) + 316px); }   /* 오퍼 상자 자리 */
+  .detail-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 36px; align-items: start; }
+  .detail-top .gallery__main { aspect-ratio: auto; height: 340px; }
+  .detail-top h1 { font-size: 29px; font-weight: 700; letter-spacing: -.8px; }
+  .detail-top__meta { margin-top: 6px; font-size: 15px; color: var(--sd-muted); }
+  .detail-top .chips-ico > div { padding: 16px 16px; }
+  .detail-top .chips-ico b { font-size: 17px; }
+  .detail-top .info-table { margin-top: 20px; font-size: 15px; }
   .detail-top .info-table th { width: 110px; }
+  .detail-top .info-table th, .detail-top .info-table td { padding-top: 16px; padding-bottom: 16px; }
+  .offer-fixed { position: fixed; top: calc(var(--sd-gnb-height) + 108px); right: max(24px, calc((100vw - var(--sd-page-width)) / 2 - 40px)); z-index: 6; width: 300px; max-height: calc(100vh - var(--sd-gnb-height) - 132px); overflow-y: auto; background: var(--sd-bg); }
+  @media (max-width: 1100px) { .space-page .main, .space-page .tab-bar > .container { padding-right: var(--sd-page-pad); } .offer-fixed { position: static; width: auto; max-height: none; grid-column: 1 / -1; } }
 </style>
 </head>
 <!-- 화면: 공간 상세 · FR-SPACE-01·03 · FR-OFFER-01 · AC-F3-16 · 묶음 1
      React: pages/SpaceDetailPage.tsx = Gallery + SpaceSummaryTable + OfferBox(SideBox) + DetailTabs(공간 조건 / 기본 장비 / 소개 / 업체)
      사진: 큰 사진 1장 + 작은 사진 줄 (DESIGN.md 4장). 연락처는 보이지 않는다. -->
-<body data-layout="user" data-nav="spaces">
+<body class="space-page" data-layout="user" data-nav="spaces">
 
 <div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="spaces.html">공간 찾기</a></li><li><a href="spaces.html">광주</a></li><li>공간 C</li></ol></div></div>
 
@@ -49,7 +56,7 @@
     </div>
 
     <!-- OfferBox: 공연장 단계가 열려 있을 때만 오퍼 (FR-OFFER-01) -->
-    <aside class="side-box">
+    <aside class="side-box offer-fixed">
       <div class="side-box__sec"><p class="side-box__title">이 업체에 오퍼 보내기</p><p class="small muted">내 공고를 먼저 보여 줘요. 업체는 48시간 안에 견적서를 보내거나 거절해요.</p></div>
       <div class="side-box__sec"><label class="field"><span class="field__label">내 공연</span><select class="select"><option>가을밤 밴드 공연 · 공연장 단계</option></select></label>
         <dl class="sum-rows mt-12"><div><dt>공연 날짜</dt><dd>11월 28일(토)</dd></div><div><dt>관객</dt><dd>80명</dd></div><div><dt>이 단계 오퍼</dt><dd>0 / 10곳</dd></div></dl></div>
