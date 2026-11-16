@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../css/app.css">
 <style>
   /* SpacesPage.module.css: 위쪽 조건표 (티켓 사이트 상세 검색처럼 줄마다 이름 칸) */
-  .cond { border-top: 2px solid var(--sd-rule); }
+  .cond { border-top: 0; }   /* 분류 타일 바로 아래라 위 선을 두지 않는다 */
   .cond > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }
   .cond__th { display: flex; align-items: center; padding: 0 18px; background: var(--sd-th); font-size: var(--sd-text-desc); font-weight: 700; }
   .cond__td { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; min-height: 52px; padding: 8px 18px; }
