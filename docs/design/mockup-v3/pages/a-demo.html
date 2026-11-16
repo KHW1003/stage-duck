@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시연 도구 · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 시연 도구 · FR-DEMO-01·02 · FR-AUTH-08 · AC-F5-14 · 묶음 4
+     React 아님: SQLAdmin DemoToolView (backend/app/admin/templates/demo.html). 테스트 환경(APP_ENV=test)에서만 메뉴가 보이고 동작한다.
+     초기화: 관리자 계정을 뺀 모든 데이터를 지우고 시드(사용자 1명, 업체 A~G, 공간 A·B·C)를 다시 넣는다. 비밀번호는 화면에 보이지 않는다. -->
+<body data-layout="admin" data-nav="demo">
+
+<div class="mock-switch" data-group="done">
+  <span>목업 보기</span>
+  <button type="button" data-value="no" aria-pressed="true">기본</button>
+  <button type="button" data-value="yes">초기화한 뒤</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>시연 도구</li></ol><h1>시연 도구</h1><p class="page-top__desc">발표 전에 시연 데이터를 처음 상태로 되돌려요. 테스트 환경에서만 보이는 메뉴예요.</p></div><span class="tag tag--tbd">APP_ENV = test</span></div></div>
+
+<main class="container main">
+  <div class="notice notice--point mb-16" data-when="done:yes"><span data-icon="pass"></span><div><b>시연 데이터를 처음 상태로 되돌렸어요.</b> 11월 14일 16:40 · 운영자</div></div>
+
+  <div class="with-aside" style="margin-top:0">
+    <div>
+      <section class="sec">
+        <div class="sec-head"><h2><span data-icon="refresh"></span>시연 데이터 초기화</h2></div>
+        <table class="info-table">
+          <tr><th>지우는 것</th><td>관리자 계정을 뺀 모든 회원·공연·요청서·견적서·채팅·결제·신고·제재 기록</td></tr>
+          <tr><th>다시 넣는 것</th><td>사용자 1명 (가을밤밴드), 업체 A~G (모두 승인), 공간 A·B·C, 공연 예시 값 (광주 · 토요일 19:00~21:00 · 리허설 17:00 · 관객 80명 · 밴드)</td></tr>
+          <tr><th>남는 것</th><td>관리자 계정, 서버 설정</td></tr>
+          <tr><th>운영 환경</th><td>메뉴가 보이지 않고, 주소로 직접 불러도 거부돼요</td></tr>
+        </table>
+        <div class="btns mt-24"><button class="btn btn--primary" type="button" data-open="reset"><span data-icon="refresh" class="icon--sm"></span>시연 데이터 초기화</button></div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-head"><h2><span data-icon="users"></span>시연 계정</h2><p>로그인 화면의 시연 계정 전환에서 바로 들어가요 (테스트 환경만).</p></div>
+        <div class="table-box"><table class="table">
+          <thead><tr><th>계정</th><th>역할</th><th>이메일</th><th>첫 화면</th></tr></thead>
+          <tbody>
+            <tr><td class="l"><b>가을밤밴드</b></td><td>사용자</td><td class="l">host@stageduck.test</td><td>내 공연</td></tr>
+            <tr><td class="l"><b>업체 A ~ G</b><small>공연장 A·B·C · 장비 D·E · 엔지니어 F·G</small></td><td>업체</td><td class="l">supplier-a ~ g@stageduck.test</td><td>공고 목록</td></tr>
+            <tr><td class="l"><b>운영자</b></td><td>관리자</td><td class="l">admin@stageduck.test</td><td>업체 심사</td></tr>
+          </tbody></table></div>
+        <p class="field__hint mt-12">비밀번호는 화면에 적지 않아요. 팀 공유 문서(로컬_개발환경_세팅.md)의 안내를 따라 주세요.</p>
+      </section>
+    </div>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">지금 데이터</p><dl class="sum-rows"><div><dt>회원</dt><dd>9명</dd></div><div><dt>공연</dt><dd>3건</dd></div><div><dt>견적서</dt><dd>7장</dd></div><div><dt>결제</dt><dd>1건</dd></div><div><dt>신고</dt><dd>3건</dd></div></dl><p class="field__hint mt-8">이 숫자는 목업 예시예요. 실제 화면은 서버에서 센 값을 보여 줘요.</p></div>
+      <div class="side-box__sec"><p class="side-box__title">초기화 기록</p><dl class="sum-rows"><div data-when="done:yes"><dt>11월 14일 16:40</dt><dd>운영자</dd></div><div><dt>11월 13일 09:00</dt><dd>운영자</dd></div></dl></div>
+    </aside>
+  </div>
+</main>
+
+<div class="layer" id="reset" hidden><div class="modal"><div class="modal__head"><h2>시연 데이터 초기화</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">모든 시연 데이터를 지우고 처음 상태로 되돌릴까요?</p><div class="notice notice--warn mt-12"><span data-icon="warn"></span><div>지금 진행 중인 공연·채팅·결제 기록이 모두 지워져요. 되돌릴 수 없어요.</div></div>
+    <label class="check mt-16"><input type="checkbox">테스트 환경인 것을 확인했어요</label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><a class="btn btn--primary" href="a-demo.html?done=yes">초기화</a></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

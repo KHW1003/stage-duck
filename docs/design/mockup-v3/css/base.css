@@ -1,0 +1,63 @@
+/* 기본 스타일 · 페이지 뼈대
+   React: shared/styles/base.css (전역 1회)
+   원칙: 카드를 쌓지 않는다. 구역은 ① 회색 띠(--sd-band) ② 표·목록 위 굵은 선(--sd-rule) ③ 1px 선으로 나눈다.
+   그림자·그라데이션·이모지 없음 (DESIGN.md 8장). */
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--sd-bg); color: var(--sd-ink); font-family: var(--sd-font); font-size: var(--sd-text-body); line-height: 1.6; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4, p, dl, dd, ol, ul, figure, blockquote { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; }
+:focus-visible { outline: 3px solid var(--sd-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--sd-muted); }
+.strong { font-weight: 700; }
+.point { color: var(--sd-blue); }
+.small { font-size: var(--sd-text-small); }
+.desc { font-size: var(--sd-text-desc); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 아이콘 (layout.js 스프라이트). React: shared/ui/Icon.tsx */
+.icon { width: var(--sd-icon); height: var(--sd-icon); flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.icon--sm { width: var(--sd-icon-sm); height: var(--sd-icon-sm); vertical-align: -2px; }
+
+/* 폭 */
+.container { max-width: calc(var(--sd-page-width) + var(--sd-page-pad) * 2); margin: 0 auto; padding: 0 var(--sd-page-pad); }
+.container--narrow { max-width: calc(880px + var(--sd-page-pad) * 2); }
+.main { padding-top: 40px; padding-bottom: 80px; }
+
+/* 본문 + 오른쪽 보조 칸 (티켓 예매 상세의 오른쪽 예매 상자 자리) */
+.with-aside { display: grid; grid-template-columns: minmax(0, 1fr) var(--sd-aside); gap: 48px; align-items: start; }
+.with-nav { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; align-items: start; }
+.sticky { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
+
+/* 구간 */
+.sec + .sec { margin-top: var(--sd-inner-section); }
+.sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.sec-head h2 { font-size: 19px; font-weight: 700; letter-spacing: -.4px; }
+.sec-head h2 em { font-style: normal; color: var(--sd-blue); margin-left: 4px; }
+.sec-head p { margin-top: 2px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.sec-head__side { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* 큰 구역 사이 회색 띠 (전체 폭) */
+.band { height: 10px; background: var(--sd-band); border-top: 1px solid var(--sd-line); border-bottom: 1px solid var(--sd-line); }
+
+/* 격자·줄 */
+.grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--gap, 24px); }
+.row { display: flex; align-items: center; gap: var(--gap, 8px); flex-wrap: wrap; }
+.row--between { justify-content: space-between; }
+.row--end { justify-content: flex-end; }
+.stack { display: flex; flex-direction: column; gap: var(--gap, 12px); }
+.grow { flex: 1; min-width: 0; }
+.mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-40 { margin-top: 40px; }
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; }
+
+/* 목업 전용 (React로 옮기지 않는다) */
+.mock-switch { position: fixed; left: 16px; bottom: 16px; z-index: 95; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; max-width: calc(100% - 32px); padding: 4px 4px 4px 12px; background: var(--sd-ink); color: #fff; border-radius: var(--sd-r-btn); font-size: var(--sd-text-meta); }
+.mock-switch > span { margin-right: 6px; opacity: .7; }
+.mock-switch button { border: 0; background: transparent; color: inherit; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.mock-switch button[aria-pressed="true"] { background: var(--sd-blue-button); }

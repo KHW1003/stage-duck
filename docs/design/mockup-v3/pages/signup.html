@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가입 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 사용자 가입 + 네이버 추가 정보 · FR-AUTH-01·04 · AC-F1-01~03·05~07 · 묶음 1
+     React: pages/SignupPage.tsx = StepBar + RoleChoice + SignupFormTable(mode: "email" | "social") + Terms
+     받지 않는 정보: 주소. 업체를 고르면 입점 신청(p-onboarding)으로 간다. -->
+<body data-layout="guest">
+
+<div class="mock-switch" data-group="mode">
+  <span>목업 보기</span>
+  <button type="button" data-value="email" aria-pressed="true">이메일 가입</button>
+  <button type="button" data-value="social">네이버 추가 정보</button>
+</div>
+
+<div class="page-top">
+  <div class="container page-top__inner">
+    <div><ol class="page-top__crumb"><li>가입</li></ol><h1 data-when="mode:email">가입하기</h1><h1 data-when="mode:social">추가 정보 입력</h1>
+      <p class="page-top__desc" data-when="mode:social">네이버에서 받은 이름·이메일을 미리 채웠어요. 고칠 수 있어요.</p></div>
+  </div>
+</div>
+
+<main class="container container--narrow main">
+  <ol class="step-bar" data-when="mode:email"><li class="is-done"><b>01</b><span data-icon="users"></span>가입 유형</li><li class="is-now"><b>02</b><span data-icon="edit"></span>정보 입력</li><li><b>03</b><span data-icon="check"></span>완료</li></ol>
+
+  <section class="sec mt-40" data-when="mode:email">
+    <div class="sec-head"><h2><span data-icon="users"></span>가입 유형</h2></div>
+    <div class="choice choice--photo">
+      <label class="choice__item"><input type="radio" name="role" checked><span class="choice__photo" style="--img:url('../../mockup/assets/photos/photo-1598387993441-a364f854c3e1.jpg')" role="img" aria-label="밴드 공연 사진"></span><span><span class="choice__mark"></span><span><b>공연을 준비해요</b><small>요청서를 쓰고 공연장·장비·엔지니어 견적서를 받아요.</small></span></span></label>
+      <label class="choice__item"><input type="radio" name="role" onclick="location.href='p-onboarding.html?step=account'"><span class="choice__photo" style="--img:url('../../mockup/assets/photos/photo-1524230659092-07f99a75c013.jpg')" role="img" aria-label="공연 장비 사진"></span><span><span class="choice__mark"></span><span><b>업체로 입점할래요</b><small>공간·장비·엔지니어 업체예요. 입점 신청으로 이어져요.</small></span></span></label>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2><span data-icon="edit"></span>정보 입력</h2><p><span class="req" style="color:var(--sd-conflict-text)">*</span> 표시는 꼭 적어야 해요. 이름·연락처는 업체에게 보이지 않아요.</p></div>
+    <div class="form-table">
+      <div><span class="form-table__th">이름<span class="req">*</span></span><span class="form-table__td"><input class="input" aria-invalid="true" placeholder="이름"><span class="field__error"><span data-icon="warn" class="icon--sm"></span>이름을 적어 주세요.</span></span></div>
+      <div><span class="form-table__th">닉네임<span class="req">*</span></span><span class="form-table__td"><span class="form-table__inline"><input class="input" value="가을밤밴드" style="max-width:280px"><button class="btn btn--sm" type="button">중복 확인</button></span><span class="field__hint">업체에게는 닉네임만 보여요.</span></span></div>
+      <div><span class="form-table__th">이메일<span class="req">*</span></span><span class="form-table__td"><input class="input" type="email" value="user@stageduck.test"></span></div>
+      <div data-when="mode:email"><span class="form-table__th">비밀번호<span class="req">*</span></span><span class="form-table__td"><input class="input" type="password" value="pass"><span class="field__hint">8자 이상, 영문과 숫자를 함께 써 주세요.</span></span></div>
+      <div data-when="mode:email"><span class="form-table__th">비밀번호 확인<span class="req">*</span></span><span class="form-table__td"><input class="input" type="password"></span></div>
+      <div><span class="form-table__th">전화번호<span class="req">*</span></span><span class="form-table__td"><input class="input" value="010-0000-0000"></span></div>
+      <div><span class="form-table__th">생년월일<span class="req">*</span></span><span class="form-table__td"><input class="input" type="date" value="2015-03-02" aria-invalid="true" style="max-width:220px"><span class="field__error"><span data-icon="warn" class="icon--sm"></span>만 14세 이상만 가입할 수 있어요.</span></span></div>
+      <div><span class="form-table__th">가입 목적</span><span class="form-table__td"><select class="select" style="max-width:280px"><option>밴드 공연</option><option>연극·뮤지컬</option><option>강연·행사</option><option>종교 행사</option><option>기타</option></select></span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2><span data-icon="shield"></span>약관 동의</h2></div>
+    <div class="list">
+      <div class="list__item"><label class="check strong"><input type="checkbox" checked>전체 동의</label><span></span></div>
+      <div class="list__item"><label class="check"><input type="checkbox" checked>STAGE DUCK 이용약관 (필수)</label><a class="link" href="#">보기</a></div>
+      <div class="list__item"><label class="check"><input type="checkbox" checked><span>개인정보 수집·이용 (필수)<small>이름, 전화번호, 이메일, 생년월일, 닉네임. 주소는 받지 않아요.</small></span></label><a class="link" href="#">보기</a></div>
+      <div class="list__item"><label class="check"><input type="checkbox">마케팅 정보 받기 (선택)</label><a class="link" href="#">보기</a></div>
+    </div>
+    <div class="notice mt-16" data-when="mode:social"><span data-icon="info"></span><div>네이버 동의와 따로 STAGE DUCK 약관에 동의해야 가입이 끝나요. 같은 이메일로 가입한 계정이 있어도 자동으로 합치지 않아요.</div></div>
+  </section>
+
+  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="login.html" style="min-width:160px">취소</a><a class="btn btn--primary btn--lg" href="my.html" style="min-width:240px">가입하기</a></div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
