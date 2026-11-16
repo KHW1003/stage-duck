@@ -1,9 +1,9 @@
-"""AC-F2-17: 견적서 최종 합계 검증 (항목 합과 다르면 거부)."""
+"""AC-F2-17: 견적서 최종 합계 검증 (항목 합과 다르면 거부, 최소 10,000원)."""
 import pytest
 from pydantic import ValidationError
 
 from app.core.errors import AppError
-from app.quote.calc import sum_amounts, verify_total
+from app.quote.calc import MIN_TOTAL_AMOUNT, sum_amounts, verify_total
 from app.quote.schemas import MAX_AMOUNT, QuoteAmounts
 
 # api-contract.md 3.3 예시 값
@@ -32,8 +32,32 @@ def test_ac_f2_17_wrong_total_rejected(total):
     _assert_total_mismatch(err.value)
 
 
-def test_ac_f2_17_all_zero_passes():
-    verify_total(QuoteAmounts.model_validate(ZERO), 0)
+def _assert_below_min(exc: AppError) -> None:
+    assert exc.status == 400
+    assert exc.code == "VALIDATION_FAILED"
+    assert exc.field_errors == [
+        {"field": "totalAmount", "reason": "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요."}
+    ]
+
+
+def test_ac_f2_17_all_zero_rejected():
+    """모든 칸 0원, 합계 0원은 최소 금액보다 작아 거부한다."""
+    with pytest.raises(AppError) as err:
+        verify_total(QuoteAmounts.model_validate(ZERO), 0)
+    _assert_below_min(err.value)
+
+
+def test_ac_f2_17_below_min_total_rejected():
+    """경계 값: 9,999원은 거부한다."""
+    with pytest.raises(AppError) as err:
+        verify_total(QuoteAmounts.model_validate({**ZERO, "items": 9_999}), 9_999)
+    _assert_below_min(err.value)
+
+
+def test_ac_f2_17_min_total_passes():
+    """경계 값: 10,000원은 통과한다."""
+    assert MIN_TOTAL_AMOUNT == 10_000
+    verify_total(QuoteAmounts.model_validate({**ZERO, "items": 10_000}), 10_000)
 
 
 def test_ac_f2_17_all_zero_with_nonzero_total_rejected():
