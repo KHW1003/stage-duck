@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이야기 따라가기 · STAGE DUCK 목업</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<!-- 목업 전용: 가을밤밴드가 공연을 준비하는 이야기 순서대로 화면을 눌러 본다. 순서는 story.js의 S 배열 하나에 있다. -->
+<body data-layout="guest" data-base="pages/">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="index.html">목업 목록</a></li><li>이야기 따라가기</li></ol><h1>이야기 따라가기</h1><p class="page-top__desc">가을밤밴드가 11월 28일 공연을 준비하는 순서대로 화면을 눌러 볼 수 있어요. 아무 장면이나 누르면 그 장면부터 시작하고, 화면 아래 띠의 [다음]으로 넘어가요.</p></div><a class="btn btn--primary" href="pages/signup.html?story=1">처음부터 시작</a></div></div>
+
+<main class="container main">
+  <div class="notice mb-16"><span data-icon="info"></span><div>사용자·업체·관리자 화면이 번갈아 나와요. 띠 왼쪽의 색 라벨이 지금 누구 화면인지 알려 줘요. 화면 안의 진짜 버튼을 눌러도 다음 장면이면 띠가 이어져요.</div></div>
+  <div id="story-list"></div>
+</main>
+<script src="layout.js"></script>
+</body>
+</html>
