@@ -79,3 +79,7 @@
 .choice__item:has(input:checked) { outline: 0; }
 .choice:has(input:checked) .choice__item:not(:has(input:checked)) { opacity: .7; transition: opacity .15s; }
 .choice:has(input:checked) .choice__item:not(:has(input:checked)):hover { opacity: .9; }
+
+/* 안내 상자: 왼쪽 색 띠를 없애고, 주의 아이콘은 주조색으로 */
+.notice--warn, .notice--conflict { border-left: 0; }
+.notice--warn > .icon { color: var(--sd-blue); }
