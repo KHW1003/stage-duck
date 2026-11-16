@@ -8,6 +8,7 @@
 .gnb__logo { display: inline-flex; align-items: center; gap: 8px; }
 .gnb__logo img { height: 28px; width: auto; }
 .gnb__role { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--sd-r-tag); background: var(--sd-blue-button); color: #fff; font-size: 10px; font-weight: 700; }
+.gnb__role--admin { background: var(--sd-ink); }
 .gnb__menu { display: flex; gap: 36px; justify-content: center; }
 .gnb__menu a { position: relative; display: inline-flex; align-items: center; height: var(--sd-gnb-height); font-size: var(--sd-text-nav); font-weight: 700; }
 .gnb__menu a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sd-ink); transform: scaleX(0); transition: transform .15s; }

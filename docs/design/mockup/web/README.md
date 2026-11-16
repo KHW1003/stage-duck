@@ -24,7 +24,7 @@
 |---|---|---|
 | `../tokens.css` | `src/shared/styles/tokens.css` | 색·크기·간격 변수. 업체 색은 `[data-theme="partner"]`로 |
 | `css/base.css` | `src/shared/styles/base.css` | 기본 스타일, `.container`, `.with-aside`, `.sec` |
-| `css/layout.css` | `src/shared/layout/` | `SimulationBanner`, `Gnb`, `PageTop`, `SideNav`, `Footer` |
+| `css/layout.css` | `src/shared/layout/` | `Gnb`, `PageTop`, `SideNav`, `Footer` |
 | `css/ui.css` | `src/shared/ui/` | `Button`, `Tag`, `StatusBadge`, `StateText`, `Field`, `Choice`, `Toggle`, `FormTable`, `Tabs`, `Filters`, `DataTable`, `InfoTable`, `List`, `Summary`, `Notice`, `Empty`, `Photo`, `Gallery`, `Avatar`, `Pagination`, `Fold`, `Modal`, `Drawer`, `NotificationPanel`, `Toast` |
 | `css/domain.css` | `src/features/*` | `StepBar`, `StageTrack`, `SideBox`, `QuoteColumns`, `QuoteLines`, `PriorInfo`, `Versions`, `ChatLayout`·`ChatCard`, `Invoice`, `Escrow`, `PenaltyScale`, `Timeline`, `Contacts` |
 | `css/theme-partner.css` | `tokens.css`의 `[data-theme="partner"]` | 업체 화면 주조색 `#0368B6` |
@@ -36,7 +36,7 @@
 
 ## 지킨 규칙 (CLAUDE.md · DESIGN.md)
 
-- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (맨 위 시뮬레이션 안내 띠는 팀장 요청으로 목업에서 뺐다. CLAUDE.md 3장 26·spec 0.2는 아직 그대로)
+- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (모든 화면 맨 위 안내 띠는 두지 않는다, D-41)
 - 용어: 사용자·업체·공고·견적서·컨펌·견적 내역 확인 카드·플랫폼 이용료·통합 청구서
 - 예시 값은 `docs/guides/시연_예시값.md` (공간 A·B·C, 업체 A~G, 1,850,000 / 92,500 / 1,942,500원, D-1 위약금 1,295,000원)
 - 이메일은 `@stageduck.test`, 전화는 `010-0000-00xx`

@@ -3,13 +3,16 @@
    - banner/gnb/footer → shared/layout/AppLayout.tsx (<Gnb role/><Footer/>)
    - ICONS → shared/ui/Icon.tsx (24 격자, 선 1.5. DESIGN.md 2.4 아이콘 세트 미정이라 Lucide 모양을 따라 그림)
    - data-open / data-close → Modal·Drawer open 상태, data-pop → 드롭다운
+   - 채팅 → chat-widget.js (shared/chat/ChatWidget.tsx). 로그인 화면이면 오른쪽 아래 둥근 버튼으로 뜬다
    - .mock-switch + data-when → 목업 전용 (옮기지 않는다)
-   body 속성: data-layout="guest | user | partner | partner-review", data-nav="메뉴 키" */
+   body 속성: data-layout="guest | user | partner | partner-review | admin", data-nav="메뉴 키" */
 (function () {
+  var SRC = document.currentScript ? document.currentScript.src : '';
   var I = {
     bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
     chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',
+    talk: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01" stroke-width="2.4"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     users: '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21a7 7 0 0 0-4-6.3"/>',
     right: '<path d="m9 6 6 6-6 6"/>', left: '<path d="m15 6-6 6 6 6"/>', down: '<path d="m6 9 6 6 6-6"/>',
@@ -83,21 +86,22 @@
 
   var MENU = {
     guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['how', '이용 방법', '../../mockup/home.html#flow']],
-    user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox.html'], ['chat', '채팅', 'chat.html'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html']],
-    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', 'p-chat.html'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html']],
-    'partner-review': []
+    user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html']],
+    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html']],
+    'partner-review': [],
+    admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['demo', '시연 도구', 'a-demo.html']]
   };
 
   /* 알림 (notifications 테이블 모양: type, payload, read_at) */
   window.NOTIS = {
     user: [
-      ['견적·채팅', '업체 D가 <b>견적 내역 확인 카드</b>를 보냈어요', '장비 · 견적서 v2 · 1,350,000원 · 48시간 안에 컨펌', '3분 전', 1, 'chat.html'],
+      ['견적·채팅', '업체 D가 <b>견적 내역 확인 카드</b>를 보냈어요', '장비 · 견적서 v2 · 1,350,000원 · 48시간 안에 컨펌', '3분 전', 1, 'chat:d'],
       ['견적·채팅', '업체 E가 <b>견적서</b>를 보냈어요', '장비 · 확인 필요 1개', '1시간 전', 1, 'inbox.html'],
       ['공고', '공연장 단계를 <b>컨펌</b>했어요', '공간 C · 500,000원', '어제', 0, 'my.html'],
       ['공고', '공고를 게시했어요', '가을밤 밴드 공연 · 공연장 업체에게 보여요', '11월 12일', 0, 'my.html']
     ],
     partner: [
-      ['견적·채팅', '<b>가을밤밴드</b>님이 채팅을 시작했어요', '장비 · 견적서 v1', '5분 전', 1, 'p-chat.html'],
+      ['견적·채팅', '<b>가을밤밴드</b>님이 채팅을 시작했어요', '장비 · 견적서 v1', '5분 전', 1, 'chat:ga'],
       ['오퍼', '<b>오퍼</b>를 받았어요', '연말 합동 공연 · 응답 기한 47시간', '2시간 전', 1, 'p-jobs.html'],
       ['견적·채팅', '견적서가 <b>컨펌</b>됐어요', '재즈 트리오 공연 · 700,000원', '어제', 0, 'p-jobs.html'],
       ['공고', '사용자가 다른 업체와 진행하기로 했어요', '포크 페스티벌 · 견적서 마감', '11월 11일', 0, 'p-jobs.html']
@@ -105,14 +109,18 @@
   };
   var NOTI_ICON = { '견적·채팅': 'chat', '오퍼': 'offer', '공고': 'ticket', '결제': 'wallet' };
   window.notiHTML = function (n) {
-    return '<a class="noti' + (n[4] ? ' is-unread' : '') + '" href="' + n[5] + '"><span class="noti__ico">' + icon(NOTI_ICON[n[0]] || 'bell') + '</span><span class="noti__text"><span class="noti__cat">' + n[0] + '</span>' + n[1] + '<small>' + n[2] + '</small></span><span class="noti__time">' + n[3] + '</span></a>';
+    var to = n[5].indexOf('chat:') === 0 ? '#chat" data-chat="' + n[5].slice(5) : n[5];   /* 채팅 알림은 페이지 이동 대신 채팅 창을 연다 */
+    return '<a class="noti' + (n[4] ? ' is-unread' : '') + '" href="' + to + '"><span class="noti__ico">' + icon(NOTI_ICON[n[0]] || 'bell') + '</span><span class="noti__text"><span class="noti__cat">' + n[0] + '</span>' + n[1] + '<small>' + n[2] + '</small></span><span class="noti__time">' + n[3] + '</span></a>';
   };
 
   var logo = partner ? '../../mockup/logo-partner.svg' : '../../mockup/logo.svg';
-  var home = partner ? (layout === 'partner' ? 'p-jobs.html' : 'p-onboarding.html') : (layout === 'user' ? 'my.html' : '../../mockup/home.html');
-  var menu = (MENU[layout] || []).map(function (m) { return '<a href="' + m[2] + '"' + (m[0] === nav ? ' aria-current="page"' : '') + '>' + m[1] + '</a>'; }).join('');
+  var home = partner ? (layout === 'partner' ? 'p-jobs.html' : 'p-onboarding.html') : (layout === 'user' ? 'my.html' : layout === 'admin' ? 'a-review.html' : '../../mockup/home.html');
+  var menu = (MENU[layout] || []).map(function (m) { return '<a href="' + m[2] + '"' + (m[2] === '#chat' ? ' data-chat=""' : '') + (m[0] === nav ? ' aria-current="page"' : '') + '>' + m[1] + '</a>'; }).join('');
   var right;
-  if (layout === 'guest') {
+  if (layout === 'admin') {   /* 관리자: SQLAdmin 화면을 같은 모양으로 (backend/app/admin). 알림·채팅 없음 */
+    right = '<span class="tag tag--tbd">테스트 환경</span><div class="gnb__pop"><button class="gnb__user" type="button" data-pop="pop-user"><span class="avatar">관</span>운영자' + icon('down', 'icon--sm') + '</button>' +
+      '<div class="dropdown" id="pop-user" hidden><div class="dropdown__head"><b>운영자</b>관리자 계정 · admin@stageduck.test</div><a href="login.html">' + icon('out') + '로그아웃</a></div></div>';
+  } else if (layout === 'guest') {
     right = '<a class="gnb__text" href="../../mockup/partner.html">업체신가요?</a><span class="gnb__sep"></span><a class="gnb__text" href="login.html">로그인</a><a class="btn btn--sm btn--primary" href="signup.html">가입하기</a>';
   } else {
     var who = partner ? ['D', '업체 D', '업체 계정 · ' + (layout === 'partner-review' ? '심사 중' : '승인')] : ['가', '가을밤밴드', '사용자 계정'];
@@ -129,7 +137,7 @@
 
   var sprite = '<svg xmlns="http://www.w3.org/2000/svg" style="display:none">' + Object.keys(I).map(function (k) { return '<symbol id="i-' + k + '" viewBox="0 0 24 24">' + I[k] + '</symbol>'; }).join('') + '</svg>';
   body.insertAdjacentHTML('afterbegin', sprite +
-    '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : '') + '</a>' +
+    '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : layout === 'admin' ? '<span class="gnb__role gnb__role--admin">관리자</span>' : '') + '</a>' +
     '<nav class="gnb__menu" aria-label="주 메뉴">' + menu + '</nav><div class="gnb__right">' + right + '</div></div></header>');
   body.insertAdjacentHTML('beforeend', '<footer class="footer"><div class="container"><div class="footer__top"><img src="' + logo + '" alt="STAGE DUCK">' +
     '<nav class="footer__links" aria-label="바닥글"><a href="#">이용약관</a><a href="#"><b>개인정보처리방침</b></a><a href="#">업체 이용약관</a><a href="#">공지사항</a><a href="#">1:1 문의</a></nav></div>' +
@@ -150,7 +158,7 @@
     if (p) { var m = document.getElementById(p.dataset.pop); if (m) m.hidden = !m.hidden; return; }
     var o = e.target.closest('[data-open]');
     if (o) { e.preventDefault(); var el = document.getElementById(o.dataset.open); if (el) el.hidden = false; return; }
-    if (e.target.closest('[data-close]')) { var ly = e.target.closest('.layer, .chat-float'); if (ly) ly.hidden = true; return; }
+    if (e.target.closest('[data-close]')) { var ly = e.target.closest('.layer'); if (ly) ly.hidden = true; return; }
     if (e.target.classList.contains('layer') && !e.target.closest('.frame')) e.target.hidden = true;
     var t = e.target.closest('.toggle button');
     if (t) { t.parentNode.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === t); }); var need = t.closest('[data-need]'); if (need) need.querySelector('.need-body').hidden = t.dataset.value === 'off'; return; }
@@ -190,4 +198,7 @@
     sw.addEventListener('click', function (e) { var b = e.target.closest('button[data-value]'); if (b) apply(b.dataset.value); });
     apply(q.get(g) || (sw.querySelector('[aria-pressed="true"]') || sw.querySelector('[data-value]')).dataset.value);
   });
+
+  /* 채팅 위젯 (같은 폴더의 chat-widget.js) */
+  if (SRC) { var cw = document.createElement('script'); cw.src = SRC.replace(/layout\.js(\?.*)?$/, 'chat-widget.js'); body.appendChild(cw); }
 })();

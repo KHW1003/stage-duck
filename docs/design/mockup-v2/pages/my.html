@@ -47,7 +47,7 @@
           <li class="is-now"><span class="track__bar"></span><span class="track__ico"><span data-icon="speaker"></span></span><p class="track__no">STEP 02</p><p class="track__name">장비 <span class="state state--on">조율 중</span></p><p class="track__info">견적서 2건 · 채팅 1곳</p></li>
           <li><span class="track__bar"></span><span class="track__ico"><span data-icon="engineer"></span></span><p class="track__no">STEP 03</p><p class="track__name">엔지니어 <span class="state">대기</span></p><p class="track__info">장비 컨펌 뒤 열려요</p></li>
         </ol>
-        <div class="notice notice--point mt-12"><span data-icon="doc"></span><div class="grow"><b>업체 D가 견적 내역 확인 카드를 보냈어요.</b> 내역서를 끝까지 보고 컨펌해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="chat.html">채팅에서 확인</a></div>
+        <div class="notice notice--point mt-12"><span data-icon="doc"></span><div class="grow"><b>업체 D가 견적 내역 확인 카드를 보냈어요.</b> 내역서를 끝까지 보고 컨펌해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅에서 확인</a></div>
       </section>
 
       <!-- StageTable (모양 C) -->
@@ -57,7 +57,7 @@
           <thead><tr><th>단계</th><th>상태</th><th>업체</th><th>금액</th><th>자동 검사</th><th>다음 할 일</th></tr></thead>
           <tbody>
             <tr><td class="strong">공연장</td><td><span class="state state--done">컨펌</span><small>11월 12일</small></td><td>업체 C<small>공간 C</small></td><td class="r">500,000원</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span><small>설치 시간 120분</small></td><td><a class="btn btn--xs" href="quote.html">내역서</a></td></tr>
-            <tr class="is-on"><td class="strong">장비</td><td><span class="state state--on">조율 중</span><small>견적서 2건</small></td><td>업체 D<small>견적서 v2 · 엔지니어 포함</small></td><td class="r">1,350,000원</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span><small>설치 완료 15:45</small></td><td><a class="btn btn--xs btn--primary" href="chat.html">컨펌하기</a></td></tr>
+            <tr class="is-on"><td class="strong">장비</td><td><span class="state state--on">조율 중</span><small>견적서 2건</small></td><td>업체 D<small>견적서 v2 · 엔지니어 포함</small></td><td class="r">1,350,000원</td><td><span class="status status--pass"><span data-icon="pass"></span>통과</span><small>설치 완료 15:45</small></td><td><a class="btn btn--xs btn--primary" href="#chat" data-chat="d">컨펌하기</a></td></tr>
             <tr class="is-off"><td class="strong">엔지니어</td><td><span class="state">대기</span></td><td>-</td><td class="r">-</td><td>-</td><td class="small">장비 컨펌 뒤 건너뛰기 제안</td></tr>
           </tbody>
         </table></div>
@@ -66,7 +66,7 @@
       <section class="sec">
         <div class="sec-head"><h2><span data-icon="doc"></span>장비 견적서 <em>2</em></h2><div class="sec-head__side"><a class="link" href="favorites.html">업체에 오퍼 보내기 · 0/10곳</a><a class="link link--point" href="inbox.html">견적함 가기<span data-icon="right" class="icon--sm"></span></a></div></div>
         <div class="list" style="--list-cols: 40px minmax(0,1fr) 140px 120px auto">
-          <div class="list__item is-link"><span class="avatar avatar--sm" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')" role="img" aria-label="업체 D 사진">D</span><div><p class="list__title">업체 D <span class="tag">v2</span> <span class="tag tag--point">엔지니어 포함</span></p><div class="list__meta"><span>스피커·믹서·마이크 8·모니터 4</span><span>설치 15:00~15:45</span><span>13:18 수정</span></div></div><span class="status status--pass"><span data-icon="pass"></span>통과</span><b class="num">1,350,000원</b><a class="btn btn--sm btn--primary" href="chat.html">채팅</a></div>
+          <div class="list__item is-link"><span class="avatar avatar--sm" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')" role="img" aria-label="업체 D 사진">D</span><div><p class="list__title">업체 D <span class="tag">v2</span> <span class="tag tag--point">엔지니어 포함</span></p><div class="list__meta"><span>스피커·믹서·마이크 8·모니터 4</span><span>설치 15:00~15:45</span><span>13:18 수정</span></div></div><span class="status status--pass"><span data-icon="pass"></span>통과</span><b class="num">1,350,000원</b><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅</a></div>
           <div class="list__item is-link"><span class="avatar avatar--sm" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')" role="img" aria-label="업체 E 사진">E</span><div><p class="list__title">업체 E <span class="tag">v1</span></p><div class="list__meta"><span>스피커·믹서·마이크</span><span>10:05 받음</span></div></div><span class="status status--info"><span data-icon="info"></span>확인 필요 1</span><b class="num">980,000원</b><a class="btn btn--sm" href="inbox.html">채팅 시작</a></div>
         </div>
       </section>

@@ -98,24 +98,14 @@
 .versions .is-now { font-weight: 700; }
 .versions .is-now .versions__v { border-color: var(--sd-ink); background: var(--sd-ink); color: #fff; }
 
-/* ── Chat ── */
-.chat { display: grid; grid-template-columns: 300px minmax(0, 1fr) 300px; height: 720px; border: 1px solid var(--sd-line-strong); border-top: 2px solid var(--sd-rule); }
-.chat--two { grid-template-columns: 320px minmax(0, 1fr); }
-.chat-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--sd-line-strong); }
-.chat-list__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 56px; padding: 0 16px; border-bottom: 1px solid var(--sd-line); }
-.chat-list__head b { font-size: 15px; }
-.chat-list__items { flex: 1; overflow-y: auto; }
+/* ── Chat: 대화 안 부품. 창(둥근 버튼·목록·탭)은 chat.css ── */
 .chat-item { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--sd-line); cursor: pointer; }
 .chat-item:hover { background: var(--sd-hover); }
-.chat-item[aria-current="true"] { background: var(--sd-th); }
-.chat-item[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--sd-ink); }
 .chat-item .avatar { --size: 40px; }
 .chat-item__name { font-size: var(--sd-text-desc); font-weight: 700; }
 .chat-item__last { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .chat-item__side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: var(--sd-text-meta); color: var(--sd-muted); }
 .room { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.room__head { display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 12px 0 18px; border-bottom: 1px solid var(--sd-line); }
-.room__head .who { flex: 1; }
 .room__msgs { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 20px; background: var(--sd-band); }
 .room__day { align-self: center; font-size: var(--sd-text-meta); color: var(--sd-muted); }
 .msg { display: flex; align-items: flex-end; gap: 6px; max-width: 76%; }
@@ -134,7 +124,6 @@
 .composer textarea { flex: 1; height: 40px; padding: 9px 12px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); resize: none; font-size: var(--sd-text-desc); }
 .composer textarea:focus { outline: none; border-color: var(--sd-ink); }
 .composer--locked { justify-content: center; gap: 6px; height: 61px; background: var(--sd-th); color: var(--sd-muted); font-size: var(--sd-text-desc); }
-.chat-side { overflow-y: auto; border-left: 1px solid var(--sd-line-strong); }
 .chat-side__sec { padding: 18px; border-bottom: 1px solid var(--sd-line); }
 .chat-side__title { margin-bottom: 8px; font-size: var(--sd-text-small); font-weight: 700; color: var(--sd-muted); }
 
@@ -160,13 +149,6 @@
 .c-card--off .c-card__total { text-decoration: line-through; }
 .timer { display: inline-flex; align-items: center; gap: 4px; color: var(--sd-warn-text); font-weight: 700; font-variant-numeric: tabular-nums; }
 
-/* 채팅 모양 C: 떠 있는 창 */
-.chat-float { position: fixed; right: 20px; bottom: 20px; z-index: var(--sd-z-float); display: flex; flex-direction: column; width: 400px; height: min(640px, calc(100vh - 40px)); max-width: calc(100vw - 40px); border: 1px solid var(--sd-rule); border-radius: 10px; overflow: hidden; background: var(--sd-bg); }
-.chat-float__bar { display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 6px 0 14px; background: var(--sd-ink); color: #fff; font-size: var(--sd-text-desc); font-weight: 700; }
-.chat-float__bar .icon-btn { color: #fff; width: 34px; height: 34px; }
-.chat-float__bar .icon-btn:hover { background: rgba(255,255,255,.12); }
-.chat-float .room { flex: 1; }
-.chat-float .c-card { width: 100%; }
 
 /* ── Invoice (통합 청구서) ── */
 .invoice { border-top: 2px solid var(--sd-rule); }
