@@ -36,8 +36,11 @@ def login(body: LoginIn, response: Response, db: Session = Depends(get_db)) -> A
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(_: User = Depends(current_user)) -> Response:
-    """AC-F1-12(서버 부분): 쿠키를 지운다. 화면의 캐시 삭제는 프론트 PR."""
+def logout() -> Response:
+    """AC-F1-12(서버 부분): 쿠키를 지운다. 화면의 캐시 삭제는 프론트 PR.
+
+    로그인 여부를 묻지 않는다 — access_token(30분)이 만료된 뒤에도 로그아웃하면 남은 쿠키가 지워져야 한다.
+    """
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
     clear_login_cookies(response)
     return response

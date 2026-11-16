@@ -19,8 +19,8 @@ def upgrade() -> None:
     op.create_table(
         "terms_agreements",
         sa.Column("id", BigID, primary_key=True, autoincrement=True),
-        sa.Column("user_id", BigID, sa.ForeignKey("users.id")),
-        sa.Column("terms_type", sa.String(20)),
+        sa.Column("user_id", BigID, sa.ForeignKey("users.id"), nullable=False),
+        sa.Column("terms_type", sa.String(20), nullable=False),
         sa.Column("terms_version", sa.String(10), nullable=False),
         sa.Column("agreed", sa.Boolean, nullable=False),
         sa.Column("agreed_at", DateTime3, nullable=False),

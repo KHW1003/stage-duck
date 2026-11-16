@@ -15,8 +15,8 @@ class TermsAgreement(Base):
     __table_args__ = (CheckConstraint(_in("terms_type", TERMS_TYPES), name="ck_terms_agreements_terms_type"),)
 
     id: Mapped[int] = mapped_column(BigID, primary_key=True, autoincrement=True)
-    user_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("users.id"))
-    terms_type: Mapped[str | None] = mapped_column(String(20))
+    user_id: Mapped[int] = mapped_column(BigID, ForeignKey("users.id"), nullable=False)
+    terms_type: Mapped[str] = mapped_column(String(20), nullable=False)
     terms_version: Mapped[str] = mapped_column(String(10), nullable=False)
     agreed: Mapped[bool] = mapped_column(Boolean, nullable=False)
     agreed_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False)

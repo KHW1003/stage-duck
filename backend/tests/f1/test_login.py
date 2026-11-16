@@ -193,9 +193,14 @@ def test_ac_f1_12_logout_clears_cookies_and_me_is_401(client, db):
     assert client.get("/api/v1/me").status_code == 401
 
 
-def test_ac_f1_12_logout_without_login_is_401(client):
+def test_ac_f1_12_logout_without_valid_access_still_clears_cookies(client):
+    """access_token 이 없거나 만료돼도 로그아웃은 되고 남은 쿠키(refresh·csrf)를 지운다."""
     client.cookies.set(CSRF_COOKIE, "x")
-    assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": "x"}).status_code == 401
+    res = client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": "x"})
+    assert res.status_code == 204
+    deleted = " ".join(res.headers.get_list("set-cookie")).lower()
+    for name in (ACCESS_COOKIE, REFRESH_COOKIE, CSRF_COOKIE):
+        assert f'{name}=""' in deleted or f"{name}=;" in deleted
 
 
 # ---------- refresh ----------
