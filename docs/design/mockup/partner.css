@@ -25,7 +25,6 @@ body:not([data-state="guest"]) .st-member { display: inline-grid !important; }
 .partner-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; margin-left: 2px; border-radius: var(--sd-r-label); background: var(--sd-ink); color: var(--sd-on-blue); font-size: var(--sd-text-meta); font-weight: 700; letter-spacing: .02em; }
 
 /* 공통 조각 */
-.badge--express { background: var(--sd-warn-soft); color: var(--sd-warn-text); }
 .p-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--sd-r-card); background: var(--sd-accent); color: var(--sd-blue); }
 .p-icon svg { width: 22px; height: 22px; }
 .p-icon--lg { width: 64px; height: 64px; border-radius: 50%; }
@@ -166,13 +165,6 @@ body:not([data-state="guest"]) .st-member { display: inline-grid !important; }
 .cal__list li { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
 .cal__list li span:not(.status) { color: var(--sd-muted); }
 
-.rep { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; }
-.rep__score { display: flex; flex-direction: column; align-items: center; padding: 18px 22px; border-radius: var(--sd-r-card); background: var(--sd-soft); }
-.rep__score b { font-size: 40px; font-weight: 800; line-height: 1.1; }
-.rep__stars { color: var(--sd-blue); letter-spacing: 1px; font-size: var(--sd-text-body); }
-.rep__score small { margin-top: 4px; font-size: var(--sd-text-meta); color: var(--sd-muted); white-space: nowrap; }
-.rep__quote { margin: 0; font-size: var(--sd-text-body); line-height: 1.7; }
-.rep__quote cite { display: block; margin-top: 8px; font-style: normal; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .pr-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; padding: 16px 18px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); }
 .pr-box b { display: block; font-size: var(--sd-text-body); }
 .pr-box small { display: block; font-size: var(--sd-text-small); color: var(--sd-muted); }
@@ -203,7 +195,13 @@ body:not([data-state="guest"]) .st-member { display: inline-grid !important; }
   .kpi { grid-template-columns: 1fr 1fr; }
   .todo__item { grid-template-columns: 36px 1fr; }
   .todo__item .btn { grid-column: 2; justify-self: start; }
-  .rep { grid-template-columns: 1fr; }
-  .pr-box { flex-direction: column; align-items: flex-start; }
+    .pr-box { flex-direction: column; align-items: flex-start; }
   .job__side { flex-direction: column; align-items: flex-start; }
 }
+
+/* ── 디테일 정리 (사용자 홈·목업 v3와 맞춤) ──
+   후속 기능(익스프레스, 후기·평점)은 MVP에서 빠져 화면에서도 뺐다. 이모지 대신 선 아이콘 */
+.todo__icon { color: var(--sd-ink); }
+.todo__icon svg, .p-steps__no svg, .p-track span svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.p-track span svg { width: 16px; height: 16px; stroke-width: 2.2; }
+.p-bottom .p-review__info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; margin-bottom: 18px; }
