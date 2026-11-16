@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>최종 담당표 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/app.css">
 </head>
 <!-- 화면: 최종 담당표 (사용자·업체 공통) · FR-PAY-04 · AC-F5-11 · 묶음 4
@@ -11,10 +12,14 @@
      연락처는 결제 후 이 화면(GET /performances/{id}/sheet)에서만. 업체 쪽은 주소 끝 ?as=partner. 컨펌 업체(C·D)와 사용자만 본다. -->
 <body data-layout="user">
 
-<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>최종 담당표</li></ol><h1>가을밤 밴드 공연 최종 담당표</h1><div class="page-top__meta"><span>11월 28일(토)</span><span>공간 C · 광주 동구</span><span>관객 80명</span><span>결제 11월 13일 15:20</span></div></div><button class="btn btn--sm" type="button" onclick="print()"><span data-icon="print" class="icon--sm"></span>인쇄</button></div></div>
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li class="my-only">마이페이지</li><li class="partner-only">최종 담당표</li></ol><h1>최종 담당표</h1></div></div></div>
 
 <main class="container main">
-  <div class="with-aside">
+  <div class="with-nav my-shell">
+    <nav class="side-nav" aria-label="마이페이지"><p class="side-nav__title">마이페이지</p><div class="side-nav__group"><a href="mypage.html">내 프로필</a><a href="favorites.html"><span>관심 업체</span><span class="count count--muted">4</span></a><a href="notifications.html"><span>알림</span><span class="count">2</span></a><a href="sheet.html" aria-current="page">최종 담당표</a></div><div class="side-nav__group"><a href="login.html">로그아웃</a></div></nav>
+    <div>
+  <div class="sec-head"><div><h2>가을밤 밴드 공연</h2><p>11월 28일(토) · 공간 C · 광주 동구 · 관객 80명 · 결제 11월 13일 15:20</p></div><button class="btn btn--sm" type="button" onclick="print()"><span data-icon="print" class="icon--sm"></span>인쇄</button></div>
+  <div class="with-aside mt-24" style="--sd-aside:250px;gap:36px">
     <div>
       <section class="sec"><div class="sec-head"><h2><span data-icon="clock"></span>당일 일정</h2></div>
         <ol class="timeline">
@@ -41,6 +46,8 @@
       </ul>
       <p class="field__hint mt-12">이 공연에서 컨펌된 업체와 사용자만 볼 수 있어요.</p>
     </aside>
+  </div>
+    </div>
   </div>
 </main>
 <script src="../layout.js"></script>

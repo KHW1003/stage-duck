@@ -28,6 +28,7 @@
   }
   function tot(n) { return '<p class="c-card__total">' + n + '<small>원</small></p>'; }
   function meta(t) { return '<p class="c-card__meta">' + t + '</p>'; }
+  function disc(n) { return '<p class="c-card__discount"><span class="discount">− ' + n + '원</span> <span class="muted">업체할인</span></p>'; }
   function diff(t) { return '<p class="c-card__diff">' + t + '</p>'; }
   var WARN = '<div class="room__warn" role="note">' + I('warn', 'icon--sm') + '<span>플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.</span></div>';
   var CLOSED = '마감된 채팅방이에요. 기록은 공연 뒤 1년까지 볼 수 있어요.';
@@ -60,10 +61,10 @@
             sys('가을밤밴드님이 채팅을 시작했어요') +
             them('안녕하세요, 업체 D예요. 공간 C 입실이 15:00이라 그때부터 설치하면 16:30에 끝나요.', '13:10') +
             me('리허설을 16:00으로 당길 수도 있어요. 설치를 더 빨리 끝낼 수 있을까요?', '13:12', 1) +
-            them('설치 인원을 한 명 더 붙이면 15:45에 끝나요. 견적서를 고쳐서 다시 보낼게요.', '13:15') +
+            them('설치 인원을 한 명 더 붙이면 15:45에 끝나요. 엔지니어까지 함께 맡겨 주셔서 5만 원은 빼 드릴게요.', '13:15') +
             '<div class="msg"><span class="msg__photo" role="img" aria-label="업체 D가 보낸 무대 설치 예시 사진" style="--img:url(\'' + PH + '1516450360452-9312f5e86fc7.jpg\')"></span><span class="msg__t">13:16</span></div>' +
             '<div class="msg"><div class="msg__file">' + I('file') + '<div>무대 배치도.pdf<small>412KB</small></div></div><span class="msg__t">13:16</span></div>' +
-            card('견적서 v2', pass(), tot('1,350,000') + diff('v1 → v2 · 설치 인원 +1 · 설치 완료 16:30 → 15:45 · +100,000원'), '<div class="c-card__foot"><a href="' + B + 'quote.html">자세히 보기</a></div>') +
+            card('견적서 v2', pass(), tot('1,350,000') + disc('50,000') + diff('v1 → v2 · 설치 인원 +1 (+150,000원) · 설치 완료 16:30 → 15:45'), '<div class="c-card__foot"><a href="' + B + 'quote.html">자세히 보기</a></div>') +
             them('급하면 010-0000-0000으로 연락 주셔도 돼요.', '13:20') + WARN + D_CARD[cardState];
         },
         info: function () {
@@ -121,8 +122,8 @@
           return day('11월 13일 (금)') + sys('가을밤밴드님이 채팅을 시작했어요') +
             me('안녕하세요, 업체 D예요. 공간 C 입실이 15:00이라 그때부터 설치하면 16:30에 끝나요.', '13:10', 1) +
             them('리허설을 16:00으로 당길 수도 있어요. 설치를 더 빨리 끝낼 수 있을까요?', '13:12') +
-            me('설치 인원을 한 명 더 붙이면 15:45에 끝나요. 견적서를 고쳐서 다시 보낼게요.', '13:15', 1) +
-            card('견적서 v2 · 보냄', pass(), tot('1,350,000') + diff('v1 → v2 · 설치 인원 +1 · +100,000원')) +
+            me('설치 인원을 한 명 더 붙이면 15:45에 끝나요. 엔지니어까지 함께 맡겨 주셔서 5만 원은 빼 드릴게요.', '13:15', 1) +
+            card('견적서 v2 · 보냄', pass(), tot('1,350,000') + disc('50,000') + diff('v1 → v2 · 설치 인원 +1 (+150,000원)')) +
             card('견적 내역 확인 · 보냄', timer('47:12'), meta('견적서 v2 고정 · 사용자가 내역서를 열었어요') + tot('1,350,000'), '<p class="c-card__why">사용자가 컨펌하면 알림이 와요. 견적서를 고치면 이 카드는 무효가 돼요.</p>', 'c-card--confirm') +
             them('내역서 확인했어요. 이대로 진행할게요.', '13:24');
         },
