@@ -74,3 +74,8 @@
 .side-nav__title { border-bottom-width: 1px; }
 .form-table__th { background: transparent; font-weight: 600; }
 .timeline__t { background: transparent; }
+
+/* 고르기 칸: 고른 칸에 진한 테두리를 두르지 않고, 안 고른 칸을 살짝 흐리게 */
+.choice__item:has(input:checked) { outline: 0; }
+.choice:has(input:checked) .choice__item:not(:has(input:checked)) { opacity: .7; transition: opacity .15s; }
+.choice:has(input:checked) .choice__item:not(:has(input:checked)):hover { opacity: .9; }
