@@ -83,3 +83,7 @@
 /* 안내 상자: 왼쪽 색 띠를 없애고, 주의 아이콘은 주조색으로 */
 .notice--warn, .notice--conflict { border-left: 0; }
 .notice--warn > .icon { color: var(--sd-blue); }
+
+/* 금액은 주조색(빨강)으로 쓰지 않는다 — 오류·할인가처럼 읽힌다. 크고 굵은 검정으로만 강조한다 */
+.sum-total--point b, .invoice__total b { color: var(--sd-ink); }
+.c-card__diff { color: var(--sd-ink); }
