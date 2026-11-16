@@ -1,4 +1,4 @@
-/* 다듬은 스타일 (대표 화면 6개에 먼저 적용). app.css 뒤에 불러온다. 머리(GNB)·바닥글은 건드리지 않는다.
+/* 다듬은 스타일 (v3: 모든 화면에 적용). app.css가 맨 뒤에 불러온다. 머리(GNB)·바닥글은 건드리지 않는다.
    근거: docs/design/references/ui-조사.md (국내 서비스 22곳을 열어 화면 값을 재 봄)
    - 회색은 푸른 기를 빼고 2단계(본문 / 설명)만. 색은 한 번에 하나: 주조색 = 지금 할 일, 초록 = 컨펌·통과, 주황 = 주의
    - 상자 모서리 8px (조사한 곳 대부분 8~12px). 그림자 없음, 선은 1px만
@@ -7,7 +7,7 @@
    - 덜어낸 것: 제목마다 붙던 아이콘, 요약 칸마다 있던 아이콘 상자, 회색 제목 띠, 2px 진한 선
    팀이 확정하면 이 값을 tokens.css와 base/ui/domain.css에 합치고 이 파일은 지운다. */
 
-.page-top, .tab-bar, main, .layer {
+.page-top, .tab-bar, main, .layer, .chat-panel, .mock-none {
   --sd-ink: #1f2227;
   --sd-muted: #6f7680;
   --sd-photo-text: #9aa0a8;
@@ -66,3 +66,10 @@
 .notice { border-radius: var(--sd-r-box); }
 .invoice { border-top: 1px solid var(--sd-rule); }
 .invoice__total { border-bottom: 1px solid var(--sd-rule); }
+
+/* 남아 있던 2px 진한 선을 모두 1px로 (v3 전체 적용하면서 맞춤) */
+.form-table, .contacts, .fold, .lines, .timeline, .feature-row, .icon-grid { border-top-width: 1px; }
+.empty, .result { border-top: 1px solid var(--sd-line-strong); }
+.side-nav__title { border-bottom-width: 1px; }
+.form-table__th { background: transparent; font-weight: 600; }
+.timeline__t { background: transparent; }
