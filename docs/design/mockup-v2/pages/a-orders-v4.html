@@ -30,21 +30,20 @@
   .c-sub { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; }
   .c-sub .icon { width: 18px; height: 18px; color: var(--sd-muted); }
 
-  .c-tools { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 40px; }
   .c-chips { display: flex; gap: 6px; }
   .c-chips button { height: 34px; padding: 0 12px; border: 0; border-radius: 6px; background: var(--sd-band); color: var(--sd-ink); font-size: 14px; font-weight: 500; cursor: pointer; }
   .c-chips button[aria-pressed="true"] { background: var(--sd-ink); color: #fff; font-weight: 700; }
-  .c-search { position: relative; width: 320px; }
+  .c-search { position: relative; margin-bottom: 12px; }
   .c-search .icon { position: absolute; left: 12px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: var(--sd-muted); }
-  .c-search input { width: 100%; height: 36px; padding: 0 12px 0 36px; border: 1px solid var(--sd-line-strong); border-radius: 6px; font-size: 14px; }
+  .c-search input { width: 100%; height: 34px; padding: 0 12px 0 36px; border: 1px solid var(--sd-line-strong); border-radius: 6px; font-size: 14px; }
   .c-search input:focus { outline: none; border-color: var(--sd-ink); }
 
-  .c-list { --cols: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)) 120px 130px; margin-top: 12px; }
-  .c-row { position: relative; display: grid; grid-template-columns: var(--cols); column-gap: 20px; align-items: center; padding: 14px 16px; border: 1px solid var(--sd-line); border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .c-list { --cols: minmax(0, 2.4fr) repeat(3, minmax(0, 1fr)) 100px 76px; margin-top: 12px; }
+  .c-row { position: relative; display: grid; grid-template-columns: var(--cols); column-gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--sd-line); border-radius: 6px; font-size: 14px; cursor: pointer; }
   .c-row + .c-row { margin-top: 8px; }
   .c-row:hover { border-color: var(--sd-line-strong); }
   .c-row[aria-current="true"] { border-color: var(--sd-ink); background: var(--sd-hover); }
-  .c-row .thumb { --w: 64px; border-radius: 4px; }
+  .c-row .thumb { --w: 56px; border-radius: 4px; }
   .c-row__title { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
   .c-row small { display: block; margin-top: 2px; font-size: 12px; color: var(--sd-muted); font-variant-numeric: tabular-nums; }
   .c-row label { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; font-size: 12px; color: var(--sd-muted); }
@@ -56,7 +55,8 @@
   .c-status { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; }
   .c-status .icon { width: 14px; height: 14px; stroke-width: 2; vertical-align: 0; }
 
-  .c-two { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; margin-top: 48px; align-items: start; }
+  .c-two { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; margin-top: 40px; }
+  .c-rec { margin-top: 44px; }
   .c-two .c-sub { padding-bottom: 12px; border-bottom: 1px solid var(--sd-line-strong); }
 
   .c-log li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; column-gap: 12px; align-items: start; padding: 13px 4px; border-bottom: 1px solid var(--sd-line); }
@@ -102,10 +102,9 @@
     <div><p class="c-facts__label is-warn"><span data-icon="refresh"></span>취소</p><b data-when="case:paid">0<small>건</small></b><b data-when="case:cancel">1<small>건</small><em>위약금 1,295,000원</em></b><small>취소돼 위약금을 나눈 공연</small></div>
   </div>
 
-  <div class="c-tools">
+  <div class="c-two">
+    <div>
     <div class="c-chips"><button type="button" aria-pressed="true">전체 3</button><button type="button" aria-pressed="false">섭외 중</button><button type="button" aria-pressed="false">결제 완료</button><button type="button" aria-pressed="false">취소</button></div>
-    <div class="c-search"><span data-icon="search"></span><input placeholder="공연 이름이나 사용자로 찾기" aria-label="공연 찾기"></div>
-  </div>
 
   <div class="c-list">
     <div class="c-row" aria-current="true">
@@ -134,8 +133,7 @@
     </div>
   </div>
 
-  <div class="c-two">
-    <section>
+    <section class="c-rec">
       <p class="c-sub"><span data-icon="clock"></span>가을밤 밴드 공연 기록</p>
       <ol class="c-log">
         <li><span data-icon="doc"></span><div><p>요청서를 올리고 공연장 모집을 시작했어요</p><small>가을밤밴드 · 요청서 v1</small></div><time>11월 12일 09:30</time></li>
@@ -149,7 +147,11 @@
       </ol>
     </section>
 
-    <aside class="c-box sticky">
+    </div>
+
+    <aside class="c-side">
+      <div class="c-search"><span data-icon="search"></span><input placeholder="공연 이름이나 사용자로 찾기" aria-label="공연 찾기"></div>
+      <div class="c-box sticky">
       <p class="c-box__head"><span data-icon="receipt"></span>결제 요약</p>
       <div class="c-box__sec">
         <h3>결제 금액</h3>
@@ -165,6 +167,7 @@
         <dl><div><dt>사용자 환불 예정</dt><dd>555,000원</dd></div><div><dt>업체 C 위약금</dt><dd>350,000원</dd></div><div><dt>업체 D 위약금</dt><dd>945,000원</dd></div><div><dt>플랫폼 이용료</dt><dd>환불 없음</dd></div></dl>
       </div>
       <div class="c-box__sec"><p class="c-box__note"><span data-icon="shield"></span><span>보기 전용 화면이에요. 금액 조정과 환불은 서버 규칙으로만 처리돼요.</span></p></div>
+      </div>
     </aside>
   </div>
 </main>
