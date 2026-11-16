@@ -69,7 +69,8 @@
 
 /* 남아 있던 2px 진한 선을 모두 1px로 (v3 전체 적용하면서 맞춤) */
 .form-table, .contacts, .fold, .lines, .timeline, .feature-row, .icon-grid { border-top-width: 1px; }
-.empty, .result { border-top: 1px solid var(--sd-line-strong); }
+.empty, .result { border-top: 0; }   /* 안내·결과 위 선은 구역을 나누지 않아서 뺌 */
+.empty { border-bottom: 0; }
 .side-nav__title { border-bottom-width: 1px; }
 .form-table__th { background: transparent; font-weight: 600; }
 .timeline__t { background: transparent; }
