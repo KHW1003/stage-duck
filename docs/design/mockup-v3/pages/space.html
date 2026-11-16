@@ -8,6 +8,7 @@
 <style>
   /* SpaceDetailPage.module.css: 티켓 상세처럼 위쪽 = 사진 + 요약표 + 오른쪽 행동 상자 */
   .detail-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) var(--sd-aside); gap: 32px; align-items: start; }
+  .detail-top .gallery__main { aspect-ratio: auto; height: 340px; }   /* 대표 사진을 100px쯤 키움 (기존 약 240px) */
   .detail-top h1 { font-size: 26px; font-weight: 700; letter-spacing: -.8px; }
   .detail-top__meta { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
   .detail-top .info-table { margin-top: 18px; }
