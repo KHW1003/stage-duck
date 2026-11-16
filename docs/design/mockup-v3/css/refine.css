@@ -98,3 +98,7 @@
 .lines tfoot tr.is-sub + tr:not(.is-sub) td { border-top: 1px solid var(--sd-line); }
 .c-card__discount { margin-top: 4px; font-size: var(--sd-text-small); }
 .sum-rows .discount { font-weight: 700; }
+
+/* 입력표: 줄 사이 구분선은 없애고, 맨 위 선과 맨 아래 선만 둔다 */
+.form-table > div { border-bottom: 0; }
+.form-table > div:last-child { border-bottom: 1px solid var(--sd-line); }
