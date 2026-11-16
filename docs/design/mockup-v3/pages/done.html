@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>완료 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 완료 화면: 가운데 한 덩어리 (결과 아이콘 + 한 문장 + 요약표 + 다음에 할 일 버튼) */
+  .done { max-width: 560px; margin: 24px auto 80px; }
+  .done .result { padding-bottom: 8px; }
+  .done .result__icon { border-color: var(--sd-pass-text); color: var(--sd-pass-text); }
+  .done .result__icon--plain { border-color: var(--sd-ink); color: var(--sd-ink); }
+  .done .info-table { margin-top: 28px; }
+  .done .info-table th { width: 140px; }
+  .done__next { margin-top: 20px; font-size: var(--sd-text-desc); color: var(--sd-muted); text-align: center; line-height: 1.7; }
+</style>
+</head>
+<!-- 화면: 완료 안내 (한 일이 끝났을 때 페이지로 보여 준다) · 묶음 1·2·3·4 공통
+     React: pages/DonePage.tsx (kind로 내용만 바꾼다) = Result + InfoTable + 다음 행동 버튼. 서버가 성공을 확인한 뒤에만 이 화면으로 온다.
+     kind: signup(가입) / request(요청서 게시) / offer(오퍼 보냄) / venue(공연장 컨펌) / pay(결제) / cancel(취소 접수) / quote(업체: 견적서 보냄, ?as=partner)
+     [다음 단계로] 선택이 필요한 장비·엔지니어 컨펌은 next.html이 완료 화면을 겸한다. 값은 docs/guides/시연_예시값.md. -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="kind">
+  <span>목업 보기</span>
+  <button type="button" data-value="pay" aria-pressed="true">결제 완료</button>
+  <button type="button" data-value="venue">공연장 컨펌</button>
+  <button type="button" data-value="request">요청서 게시</button>
+  <button type="button" data-value="signup">가입</button>
+  <button type="button" data-value="offer">오퍼 보냄</button>
+  <button type="button" data-value="cancel">취소 접수</button>
+  <button type="button" data-value="quote">견적서 보냄 (업체)</button>
+</div>
+
+<main class="container main">
+
+  <section class="done" data-when="kind:pay">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>결제가 완료됐어요</h1><p>가을밤 밴드 공연의 섭외가 확정됐어요.</p></div>
+    <table class="info-table"><tr><th>결제 금액</th><td class="strong">1,942,500원</td></tr><tr><th>업체 금액</th><td>1,850,000원 (공간 C 500,000 + 장비 D 1,350,000)</td></tr><tr><th>플랫폼 이용료</th><td>92,500원</td></tr><tr><th>결제 일시</th><td>11월 13일 15:20 · 테스트 결제</td></tr><tr><th>결제금</th><td>공연이 끝날 때까지 STAGE DUCK이 보관해요</td></tr></table>
+    <p class="test-pay mt-16"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 실제 청구되지 않습니다</p>
+    <p class="done__next">이제 업체 연락처가 최종 담당표에 공개됐어요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="invoice.html?pay=paid">청구서 보기</a><a class="btn btn--primary btn--lg" href="sheet.html">최종 담당표 보기</a></div>
+  </section>
+
+  <section class="done" data-when="kind:venue">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>공연장 컨펌이 완료됐어요</h1><p>공간 C로 정했어요. 다른 공연장 견적서는 자동으로 마감됐어요.</p></div>
+    <table class="info-table"><tr><th>공연장</th><td class="strong">업체 C · 공간 C</td></tr><tr><th>금액</th><td>500,000원 (견적서 v1)</td></tr><tr><th>입실 · 퇴실</th><td>15:00 · 22:00</td></tr><tr><th>컨펌 일시</th><td>11월 12일 10:22</td></tr></table>
+    <p class="done__next">이제 장비 업체에게 공고가 보여요. 공간 C 조건이 함께 전달돼요.<br>결제는 모든 단계를 정한 뒤 한 번에 해요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="my.html">내 공연으로</a><a class="btn btn--primary btn--lg" href="next.html?case=venue">다음 단계로</a></div>
+  </section>
+
+  <section class="done" data-when="kind:request">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>요청서를 게시했어요</h1><p>공연장 업체에게 공고가 보이기 시작했어요.</p></div>
+    <table class="info-table"><tr><th>공연</th><td class="strong">가을밤 밴드 공연</td></tr><tr><th>날짜</th><td>11월 28일(토) 19:00~21:00 · 리허설 17:00</td></tr><tr><th>필요한 것</th><td>공연장 · 장비 · 엔지니어</td></tr><tr><th>지금 단계</th><td>공연장 모집 중</td></tr></table>
+    <p class="done__next">견적서가 도착하면 알림으로 알려 드려요.<br>마음에 드는 업체에 오퍼를 먼저 보낼 수도 있어요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="spaces.html">공간 둘러보기</a><a class="btn btn--primary btn--lg" href="my.html">내 공연 보기</a></div>
+  </section>
+
+  <section class="done" data-when="kind:signup">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>가입이 완료됐어요</h1><p>가을밤밴드님, 환영해요.</p></div>
+    <table class="info-table"><tr><th>닉네임</th><td class="strong">가을밤밴드</td></tr><tr><th>이메일</th><td>host@stageduck.test</td></tr><tr><th>가입 유형</th><td>사용자 (공연을 준비해요)</td></tr></table>
+    <p class="done__next">요청서를 한 번만 쓰면 공연장부터 차례로 견적서를 받을 수 있어요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="spaces.html">공간 둘러보기</a><a class="btn btn--primary btn--lg" href="request-1.html">요청서 쓰기</a></div>
+  </section>
+
+  <section class="done" data-when="kind:offer">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>오퍼를 보냈어요</h1><p>업체 C에게 내 공고를 먼저 보여 줬어요.</p></div>
+    <table class="info-table"><tr><th>받는 업체</th><td class="strong">업체 C · 공간 C</td></tr><tr><th>공연</th><td>가을밤 밴드 공연 · 공연장 단계</td></tr><tr><th>응답 기한</th><td>48시간 (11월 14일 09:40까지)</td></tr><tr><th>이 단계 오퍼</th><td>1 / 10곳</td></tr></table>
+    <p class="done__next">업체가 견적서를 보내거나 거절하면 알림으로 알려 드려요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="spaces.html">다른 공간 보기</a><a class="btn btn--primary btn--lg" href="my.html">내 공연 보기</a></div>
+  </section>
+
+  <section class="done" data-when="kind:cancel">
+    <div class="result"><span class="result__icon result__icon--plain"><span data-icon="check"></span></span>
+      <h1>공연 취소가 접수됐어요</h1><p>공연 하루 전(D-1) 취소라 업체 금액의 70%가 위약금이에요.</p></div>
+    <table class="info-table"><tr><th>결제한 금액</th><td>1,942,500원</td></tr><tr><th>위약금</th><td>1,295,000원 (업체 C 350,000 · 업체 D 945,000)</td></tr><tr><th>플랫폼 이용료</th><td>92,500원 · 환불되지 않아요</td></tr><tr><th>환불 예정액</th><td class="strong">555,000원</td></tr></table>
+    <p class="test-pay mt-16"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 환불·위약금도 모의로 처리돼요</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="invoice.html">청구서 보기</a><a class="btn btn--primary btn--lg" href="my.html?state=empty">내 공연으로</a></div>
+  </section>
+
+  <section class="done" data-when="kind:quote">
+    <div class="result"><span class="result__icon"><span data-icon="check"></span></span>
+      <h1>견적서를 보냈어요</h1><p>가을밤밴드님의 견적함에 도착했어요.</p></div>
+    <table class="info-table"><tr><th>공고</th><td class="strong">가을밤 밴드 공연 · 장비</td></tr><tr><th>견적서</th><td>기본형 v2</td></tr><tr><th>합계</th><td>1,350,000원 (부가세 포함, 서버 계산)</td></tr><tr><th>자동 검사</th><td><span class="status status--pass"><span data-icon="pass"></span>통과</span> · 설치 완료 15:45</td></tr></table>
+    <p class="done__next">사용자가 [채팅 시작]을 누르면 메시지를 보낼 수 있어요.<br>견적서를 고치면 새 버전으로 다시 보내져요.</p>
+    <div class="btns btns--center mt-16"><a class="btn btn--lg" href="p-job.html">공고로</a><a class="btn btn--primary btn--lg" href="p-jobs.html">공고 목록</a></div>
+  </section>
+
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
