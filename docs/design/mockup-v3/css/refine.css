@@ -108,3 +108,9 @@ body[data-layout^="partner"] .my-shell { grid-template-columns: minmax(0, 1fr); 
 body[data-layout^="partner"] .my-shell > .side-nav, body[data-layout^="partner"] .my-only { display: none; }
 body[data-layout^="partner"] .partner-only { display: list-item; }
 .page-top__crumb .partner-only::before { display: none; }
+
+/* 화면을 넘길 때 흔들림 줄이기
+   - 스크롤바 자리를 항상 비워 둬서, 긴 화면·짧은 화면을 오가도 내용이 좌우로 움직이지 않게 (React에도 그대로)
+   - 목업 전용: layout.js가 헤더를 넣기 전까지 헤더 높이만큼 자리를 비워 둬서 내용이 아래로 밀리지 않게 */
+html { scrollbar-gutter: stable; }
+body:not(:has(> .gnb)) { padding-top: var(--sd-gnb-height); }
