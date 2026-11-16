@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기술 확인 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+</head>
+<!-- 화면: 기술 확인 · FR-TECH-01 · AC-F3-25 · 묶음 4
+     React: pages/TechCheckPage.tsx = PageTop + Summary + TechItemTable(owner별 답변) + AddItemModal
+     항목은 엔지니어(또는 엔지니어 포함 업체 D)가 정하고, 각 업체는 자기 담당 항목에만 답한다. 자동 판정 없음. -->
+<body data-layout="partner" data-nav="tech">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>기술 확인</li></ol><h1>기술 확인</h1><div class="page-top__meta"><span>가을밤 밴드 공연</span><span>11월 28일(토)</span><span>결제 대기</span><span>항목 담당: 업체 D</span></div></div><button class="btn btn--sm btn--primary" type="button"><span data-icon="plus" class="icon--sm"></span>항목 추가</button></div></div>
+
+<main class="container main">
+  <div class="summary" style="--cols:3"><div class="has-ico"><span class="ico-box"><span data-icon="list"></span></span><div><span>전체 항목</span><b>5<small>개</small></b></div></div><div class="has-ico"><span class="ico-box"><span data-icon="pass"></span></span><div><span>답변 완료</span><b>3<small>개</small></b></div></div><div class="has-ico is-on"><span class="ico-box"><span data-icon="edit"></span></span><div><span>내가 답할 항목</span><b>1<small>개</small></b></div></div></div>
+
+  <section class="sec mt-40"><div class="sec-head"><h2><span data-icon="list"></span>확인 항목</h2><p>공연 전에 업체끼리 확인할 것들이에요.</p></div>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>항목</th><th style="width:140px">담당</th><th>답변</th><th style="width:100px">상태</th><th style="width:110px"></th></tr></thead>
+      <tbody>
+        <tr><td class="l"><div class="with-thumb"><span class="ico-box ico-box--sm"><span data-icon="plug"></span></span><div><b>무대 콘센트 위치·구 수</b><small>믹서와 스피커 전원을 따로 쓰고 싶어요</small></div></div></td><td>업체 C (공간)</td><td class="l">무대 왼쪽 4구, 오른쪽 2구. 단상 220V</td><td><span class="state state--done">답변함</span></td><td></td></tr>
+        <tr><td class="l"><div class="with-thumb"><span class="ico-box ico-box--sm"><span data-icon="elevator"></span></span><div><b>장비 반입 동선</b><small>엘리베이터 크기</small></div></div></td><td>업체 C (공간)</td><td class="l">뒷문 화물 엘리베이터, 문 폭 120cm</td><td><span class="state state--done">답변함</span></td><td></td></tr>
+        <tr class="is-off"><td class="l"><div class="with-thumb"><span class="ico-box ico-box--sm"><span data-icon="volume"></span></span><div><b>음량 제한 시각</b><small>이웃 민원 기준</small></div></div></td><td>업체 C (공간)</td><td class="l">아직 답변 전</td><td><span class="state state--on">대기</span></td><td class="small">업체 C만 답할 수 있어요</td></tr>
+        <tr class="is-on"><td class="l"><div class="with-thumb"><span class="ico-box ico-box--sm"><span data-icon="sliders"></span></span><div><b>FOH 믹서 자리</b><small>객석 뒤쪽 테이블 필요</small></div></div></td><td>업체 D (나)</td><td class="l"><input class="input" value="객석 맨 뒤 중앙, 테이블 1개 필요" aria-label="답변" style="height:36px"></td><td><span class="state state--on">작성 중</span></td><td><button class="btn btn--xs btn--primary" type="button">답변 저장</button></td></tr>
+        <tr><td class="l"><div class="with-thumb"><span class="ico-box ico-box--sm"><span data-icon="mic"></span></span><div><b>드럼 마이킹 수</b><small>사용자 보유 드럼 세트</small></div></div></td><td>업체 D (나)</td><td class="l">킥·스네어·오버헤드 2, 총 4채널</td><td><span class="state state--done">답변함</span></td><td><button class="btn btn--xs" type="button">고치기</button></td></tr>
+      </tbody></table></div>
+    <ul class="bullets mt-16"><li>답변은 참고용이에요. 소리 크기나 장비 호환성은 STAGE DUCK이 판정하지 않아요.</li><li>결제 뒤에는 최종 담당표에서 서로 연락할 수 있어요.</li></ul></section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

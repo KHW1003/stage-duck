@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마이페이지 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 마이페이지 (내 프로필) · FR-PROFILE-02 · FR-POL-02·03 · AC-F4-05·06 · AC-F5-16 · 묶음 1
+     React: pages/MyPage.tsx = SideNav + ProfilePreview(업체에게 보이는 모습) + FormTable(GET /me)
+     업체에게는 닉네임·사진·가입일·이용 횟수·반려 횟수만 보인다. -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>마이페이지</li></ol><h1>내 프로필</h1></div></div></div>
+
+<main class="container main">
+  <div class="with-nav">
+    <nav class="side-nav" aria-label="마이페이지"><p class="side-nav__title">마이페이지</p><div class="side-nav__group"><a href="mypage.html" aria-current="page">내 프로필</a><a href="favorites.html"><span>관심 업체</span><span class="count count--muted">4</span></a><a href="notifications.html"><span>알림</span><span class="count">2</span></a><a href="sheet.html">최종 담당표</a></div><div class="side-nav__group"><a href="login.html">로그아웃</a></div></nav>
+    <div>
+      <section class="sec"><div class="sec-head"><h2><span data-icon="eye"></span>업체에게 이렇게 보여요</h2></div>
+        <div class="summary" style="--cols:4"><div style="display:flex;align-items:center;gap:12px;grid-column:span 2"><span class="avatar avatar--lg">가</span><div><b style="margin:0;font-size:18px">가을밤밴드</b><span>2026년 11월 가입</span></div></div><div class="has-ico"><span class="ico-box"><span data-icon="ticket"></span></span><div><span>이용 횟수</span><b>0<small>회</small></b></div></div><div class="has-ico"><span class="ico-box"><span data-icon="refresh"></span></span><div><span>반려 횟수</span><b>0<small>회</small></b></div></div></div>
+        <ul class="bullets mt-12"><li>반려 횟수: 채팅을 시작한 뒤 공고를 내린 횟수예요. 5회가 되면 24시간 동안 새 공고를 올릴 수 없어요.</li><li>마지막으로 내린 지 180일이 지나면 0으로 돌아가요.</li></ul></section>
+
+      <section class="sec"><div class="sec-head"><h2><span data-icon="user"></span>프로필</h2></div>
+        <div class="form-table">
+          <div><span class="form-table__th">닉네임</span><span class="form-table__td"><span class="form-table__inline"><input class="input" value="가을밤밴드" style="max-width:280px"><button class="btn btn--sm" type="button">중복 확인</button></span></span></div>
+          <div><span class="form-table__th">프로필 사진</span><span class="form-table__td"><span class="form-table__inline"><span class="avatar">가</span><button class="btn btn--sm" type="button"><span data-icon="upload" class="icon--sm"></span>사진 바꾸기</button></span></span></div>
+        </div></section>
+
+      <section class="sec"><div class="sec-head"><h2><span data-icon="lock"></span>계정 정보</h2><p>나만 보여요.</p></div>
+        <table class="info-table"><tr><th>이름</th><td>시연 사용자</td><th>로그인</th><td>이메일</td></tr><tr><th>이메일</th><td>user@stageduck.test</td><th>전화번호</th><td class="num">010-0000-0000</td></tr><tr><th>생년월일</th><td class="num">2000-01-01</td><th>마케팅 수신</th><td>받지 않음 <button class="link" type="button">바꾸기</button></td></tr></table>
+        <div class="btns mt-16"><button class="btn btn--sm" type="button">비밀번호 바꾸기</button><button class="btn btn--sm btn--ghost" type="button">탈퇴</button></div></section>
+
+      <div class="btns btns--center mt-40"><button class="btn btn--primary btn--lg" type="button" style="min-width:240px">저장</button></div>
+    </div>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
