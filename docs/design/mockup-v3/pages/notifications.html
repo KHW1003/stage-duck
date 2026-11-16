@@ -10,12 +10,18 @@
      React: pages/NotificationsPage.tsx = Tabs + NotificationRow[] (헤더 종 상자와 같은 줄 부품). 업체 쪽은 ?as=partner. -->
 <body data-layout="user">
 
-<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>알림</li></ol><h1>알림</h1><p class="page-top__desc">사이트 안 알림만 보내요. 메일·문자 알림은 없어요.</p></div><button class="btn btn--sm btn--ghost" type="button">모두 읽음</button></div></div>
-<div class="tab-bar"><div class="container"><div class="tabs"><button role="tab" aria-selected="true" type="button">전체 <span class="count">2</span></button><button role="tab" aria-selected="false" type="button">견적·채팅</button><button role="tab" aria-selected="false" type="button">오퍼</button><button role="tab" aria-selected="false" type="button">공고</button><button role="tab" aria-selected="false" type="button">결제</button></div></div></div>
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li class="my-only">마이페이지</li><li class="partner-only">알림</li></ol><h1>알림</h1></div></div></div>
 
-<main class="container container--narrow main">
-  <div style="border-top:2px solid var(--sd-rule)"><p class="noti-day">오늘</p><div id="today"></div><p class="noti-day">이전</p><div id="before"></div></div>
-  <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span></nav>
+<main class="container main">
+  <div class="with-nav my-shell">
+    <nav class="side-nav" aria-label="마이페이지"><p class="side-nav__title">마이페이지</p><div class="side-nav__group"><a href="mypage.html">내 프로필</a><a href="favorites.html"><span>관심 업체</span><span class="count count--muted">4</span></a><a href="notifications.html" aria-current="page"><span>알림</span><span class="count">2</span></a><a href="sheet.html">최종 담당표</a></div><div class="side-nav__group"><a href="login.html">로그아웃</a></div></nav>
+    <div>
+      <div class="sec-head"><div><h2>받은 알림</h2><p>사이트 안 알림만 보내요. 메일·문자 알림은 없어요.</p></div><button class="btn btn--sm btn--ghost" type="button">모두 읽음</button></div>
+      <div class="tab-bar"><div class="tabs"><button role="tab" aria-selected="true" type="button">전체 <span class="count">2</span></button><button role="tab" aria-selected="false" type="button">견적·채팅</button><button role="tab" aria-selected="false" type="button">오퍼</button><button role="tab" aria-selected="false" type="button">공고</button><button role="tab" aria-selected="false" type="button">결제</button></div></div>
+      <div><p class="noti-day">오늘</p><div id="today"></div><p class="noti-day">이전</p><div id="before"></div></div>
+      <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span></nav>
+    </div>
+  </div>
 </main>
 <script src="../layout.js"></script>
 <script>
