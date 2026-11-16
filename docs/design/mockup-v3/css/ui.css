@@ -122,7 +122,7 @@ button.link { border: 0; background: none; padding: 0; cursor: pointer; }
 
 /* ── Tabs: 아래 1px 선 + 지금 탭은 굵은 아래선 ── */
 .tab-bar { border-bottom: 1px solid var(--sd-line-strong); }
-.tabs { display: flex; gap: 0; overflow-x: auto; }
+.tabs { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 1px; margin-bottom: -1px; }   /* 밑줄(-1px)이 넘쳐 세로 스크롤이 생기지 않게 */
 .tabs > button, .tabs > a { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 54px; padding: 0 22px; border: 0; background: transparent; color: var(--sd-muted); font-size: 15px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .tabs > button:hover, .tabs > a:hover { color: var(--sd-ink); }
 .tabs [aria-selected="true"], .tabs [aria-current="page"] { color: var(--sd-ink); font-weight: 700; }

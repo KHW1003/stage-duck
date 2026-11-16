@@ -8,8 +8,10 @@
 <style>
   /* SpaceDetailPage.module.css: 티켓 상세처럼 위쪽 = 사진 + 요약표 + 오른쪽 행동 상자 */
   /* 왼쪽 = 사진 + 대표 정보, 그 아래 상세. 오른쪽 = 오퍼 상자가 화면에 붙어 스크롤을 따라온다 */
-  .space-page .main, .space-page .tab-bar > .container { padding-right: calc(var(--sd-page-pad) + 316px); }   /* 오퍼 상자 자리 */
-  .detail-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 36px; align-items: start; }
+  /* 오퍼 상자는 본문 오른쪽 끝보다 90px 더 오른쪽 (화면이 좁으면 화면 끝에서 24px). 본문은 상자 폭 300 + 간격 32에서 밖으로 나간 만큼을 뺀 자리를 비운다 */
+  .space-page { --box-right: max(24px, calc((100vw - var(--sd-page-width)) / 2 - 90px)); --edge: max(var(--sd-page-pad), calc((100vw - var(--sd-page-width)) / 2)); }
+  .space-page .main, .space-page .tab-bar > .container { padding-right: calc(var(--sd-page-pad) + 332px - (var(--edge) - var(--box-right))); }
+  .detail-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 36px; align-items: start; }
   .detail-top .gallery__main { aspect-ratio: auto; height: 340px; }
   .detail-top h1 { font-size: 29px; font-weight: 700; letter-spacing: -.8px; }
   .detail-top__meta { margin-top: 6px; font-size: 15px; color: var(--sd-muted); }
@@ -18,7 +20,7 @@
   .detail-top .info-table { margin-top: 20px; font-size: 15px; }
   .detail-top .info-table th { width: 110px; }
   .detail-top .info-table th, .detail-top .info-table td { padding-top: 16px; padding-bottom: 16px; }
-  .offer-fixed { position: fixed; top: calc(var(--sd-gnb-height) + 108px); right: max(24px, calc((100vw - var(--sd-page-width)) / 2 - 40px)); z-index: 6; width: 300px; max-height: calc(100vh - var(--sd-gnb-height) - 132px); overflow-y: auto; background: var(--sd-bg); }
+  .offer-fixed { position: fixed; top: calc(var(--sd-gnb-height) + 108px); right: var(--box-right); z-index: 6; width: 300px; max-height: calc(100vh - var(--sd-gnb-height) - 132px); overflow-y: auto; background: var(--sd-bg); }
   @media (max-width: 1100px) { .space-page .main, .space-page .tab-bar > .container { padding-right: var(--sd-page-pad); } .offer-fixed { position: static; width: auto; max-height: none; grid-column: 1 / -1; } }
 </style>
 </head>
