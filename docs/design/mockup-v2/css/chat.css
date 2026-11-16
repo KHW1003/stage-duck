@@ -11,11 +11,11 @@
 .chat-fab .icon { grid-area: 1 / 1; width: 26px; height: 26px; stroke-width: 1.7; vertical-align: 0; transition: transform .2s, opacity .2s; }
 .chat-fab[aria-expanded="true"] .chat-fab__open, .chat-fab:not([aria-expanded="true"]) .chat-fab__close { opacity: 0; transform: rotate(-45deg) scale(.6); }
 .chat-fab__badge { position: absolute; top: -3px; right: -3px; min-width: 22px; height: 22px; padding: 0 6px; border: 2px solid var(--sd-bg); border-radius: 11px; background: var(--sd-blue); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
-.chat-fab[aria-expanded="true"] .chat-fab__badge { display: none; }
+.chat-fab[aria-expanded="true"] { display: none; }   /* 창을 열면 버튼은 숨기고, 닫기는 창 머리줄의 X로 */
 body.has-chat .toasts { bottom: 100px; }   /* 알림 토스트는 버튼 위로 */
 
 /* ── 창 ── */
-.chat-panel { position: fixed; right: 24px; bottom: 96px; z-index: var(--sd-z-float); display: flex; flex-direction: column; width: 400px; height: min(680px, calc(100vh - 120px)); border: 1px solid var(--sd-rule); border-radius: 16px; overflow: hidden; background: var(--sd-bg); transform-origin: right bottom; }
+.chat-panel { position: fixed; right: 24px; bottom: 24px; z-index: var(--sd-z-float); display: flex; flex-direction: column; width: 400px; height: min(780px, calc(100vh - 48px));   /* 버튼과 같은 자리(바닥 24px)에 뜬다 */ border: 1px solid var(--sd-rule); border-radius: 16px; overflow: hidden; background: var(--sd-bg); transform-origin: right bottom; }
 .chat-panel.is-pop { animation: cw-in .18s ease-out; }   /* 버튼으로 열 때만. 화면을 옮겨 이어 열 때는 움직이지 않는다 */
 .chat-panel[hidden] { display: none; }
 @keyframes cw-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
@@ -70,7 +70,7 @@ body.has-chat .toasts { bottom: 100px; }   /* 알림 토스트는 버튼 위로 
 .chat-panel__empty p { font-size: var(--sd-text-small); color: var(--sd-muted); }
 
 /* 대화: 둥글기만 창에 맞게 */
-.chat-panel .room__msgs { gap: 10px; padding: 18px 16px; }
+.chat-panel .room__msgs { gap: 16px; padding: 18px 16px; }
 .chat-panel .room__day { padding: 3px 10px; border-radius: 10px; background: rgba(32, 46, 61, .06); }
 .chat-panel .msg { max-width: 84%; }
 .chat-panel .msg__b { padding: 10px 14px; border-radius: 4px 16px 16px 16px; }
@@ -96,7 +96,6 @@ body.has-chat .toasts { bottom: 100px; }   /* 알림 토스트는 버튼 위로 
 @media (max-width: 560px) {
   .chat-panel { inset: 0; width: auto; height: auto; border: 0; border-radius: 0; }
   .chat-fab { right: 16px; bottom: 16px; }
-  .chat-fab[aria-expanded="true"] { display: none; }
 }
 
 /* 시안 페이지에서 멈춰 둔 창 (components.html) */
