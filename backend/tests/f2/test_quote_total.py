@@ -67,3 +67,13 @@ def test_ac_f2_17_non_integer_amount_rejected(value):
     with pytest.raises(ValidationError) as err:
         QuoteAmounts.model_validate({**ZERO, "items": value})
     assert err.value.errors()[0]["loc"] == ("items",)
+
+
+def test_ac_f2_17_sum_over_column_max_rejected():
+    """항목은 각각 한도 안이어도 합이 합계 칸(INT UNSIGNED)을 넘으면 저장할 수 없다."""
+    amounts = QuoteAmounts.model_validate({**ZERO, "items": MAX_AMOUNT, "transport": 1})
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, MAX_AMOUNT + 1)
+    assert err.value.status == 400
+    assert err.value.code == "TOTAL_TOO_LARGE"
+    assert err.value.field_errors[0]["field"] == "totalAmount"
