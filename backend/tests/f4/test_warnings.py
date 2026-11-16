@@ -54,3 +54,22 @@ def test_ac_f4_08_admin_warn_action(admin_client, db):
         assert res.status_code == 302
     db.expire_all()
     assert db.get(User, user.id).status == "SUSPENDED"
+
+
+def test_ac_f4_08_suspension_reason_returns_latest_own_suspension(db, admin_user):
+    """정지 사유 조회 (1번 #24 로그인 안내용)."""
+    user = make_user(db)
+    other = make_user(db)
+    assert service.suspension_reason(db, user.id) is None  # 제재 없음
+
+    service.warn(db, user.id, actor_id=admin_user.id, reason="경고 사유")
+    assert service.suspension_reason(db, user.id) is None  # 경고만 있음
+
+    for _ in range(2):
+        service.warn(db, user.id, actor_id=admin_user.id, reason="경고 사유")
+    assert service.suspension_reason(db, user.id) == "경고 3회 누적"
+
+    db.add(Sanction(user_id=user.id, type="SUSPENSION", reason="나중 정지 사유", created_by=admin_user.id))
+    db.commit()
+    assert service.suspension_reason(db, user.id) == "나중 정지 사유"  # 가장 최근 것
+    assert service.suspension_reason(db, other.id) is None  # 남의 제재는 섞이지 않음

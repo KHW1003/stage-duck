@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공간 C · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* SpaceDetailPage.module.css: 티켓 상세처럼 위쪽 = 사진 + 요약표 + 오른쪽 행동 상자 */
+  .detail-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) var(--sd-aside); gap: 32px; align-items: start; }
+  .detail-top h1 { font-size: 26px; font-weight: 700; letter-spacing: -.8px; }
+  .detail-top__meta { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+  .detail-top .info-table { margin-top: 18px; }
+  .detail-top .info-table th { width: 110px; }
+</style>
+</head>
+<!-- 화면: 공간 상세 · FR-SPACE-01·03 · FR-OFFER-01 · AC-F3-16 · 묶음 1
+     React: pages/SpaceDetailPage.tsx = Gallery + SpaceSummaryTable + OfferBox(SideBox) + DetailTabs(공간 조건 / 기본 장비 / 소개 / 업체)
+     사진: 큰 사진 1장 + 작은 사진 줄 (DESIGN.md 4장). 연락처는 보이지 않는다. -->
+<body data-layout="user" data-nav="spaces">
+
+<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="spaces.html">공간 찾기</a></li><li><a href="spaces.html">광주</a></li><li>공간 C</li></ol></div></div>
+
+<main class="container main">
+  <div class="detail-top">
+    <div class="gallery">
+      <div class="photo gallery__main" role="img" aria-label="공간 C 내부 무대" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"><span class="gallery__count"><b>1</b> / 5</span></div>
+      <div class="gallery__thumbs" style="--cols:5">
+        <button type="button" aria-current="true" aria-label="사진 1" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"></button>
+        <button type="button" aria-label="사진 2" style="--img:url('../../mockup/assets/photos/photo-1501386761578-eac5c94b800a.jpg')"></button>
+        <button type="button" aria-label="사진 3" style="--img:url('../../mockup/assets/photos/photo-1514525253161-7a46d19cd819.jpg')"></button>
+        <button type="button" aria-label="사진 4" style="--img:url('../../mockup/assets/photos/photo-1459749411175-04bf5292ceea.jpg')"></button>
+        <button type="button" aria-label="사진 5" style="--img:url('../../mockup/assets/photos/photo-1540039155733-5bb30b53aa14.jpg')"></button>
+      </div>
+    </div>
+
+    <div>
+      <p class="detail-top__meta">광주 동구 · 복합문화공간</p>
+      <h1>공간 C</h1>
+      <div class="chips-ico mt-16"><div><span class="ico-box ico-box--sm"><span data-icon="users"></span></span><div><span>수용 인원</span><b>120명</b></div></div><div><span class="ico-box ico-box--sm"><span data-icon="door"></span></span><div><span>입실</span><b>15:00</b></div></div><div><span class="ico-box ico-box--sm"><span data-icon="music"></span></span><div><span>밴드 공연</span><b>가능</b></div></div></div>
+      <table class="info-table">
+        <tr><th>업체</th><td><a class="link link--point" href="supplier.html">업체 C</a> <span class="muted small">· 거래 12건</span></td></tr>
+                <tr><th>퇴실 마감</th><td class="num">22:00</td></tr>
+        <tr><th>장비 설치</th><td class="num">15:00부터 가능</td></tr>
+                <tr><th>대관료</th><td class="strong num">500,000원 <span class="muted small" style="font-weight:400">부가세 포함</span></td></tr>
+      </table>
+      <div class="btns mt-16"><button class="btn btn--sm" type="button"><span data-icon="heart" class="icon--sm"></span>관심 업체 저장</button><button class="btn btn--sm btn--ghost" type="button" data-open="report"><span data-icon="flag" class="icon--sm"></span>신고</button></div>
+    </div>
+
+    <!-- OfferBox: 공연장 단계가 열려 있을 때만 오퍼 (FR-OFFER-01) -->
+    <aside class="side-box">
+      <div class="side-box__sec"><p class="side-box__title">이 업체에 오퍼 보내기</p><p class="small muted">내 공고를 먼저 보여 줘요. 업체는 48시간 안에 견적서를 보내거나 거절해요.</p></div>
+      <div class="side-box__sec"><label class="field"><span class="field__label">내 공연</span><select class="select"><option>가을밤 밴드 공연 · 공연장 단계</option></select></label>
+        <dl class="sum-rows mt-12"><div><dt>공연 날짜</dt><dd>11월 28일(토)</dd></div><div><dt>관객</dt><dd>80명</dd></div><div><dt>이 단계 오퍼</dt><dd>0 / 10곳</dd></div></dl></div>
+      <div class="side-box__sec"><button class="btn btn--primary btn--lg btn--block" type="button" data-open="offer">오퍼 보내기</button><p class="field__hint mt-8">연락처는 결제 뒤 최종 담당표에서 공개돼요.</p></div>
+    </aside>
+  </div>
+</main>
+
+<div class="band"></div>
+<div class="tab-bar" style="position:sticky;top:var(--sd-gnb-height);background:var(--sd-bg);z-index:5"><div class="container"><div class="tabs"><a href="#cond" aria-current="page">공간 조건</a><a href="#gear">기본 장비·인력</a><a href="#intro">소개</a><a href="#notice">이용 안내</a></div></div></div>
+
+<div class="container main">
+  <section class="sec" id="cond"><div class="sec-head"><h2><span data-icon="venue"></span>공간 조건</h2></div>
+    <table class="info-table"><tr><th>수용 인원</th><td>최대 120명 (좌석 배치 시 60명)</td><th>공연장 등록</th><td>등록 <span class="tag">업체 입력</span></td></tr><tr><th>입실</th><td class="num">15:00</td><th>퇴실 마감</th><td class="num">22:00</td></tr><tr><th>외부 장비 반입</th><td>가능 · 뒷문 화물 엘리베이터</td><th>외부 엔지니어</th><td>허용</td></tr><tr><th>전원</th><td>무대 콘센트 4구 · 단상 220V</td><th>부대 시설</th><td>대기실 1 · 무대 단상</td></tr></table></section>
+  <section class="sec" id="gear"><div class="sec-head"><h2><span data-icon="speaker"></span>기본 장비·인력</h2><p>업체가 적은 내용이에요. 공연 가능 여부는 업체 확인 뒤에 정해져요.</p></div>
+    <div class="table-box"><table class="table table--fit"><thead><tr><th>구분</th><th>내용</th><th>수량</th></tr></thead><tbody><tr><td>마이크</td><td class="l">유선 보컬 마이크</td><td>2</td></tr><tr><td>스피커</td><td class="l">메인 스피커 (소형)</td><td>2</td></tr><tr><td>인력</td><td class="l">현장 관리자 (음향 운영 아님)</td><td>1</td></tr></tbody></table></div></section>
+  <section class="sec" id="intro"><div class="sec-head"><h2><span data-icon="info"></span>소개</h2></div><p class="desc" style="line-height:1.8">1층 복합문화공간이에요. 무대 앞 스탠딩 80명, 좌석 배치 시 60명까지 들어가요. 장비 반입은 뒷문 엘리베이터를 써요.</p></section>
+  <section class="sec" id="notice"><div class="sec-head"><h2><span data-icon="info"></span>이용 안내</h2></div><ul class="bullets"><li>공간을 고른다고 예약되지 않아요. 요청서를 올리고 업체 견적서를 컨펌해야 정해져요.</li><li>컨펌할 때의 공간 조건은 따로 보관돼요. 업체가 나중에 정보를 바꿔도 내 공연에는 그대로 남아요.</li><li>결제 전에는 업체 연락처가 공개되지 않아요.</li></ul></section>
+</div>
+
+<div class="layer" id="offer" hidden><div class="modal"><div class="modal__head"><h2>오퍼 보내기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 C에 오퍼를 보낼까요?</p><p>가을밤 밴드 공연 · 공연장 단계 · 응답 기한 48시간</p><label class="field mt-16"><span class="field__label">한마디<span class="opt">선택</span></span><textarea class="textarea" placeholder="예: 리허설 17시부터 가능한지 궁금해요."></textarea><span class="field__hint">전화번호·계좌번호는 적을 수 없어요.</span></label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>오퍼 보내기</button></div></div></div>
+<div class="layer" id="report" hidden><div class="modal"><div class="modal__head"><h2>신고하기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">무엇이 문제인가요?</p><p>관리자가 확인한 뒤 경고나 숨김 처리를 해요.</p><div class="stack mt-16" style="--gap:8px"><label class="check"><input type="radio" name="r" checked>연락처·외부 거래 유도</label><label class="check"><input type="radio" name="r">사실과 다른 정보</label><label class="check"><input type="radio" name="r">기타</label></div><textarea class="textarea mt-12" aria-label="내용"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>신고하기</button></div></div></div>
+
+<script src="../layout.js"></script>
+</body>
+</html>

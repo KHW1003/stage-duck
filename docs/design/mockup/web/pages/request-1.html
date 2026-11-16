@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요청서 STEP1 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 요청서 STEP1 공연 기본 정보 · FR-REQ-01 · AC-F2-04~07 · 묶음 2
+     React: pages/RequestStep1Page.tsx = StepBar + FormTable(PerformanceBasic) — React Hook Form + zod, 서버 fieldErrors 우선
+     필드: title, form, lineup, showDate, rehearsalStart, showStart, showEnd, audience, sido, sigungu, contactPhone -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="err">
+  <span>목업 보기</span>
+  <button type="button" data-value="ok" aria-pressed="true">입력 완료</button>
+  <button type="button" data-value="bad">오류 표시</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="my.html">내 공연</a></li><li>요청서 쓰기</li></ol><h1>요청서 쓰기</h1><p class="page-top__desc">한 번만 적으면 공연장·장비·엔지니어 업체가 모두 같은 내용을 봐요.</p></div><span class="tag tag--soft">14:02 임시 저장</span></div></div>
+
+<main class="container container--narrow main">
+  <ol class="step-bar"><li class="is-now"><b>01</b>공연 기본 정보</li><li><b>02</b>필요한 것</li><li><b>03</b>확인·게시</li></ol>
+
+  <section class="sec mt-40">
+    <div class="sec-head"><h2>공연</h2><p><span style="color:var(--sd-conflict-text)">*</span> 꼭 적어야 해요</p></div>
+    <div class="form-table">
+      <div><span class="form-table__th">공연명<span class="req">*</span></span><span class="form-table__td"><input class="input wide" value="가을밤 밴드 공연"></span></div>
+      <div><span class="form-table__th">공연 형태<span class="req">*</span></span><span class="form-table__td"><div class="filters"><button type="button" aria-pressed="true">밴드</button><button type="button" aria-pressed="false">연극·뮤지컬</button><button type="button" aria-pressed="false">강연·행사</button><button type="button" aria-pressed="false">종교 행사</button><button type="button" aria-pressed="false">기타</button></div></span></div>
+      <div><span class="form-table__th">편성</span><span class="form-table__td"><input class="input wide" value="보컬 1, 기타 2, 베이스 1, 드럼 1"><span class="field__hint">업체가 장비 구성을 정할 때 봐요.</span></span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>날짜와 시간</h2><p>공연 날짜는 오늘부터 3일 뒤부터 고를 수 있어요.</p></div>
+    <div class="form-table">
+      <div><span class="form-table__th">공연 날짜<span class="req">*</span></span><span class="form-table__td">
+        <input class="input" type="date" value="2026-11-28" style="max-width:220px" data-when="err:ok">
+        <input class="input" type="date" value="2026-11-15" style="max-width:220px" aria-invalid="true" data-when="err:bad"><span class="field__error" data-when="err:bad"><span data-icon="warn" class="icon--sm"></span>공연 3일 전까지만 요청할 수 있어요. 11월 17일 이후로 골라 주세요.</span></span></div>
+      <div><span class="form-table__th">시간<span class="req">*</span></span><span class="form-table__td"><span class="form-table__inline">
+        <span class="small muted">리허설</span><input class="input" type="time" value="17:00" data-when="err:ok"><input class="input" type="time" value="20:00" aria-invalid="true" data-when="err:bad">
+        <span class="small muted">공연</span><input class="input" type="time" value="19:00"><span>~</span><input class="input" type="time" value="21:00"></span>
+        <span class="field__error" data-when="err:bad"><span data-icon="warn" class="icon--sm"></span>리허설은 공연 시작보다 먼저여야 해요.</span></span></div>
+      <div><span class="form-table__th">예상 관객<span class="req">*</span></span><span class="form-table__td">
+        <span class="unit" style="max-width:200px" data-when="err:ok"><input class="input input--num" value="80"><span>명</span></span>
+        <span class="unit" style="max-width:200px" data-when="err:bad"><input class="input input--num" value="501" aria-invalid="true"><span>명</span></span><span class="field__error" data-when="err:bad"><span data-icon="warn" class="icon--sm"></span>관객은 1명부터 500명까지 적을 수 있어요.</span></span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>지역과 연락처</h2></div>
+    <div class="form-table">
+      <div><span class="form-table__th">지역<span class="req">*</span></span><span class="form-table__td"><span class="form-table__inline"><select class="select"><option>광주광역시</option><option>전라남도</option></select><select class="select"><option>동구</option><option>서구</option><option>북구</option></select></span></span></div>
+      <div><span class="form-table__th">대표 전화번호</span><span class="form-table__td"><input class="input" placeholder="010-0000-0000"><span class="field__hint">안 남기시면 채팅으로 연락이 가요. 결제 전에는 업체에게 보이지 않아요.</span></span></div>
+    </div>
+  </section>
+
+  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="my.html" style="min-width:160px">나중에 쓰기</a><a class="btn btn--primary btn--lg" href="request-2.html" style="min-width:240px">다음 단계</a></div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

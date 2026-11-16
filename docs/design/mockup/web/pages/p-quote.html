@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>견적서 작성 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+</head>
+<!-- 화면: 견적서 작성·수정 (업체) · FR-QUOTE-02·03 · AC-F2-15~20 · 묶음 3
+     React: pages/QuoteFormPage.tsx = FormTable + QuoteLinesEditor + SubmitBox(SideBox: 서버 미리 계산 합계 + 검사)
+     항목 합과 합계가 다르면 서버가 거부 (TOTAL_MISMATCH). 공연장 견적서에서 장비·엔지니어 포함이면 "풀스펙". 수정하면 v+1. -->
+<body data-layout="partner" data-nav="jobs">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="p-jobs.html">공고 목록</a></li><li><a href="p-job.html">가을밤 밴드 공연</a></li><li>견적서</li></ol><h1>견적서 고치기 <span class="tag">v2 → v3</span></h1><p class="page-top__desc">고치면 새 버전이 생기고, 보낸 견적 내역 확인 카드는 무효가 돼요.</p></div></div></div>
+
+<main class="container main">
+  <div class="with-aside">
+    <div>
+      <section class="sec"><div class="sec-head"><h2>기본 정보</h2></div>
+        <div class="form-table">
+          <div><span class="form-table__th">견적서 이름<span class="req">*</span></span><span class="form-table__td"><input class="input" value="기본형" style="max-width:280px"><span class="field__hint">한 공고에 여러 개 보낼 수 있어요. 예: 기본형, 고급형</span></span></div>
+          <div><span class="form-table__th">포함</span><span class="form-table__td"><div class="checks" style="--cols:2"><label class="check"><input type="checkbox" checked><span>엔지니어 포함<small>사용자에게 엔지니어 단계 건너뛰기를 제안해요</small></span></label><label class="check"><input type="checkbox" checked>운반 포함</label></div></span></div>
+          <div><span class="form-table__th">설치 시간<span class="req">*</span></span><span class="form-table__td"><span class="form-table__inline"><span class="small muted">설치</span><input class="input" type="time" value="15:00"><span>~</span><input class="input" type="time" value="15:45"><span class="small muted">철수 완료</span><input class="input" type="time" value="22:00"></span><span class="field__hint">공간 C 입실 15:00 · 리허설 17:00 기준으로 자동 검사해요.</span></span></div>
+        </div></section>
+
+      <section class="sec"><div class="sec-head"><h2>항목</h2><p>금액은 부가세 포함 원 단위로 적어요.</p></div>
+        <table class="lines"><thead><tr><th>항목</th><th>내용</th><th style="width:90px" class="r">수량</th><th style="width:150px" class="r">금액</th><th style="width:44px"></th></tr></thead><tbody>
+          <tr><td><input class="input" value="메인 스피커"></td><td><input class="input" value="중형 2웨이"></td><td><input class="input input--num" value="2"></td><td><input class="input input--num" value="420,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="믹서"></td><td><input class="input" value="디지털 16채널"></td><td><input class="input input--num" value="1"></td><td><input class="input input--num" value="200,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="마이크"></td><td><input class="input" value="보컬·악기용"></td><td><input class="input input--num" value="8"></td><td><input class="input input--num" value="160,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="모니터 스피커"></td><td><input class="input" value="바닥형"></td><td><input class="input input--num" value="4"></td><td><input class="input input--num" value="120,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="설치·철수"></td><td><input class="input" value="설치 15:00~15:45 · 철수 21:00~22:00"></td><td><input class="input input--num" value="1"></td><td><input class="input input--num" value="200,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="설치 인원"></td><td><input class="input" value="추가 1명"></td><td><input class="input input--num" value="1"></td><td><input class="input input--num" value="100,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+          <tr><td><input class="input" value="현장 엔지니어"></td><td><input class="input" value="FOH 믹싱 · 사운드체크·리허설"></td><td><input class="input input--num" value="1"></td><td><input class="input input--num" value="150,000"></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr>
+        </tbody><tfoot><tr><td colspan="3">합계 (서버 계산)</td><td class="r">1,350,000원</td><td></td></tr></tfoot></table>
+        <button class="btn btn--sm mt-12" type="button"><span data-icon="plus" class="icon--sm"></span>항목 추가</button></section>
+
+      <section class="sec"><div class="sec-head"><h2>사용자에게 한마디</h2></div>
+        <textarea class="textarea">설치 인원을 한 명 늘려서 15:45에 끝나도록 바꿨어요.</textarea><p class="field__hint mt-8">전화번호·계좌번호·외부 링크를 적으면 경고가 표시돼요.</p></section>
+    </div>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">보낼 견적서</p><div class="sum-total sum-total--point"><span>합계</span><b>1,350,000<small>원</small></b></div><p class="small muted mt-4">부가세 포함 · v2와 같은 금액</p></div>
+      <div class="side-box__sec"><p class="small strong mb-8">보내기 전 자동 검사</p><dl class="sum-rows"><div><dt>설치 완료</dt><dd><span class="status status--pass"><span data-icon="pass"></span>15:45</span></dd></div><div><dt>퇴실</dt><dd><span class="status status--pass"><span data-icon="pass"></span>22:00 이내</span></dd></div><div><dt>엔지니어</dt><dd><span class="status status--warn"><span data-icon="warn"></span>포함</span></dd></div></dl></div>
+      <div class="side-box__sec side-box__sec--gray"><p class="small muted">보낸 견적 내역 확인 카드(v2)는 무효가 돼요. 조율이 끝나면 v3로 카드를 다시 보내 주세요.</p></div>
+      <div class="side-box__sec"><button class="btn btn--primary btn--lg btn--block" type="button">v3로 보내기</button><a class="btn btn--block mt-8" href="p-job.html">취소</a></div>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

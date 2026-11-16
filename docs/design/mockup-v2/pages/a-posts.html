@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>게시글·공간 · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: PR 게시글 블라인드·해제, 공간 정보 숨김 · FR-ADMIN-04 · FR-BOARD · 묶음 1·4
+     React 아님: SQLAdmin. 블라인드는 사유 필수, 블라인드하면 업체 경고 1회 (제재 이력). 해제해도 경고는 남는다.
+     공간 숨김은 공간 목록·상세와 요청서 공간 고르기에서 빠진다. 진행 중인 섭외에는 영향 없음. -->
+<body data-layout="admin" data-nav="posts">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>게시글·공간</li></ol><h1>게시글·공간</h1><p class="page-top__desc">문제가 있는 PR 게시글을 가리고, 잘못된 공간 정보를 숨겨요.</p></div></div></div>
+
+<main class="container main">
+  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="b1" type="button">PR 게시글</button><button role="tab" aria-selected="false" aria-controls="b2" type="button">공간 정보</button></div></div>
+
+  <section id="b1" class="mt-24">
+    <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">게시 중</button><button type="button" aria-pressed="false">블라인드</button></div><select class="select select--sm" aria-label="말머리"><option>말머리 전체</option><option>공연장</option><option>장비</option><option>엔지니어</option></select></div>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>말머리</th><th>게시글</th><th>업체</th><th>올린 날</th><th>신고</th><th>상태</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag">장비</span></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')"></span><div><b>밴드 공연 음향, 설치부터 철수까지</b><small>사진 6장 · 끌어올림 11월 10일</small></div></div></td><td>업체 D</td><td class="num">11월 3일</td><td>0</td><td><span class="state state--done">게시 중</span></td><td><button class="btn btn--xs" type="button" data-open="blind">블라인드</button></td></tr>
+        <tr><td><span class="tag">공연장</span></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1514320291840-2e0a9bf2a9ae.jpg')"></span><div><b>공간 C 대관 — 80석 소극장</b><small>사진 8장</small></div></div></td><td>업체 C</td><td class="num">10월 30일</td><td>0</td><td><span class="state state--done">게시 중</span></td><td><button class="btn btn--xs" type="button" data-open="blind">블라인드</button></td></tr>
+        <tr class="is-off"><td><span class="tag">공연장</span></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1563841930606-67e2bce48b78.jpg')"></span><div><b>야외 무대 대관</b><small>블라인드 사유: 다른 업체 사진 사용</small></div></div></td><td>업체 B</td><td class="num">10월 20일</td><td>2</td><td><span class="state state--warn">블라인드</span></td><td><button class="btn btn--xs" type="button" data-open="unblind">해제</button></td></tr>
+      </tbody></table></div>
+    <ul class="bullets mt-16"><li>블라인드한 글은 PR 게시판에서 안 보이고, 업체의 내 PR 게시글에 사유가 보여요.</li><li>블라인드하면 업체에 경고 1회가 쌓여요. 해제해도 경고는 지워지지 않아요.</li></ul>
+  </section>
+
+  <section id="b2" class="mt-24" hidden>
+    <div class="table-box"><table class="table">
+      <thead><tr><th>공간</th><th>업체</th><th>수용</th><th>장비 설치 가능</th><th>상태</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1501612780327-45045538702b.jpg')"></span><div><b>공간 A</b><small>풀스펙 · 장비·엔지니어 포함</small></div></div></td><td>업체 A</td><td>150명</td><td class="num">13:00</td><td><span class="state state--done">보임</span></td><td><button class="btn btn--xs" type="button" data-open="hide">숨기기</button></td></tr>
+        <tr><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1563841930606-67e2bce48b78.jpg')"></span><div><b>공간 B</b><small>대관만</small></div></div></td><td>업체 B</td><td>100명</td><td class="num">17:00</td><td><span class="state state--done">보임</span></td><td><button class="btn btn--xs" type="button" data-open="hide">숨기기</button></td></tr>
+        <tr><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1514320291840-2e0a9bf2a9ae.jpg')"></span><div><b>공간 C</b><small>소극장 · 기본 마이크 2</small></div></div></td><td>업체 C</td><td>120명</td><td class="num">15:00</td><td><span class="state state--done">보임</span></td><td><button class="btn btn--xs" type="button" data-open="hide">숨기기</button></td></tr>
+      </tbody></table></div>
+    <p class="field__hint mt-12">수용 인원은 공간 찾기 화면과 같은 값이에요.</p>
+  </section>
+</main>
+
+<div class="layer" id="blind" hidden><div class="modal"><div class="modal__head"><h2>블라인드</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 게시글을 가릴까요?</p><div class="notice notice--warn mt-12"><span data-icon="warn"></span><div>블라인드하면 업체에 <b>경고 1회</b>가 쌓여요. 3회째에는 이용 정지돼요.</div></div>
+    <div class="stack mt-16" style="--gap:8px"><label class="check"><input type="radio" name="bl" checked>다른 업체 사진·글 사용</label><label class="check"><input type="radio" name="bl">연락처·외부 거래 유도</label><label class="check"><input type="radio" name="bl">기타</label></div>
+    <textarea class="textarea mt-12" aria-label="사유" placeholder="사유 (필수, 업체에게 보여요)"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>블라인드</button></div></div></div>
+<div class="layer" id="unblind" hidden><div class="modal"><div class="modal__head"><h2>블라인드 해제</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">업체 B 게시글을 다시 보이게 할까요?</p><p>이미 쌓인 경고는 그대로예요. 해제 사유를 적어 주세요.</p><textarea class="textarea mt-12" aria-label="해제 사유" placeholder="사유 (필수)"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>해제</button></div></div></div>
+<div class="layer" id="hide" hidden><div class="modal"><div class="modal__head"><h2>공간 숨기기</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 공간을 숨길까요?</p><p>공간 목록·상세와 요청서의 공간 고르기에서 빠져요. 이미 컨펌된 섭외는 그대로 진행돼요.</p><textarea class="textarea mt-12" aria-label="사유" placeholder="사유 (필수)"></textarea></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>숨기기</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

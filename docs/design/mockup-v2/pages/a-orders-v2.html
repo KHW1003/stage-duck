@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>거래 이력 (친근한 시안) · STAGE DUCK 관리자</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 친근한 시안 (a-orders.html과 비교용). 머리·바닥글은 그대로, 안쪽 내용만 바꿨다.
+     바꾼 것: ① 진한 2px 선·표 머리줄 없앰 → 여백과 연한 선 ② 표 → 사진이 있는 줄 목록 ③ 모서리 12px, 아이콘 원형
+     ④ 본문 글자 한 단계 키움, 왼쪽 정렬 ⑤ 제목·기록을 말하듯 문장으로 ⑥ 기록은 세로 흐름(타임라인)
+     그림자·그라데이션·파스텔·이모지 없음 (DESIGN.md 8장). 팀이 고르면 공통 CSS로 옮긴다. */
+  .f-hello { padding: 44px 0 8px; }
+  .f-hello h1 { font-size: 30px; font-weight: 800; letter-spacing: -.8px; line-height: 1.35; }
+  .f-hello p { margin-top: 8px; font-size: 16px; color: var(--sd-muted); }
+
+  .f-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--sd-band); }
+  .f-seg button { height: 38px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: var(--sd-muted); font-size: 15px; font-weight: 600; cursor: pointer; }
+  .f-seg button[aria-pressed="true"] { background: var(--sd-bg); color: var(--sd-ink); font-weight: 700; }
+  .f-seg em { font-style: normal; margin-left: 4px; color: var(--sd-muted); font-weight: 600; }
+  .f-search { width: 260px; height: 46px; padding: 0 16px; border: 1px solid var(--sd-line); border-radius: 12px; background: var(--sd-bg); font-size: 15px; }
+  .f-search:focus { outline: none; border-color: var(--sd-ink); }
+
+  .f-shows { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .f-show { display: grid; grid-template-columns: 96px minmax(0, 1.1fr) minmax(0, 1.6fr) auto; gap: 20px; align-items: center; padding: 16px 20px 16px 16px; border: 1px solid var(--sd-line); border-radius: 14px; background: var(--sd-bg); cursor: pointer; }
+  .f-show:hover { border-color: var(--sd-line-strong); }
+  .f-show[aria-current="true"] { border: 2px solid var(--sd-ink); padding: 15px 19px 15px 15px; }
+  .f-show .thumb { --w: 96px; border-radius: 10px; }
+  .f-show__title { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+  .f-show__meta { margin-top: 4px; font-size: 14px; color: var(--sd-muted); }
+  .f-stages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .f-stages > div { padding: 2px 14px; font-size: 14px; }
+  .f-stages > div + div { border-left: 1px solid var(--sd-line); }
+  .f-stages small { display: flex; align-items: center; gap: 4px; color: var(--sd-muted); font-size: 12px; }
+  .f-stages small .icon { width: 14px; height: 14px; }
+  .f-stages b { display: block; margin-top: 2px; font-size: 15px; }
+  .f-stages span { color: var(--sd-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .f-stages .is-none b { color: var(--sd-muted); font-weight: 500; }
+  .f-show__end { text-align: right; min-width: 132px; }
+  .f-show__end b { display: block; margin-top: 4px; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .f-pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 8px; background: var(--sd-band); font-size: 13px; font-weight: 700; }
+  .f-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sd-muted); }
+  .f-pill--ok::before { background: var(--sd-pass-text); }
+  .f-pill--on::before { background: var(--sd-blue); }
+  .f-pill--warn { color: var(--sd-warn-text); } .f-pill--warn::before { background: var(--sd-warn-text); }
+
+  .f-two { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; margin-top: 56px; align-items: start; }
+  .f-h2 { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+  .f-h2 + p { margin-top: 4px; font-size: 15px; color: var(--sd-muted); }
+
+  .f-flow { margin-top: 24px; }
+  .f-flow li { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 16px; padding-bottom: 26px; }
+  .f-flow li + li::before { content: ""; position: absolute; left: 21px; top: -26px; height: 26px; width: 2px; background: var(--sd-line); }
+  .f-flow li:last-child { padding-bottom: 0; }
+  .f-flow__ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--sd-band); color: var(--sd-ink); }
+  .f-flow__ico .icon { width: 20px; height: 20px; vertical-align: 0; }
+  .f-flow li.is-key .f-flow__ico { background: var(--sd-ink); color: #fff; }
+  .f-flow li.is-bad .f-flow__ico { background: var(--sd-bg); border: 2px solid var(--sd-warn-text); color: var(--sd-warn-text); }
+  .f-flow__what { padding-top: 2px; font-size: 16px; font-weight: 600; line-height: 1.5; }
+  .f-flow__what b { font-weight: 800; }
+  .f-flow__when { margin-top: 2px; font-size: 13px; color: var(--sd-muted); font-variant-numeric: tabular-nums; }
+
+  .f-card { border-radius: 14px; background: var(--sd-band); padding: 24px; }
+  .f-card + .f-card { margin-top: 12px; }
+  .f-card h3 { font-size: 16px; font-weight: 700; }
+  .f-card .f-card__big { color: var(--sd-ink); line-height: 1.2; margin-top: 10px; font-size: 30px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .f-card__big small { font-size: 16px; font-weight: 600; margin-left: 2px; }
+  .f-card dl { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+  .f-card dl > div { display: flex; justify-content: space-between; gap: 12px; }
+  .f-card dt { color: var(--sd-muted); } .f-card dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .f-card hr { margin: 16px 0 0; border: 0; border-top: 1px solid var(--sd-line-strong); }
+  .f-card p { margin-top: 12px; font-size: 13px; color: var(--sd-muted); line-height: 1.6; }
+  .f-card--line { background: var(--sd-bg); border: 1px solid var(--sd-line); }
+  .f-card--line p { margin-top: 0; display: flex; gap: 8px; font-size: 14px; }
+  .f-card--line .icon { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+</style>
+</head>
+<!-- 화면: 거래 이력 · 친근한 시안 (a-orders.html과 같은 내용) · FR-ADMIN-02 · 묶음 4
+     값은 docs/guides/시연_예시값.md (공간 C + 장비 D, 엔지니어 건너뜀, D-1 사용자 취소). 조회만 한다. -->
+<body data-layout="admin" data-nav="orders">
+
+<div class="mock-switch" data-group="case">
+  <span>목업 보기</span>
+  <button type="button" data-value="paid" aria-pressed="true">결제 · 보관 중</button>
+  <button type="button" data-value="cancel">D-1 사용자 취소</button>
+</div>
+
+<main class="container main" style="padding-top:0">
+  <div class="f-hello">
+    <h1>지금 공연 3건이 진행되고 있어요</h1>
+    <p>공연을 누르면 컨펌부터 결제·취소까지 있었던 일을 순서대로 볼 수 있어요.</p>
+  </div>
+
+  <div class="row row--between mt-24">
+    <div class="f-seg"><button type="button" aria-pressed="true">전체<em>3</em></button><button type="button" aria-pressed="false">섭외 중<em>1</em></button><button type="button" aria-pressed="false">결제 완료<em>1</em></button><button type="button" aria-pressed="false">취소<em>0</em></button></div>
+    <input class="f-search" placeholder="공연 이름이나 사용자로 찾기" aria-label="공연 찾기">
+  </div>
+
+  <div class="f-shows">
+    <div class="f-show" aria-current="true">
+      <span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1598387993441-a364f854c3e1.jpg')" role="img" aria-label="밴드 공연 사진"></span>
+      <div><p class="f-show__title">가을밤 밴드 공연</p><p class="f-show__meta">11월 28일(토) · 광주 · 가을밤밴드</p></div>
+      <div class="f-stages">
+        <div><small><span data-icon="venue"></span>공연장</small><b>업체 C</b><span>500,000원</span></div>
+        <div><small><span data-icon="speaker"></span>장비</small><b>업체 D</b><span>1,350,000원</span></div>
+        <div class="is-none"><small><span data-icon="engineer"></span>엔지니어</small><b>건너뜀</b><span>장비에 포함</span></div>
+      </div>
+      <div class="f-show__end"><span class="f-pill f-pill--ok" data-when="case:paid">결제금 보관 중</span><span class="f-pill f-pill--warn" data-when="case:cancel">취소 · 위약금</span><b>1,942,500원</b></div>
+    </div>
+    <div class="f-show">
+      <span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1471478331149-c72f17e33c73.jpg')" role="img" aria-label="어쿠스틱 공연 사진"></span>
+      <div><p class="f-show__title">겨울 어쿠스틱 공연</p><p class="f-show__meta">12월 5일(토) · 광주 · 봄날</p></div>
+      <div class="f-stages">
+        <div><small><span data-icon="venue"></span>공연장</small><b>업체 B</b><span>조율 중</span></div>
+        <div class="is-none"><small><span data-icon="speaker"></span>장비</small><b>아직</b><span>공연장 컨펌 뒤</span></div>
+        <div class="is-none"><small><span data-icon="engineer"></span>엔지니어</small><b>아직</b><span>장비 컨펌 뒤</span></div>
+      </div>
+      <div class="f-show__end"><span class="f-pill f-pill--on">섭외 중</span><b class="muted">결제 전</b></div>
+    </div>
+    <div class="f-show">
+      <span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')" role="img" aria-label="재즈 공연 사진"></span>
+      <div><p class="f-show__title">재즈 트리오 공연</p><p class="f-show__meta">11월 14일(토) · 광주 · 하모니</p></div>
+      <div class="f-stages">
+        <div><small><span data-icon="venue"></span>공연장</small><b>업체 A</b><span>풀스펙</span></div>
+        <div class="is-none"><small><span data-icon="speaker"></span>장비</small><b>포함</b><span>공연장에 포함</span></div>
+        <div class="is-none"><small><span data-icon="engineer"></span>엔지니어</small><b>포함</b><span>공연장에 포함</span></div>
+      </div>
+      <div class="f-show__end"><span class="f-pill">결제 기다리는 중</span><b class="muted">결제 전</b></div>
+    </div>
+  </div>
+
+  <div class="f-two">
+    <section>
+      <h2 class="f-h2">가을밤 밴드 공연에서 있었던 일</h2><p>서버가 남긴 기록을 시간 순서로 보여 드려요.</p>
+      <ol class="f-flow">
+        <li><span class="f-flow__ico"><span data-icon="doc"></span></span><div><p class="f-flow__what">가을밤밴드님이 요청서를 올리고 공연장을 찾기 시작했어요</p><p class="f-flow__when">11월 12일 09:30 · 요청서 v1</p></div></li>
+        <li><span class="f-flow__ico"><span data-icon="venue"></span></span><div><p class="f-flow__what">공연장은 <b>업체 C</b>로 정했어요 · 500,000원</p><p class="f-flow__when">11월 12일 10:22 · 견적서 v1 컨펌 · 다른 공연장 견적서는 마감</p></div></li>
+        <li><span class="f-flow__ico"><span data-icon="edit"></span></span><div><p class="f-flow__what">업체 D가 장비 견적서를 고쳤어요 · 1,250,000원 → 1,350,000원</p><p class="f-flow__when">11월 13일 13:18 · 견적서 v2</p></div></li>
+        <li><span class="f-flow__ico"><span data-icon="speaker"></span></span><div><p class="f-flow__what">장비는 <b>업체 D</b>로 정했어요 · 1,350,000원</p><p class="f-flow__when">11월 13일 15:02 · 견적서 v2 컨펌</p></div></li>
+        <li><span class="f-flow__ico"><span data-icon="skip"></span></span><div><p class="f-flow__what">엔지니어 단계는 건너뛰었어요</p><p class="f-flow__when">11월 13일 15:04 · 장비 견적서에 포함</p></div></li>
+        <li><span class="f-flow__ico"><span data-icon="receipt"></span></span><div><p class="f-flow__what">통합 청구서가 만들어졌어요 · 1,942,500원</p><p class="f-flow__when">11월 13일 15:05 · 업체 금액 1,850,000원 + 플랫폼 이용료 92,500원</p></div></li>
+        <li class="is-key"><span class="f-flow__ico"><span data-icon="check"></span></span><div><p class="f-flow__what">결제가 끝나서 <b>섭외가 확정</b>됐어요</p><p class="f-flow__when">11월 13일 15:20 · 테스트 결제 · 결제금 보관 시작</p></div></li>
+        <li class="is-bad" data-when="case:cancel"><span class="f-flow__ico"><span data-icon="x"></span></span><div><p class="f-flow__what">가을밤밴드님이 공연 하루 전에 취소했어요 · 위약금 1,295,000원</p><p class="f-flow__when">11월 27일 11:00 · D-1 · 업체 금액의 70%</p></div></li>
+      </ol>
+    </section>
+
+    <aside class="sticky">
+      <div class="f-card">
+        <h3>결제한 금액</h3>
+        <p class="f-card__big">1,942,500<small>원</small></p>
+        <dl><div><dt>업체 금액</dt><dd>1,850,000원</dd></div><div><dt>플랫폼 이용료 5%</dt><dd>92,500원</dd></div></dl>
+      </div>
+      <div class="f-card" data-when="case:paid">
+        <h3>공연이 끝나면 이렇게 정산돼요</h3>
+        <dl><div><dt>업체 C</dt><dd>500,000원</dd></div><div><dt>업체 D</dt><dd>1,350,000원</dd></div></dl>
+        <hr><p>지금은 STAGE DUCK이 결제금을 보관하고 있어요.</p>
+      </div>
+      <div class="f-card" data-when="case:cancel">
+        <h3>취소 금액은 이렇게 나눠져요</h3>
+        <dl><div><dt>사용자 환불 예정</dt><dd>555,000원</dd></div><div><dt>업체 C 위약금</dt><dd>350,000원</dd></div><div><dt>업체 D 위약금</dt><dd>945,000원</dd></div></dl>
+        <hr><p>공연 하루 전 취소라 업체 금액의 70%(1,295,000원)가 위약금이에요. 플랫폼 이용료는 돌려드리지 않아요.</p>
+      </div>
+      <div class="f-card f-card--line"><p><span data-icon="eye"></span><span>이 화면은 보기 전용이에요. 금액 조정과 환불은 서버 규칙으로만 처리돼요.</span></p></div>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

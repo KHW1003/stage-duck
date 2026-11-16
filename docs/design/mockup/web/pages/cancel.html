@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공연 취소 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 취소 (예상 금액) · FR-PAY-03 · AC-F5-08~10 · 묶음 4
+     React: pages/CancelPage.tsx = PenaltyScale + CancelEstimateTable + CancelModal
+     위약금·환불 예정액·업체별 배분은 서버 payment 계산 함수 결과 그대로. 모의 처리. -->
+<body data-layout="user" data-nav="my">
+
+<div class="mock-switch" data-group="when">
+  <span>목업 보기</span>
+  <button type="button" data-value="before">결제 전 취소</button>
+  <button type="button" data-value="d1" aria-pressed="true">결제 후 D-1 취소</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="invoice.html">통합 청구서</a></li><li>취소</li></ol><h1>공연 취소</h1><div class="page-top__meta"><span>가을밤 밴드 공연</span><span>11월 28일(토)</span></div></div></div></div>
+
+<main class="container container--narrow main">
+  <p class="test-pay"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리돼요.</p>
+
+  <section class="sec mt-40"><div class="sec-head"><h2>취소 시점별 위약금</h2><p>업체 금액 기준이에요.</p></div>
+    <ol class="penalty">
+      <li class="is-now" data-when="when:before">결제 전 · 지금<b>10%</b></li><li data-when="when:d1">결제 전<b>10%</b></li>
+      <li>결제 후 ~ D-3<b>10%</b></li><li>D-2<b>50%</b></li>
+      <li class="is-now" data-when="when:d1">D-1 · 지금<b>70%</b></li><li data-when="when:before">D-1<b>70%</b></li>
+      <li>공연 당일<b>100%</b></li>
+    </ol></section>
+
+  <section class="sec" data-when="when:d1"><div class="sec-head"><h2>지금 취소하면</h2></div>
+    <table class="info-table">
+      <tr><th>결제한 금액</th><td class="num">1,942,500원</td></tr>
+      <tr><th>업체 금액 합계</th><td class="num">1,850,000원</td></tr>
+      <tr><th>위약금 (70%)</th><td class="num strong">1,295,000원 <span class="muted small" style="font-weight:400">· 업체 C 350,000원 · 업체 D 945,000원 (금액 비율)</span></td></tr>
+      <tr><th>플랫폼 이용료</th><td class="num">92,500원 <span class="muted small">· 환불하지 않아요</span></td></tr>
+      <tr><th>환불 예정액</th><td class="num"><b class="point" style="font-size:22px">555,000원</b></td></tr>
+    </table></section>
+
+  <section class="sec" data-when="when:before"><div class="sec-head"><h2>지금 취소하면</h2></div>
+    <table class="info-table">
+      <tr><th>업체 금액 합계</th><td class="num">1,850,000원</td></tr>
+      <tr><th>취소 수수료 (10%)</th><td class="num strong">185,000원 <span class="muted small" style="font-weight:400">· 업체 C 50,000원 · 업체 D 135,000원</span></td></tr>
+    </table>
+    <p class="field__hint mt-8">모든 단계를 컨펌한 뒤 결제 전에 취소하면 확정된 업체들에게 나눠 가요.</p></section>
+
+  <section class="sec"><ul class="bullets"><li>업체 사정으로 취소되면 플랫폼 이용료까지 전액 환불되고, 그 단계만 다시 모집할 수 있어요.</li><li>원 단위 나머지는 금액이 가장 큰 업체에 붙어요.</li></ul></section>
+
+  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="invoice.html" style="min-width:160px">돌아가기</a><button class="btn btn--primary btn--lg" type="button" data-open="cancel" style="min-width:240px">취소 요청</button></div>
+</main>
+
+<div class="layer" id="cancel" hidden><div class="modal"><div class="modal__head"><h2>취소 요청</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">정말 공연을 취소할까요?</p><p>되돌릴 수 없어요. 업체 C·D에 알림이 가요.</p><dl class="sum-rows mt-16"><div><dt>위약금</dt><dd>1,295,000원</dd></div><div><dt>환불 예정액</dt><dd class="strong">555,000원</dd></div></dl><label class="field mt-16"><span class="field__label">취소 사유<span class="req">*</span></span><textarea class="textarea"></textarea></label></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>돌아가기</button><button class="btn btn--primary" type="button" data-close>취소 요청</button></div></div></div>
+<script src="../layout.js"></script>
+</body>
+</html>

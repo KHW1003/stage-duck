@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<!-- 화면: 알림 전체 (사용자·업체 공통) · notifications 테이블 · 묶음 3
+     React: pages/NotificationsPage.tsx = Tabs + NotificationRow[] (헤더 종 상자와 같은 줄 부품). 업체 쪽은 ?as=partner. -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>알림</li></ol><h1>알림</h1><p class="page-top__desc">사이트 안 알림만 보내요. 메일·문자 알림은 없어요.</p></div><button class="btn btn--sm btn--ghost" type="button">모두 읽음</button></div></div>
+<div class="tab-bar"><div class="container"><div class="tabs"><button role="tab" aria-selected="true" type="button">전체 <span class="count">2</span></button><button role="tab" aria-selected="false" type="button">견적·채팅</button><button role="tab" aria-selected="false" type="button">오퍼</button><button role="tab" aria-selected="false" type="button">공고</button><button role="tab" aria-selected="false" type="button">결제</button></div></div></div>
+
+<main class="container container--narrow main">
+  <div style="border-top:2px solid var(--sd-rule)"><p class="noti-day">오늘</p><div id="today"></div><p class="noti-day">이전</p><div id="before"></div></div>
+  <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span></nav>
+</main>
+<script src="../layout.js"></script>
+<script>
+  var list = NOTIS[document.body.dataset.layout.indexOf('partner') === 0 ? 'partner' : 'user'];
+  document.getElementById('today').innerHTML = list.slice(0, 2).map(notiHTML).join('');
+  document.getElementById('before').innerHTML = list.slice(2).map(notiHTML).join('');
+</script>
+</body>
+</html>

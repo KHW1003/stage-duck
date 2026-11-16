@@ -200,7 +200,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 서버 상태 | TanStack Query (캐시·재요청). 채팅은 WebSocket 이벤트로 캐시 갱신 |
 | 폼 | React Hook Form + 스키마 검증(zod) — 서버 규칙과 같은 값 사용 (제안) |
 | API 계약 | `shared/api/types.ts`에 api-contract.md의 요청·응답 타입 |
-| 공통 컴포넌트 | StatusBadge(색+글자), StageStepper(단계 현황), QuoteCard, CheckResultList, MoneyText, SimulationBanner |
+| 공통 컴포넌트 | StatusBadge(색+글자), StageStepper(단계 현황), QuoteCard, CheckResultList, MoneyText |
 | 반응형 | CSS Modules + Grid/Flex, 모바일 우선 |
 
 ### 라우트 (화면 목록은 user-flow.md)
@@ -285,7 +285,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 5 판정하지 않음 | CHK는 입력값 비교만, 기술 확인은 사람이 답변 |
 | 6 서버 기준 | 권한 의존성, 서버 금액 계산, 멱등 키, 행 잠금 |
 | 7 개인정보 | 주소 컬럼 없음, 연락처는 결제 후 담당표 API에서만 반환 |
-| 8 시뮬레이션 | MockPaymentGateway, 모든 화면 SimulationBanner |
+| 8 시뮬레이션 | MockPaymentGateway, 결제·환불·위약금 화면의 "테스트 결제" 문구 |
 | 10 테스트 | AC ID 이름 규칙, CI 필수 |
 
 ## 10. 위험과 대응

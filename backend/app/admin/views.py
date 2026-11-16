@@ -5,6 +5,7 @@
 관리자가 확정·결제를 대신 처리하는 액션은 두지 않는다.
 """
 from collections.abc import Callable
+from datetime import datetime
 from urllib.parse import urlencode
 
 from sqladmin import BaseView, ModelView, action, expose
@@ -14,8 +15,10 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 
 from app.admin.auth import current_admin_id
+from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.core.errors import AppError
+from app.demo import service as demo_service
 from app.models import Sanction, StatusHistory, Supplier, User
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
@@ -180,3 +183,32 @@ class ReasonView(BaseView):
         return await self.templates.TemplateResponse(
             request, "reason.html", {"title": title, "pks": pks}
         )
+
+
+def _reset_demo() -> None:
+    with SessionLocal() as db:
+        demo_service.reset_demo(db, datetime.now())
+
+
+class DemoToolView(BaseView):
+    """시연 도구 — 테스트 환경(APP_ENV=test)에서만 보이고 동작한다 (AC-F5-14)."""
+
+    name = "시연 도구"
+    icon = "fa-solid fa-rotate"
+
+    def is_visible(self, request: Request) -> bool:
+        return get_settings().is_test_env
+
+    def is_accessible(self, request: Request) -> bool:
+        return get_settings().is_test_env
+
+    @expose("/demo", methods=["GET", "POST"], identity="demo")
+    async def demo(self, request: Request) -> Response:
+        if request.method == "POST":
+            try:
+                await run_in_threadpool(_reset_demo)
+                flash(request, "시연 데이터를 처음 상태로 되돌렸어요.", "success")
+            except AppError as exc:
+                flash(request, f"초기화 실패 — {exc.message}", "danger")
+            return RedirectResponse(request.url_for("admin:view-demo"), status_code=302)
+        return await self.templates.TemplateResponse(request, "demo.html", {})

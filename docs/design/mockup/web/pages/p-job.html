@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공고 상세 · STAGE DUCK 파트너</title>
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/theme-partner.css">
+</head>
+<!-- 화면: 공고 상세 (업체) · FR-QUOTE-01 · FR-ASSIGN-02 · AC-F3-03 · AC-F2-13·14 · 묶음 3
+     React: pages/SupplierJobDetailPage.tsx = PageTop + PriorInfo(공간 스냅샷) + RequestTables + MyQuotesBox(SideBox)
+     앞 단계 공간 C의 입실·기본 장비·전원이 보인다. 요청서가 바뀌면 "v1 → v2 바뀐 항목"이 위에 뜬다. -->
+<body data-layout="partner" data-nav="jobs">
+
+<div class="mock-switch" data-group="ver">
+  <span>목업 보기</span>
+  <button type="button" data-value="v1" aria-pressed="true">요청서 v1</button>
+  <button type="button" data-value="v2">요청서 v2로 바뀜</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="p-jobs.html">공고 목록</a></li><li>공고 상세</li></ol><h1>가을밤 밴드 공연 <span class="tag tag--point">장비 단계</span></h1>
+  <div class="page-top__meta"><span>11월 28일(토) · D-15</span><span data-when="ver:v1">리허설 17:00</span><span data-when="ver:v2"><b style="color:var(--sd-ink)">리허설 16:00</b></span><span>공연 19:00~21:00</span><span>광주 동구</span><span>관객 80명</span><span data-when="ver:v1">요청서 v1</span><span data-when="ver:v2">요청서 v2</span></div></div>
+  <button class="link link--point" type="button">가을밤밴드 · 이용 0 · 반려 0</button></div></div>
+
+<main class="container main">
+  <div class="notice notice--warn mb-16" data-when="ver:v2"><span data-icon="warn"></span><div><b>요청서가 v2로 바뀌었어요.</b> 리허설 17:00 → 16:00. 내 견적서 v2를 다시 검사했어요: <span class="status status--pass"><span data-icon="pass"></span>통과</span> (설치 완료 15:45). 보낸 견적 내역 확인 카드는 무효가 됐으니 다시 보내 주세요.</div></div>
+
+  <div class="with-aside">
+    <div>
+      <section class="sec"><div class="prior"><p class="prior__head"><span data-icon="venue" class="icon--sm"></span>앞 단계에서 정해진 공간</p>
+        <table class="info-table"><tr><th>공간</th><td>공간 C (업체 C)</td><th>입실 · 설치 가능</th><td class="num">15:00</td></tr><tr><th>퇴실 마감</th><td class="num">22:00</td><th>외부 장비 반입</th><td>가능</td></tr><tr><th>기본 장비</th><td>유선 마이크 2 · 소형 스피커 2</td><th>전원</th><td>무대 4구 · 단상 220V</td></tr></table></div></section>
+
+      <section class="sec"><div class="sec-head"><h2>장비 요청</h2></div>
+        <table class="info-table"><tr><th>원하는 장비</th><td><span class="tag tag--point">업체 제안 받기</span> 사용자가 적은 장비가 없어요. 공연에 맞게 제안해 주세요.</td></tr><tr><th>필요한 서비스</th><td>운반 · 설치 및 철수</td></tr><tr><th>장비 예산</th><td class="num">1,500,000원</td></tr><tr><th>가지고 있는 장비</th><td>드럼 세트 (심벌 포함, 킥 페달 1) 1 · 기타 앰프 2</td></tr><tr><th>편성</th><td>보컬 1, 기타 2, 베이스 1, 드럼 1</td></tr></table></section>
+
+      <section class="sec"><div class="sec-head"><h2>다음 단계 (참고)</h2></div>
+        <p class="desc muted" style="line-height:1.8">엔지니어도 필요해요: 메인 음향 (FOH 믹싱), 설치 및 철수 보조, 사운드체크·리허설 진행. 엔지니어를 포함해 견적서를 보내면 사용자가 엔지니어 단계를 건너뛸 수 있어요.</p></section>
+    </div>
+
+    <aside class="side-box sticky">
+      <div class="side-box__sec"><p class="side-box__title">내가 보낸 견적서</p><ul class="versions"><li class="is-now"><span><span class="versions__v">v2</span>기본형</span><span class="num">1,350,000원</span></li><li><span><span class="versions__v">v1</span>기본형</span><span class="num muted">1,250,000원</span></li></ul></div>
+      <div class="side-box__sec side-box__sec--gray"><p class="small">상태 <span class="state state--on">확인 카드 보냄 · 47:12</span></p><p class="small muted mt-4">다른 업체 견적서는 보이지 않아요.</p></div>
+      <div class="side-box__sec"><a class="btn btn--primary btn--block" href="p-quote.html"><span data-icon="edit" class="icon--sm"></span>견적서 고치기 (v3)</a><a class="btn btn--block mt-8" href="p-quote.html"><span data-icon="plus" class="icon--sm"></span>견적서 하나 더</a><a class="btn btn--block btn--ghost mt-8" href="p-chat.html">채팅으로 가기</a></div>
+    </aside>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

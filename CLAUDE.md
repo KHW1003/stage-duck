@@ -40,6 +40,7 @@
 | Git·PR 규칙, 룰셋 | `CONTRIBUTING.md` |
 | 기술 선택 이유 | `docs/decisions/` |
 | 시연 예시 값, 검증 표 (그 일을 할 때만) | `docs/guides/시연_예시값.md`, `docs/guides/검증_방법.md` |
+| **화면 디자인 (화면을 만들 때 반드시)** | **`DESIGN.md`** — 팀이 채우는 양식. 기본 스타일(색·글자·간격·부품)과 화면별 내용 칸 |
 
 - 기능을 만들 때는 `specs/traceability.md`에서 그 AC의 줄을 찾아 **API, 테이블, 화면, 테스트 종류**를 확인한 뒤 시작한다.
 - 문서끼리 다르면 이 순서로 따른다: `constitution.md` > `요구사항_명세서.md` 10장의 결정 > `spec.md` > `plan.md`·`data-model.md`·`api-contract.md`. 다른 점은 해원(팀장)에게 알린다.
@@ -85,7 +86,7 @@
 25. **인증은 httpOnly 쿠키 + CSRF**다. 토큰을 `localStorage`·`sessionStorage`에 두지 않는다. 상태를 바꾸는 요청은 `X-CSRF-Token` 헤더가 필요하다 (프론트는 `api()`가 알아서 붙인다).
 
 ### 시뮬레이션과 운영
-26. **모든 화면에 `SimulationBanner`를 둔다.** 결제·환불·위약금 화면에는 "테스트 결제 — 실제 청구되지 않습니다"를 적는다. 시연 결과를 실제 거래·시장 검증처럼 쓰지 않는다.
+26. **결제·환불·위약금 화면에는 "테스트 결제 — 실제 청구되지 않습니다"를 적는다.** 모든 화면 맨 위 시뮬레이션 안내 띠(`SimulationBanner`)는 두지 않는다 (2026-11-14 결정, 명세서 D-41). 시연 결과를 실제 거래·시장 검증처럼 쓰지 않는다.
 27. **실제 회사·공간·사람 이름을 쓰지 않는다.** 시드 데이터와 테스트는 가상 이름(업체 A~G, 공간 A·B·C)과 `@stageduck.test` 이메일, `010-0000-0000` 같은 가짜 번호만 쓴다.
 28. **요청을 처리하는 중에 외부 API를 부르지 않는다.** 예외는 네이버·카카오 로그인 콜백뿐이다. 테스트에서는 외부 호출을 목업으로 바꾼다. 카카오는 `KAKAO_LOGIN_ENABLED=false`가 기본이고, 꺼져 있으면 라우터가 404다.
 29. **관리자 기능은 SQLAdmin 액션으로만 만든다.** 액션은 반드시 서비스 함수를 부르고, 뷰는 `can_create = can_edit = can_delete = False`로 직접 수정을 막는다. 관리자가 컨펌·결제를 대신 처리하는 기능을 만들지 않는다.
@@ -117,7 +118,7 @@
 
 ## 5. 기능 묶음과 담당 파일
 
-한 사람이 한 묶음을 **화면 → API → DB → 권한 → 테스트까지 끝까지** 맡는다. 담당자 이름은 `specs/roles.md` 4장에 있다 (2번 해원, 1·3·4번은 고르는 중).
+한 사람이 한 묶음을 **화면 → API → DB → 권한 → 테스트까지 끝까지** 맡는다. 담당: **1번 세환(@sehwan-An), 2번 해원(@KHW1003, 팀장), 3번 채은(@qkrcodms98-beep), 4번 목산(@kimmoksan)**.
 
 | 묶음 | 이름 | 백엔드 (`backend/app/`) | 프론트 (`frontend/src/features/`) | 모델 (`backend/app/models/`) | 테스트 |
 |---|---|---|---|---|---|
@@ -143,17 +144,18 @@
 | `.github/`, `CONTRIBUTING.md`, `CLAUDE.md`, `specs/`, `docs/요구사항_명세서.md` | 해원만 고친다. 고칠 점은 이슈로 올린다 |
 
 - 다른 묶음의 기능이 필요하면 **그 묶음의 `service.py` 함수만 부른다.** 남의 router를 HTTP로 부르거나, 남의 테이블을 직접 `select`·수정하지 않는다.
-- 묶음 사이에 부르는 함수는 `specs/roles.md` 3장에 정해져 있다. 아직 없으면 **그 이름 그대로 빈 함수(`raise NotImplementedError`)를 만들어 달라고** 담당에게 요청하고, 내 테스트에서는 그 함수를 목업으로 바꿔 진행한다.
+- 묶음 사이에 부르는 함수는 **이미 빈 함수로 있다** (아래 표의 파일). 본문이 `NotImplementedError`면 내 테스트에서 `monkeypatch`로 바꿔 진행한다. 이름·인자·돌려주는 칸을 바꾸면 `tests/test_contracts.py`가 실패한다 — 바꾸려면 쓰는 쪽과 합의하고 그 테스트도 같은 PR에서 고친다.
+- 대표 시나리오 통합 테스트 `tests/scenario/`는 지금 `xfail`이다. 내 API를 만들면 `pytest tests/scenario --runxfail --tb=line`으로 어디까지 가는지 본다. 계약서에 예시가 없어 테스트에 짐작으로 적힌 요청·응답 칸(`# 계약 예시 없음`)은 내가 만든 실제 모양에 맞춰 고친다.
 
 | 함수 | 주는 쪽 | 쓰는 쪽 |
 |---|---|---|
 | `current_user`, `require_role(...)` 의존성 | 1 | 전원 |
 | `supplier.service.can_send_quotes(supplier)` (있음) | 1 | 3 |
-| `get_venue_snapshot(venue_id)` | 1 | 2 |
-| `get_open_stage(performance_id)` | 2 | 1(오퍼), 3(공고·견적) |
-| `stage_confirmed(stage_id, quote_version_id)` | 2 (3이 부름) | 3 |
-| `run_checks(...) -> list[CheckResult]` | 4 | 3 (컨펌 전), 4 (비교 화면) |
-| `confirmed_lines(performance_id)` | 2·3 | 4 |
+| `supplier.service.get_venue_snapshot(db, venue_id)` | 1 | 2 |
+| `request.service.get_open_stage(db, performance_id)` | 2 | 1(오퍼), 3(공고·견적) |
+| `request.service.stage_confirmed(db, stage_id, quote_version_id, *, actor_id)` — 커밋 안 함 | 2 (3이 부름) | 3 |
+| `check.calc.run_checks(performance, quote, confirmed)`, `has_conflict(results)` | 4 | 3 (컨펌 전), 4 (비교 화면) |
+| `request.service.confirmed_lines(db, performance_id)` | 2 | 4 |
 | `policy.service.warn(...)` (있음), `report(...)`, `blind_post(...)` | 4 | 1·3 |
 
 ## 6. 코드를 쓰는 방법
@@ -184,8 +186,10 @@
 - 오류는 `ApiError`의 `body.message`를 그대로 보여 주고, `fieldErrors`는 해당 입력칸 아래에 보여 준다. 오류 문구를 화면에서 새로 지어내지 않는다.
 - 금액은 공통 `MoneyText`(없으면 1번이 만든다)로 "1,850,000원"처럼 보여 준다. 금액을 화면에서 더하거나 곱하지 않는다.
 - 검사 결과·상태는 `StatusBadge`로 보여 준다 (색 + 글자).
-- 화면 모양(색·글자·여백·버튼)은 1번이 만든 공통 기준을 쓴다. 색 값을 화면 파일에 직접 적지 않는다. 스타일은 CSS Modules(`*.module.css`).
-- **모바일이 기본이다.** 누르는 영역은 가로세로 44픽셀 이상. 같은 화면을 모바일·웹 따로 만들지 않고 미디어 쿼리로 맞춘다.
+- **화면 디자인은 `DESIGN.md`를 따른다.** 기준 배치는 팀의 메인 페이지 와이어프레임(`docs/design/references/home-wireframe/`)이고, **배치와 스타일만** 따른다 (와이어프레임 안의 문구·예시는 임시라 쓰지 않는다). 색·크기는 `shared/styles/tokens.css`의 변수로만 쓰고 화면 파일에 숫자를 직접 적지 않는다. 화면은 `DESIGN.md` 5장의 공통 부품만 조립한다. 스타일은 CSS Modules(`*.module.css`).
+- `DESIGN.md`에서 **비어 있거나(`____`) 확정 체크가 안 된 칸은 임의로 정하지 않는다.** 화면 내용이 비어 있으면 명세서 용어와 시연 데이터로 최소한만 만들고 "내용 미정"이라고 PR에 적는다.
+- 화면 PR에는 스크린샷(웹 단계는 데스크톱 1280px)과 `DESIGN.md` 9장 점검 답을 붙인다.
+- **웹 우선이다.** 기본 CSS는 데스크톱 기준으로 만들고, 모바일은 웹이 끝난 뒤 같은 CSS 파일에 `max-width` 미디어 쿼리(760px, 560px)로 덮어쓴다. 모바일용 화면·컴포넌트를 따로 만들지 않는다. 나중에 쉽게 바꾸도록 지금부터 고정 폭(px)을 쓰지 않고, 열 수·크기는 변수로 둔다 (`DESIGN.md` 2.5). 누르는 영역은 44픽셀 이상.
 - 관리자 화면(`/admin`)은 React 라우트가 아니다. 만들지 않는다.
 - `any`를 쓰지 않는다. `npm run build`(타입 검사 포함)가 통과해야 한다.
 
@@ -275,7 +279,7 @@ npm run build                           # 타입 검사 포함
 | 계산 (이용료, 위약금, 검사 시간) | 위에 더해 예시 값·경계 값 + 무작위 1,000건 이상을 따로 쓴 식과 비교 (불일치 0건) |
 | 상태 변경, 동시·중복 요청 | 위에 더해 허용 안 된 전이 `409`, 같은 요청 2번에 1번만 반영 (MariaDB) |
 | 모델 변경 | 위에 더해 마이그레이션 upgrade → downgrade → upgrade |
-| 화면 | 위에 더해 서버를 켜고 정상 값·오류 값·모바일 폭으로 직접 눌러 보기 |
+| 화면 | 위에 더해 서버를 켜고 정상 값·오류 값으로 직접 눌러 보기 (웹 단계는 데스크톱, 모바일 단계는 390px도) |
 
 - 단순 조회·문구 수정처럼 위 표의 "계산·상태·동시성"이 없는 작업에 무작위 1,000건 같은 검증을 하지 않는다.
 

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* LoginPage.module.css */
+  .login { max-width: 440px; margin: 0 auto; padding: 64px 0 96px; }
+  .login h1 { font-size: 28px; font-weight: 700; letter-spacing: -.8px; text-align: center; }
+  .login > p { margin-top: 6px; text-align: center; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+  .login__form { margin-top: 32px; padding-top: 28px; border-top: 2px solid var(--sd-rule); }
+  .login__opts { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: var(--sd-text-desc); }
+  .login__or { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .login__or::before, .login__or::after { content: ""; flex: 1; height: 1px; background: var(--sd-line); }
+  .naver { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 54px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-btn); background: var(--sd-bg); font-size: 15px; font-weight: 600; cursor: pointer; }
+  .naver span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 3px; background: var(--sd-ink); color: #fff; font-size: 12px; font-weight: 800; }
+  .login__links { display: flex; justify-content: center; margin-top: 24px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+  .login__links a + a::before { content: ""; display: inline-block; width: 1px; height: 11px; margin: 0 12px; background: var(--sd-line-strong); }
+  .dev { margin-top: 40px; border-top: 1px solid var(--sd-line); padding-top: 20px; }
+</style>
+</head>
+<!-- 화면: 로그인 · FR-AUTH-02·06 · AC-F1-04·08·11·16 · 묶음 1
+     React: pages/LoginPage.tsx = LoginForm + NaverLoginButton + DevAccountSwitch(APP_ENV=test만)
+     카카오 버튼은 KAKAO_LOGIN_ENABLED=false면 그리지 않는다. 로그인 5회 실패 시 10분 제한. -->
+<body data-layout="guest">
+
+<div class="mock-switch" data-group="err">
+  <span>목업 보기</span>
+  <button type="button" data-value="none" aria-pressed="true">기본</button>
+  <button type="button" data-value="wrong">비밀번호 틀림</button>
+  <button type="button" data-value="lock">5회 실패</button>
+</div>
+
+<main class="container">
+  <div class="login">
+    <h1>로그인</h1>
+    <p>사용자와 업체 모두 같은 화면에서 로그인해요.</p>
+    <form class="login__form stack" style="--gap:14px" onsubmit="return false">
+      <input class="input" type="email" value="user@stageduck.test" aria-label="이메일" autocomplete="email" style="height:52px">
+      <input class="input" type="password" value="password1" aria-label="비밀번호" autocomplete="current-password" style="height:52px">
+      <p class="field__error" data-when="err:wrong"><span data-icon="warn" class="icon--sm"></span>이메일이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.</p>
+      <div class="notice notice--conflict" data-when="err:lock"><span data-icon="lock"></span><div>로그인에 5번 실패했어요. <b>10분 뒤</b>에 다시 시도해 주세요.</div></div>
+      <div class="login__opts"><label class="check"><input type="checkbox">이메일 저장</label><a class="link" href="#">비밀번호 찾기</a></div>
+      <button class="btn btn--primary btn--lg btn--block" type="submit">로그인</button>
+    </form>
+    <div class="login__or">간편 로그인</div>
+    <button class="naver" type="button"><span>N</span>네이버로 로그인</button>
+    <p class="field__hint mt-8" style="text-align:center">처음이면 추가 정보 화면으로 이어져요.</p>
+    <div class="login__links"><a href="signup.html">사용자 가입</a><a href="p-onboarding.html?step=account">업체 입점 신청</a></div>
+
+    <div class="dev">
+      <p class="small strong">시연 계정으로 들어가기 <span class="tag">테스트 환경만</span></p>
+      <div class="btns mt-12"><a class="btn btn--sm" href="my.html">사용자</a><a class="btn btn--sm" href="p-jobs.html">업체 D (승인)</a><a class="btn btn--sm" href="p-onboarding.html?step=review">업체 (심사 중)</a></div>
+    </div>
+  </div>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
