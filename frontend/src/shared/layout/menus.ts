@@ -1,0 +1,77 @@
+/**
+ * 머리(GNB) 메뉴·계정 메뉴. 출처: docs/design/mockup-v3/layout.js (MENU, 계정 메뉴) — 목업과 같은 항목·순서.
+ * 주소는 specs/plan.md 6장 라우트 표를 따른다. 표에 아직 없는 화면은 [주소 미정] 으로 표시했다 —
+ * 그 화면 담당이 plan.md 에 주소를 정하면 여기만 고친다. (그 전까지 누르면 "찾을 수 없어요" 화면)
+ */
+import type { IconName } from "../ui/Icon";
+import type { LayoutKind } from "../auth/useMe";
+
+export interface MenuItem {
+  label: string;
+  to: string;
+  /** React 밖 주소 (서버의 SQLAdmin) — <a href> 로 이동 */
+  external?: boolean;
+}
+
+export interface AccountLink extends MenuItem {
+  icon: IconName;
+}
+
+export const MENUS: Record<LayoutKind, MenuItem[]> = {
+  guest: [
+    { label: "공간 찾기", to: "/venues" },
+    { label: "PR 게시판", to: "/board" },
+    { label: "이용 방법", to: "/" }, // 목업: 홈의 이용 방법 구역 (home.html#flow)
+  ],
+  user: [
+    { label: "내 공연", to: "/me/performances" },
+    { label: "견적함", to: "/quotes" }, // [주소 미정] 목업 inbox.html — 3번 묶음
+    { label: "채팅", to: "/chats" }, // 목업은 오른쪽 아래 채팅 위젯을 연다 — 위젯(3번)이 생기면 바꾼다
+    { label: "공간 찾기", to: "/venues" },
+    { label: "PR 게시판", to: "/board" },
+  ],
+  partner: [
+    { label: "공고 목록", to: "/supplier/postings" },
+    { label: "채팅", to: "/chats" },
+    { label: "기술 확인", to: "/supplier/tech" }, // [주소 미정] 목업 p-tech.html — 4번 묶음
+    { label: "PR 게시판", to: "/board" },
+  ],
+  "partner-review": [],
+  // 관리자 화면은 React 가 아니라 서버의 SQLAdmin (plan.md 6.5). 목업 a-*.html 과 같은 메뉴를 SQLAdmin 주소로 잇는다
+  admin: [
+    { label: "업체 심사", to: "/admin/supplier/list", external: true },
+    { label: "신고·제재", to: "/admin/sanction/list", external: true },
+    { label: "게시글·공간", to: "/admin", external: true }, // [주소 미정] SQLAdmin 화면이 아직 없음
+    { label: "거래 이력", to: "/admin", external: true }, // [주소 미정] SQLAdmin 화면이 아직 없음
+    { label: "시연 도구", to: "/admin/demo", external: true },
+  ],
+};
+
+/** 계정 메뉴의 화면 링크 (로그아웃·알림 위). 목업 layout.js 와 같은 항목 */
+export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
+  guest: [],
+  user: [
+    { label: "마이페이지", to: "/mypage", icon: "user" }, // [주소 미정] 목업 mypage.html — 1번 profile
+    { label: "관심 업체", to: "/favorites", icon: "heart" }, // [주소 미정] 목업 favorites.html — 1번 offer
+    { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정] plan.md 는 공연별 /performances/:id/sheet
+  ],
+  partner: [
+    { label: "업체 프로필", to: "/supplier/profile", icon: "venue" },
+    { label: "내 PR 게시글", to: "/supplier/posts", icon: "edit" }, // [주소 미정] 목업 p-post.html
+    { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정]
+  ],
+  "partner-review": [],
+  admin: [],
+};
+
+/** 알림 전체 보기 — [주소 미정] 목업 notifications.html — 3번 notification */
+export const NOTIFICATIONS_PATH = "/notifications";
+
+/** 로고를 눌렀을 때 가는 곳 (목업 layout.js home) */
+export const HOME: Record<LayoutKind, string> = {
+  guest: "/",
+  user: "/me/performances",
+  partner: "/supplier/postings",
+  "partner-review": "/supplier/onboarding",
+  admin: "/admin",
+};
