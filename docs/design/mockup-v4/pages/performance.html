@@ -96,6 +96,17 @@
   .todo .timer { margin-left: 6px; color: var(--sd-blue); }
   .todo--quiet > .icon { color: var(--sd-muted); }
 
+  /* STEP 목록·할 일 줄·요약 줄은 무채색 톤으로만 구분 (2026-11-18): 지금 = 가장 진함·굵게, 확정 = 중간 회색, 보조 = 옅은 회색, 대기 = 가장 옅음 */
+  .stp .status, .stp .state, .stp .state--on { color: var(--sd-muted) !important; }
+  .stp .status .icon { color: var(--sd-muted); }
+  .stp .state::before, .stp .state--on::before { background: currentColor !important; }
+  .stp[data-state="now"] .stp__head .state--on { color: var(--sd-ink) !important; font-weight: 700; }
+  .stp[data-state="done"] .stp__title { color: #4a5059; }
+  .stp[data-state="wait"] .stp__title, .stp[data-state="wait"] .stp__head .muted { color: var(--sd-photo-text); }
+  .todo > .icon { color: var(--sd-ink) !important; }
+  .todo .timer { color: var(--sd-ink) !important; }
+  .todo .timer .icon { color: var(--sd-muted); }
+  .stat-line .point { color: var(--sd-ink) !important; }
 </style>
 </head>
 <!-- 2026-11-17 해원: 상자·진한 펼침 테두리·파스텔 바탕을 빼고 선과 여백으로만 나눔 (카드형 쓰지 않기)
