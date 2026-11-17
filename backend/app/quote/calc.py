@@ -2,6 +2,9 @@
 from app.core.errors import AppError
 from app.quote.schemas import MAX_AMOUNT, QuoteAmounts
 
+# 견적서 최종 합계의 최소 금액 (원). 팀장 결정 2026-11-16.
+MIN_TOTAL_AMOUNT = 10_000
+
 
 def sum_amounts(amounts: QuoteAmounts) -> int:
     """AC-F2-17: 항목별 금액(물품·운반·설치·인건비·기타)의 합."""
@@ -12,6 +15,8 @@ def verify_total(amounts: QuoteAmounts, total_amount: int) -> None:
     """AC-F2-17: 최종 합계가 항목 합과 다르면 400 TOTAL_MISMATCH로 거부한다.
 
     합계 칸(quote_versions.total_amount)도 INT UNSIGNED라서, 항목 합이 그 최댓값을 넘으면 400 TOTAL_TOO_LARGE.
+    합계가 MIN_TOTAL_AMOUNT보다 작으면 400 VALIDATION_FAILED (field totalAmount).
+    검사 순서: TOTAL_TOO_LARGE → TOTAL_MISMATCH → 최소 금액.
     """
     if sum_amounts(amounts) > MAX_AMOUNT:
         raise AppError(
@@ -26,4 +31,16 @@ def verify_total(amounts: QuoteAmounts, total_amount: int) -> None:
             "TOTAL_MISMATCH",
             "최종 합계가 항목 금액의 합과 달라요. 항목 금액을 확인하고 합계를 다시 계산해 주세요.",
             [{"field": "totalAmount", "reason": "항목 금액의 합과 같아야 해요."}],
+        )
+    if total_amount < MIN_TOTAL_AMOUNT:
+        raise AppError(
+            400,
+            "VALIDATION_FAILED",
+            "입력값을 확인해 주세요.",
+            [
+                {
+                    "field": "totalAmount",
+                    "reason": f"금액을 다시 확인해 주세요. 견적서 합계는 {MIN_TOTAL_AMOUNT:,}원 이상이어야 해요.",
+                }
+            ],
         )
