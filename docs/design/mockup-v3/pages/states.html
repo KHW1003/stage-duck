@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>빈 화면·오류 상태 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 상태 모음 (목업 전용 카탈로그). 화면마다 이 모양을 그대로 가져다 쓴다 */
+  .st-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .st-card { border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); overflow: hidden; }
+  .st-card__head { display: flex; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .st-card__head b { color: var(--sd-ink); }
+  .st-card .empty { padding: 40px 20px; }
+  .st-card__body { padding: 20px; }
+  /* 불러오기 실패: 화면 한 구역만 실패했을 때 그 자리에 */
+  .load-fail { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
+  .load-fail > .icon { flex: none; color: var(--sd-muted); }
+  .load-fail div { flex: 1; min-width: 0; font-size: var(--sd-text-desc); }
+  .load-fail small { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  /* 불러오는 중: 회색 막대 (반짝이는 효과 없이 천천히 옅어졌다 진해짐). 0.3초 안에 끝나면 보이지 않게 300ms 늦게 띄운다 */
+  .skel { display: block; height: 14px; border-radius: 4px; background: var(--sd-band); animation: sd-skel 1.4s ease-in-out infinite; }
+  .skel--title { height: 20px; width: 40%; }
+  .skel-row { display: grid; grid-template-columns: 1.2fr 1fr .8fr .6fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--sd-line); }
+  @keyframes sd-skel { 50% { opacity: .5; } }
+  @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+  .btn.is-busy { opacity: .7; cursor: default; }
+  .err-sum { margin-bottom: 20px; }
+  .err-sum ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--sd-text-desc); }
+  .err-sum a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .st-toasts { position: static; width: auto; max-width: 360px; }
+</style>
+</head>
+<!-- 화면 아님: 빈 화면·불러오는 중·불러오기 실패·입력 오류·상태 충돌 모양 모음 (목업 전용, 옮기지 않는다)
+     React: shared/ui/EmptyState.tsx · Skeleton.tsx · LoadFail.tsx · FieldError.tsx · Toast.tsx
+     문구 원본: docs/design/문구.md. 화면 전체 오류(401·403·404·500)는 error.html -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>목업</li></ol><h1>빈 화면·오류 상태</h1></div></div></div>
+
+<main class="container main">
+
+  <section class="sec">
+    <div class="sec-head"><h2>1. 빈 화면</h2><p>"없어요" 한 줄 + 왜 비었는지·무엇을 하면 채워지는지 한 줄 + 할 수 있으면 버튼 하나.</p></div>
+    <div class="st-grid">
+      <div class="st-card"><div class="st-card__head"><b>내 공연</b><span>사용자 · my.html</span></div>
+        <div class="empty"><span data-icon="calendar"></span><b>아직 준비 중인 공연이 없어요</b><p>요청서를 쓰면 공연장부터 차례로 업체 견적서를 받을 수 있어요.</p><a class="btn btn--primary" href="request-1.html">요청서 쓰기</a></div></div>
+      <div class="st-card"><div class="st-card__head"><b>견적함</b><span>사용자 · inbox.html</span></div>
+        <div class="empty"><span data-icon="doc"></span><b>아직 받은 견적서가 없어요</b><p>공고가 올라가 있어요. 업체가 견적서를 보내면 알림으로 알려 드려요.</p><a class="btn" href="spaces.html">공간 보고 오퍼 보내기</a></div></div>
+      <div class="st-card"><div class="st-card__head"><b>공간 찾기 · 결과 없음</b><span>사용자 · spaces.html</span></div>
+        <div class="empty"><span data-icon="search"></span><b>조건에 맞는 공간이 없어요</b><p>고른 조건을 줄이거나 지역을 넓혀 보세요.</p><button class="btn" type="button">조건 모두 지우기</button></div></div>
+      <div class="st-card"><div class="st-card__head"><b>관심 업체</b><span>사용자 · favorites.html</span></div>
+        <div class="empty"><span data-icon="heart"></span><b>관심 업체가 없어요</b><p>업체 프로필에서 하트를 누르면 여기에 모여요.</p><a class="btn" href="board.html">PR 게시판 보기</a></div></div>
+      <div class="st-card"><div class="st-card__head"><b>알림</b><span>공통 · notifications.html</span></div>
+        <div class="empty"><span data-icon="bell"></span><b>새 알림이 없어요</b><p>견적서·오퍼·결제 소식이 오면 여기에 쌓여요.</p></div></div>
+      <div class="st-card"><div class="st-card__head"><b>채팅 목록</b><span>공통 · 채팅 창</span></div>
+        <div class="empty"><span data-icon="chat"></span><b>아직 대화가 없어요</b><p>업체가 견적서를 보내면 그 업체와 대화방이 열려요.</p></div></div>
+      <div class="st-card"><div class="st-card__head"><b>PR 게시판</b><span>공통 · board.html</span></div>
+        <div class="empty"><span data-icon="flag"></span><b>이 지역에 올라온 게시글이 없어요</b><p>지역이나 말머리를 바꿔 보세요.</p><button class="btn" type="button">전체 지역 보기</button></div></div>
+      <div class="st-card"><div class="st-card__head"><b>공고</b><span>업체 · p-jobs.html</span></div>
+        <div class="empty"><span data-icon="ticket"></span><b>지금 열린 공고가 없어요</b><p>내 부문·지역에 공고가 올라오면 알림으로 알려 드려요.</p><a class="btn" href="supplier.html?as=partner">업체 프로필 다듬기</a></div></div>
+      <div class="st-card"><div class="st-card__head"><b>받은 오퍼</b><span>업체 · p-jobs.html</span></div>
+        <div class="empty"><span data-icon="offer"></span><b>받은 오퍼가 없어요</b><p>PR 게시글과 프로필을 본 사용자가 직접 오퍼를 보낼 수 있어요.</p><a class="btn" href="p-post.html?as=partner">PR 게시글 쓰기</a></div></div>
+      <div class="st-card"><div class="st-card__head"><b>심사 대기</b><span>관리자 · a-review.html</span></div>
+        <div class="empty"><span data-icon="shield"></span><b>심사할 업체가 없어요</b><p>새 입점 신청이 오면 이 목록에 나타나요.</p></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>2. 불러오는 중</h2><p>0.3초 안에 끝나면 아무것도 띄우지 않는다. 그보다 길면 목록 모양 그대로 회색 막대. 버튼은 누른 뒤 글자를 바꾸고 다시 못 누르게.</p></div>
+    <div class="st-grid">
+      <div class="st-card"><div class="st-card__head"><b>목록 불러오는 중</b><span>Skeleton</span></div>
+        <div class="st-card__body" aria-busy="true" aria-label="불러오는 중">
+          <span class="skel skel--title"></span>
+          <div class="skel-row"><span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span></div>
+          <div class="skel-row"><span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span></div>
+          <div class="skel-row" style="border-bottom:0"><span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span></div>
+        </div></div>
+      <div class="st-card"><div class="st-card__head"><b>보내는 중</b><span>버튼</span></div>
+        <div class="st-card__body" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button class="btn btn--primary is-busy" type="button" disabled aria-busy="true">견적서 보내는 중…</button>
+          <button class="btn btn--primary is-busy" type="button" disabled aria-busy="true">결제하는 중…</button>
+          <p class="field__hint" style="flex-basis:100%">결제는 끝날 때까지 화면을 닫지 말라고 함께 안내해요.</p>
+        </div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>3. 불러오기 실패</h2><p>화면의 한 구역만 실패하면 화면 전체를 바꾸지 않고 그 자리에. 나머지는 그대로 쓸 수 있다.</p></div>
+    <div class="load-fail"><span data-icon="refresh"></span><div><b>견적서를 불러오지 못했어요</b><small>인터넷 연결을 확인하고 다시 시도해 주세요.</small></div><button class="btn btn--sm" type="button">다시 시도</button></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>4. 입력 오류</h2><p>400 VALIDATION_FAILED의 fieldErrors를 칸 아래에. 무엇이 잘못됐는지 + 무엇을 하면 되는지. 칸이 여러 개면 맨 위에 모아서 보여 주고 누르면 그 칸으로.</p></div>
+    <div class="st-grid">
+      <div class="st-card"><div class="st-card__head"><b>요청서 STEP1</b><span>FR-REQ-01</span></div>
+        <div class="st-card__body">
+          <div class="notice notice--line err-sum" role="alert"><span data-icon="warn"></span><div><b>확인할 칸이 2개 있어요</b><ul><li><a href="#f-date">공연 날짜</a></li><li><a href="#f-aud">예상 관객 수</a></li></ul></div></div>
+          <div class="field"><label class="field__label" for="f-date">공연 날짜<span class="req">*</span></label><input class="input" id="f-date" value="2026-11-18" aria-invalid="true" aria-describedby="e-date"><p class="field__error" id="e-date"><span data-icon="warn" class="icon--sm"></span>공연 3일 전까지만 요청할 수 있어요. 11월 20일 이후로 골라 주세요.</p></div>
+          <div class="field mt-16"><label class="field__label" for="f-aud">예상 관객 수<span class="req">*</span></label><input class="input input--num" id="f-aud" value="0" aria-invalid="true" aria-describedby="e-aud"><p class="field__error" id="e-aud"><span data-icon="warn" class="icon--sm"></span>1명부터 500명까지 적을 수 있어요.</p></div>
+        </div></div>
+      <div class="st-card"><div class="st-card__head"><b>견적서 쓰기</b><span>업체 · AC-F2-17</span></div>
+        <div class="st-card__body">
+          <div class="field"><label class="field__label" for="f-disc">업체할인</label><input class="input input--num" id="f-disc" value="1,500,000" aria-invalid="true" aria-describedby="e-disc"><p class="field__error" id="e-disc"><span data-icon="warn" class="icon--sm"></span>업체할인은 항목 합계(1,400,000원)보다 클 수 없어요.</p></div>
+          <div class="field mt-16"><label class="field__label" for="f-total">최종 합계</label><input class="input input--num" id="f-total" value="9,000" aria-invalid="true" aria-describedby="e-total"><p class="field__error" id="e-total"><span data-icon="warn" class="icon--sm"></span>금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요.</p></div>
+        </div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>5. 상태가 바뀌었을 때 (409·422)</h2><p>다른 사람이 먼저 바꿨거나 카드가 오래됐을 때. 화면을 바꾸지 않고 안내 상자 + 새로 고침 버튼.</p></div>
+    <div class="notice notice--warn"><span data-icon="warn"></span><div><b>견적서가 새 버전(v2)으로 바뀌었어요</b><p>업체 D가 방금 견적서를 고쳤어요. 바뀐 내용을 확인한 뒤 다시 컨펌해 주세요.</p><button class="btn btn--sm mt-12" type="button"><span data-icon="refresh" class="icon--sm"></span>새 버전 보기</button></div></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><h2>6. 알림 띠 (토스트)</h2><p>화면 오른쪽 아래에 4초. 실패는 다시 할 방법을 같이.</p></div>
+    <div class="toasts st-toasts">
+      <div class="toast" role="status"><div><b>저장하지 못했어요</b><small>인터넷 연결을 확인해 주세요.</small><a href="#">다시 시도</a></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x"></span></button></div>
+    </div>
+  </section>
+
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
