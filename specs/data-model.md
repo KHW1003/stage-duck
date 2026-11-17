@@ -185,7 +185,7 @@ erDiagram
 | needs | JSON | NOT NULL | STEP2 전체 (아래 구조) |
 | published_at | DATETIME(3) | NULL | |
 
-`needs` JSON 구조:
+`needs` JSON 구조 (`note` = 단계별 추가 요청, 최대 500자, D-45):
 ```json
 {
   "venue":    { "needed": true,  "proposalWanted": false, "types": ["CULTURE_SPACE"], "capacity": 80,
@@ -193,8 +193,8 @@ erDiagram
                 "mustHave": ["BAND_ALLOWED","EXTERNAL_EQUIPMENT","WAITING_ROOM"], "note": "" },
   "equipment":{ "needed": true,  "proposalWanted": true, "items": [{"name":"보컬 마이크","qty":4}],
                 "services": ["TRANSPORT","INSTALL"], "budget": 1500000,
-                "owned": [{"name":"드럼 세트","detail":"심벌 포함, 킥 페달 1"}] },
-  "engineer": { "needed": true,  "tasks": ["FOH","INSTALL_ASSIST","SOUNDCHECK"], "conditions": ["BAND_EXPERIENCE"], "etc": "" },
+                "owned": [{"name":"드럼 세트","detail":"심벌 포함, 킥 페달 1"}], "note": "" },
+  "engineer": { "needed": true,  "tasks": ["FOH","INSTALL_ASSIST","SOUNDCHECK"], "conditions": ["BAND_EXPERIENCE"], "etc": "", "note": "" },
   "ownedVenue": null
 }
 ```
@@ -238,7 +238,8 @@ erDiagram
 | | items JSON | | [{name, category, qty, unitPrice, amount}] |
 | | includes_equipment · includes_engineer · includes_install · includes_transport | BOOLEAN | 풀스펙·CHK-09 |
 | | amount_items · amount_transport · amount_install · amount_labor · amount_etc | INT UNSIGNED | |
-| | total_amount | INT UNSIGNED, **CHECK (total_amount = amount_items + amount_transport + amount_install + amount_labor + amount_etc)** | AC-F2-17 |
+| | discount_amount | INT UNSIGNED NOT NULL DEFAULT 0 | 업체할인 (D-44) |
+| | total_amount | INT UNSIGNED, **CHECK (total_amount = amount_items + amount_transport + amount_install + amount_labor + amount_etc − discount_amount)**, **CHECK (total_amount >= 10000)** | AC-F2-17, D-43·D-44. 할인이 항목 합보다 크면 음수가 되므로 서비스에서 먼저 거부 |
 | | extra_cost_note VARCHAR(500), valid_until DATE, tech_note TEXT | | |
 
 ---

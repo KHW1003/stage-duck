@@ -161,12 +161,13 @@
   "setupStart": "15:00", "setupMinutes": 90, "teardownMinutes": 60,
   "includes": { "equipment": true, "engineer": true, "install": true, "transport": true },
   "amounts": { "items": 600000, "transport": 150000, "install": 200000, "labor": 300000, "etc": 0 },
+  "discountAmount": 0,
   "totalAmount": 1250000,
   "extraCostNote": "주차비 별도", "validUntil": "2026-11-19", "techNote": "전원 위치 확인 필요"
 }
 ```
 - 공연장 견적서는 `venueId`, `checkinTime`, `setupAvailableTime` 필수. `includes.equipment && includes.engineer`면 서버가 `isFullSpec=true`.
-- 합계 검사 순서: `amounts 합 > INT UNSIGNED 최댓값` → `400 TOTAL_TOO_LARGE`, `totalAmount ≠ amounts 합` → `400 TOTAL_MISMATCH`, `totalAmount < 10,000` → `400 VALIDATION_FAILED` (`fieldErrors: [{ "field": "totalAmount", "reason": "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요." }]`, D-43). 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
+- 합계 검사 순서: `amounts 합 > INT UNSIGNED 최댓값` → `400 TOTAL_TOO_LARGE`, `discountAmount > amounts 합` → `400 VALIDATION_FAILED` (field `discountAmount`), `totalAmount ≠ amounts 합 − discountAmount` → `400 TOTAL_MISMATCH`, `totalAmount < 10,000` → `400 VALIDATION_FAILED` (`fieldErrors: [{ "field": "totalAmount", "reason": "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요." }]`, D-43·D-44). `discountAmount`는 생략하면 0. 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
 - 응답 `201`: `{ "quoteId": 77, "version": 1, "chatRoomId": 31, "checks": [ ... ] }`
 
 ---
