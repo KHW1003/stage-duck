@@ -186,6 +186,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 오퍼 만료 | 48시간 지나면 `EXPIRED` |
 | 공연 완료 | 공연 종료 시각이 지나면 `COMPLETED` + 장부 `SETTLE_SCHEDULED` |
 | 반려 카운트 | 조회 시 계산 (마지막 반려 후 180일 지나면 0) — 스케줄 불필요 |
+| 알림 | 확인 카드 만료 6시간 전 `CONFIRM_EXPIRING`, 오퍼·카드 만료·정산 예정 알림, 90일 지난 알림 삭제 (notifications.md) |
 | 임시 파일 정리 | 1시간마다 `files.status=TEMP`이고 24시간 지난 파일 삭제 (uploads.md) |
 
 ### 5.8 반려·신고·정지

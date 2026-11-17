@@ -377,7 +377,7 @@ erDiagram
 | 테이블 | 주요 컬럼 | 설명 |
 |---|---|---|
 | status_histories | id, entity_type, entity_id, from_status, to_status, actor_user_id NULL, reason, created_at | 인덱스 (entity_type, entity_id). 추가만 (NFR-HIST-01, AC-F5-13) |
-| notifications | id, user_id, type, payload JSON, read_at | 사이트 안 알림 배지 |
+| notifications | id, user_id, type VARCHAR(40), category VARCHAR(20), title VARCHAR(100), body VARCHAR(200), link VARCHAR(255), payload JSON, read_at, created_at | 사이트 안 알림. 문구는 만들 때 확정. 인덱스 (user_id, id DESC), (user_id, read_at). 종류 28개·문구·받는 사람은 [notifications.md](notifications.md) (D-52) |
 | inquiries | id, user_id FK, category CHECK IN ('PAYMENT','QUOTE','SUPPLIER','ACCOUNT','ETC'), performance_id NULL FK, title VARCHAR(50), body TEXT (2,000자), status CHECK IN ('WAITING','ANSWERED'), answer TEXT NULL, answered_by NULL FK → users, attachments JSON [file_id] (이미지 최대 3장, 한 장 5MB), answered_at NULL, created_at, updated_at | 1:1 문의 (D-48). 본인·관리자만 조회. ANSWERED면 회원 수정·삭제 불가 |
 | notices | id, category CHECK IN ('GUIDE','MAINTENANCE','POLICY'), title VARCHAR(100), body TEXT, is_pinned BOOLEAN DEFAULT FALSE, published_at, created_by FK → users | 공지사항. 정렬 is_pinned DESC, published_at DESC |
 | files | id, owner_user_id, purpose, visibility (PUBLIC·PRIVATE), status (TEMP·ATTACHED·DELETED), storage_key UNIQUE, thumb_key, original_name, mime_type, size_bytes, width, height, created_at, attached_at | 업로드 파일 메타 (D-51). 인덱스 (status, created_at). 다른 테이블의 사진·서류 칸은 `file_id`를 가리킨다 — 상세는 [uploads.md](uploads.md) 5장 |
