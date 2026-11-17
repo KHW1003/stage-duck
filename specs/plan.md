@@ -202,12 +202,15 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | API 계약 | `shared/api/types.ts`에 api-contract.md의 요청·응답 타입 |
 | 공통 컴포넌트 | StatusBadge(색+글자), StageStepper(단계 현황), QuoteCard, CheckResultList, MoneyText |
 | 반응형 | CSS Modules + Grid/Flex, 모바일 우선 |
+| 검색·공유 노출 | 화면은 SPA 그대로, **FastAPI가 처음 HTML의 `<head>`만 채운다** (공개 화면의 title·description·og:*). 화면 안 이동은 `usePageMeta`. robots.txt·sitemap.xml도 서버 — [seo.md](seo.md) (D-50) |
 
 ### 라우트 (화면 목록은 user-flow.md)
 
 | 경로 | 화면 | 권한 |
 |---|---|---|
-| `/` · `/venues` · `/venues/:id` · `/board` | 시작, 공간 탐색·상세, PR 게시판 | 누구나 |
+| `/` · `/venues` · `/venues/:id` · `/board` · `/board/:id` · `/suppliers/:id` | 시작, 공간 탐색·상세, PR 게시판·게시글, 업체 프로필 | 누구나 (검색 공개, seo.md) |
+| `/community` · `/community/:id` · `/notices` · `/notices/:id` · `/faq` · `/guide/supplier` · `/terms/:type` | 커뮤니티, 공지, FAQ, 업체 이용 가이드, 약관 | 누구나 (검색 공개) |
+| `/community/new` · `/me/inquiries` · `/inquiries/new` · `/inquiries/:id` | 커뮤니티 글쓰기, 1:1 문의 | 로그인 |
 | `/signup` · `/signup/supplier` · `/login` · `/signup/extra` | 가입·로그인·추가 정보 | 비로그인 |
 | `/me/performances` · `/performances/new` · `/performances/:id` | 내 공연, 요청서, 공연 상세(단계 현황) | 사용자 |
 | `/performances/:id/stages/:stage/quotes` | 단계별 견적 비교 (대표 화면) | 사용자 |
@@ -272,6 +275,8 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `KAKAO_LOGIN_ENABLED`, `KAKAO_REST_KEY` | 카카오 로그인 (기본 false) |
 | `PLATFORM_FEE_RATE` | 수수료율 (시연 기본 0.05 (제안)) |
 | `SETUP_WARNING_MINUTES` | CHK-02 기준 (기본 60) |
+| `PUBLIC_BASE_URL` | canonical·공유 미리보기·sitemap 절대 주소 (seo.md) |
+| `SEO_INDEXING` | 검색 허용 (기본 false — 시연 데이터가 검색에 남지 않게) |
 
 비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다.
 
