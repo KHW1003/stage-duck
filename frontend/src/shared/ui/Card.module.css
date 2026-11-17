@@ -1,0 +1,5 @@
+.card { border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); overflow: hidden; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 18px 24px 0; }
+.title { font-size: var(--sd-text-sub); font-weight: 700; letter-spacing: -0.3px; }
+.body { padding: 22px 24px; }
+.head + .body { padding-top: 14px; }

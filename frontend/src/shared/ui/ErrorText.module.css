@@ -1,0 +1,12 @@
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-left: 3px solid var(--sd-conflict-text);
+  border-radius: var(--sd-r-box);
+  background: var(--sd-band);
+  font-size: var(--sd-text-desc);
+  line-height: 1.7;
+}
+.notice > svg { margin-top: 2px; color: var(--sd-conflict-text); }

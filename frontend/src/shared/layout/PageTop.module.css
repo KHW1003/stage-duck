@@ -1,0 +1,9 @@
+.pageTop { background: var(--sd-bg); }
+.inner { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding-top: 36px; padding-bottom: 4px; }
+.crumb { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.crumb li + li::before { content: "›"; margin-right: 6px; color: var(--sd-line-strong); }
+.crumb a:hover { color: var(--sd-ink); text-decoration: underline; }
+.pageTop h1 { display: flex; align-items: center; gap: 8px; font-size: var(--sd-text-page); font-weight: 700; letter-spacing: -0.6px; line-height: 1.35; }
+.desc { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px dashed var(--sd-line-strong); border-radius: var(--sd-r-tag); color: var(--sd-muted); font-size: var(--sd-text-meta); font-weight: 500; letter-spacing: 0; }

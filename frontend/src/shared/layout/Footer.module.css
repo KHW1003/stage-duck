@@ -1,0 +1,7 @@
+.footer { background: var(--sd-footer-bg); color: var(--sd-footer-ink); font-size: var(--sd-text-small); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 0; border-bottom: 1px solid var(--sd-footer-line); }
+.top img { height: 22px; width: auto; }
+.links { display: flex; flex-wrap: wrap; gap: 4px 0; }
+.links li + li::before { content: ""; display: inline-block; width: 1px; height: 10px; margin: 0 12px; background: var(--sd-footer-line); }
+.biz { padding: 18px 0 28px; color: var(--sd-footer-muted); line-height: 1.85; }
+.tbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px dashed var(--sd-footer-line); border-radius: var(--sd-r-tag); font-size: var(--sd-text-meta); }

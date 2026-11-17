@@ -1,0 +1,12 @@
+.icon {
+  width: var(--sd-icon);
+  height: var(--sd-icon);
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -3px;
+}
+.sm { width: var(--sd-icon-sm); height: var(--sd-icon-sm); stroke-width: 2; vertical-align: -2px; }
