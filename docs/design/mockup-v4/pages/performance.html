@@ -13,17 +13,20 @@
   .st li { position: relative; }
   .st li:not(:last-child)::after { content: ""; position: absolute; top: 11px; left: 32px; right: 8px; height: 2px; border-radius: 2px; background: var(--sd-line); }
   .st li.is-done:not(:last-child)::after { background: var(--sd-pass-text); }
-  .st li.is-now:not(:last-child)::after { background: linear-gradient(90deg, var(--sd-blue) 0 45%, var(--sd-line) 45% 100%); }
-  .st li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 7px; left: calc(32px + (100% - 40px) * .45 - 5px); width: 10px; height: 10px; border: 2px solid var(--sd-blue); border-radius: 50%; background: var(--sd-bg); }
+  /* 조율 중(진행 중) 단계: 주황. 빨강은 "지금 해야 할 일"(확인 카드 남은 시간 등)에만 쓴다 */
+  .st, .stp, .stat-line { --prog: #c45f00; }
+  .st li.is-now:not(:last-child)::after { background: linear-gradient(90deg, var(--prog) 0 45%, var(--sd-line) 45% 100%); }
+  .st li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 7px; left: calc(32px + (100% - 40px) * .45 - 5px); width: 10px; height: 10px; border: 2px solid var(--prog); border-radius: 50%; background: var(--sd-bg); }
   .st__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: var(--sd-bg); }
   .st__dot svg { width: 13px; height: 13px; }
   .is-done .st__dot { border-color: var(--sd-pass-text); background: var(--sd-pass-text); }
-  .is-now .st__dot { border-width: 2px; border-color: var(--sd-blue); }
-  .is-now .st__dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sd-blue); }
+  .is-now .st__dot { border-width: 2px; border-color: var(--prog); background: var(--prog); color: #fff; }
   .st small { display: block; margin-top: 10px; color: var(--sd-muted); font-size: var(--sd-text-small); }
   .st b { display: block; margin-top: 2px; font-size: 15px; font-weight: 700; color: var(--sd-muted); }
   .st .is-done b { color: var(--sd-pass-text); }
-  .st .is-now b { color: var(--sd-blue); }
+  .st .is-now b { color: var(--prog); }
+  .stp .state--on { color: var(--prog); } .stp .state--on::before { background: var(--prog); }
+  .stat-line .point { color: var(--prog) !important; }
   .st em { display: block; margin-top: 4px; font-style: normal; color: var(--sd-muted); font-size: var(--sd-text-small); }
   .st-box { padding: 4px 0 22px; border: 0; border-radius: 0; border-bottom: 1px solid var(--sd-line); }
 
@@ -127,7 +130,7 @@
     <div class="st-box">
       <ol class="st">
         <li class="is-done"><span class="st__dot"><span data-icon="check"></span></span><small>공연장</small><b>컨펌</b><em>업체 C · 500,000원</em></li>
-        <li class="is-now"><span class="st__dot"></span><small>장비</small><b>조율 중 · 견적 2건</b><em>채팅 1곳 · 확인 카드 1</em></li>
+        <li class="is-now"><span class="st__dot"><span data-icon="chat"></span></span><small>장비</small><b>조율 중 · 견적 2건</b><em>채팅 1곳 · 확인 카드 1</em></li>
         <li><span class="st__dot"></span><small>엔지니어</small><b>대기</b><em>장비 컨펌 뒤 열려요</em></li>
       </ol>
     </div>
