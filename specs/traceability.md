@@ -146,14 +146,10 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 93개 중 API가 연결된 것 | 92개 (F2-09는 화면 동작 — FE 테스트로 확인) |
-| 테이블이 연결된 것 | 83개 (나머지 10개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **93개 전부** (BE 89 · FE 29 · E2E 4, 한 기준에 여러 종류 가능) |
-| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 수용 기준 103개 중 API가 연결된 것 | 102개 (F2-09는 화면 동작 — FE 테스트로 확인) |
 | 테이블이 연결된 것 | 93개 (나머지 10개는 권한·화면 동작) |
 | 테스트가 정해진 것 | **103개 전부** (BE 99 · FE 33 · E2E 4, 한 기준에 여러 종류 가능) |
-| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`, `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
+| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 
 ## 비기능 요구사항 연결
