@@ -1,16 +1,26 @@
-"""경고·정지 서비스 (FR-POL-04, Q-34). 경고 3회면 이용 정지."""
+"""신고·경고·정지 서비스 (FR-POL-04, Q-34). 경고 3회면 이용 정지."""
+from datetime import datetime
+
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.errors import invalid_state, not_found
+from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
-from app.models.policy import WARNINGS_BEFORE_SUSPENSION, Sanction
+from app.models.policy import REPORT_TARGET_TYPES, WARNINGS_BEFORE_SUSPENSION, Report, Sanction
 from app.models.user import User
 from app.supplier.service import _require_reason
 
 
 def warn(db: Session, user_id: int, *, actor_id: int | None, reason: str | None, report_id: int | None = None) -> User:
     """AC-F4-08: 경고 3회째에 계정이 정지된다. AC-F5-10(업체 사정 취소)도 이 함수를 쓴다."""
+    user = _warn(db, user_id, actor_id=actor_id, reason=reason, report_id=report_id)
+    db.commit()
+    return user
+
+
+def _warn(db: Session, user_id: int, *, actor_id: int | None, reason: str | None, report_id: int | None) -> User:
+    """warn() 의 본문 — 커밋하지 않는다 (신고 처리처럼 다른 변경과 한 트랜잭션으로 묶을 때)."""
     reason = _require_reason(reason)
     user = db.get(User, user_id, with_for_update=True)
     if user is None:
@@ -36,8 +46,40 @@ def warn(db: Session, user_id: int, *, actor_id: int | None, reason: str | None,
             actor_user_id=actor_id,
             reason=auto_reason,
         )
-    db.commit()
     return user
+
+
+# 신고 처리 (SQLAdmin [경고]·[기각] 액션) ---------------------------------------
+_REPORT_ALLOWED = {("OPEN", "WARNED"), ("OPEN", "DISMISSED")}
+
+
+def _handle_report(db: Session, report_id: int, to: str, actor_id: int | None, reason: str | None) -> Report:
+    reason = _require_reason(reason)
+    rep = db.get(Report, report_id, with_for_update=True)
+    if rep is None:
+        raise not_found()
+    if (rep.status, to) not in _REPORT_ALLOWED:
+        raise invalid_state("이미 처리한 신고예요.")
+    if to == "WARNED":
+        if rep.target_type != "USER":
+            # shortcut: 글·채팅방의 주인은 1·3번 테이블에 있어 아직 찾을 수 없다. 그 테이블이 생기면 주인을 찾아 경고한다.
+            raise invalid_state("회원 신고만 여기서 경고할 수 있어요. PR 글은 [블라인드]로 처리해 주세요.")
+        _warn(db, rep.target_id, actor_id=actor_id, reason=reason, report_id=rep.id)
+    record_transition(db, entity_type="report", entity_id=rep.id, from_status=rep.status, to_status=to,
+                      actor_user_id=actor_id, reason=reason)
+    rep.status, rep.handled_by, rep.handled_at = to, actor_id, datetime.now()
+    db.commit()
+    return rep
+
+
+def warn_report(db: Session, report_id: int, *, actor_id: int | None, reason: str | None) -> Report:
+    """FR-POL-04: 신고를 받아들여 대상 회원에게 경고 1회 (3회면 정지). OPEN → WARNED."""
+    return _handle_report(db, report_id, "WARNED", actor_id, reason)
+
+
+def dismiss_report(db: Session, report_id: int, *, actor_id: int | None, reason: str | None) -> Report:
+    """FR-POL-04: 신고를 기각한다. OPEN → DISMISSED."""
+    return _handle_report(db, report_id, "DISMISSED", actor_id, reason)
 
 
 # ---------------------------------------------------------------------------
@@ -58,18 +100,27 @@ def suspension_reason(db: Session, user_id: int) -> str | None:
     )
 
 
-REPORT_TARGET_TYPES = ("CHAT_ROOM", "PR_POST", "USER")  # data-model.md reports.target_type
-
-
 def report(db: Session, *, reporter_id: int, target_type: str, target_id: int, reason: str | None) -> int:
     """[약속 4 → 1·3] 신고를 남기고 신고 id 를 돌려준다. 처리(경고·기각)는 관리자가 한다 (FR-POL-04).
 
     - reason 이 비면 VALIDATION_FAILED, target_type 이 REPORT_TARGET_TYPES 밖이면 VALIDATION_FAILED.
     - 같은 사람이 같은 대상을 여러 번 신고해도 한 건으로 본다.
-    쓰는 곳: 1번 PR 게시글 신고(AC-F4-03), 3번 채팅방 신고(POST /chat-rooms/{id}/report).
-    구현: 4번 목산 — T4-09 (#54).
+    쓰는 곳: 1번 PR 게시글 신고(AC-F4-03), 3번 채팅방 신고(POST /chat-rooms/{id}/report), POST /reports.
     """
-    raise NotImplementedError("4번 묶음 T4-09(#54)에서 구현한다")
+    reason = _require_reason(reason)
+    if target_type not in REPORT_TARGET_TYPES:
+        raise AppError(400, "VALIDATION_FAILED", "신고할 수 없는 대상이에요.", [{"field": "targetType", "reason": "허용 안 됨"}])
+    if type(target_id) is not int or target_id < 1:
+        raise AppError(400, "VALIDATION_FAILED", "신고 대상을 다시 골라 주세요.", [{"field": "targetId", "reason": "1 이상"}])
+    key = (Report.reporter_user_id == reporter_id, Report.target_type == target_type, Report.target_id == target_id)
+    rep = Report(reporter_user_id=reporter_id, target_type=target_type, target_id=target_id, reason=reason)
+    db.add(rep)
+    try:
+        db.commit()
+    except IntegrityError:  # 같은 신고가 이미 있으면 (동시에 두 번 와도) 그 건을 돌려준다
+        db.rollback()
+        return db.scalar(select(Report.id).where(*key))
+    return rep.id
 
 
 def blind_post(db: Session, post_id: int, *, actor_id: int, reason: str | None) -> None:

@@ -11,6 +11,7 @@ from app.auth.router import router as auth_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.dev.router import router as dev_router
+from app.policy.router import router as reports_router
 from app.files.router import router as files_router
 
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
 
     api.include_router(auth_router)
     api.include_router(me_router)
+    api.include_router(reports_router)
     api.include_router(files_router)
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)

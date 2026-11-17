@@ -2,9 +2,9 @@
 from app.core.db import Base
 from app.models.file import StoredFile
 from app.models.history import StatusHistory
-from app.models.policy import Sanction
+from app.models.policy import Report, Sanction
 from app.models.supplier import Supplier, SupplierCategory
 from app.models.terms import TermsAgreement
 from app.models.user import User
 
-__all__ = ["Base", "User", "Supplier", "SupplierCategory", "Sanction", "StatusHistory", "TermsAgreement", "StoredFile"]
+__all__ = ["Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile"]
