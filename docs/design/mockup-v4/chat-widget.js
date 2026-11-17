@@ -40,9 +40,9 @@
   var cardState = q.get('card') || 'pending';
   var timer = function (t) { return '<span class="timer" style="color:#fff">' + I('clock', 'icon--sm') + t + ' 남음</span>'; };
   var D_CARD = {
-    pending: card('최종 견적', timer('47:12'), meta('업체 D · 장비 · 견적서 v2 고정') + tot('1,350,000') + '<p class="mt-4">' + pass('자동 검사 통과') + '</p>', '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button type="button" disabled>이 업체로 정하기</button></div><p class="c-card__why">내역서를 끝까지 보면 정할 수 있어요.</p>', 'c-card--confirm'),
-    opened: card('최종 견적', timer('46:58'), meta('업체 D · 장비 · 견적서 v2 고정 · 내역서 확인함') + tot('1,350,000'), '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button class="is-primary" type="button" data-open="cw-confirm">이 업체로 정하기</button></div>', 'c-card--confirm'),
-    done: me('내역서 확인했어요. 이대로 진행할게요.', '15:01', 1) + card('정했어요', '<span class="muted">15:02</span>', meta('업체 D · 장비 · 견적서 v2') + tot('1,350,000'), '<div class="c-card__foot"><a class="is-primary" href="' + B + 'next.html">다음 단계로</a></div>', 'c-card--done')
+    pending: card('최종 견적', timer('47:12'), meta('업체 D · 장비 · 견적서 v2 고정') + tot('1,350,000') + '<p class="mt-4">' + pass('자동 검사 통과') + '</p>', '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button type="button" disabled>확정하기</button></div><p class="c-card__why">내역서를 끝까지 보면 확정할 수 있어요.</p>', 'c-card--confirm'),
+    opened: card('최종 견적', timer('46:58'), meta('업체 D · 장비 · 견적서 v2 고정 · 내역서 확인함') + tot('1,350,000'), '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button class="is-primary" type="button" data-open="cw-confirm">확정하기</button></div>', 'c-card--confirm'),
+    done: me('내역서 확인했어요. 이대로 진행할게요.', '15:01', 1) + card('확정 완료', '<span class="muted">15:02</span>', meta('업체 D · 장비 · 견적서 v2') + tot('1,350,000'), '<div class="c-card__foot"><a class="is-primary" href="' + B + 'next.html">다음 단계로</a></div>', 'c-card--done')
   };
   if (!D_CARD[cardState]) cardState = 'pending';
 
@@ -54,7 +54,7 @@
       note: '견적함에서 견적서를 보고 <b>[채팅 시작]</b>을 누르면 그 업체와 대화가 여기에 생겨요. <a href="' + B + 'inbox.html">견적함</a>',
       list: ['d', 'e', 'c', 'a'],
       d: { letter: 'D', name: '업체 D', photo: '1545454675-3531b543be5d', stage: '장비', on: 1, unread: 1, time: '13:24',
-        last: '최종 견적을 보냈어요', sub: '견적서 v2 · 1,350,000원 · ' + (cardState === 'done' ? '정함' : '조율 중'), doc: 'quote.html',
+        last: '최종 견적을 보냈어요', sub: '견적서 v2 · 1,350,000원 · ' + (cardState === 'done' ? '확정' : '조율 중'), doc: 'quote.html',
         msgs: function () {
           return day('11월 13일 (금)') +
             card('견적서 v1', '<span class="tag">이전 버전</span>', tot('1,250,000') + meta('추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함 · 설치 90분'), '', 'c-card--off') +
@@ -68,7 +68,7 @@
             them('급하면 010-0000-0000으로 연락 주셔도 돼요.', '13:20') + WARN + D_CARD[cardState];
         },
         info: function () {
-          return sec('이 단계', '<p class="strong">장비 · ' + (cardState === 'done' ? '정함' : '조율 중') + '</p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p>') +
+          return sec('이 단계', '<p class="strong">장비 · ' + (cardState === 'done' ? '확정' : '조율 중') + '</p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p>') +
             sec('지금 견적서 (v2)', total('1,350,000') + '<p class="small muted">추가 마이크 2 · 밴드 음향 · 설치·철수 · 엔지니어 포함</p><a class="link link--point mt-4" href="' + B + 'quote.html">내역서 보기' + I('right', 'icon--sm') + '</a>') +
             sec('자동 검사', rows([['설치 완료', pass('15:45')], ['공간 반입', pass()], ['엔지니어', warnS('포함')]])) +
             sec('앞 단계', '<p class="desc">공간 C · 입실 15:00 · 기본 마이크 2 · 전원 4구</p>') +
@@ -89,17 +89,17 @@
             '<div class="chat-panel__actions"><a class="btn btn--block" href="' + B + 'compare.html">단계별 비교 보기</a></div>';
         } },
       c: { letter: 'C', name: '업체 C', photo: '1514320291840-2e0a9bf2a9ae', stage: '공연장', on: 1, time: '어제',
-        last: '정했어요', sub: '견적서 v1 · 500,000원 · 정함', doc: 'quote.html',
+        last: '확정 완료', sub: '견적서 v1 · 500,000원 · 확정', doc: 'quote.html',
         msgs: function () {
           return day('11월 12일 (목)') + card('견적서 v1', pass(), tot('500,000') + meta('공간 C 대관 · 15:00 입실 · 22:00 퇴실')) +
             sys('가을밤밴드님이 채팅을 시작했어요') +
             them('공간 C는 15:00부터 들어오실 수 있어요. 외부 장비 반입도 돼요.', '10:05') +
             me('좋아요. 이대로 진행할게요.', '10:20', 1) +
-            card('정했어요', '<span class="muted">10:22</span>', meta('업체 C · 공연장 · 견적서 v1') + tot('500,000'), '', 'c-card--done');
+            card('확정 완료', '<span class="muted">10:22</span>', meta('업체 C · 공연장 · 견적서 v1') + tot('500,000'), '', 'c-card--done');
         },
         info: function () {
-          return sec('이 단계', '<p class="strong">공연장 · 정함</p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p>') +
-            sec('정한 견적서 (v1)', total('500,000') + '<p class="small muted">공간 C 대관 · 15:00 입실 · 22:00 퇴실</p>') +
+          return sec('이 단계', '<p class="strong">공연장 · 확정</p><p class="small muted">가을밤 밴드 공연 · 11월 28일(토)</p>') +
+            sec('확정한 견적서 (v1)', total('500,000') + '<p class="small muted">공간 C 대관 · 15:00 입실 · 22:00 퇴실</p>') +
             '<div class="chat-panel__actions"><a class="btn btn--block" href="' + B + 'my.html">내 공연에서 보기</a></div>';
         } },
       a: { letter: 'A', name: '업체 A', photo: '1501612780327-45045538702b', stage: '공연장', closed: 1, time: '어제',
@@ -124,7 +124,7 @@
             them('리허설을 16:00으로 당길 수도 있어요. 설치를 더 빨리 끝낼 수 있을까요?', '13:12') +
             me('설치 인원을 한 명 더 붙이면 15:45에 끝나요. 엔지니어까지 함께 맡겨 주셔서 5만 원은 빼 드릴게요.', '13:15', 1) +
             card('견적서 v2 · 보냄', pass(), tot('1,350,000') + disc('50,000') + diff('v1 → v2 · 설치 인원 +1 (+150,000원)')) +
-            card('최종 견적 · 보냄', timer('47:12'), meta('견적서 v2 고정 · 사용자가 내역서를 열었어요') + tot('1,350,000'), '<p class="c-card__why">사용자가 정하면 알림이 와요. 견적서를 고치면 이 카드는 무효가 돼요.</p>', 'c-card--confirm') +
+            card('최종 견적 · 보냄', timer('47:12'), meta('견적서 v2 고정 · 사용자가 내역서를 열었어요') + tot('1,350,000'), '<p class="c-card__why">사용자가 확정하면 알림이 와요. 견적서를 고치면 이 카드는 무효가 돼요.</p>', 'c-card--confirm') +
             them('내역서 확인했어요. 이대로 진행할게요.', '13:24');
         },
         info: function () {
@@ -181,7 +181,7 @@
           return '<button class="chat-item' + (r.unread ? ' is-unread' : '') + (r.closed ? ' is-closed' : '') + '" type="button" data-cw-room="' + id + '">' + avatar(r) +
             '<span style="min-width:0"><span class="chat-item__name">' + r.name + ' ' + tag(r) + '</span><span class="chat-item__last" style="display:block">' + r.last + '</span></span>' +
             '<span class="chat-item__side">' + r.time + (r.unread ? '<span class="count">' + r.unread + '</span>' : '') + '</span></button>';
-        }).join('') : '<div class="chat-panel__empty">' + I('chat') + '<b>' + R.tabs.filter(function (t) { return t[0] === f; })[0][1] + ' 채팅이 아직 없어요</b><p>' + (key === 'stage' ? '앞 단계를 정하면 이 단계 업체의 견적서를 받을 수 있어요.' : '여기에 해당하는 대화가 없어요.') + '</p></div>') +
+        }).join('') : '<div class="chat-panel__empty">' + I('chat') + '<b>' + R.tabs.filter(function (t) { return t[0] === f; })[0][1] + ' 채팅이 아직 없어요</b><p>' + (key === 'stage' ? '앞 단계를 확정하면 이 단계 업체의 견적서를 받을 수 있어요.' : '여기에 해당하는 대화가 없어요.') + '</p></div>') +
         '<p class="chat-panel__note">' + I('info') + '<span>' + R.note + '</span></p></div></div>';
     }
     p.innerHTML = html;
@@ -218,11 +218,11 @@
     body.insertAdjacentHTML('beforeend',
       '<button class="chat-fab" id="chat-fab" type="button" aria-expanded="false" aria-controls="chat-panel">' + I('talk', 'chat-fab__open') + I('x', 'chat-fab__close') + '</button>' +
       '<section class="chat-panel" id="chat-panel" role="dialog" aria-label="채팅" data-role="' + role + '" data-view="list" hidden></section>' +
-      (role === 'user' ? '<div class="layer" id="cw-confirm" hidden><div class="modal"><div class="modal__head"><h2>이 업체로 정할까요?</h2><button class="icon-btn" type="button" data-close aria-label="닫기">' + I('x') + '</button></div>' +
-        '<div class="modal__body"><p class="modal__lead">업체 D 견적서 v2를 이 업체로 정할까요?</p><p>같은 장비 단계의 다른 견적서는 자동으로 마감돼요.</p>' +
+      (role === 'user' ? '<div class="layer" id="cw-confirm" hidden><div class="modal"><div class="modal__head"><h2>확정할까요?</h2><button class="icon-btn" type="button" data-close aria-label="닫기">' + I('x') + '</button></div>' +
+        '<div class="modal__body"><p class="modal__lead">업체 D 견적서 v2를 확정할까요?</p><p>같은 장비 단계의 다른 견적서는 자동으로 마감돼요.</p>' +
         '<table class="info-table mt-16"><tr><th>단계</th><td>장비</td></tr><tr><th>견적서</th><td>v2 · 11월 13일 13:18</td></tr><tr><th>금액</th><td class="num strong">1,350,000원</td></tr><tr><th>자동 검사</th><td>' + pass() + '</td></tr></table>' +
         '<p class="field__hint mt-12">결제는 모든 단계를 정한 뒤 통합 청구서로 한 번에 해요.</p></div>' +
-        '<div class="modal__foot"><button class="btn" type="button" data-close>취소</button><a class="btn btn--primary" href="' + B + 'next.html">이 업체로 정하기</a></div></div></div>' : '') +
+        '<div class="modal__foot"><button class="btn" type="button" data-close>취소</button><a class="btn btn--primary" href="' + B + 'next.html">확정하기</a></div></div></div>' : '') +
       '<div class="layer" id="cw-report" hidden><div class="modal"><div class="modal__head"><h2>신고하기</h2><button class="icon-btn" type="button" data-close aria-label="닫기">' + I('x') + '</button></div>' +
         '<div class="modal__body"><p class="modal__lead">이 채팅방을 신고할까요?</p><p>관리자가 대화를 확인한 뒤 경고를 줄 수 있어요. 경고 3회면 이용이 정지돼요.</p><div class="stack mt-16" style="--gap:8px"><label class="check"><input type="radio" name="cw-r" checked>외부 거래 유도</label><label class="check"><input type="radio" name="cw-r">욕설·불쾌한 말</label><label class="check"><input type="radio" name="cw-r">기타</label></div><textarea class="textarea mt-12" aria-label="내용"></textarea></div>' +
         '<div class="modal__foot"><button class="btn" type="button" data-close>취소</button><button class="btn btn--primary" type="button" data-close>신고하기</button></div></div></div>');
