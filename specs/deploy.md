@@ -1,6 +1,6 @@
 # 시연 서버 배포 (deploy.md)
 
-> 초안 (2026-11-17, 해원). 결정 D-53. 팀 검토 전.
+> 초안 (2026-11-17, 해원). 결정 D-54. 팀 검토 전.
 > 시연·발표용 서버 **AWS EC2 1대**에 Docker Compose로 올린다. 비용은 새 계정 크레딧으로 쓴다.
 > 파일: `deploy/` 폴더, `.github/workflows/deploy.yml`. 개발용 DB만 있는 맨 위 `docker-compose.yml`은 그대로 둔다.
 

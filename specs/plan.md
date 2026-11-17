@@ -280,7 +280,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `PUBLIC_BASE_URL` | canonical·공유 미리보기·sitemap 절대 주소 (seo.md) |
 | `SEO_INDEXING` | 검색 허용 (기본 false — 시연 데이터가 검색에 남지 않게) |
 
-비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다. 시연 서버는 `deploy/.env`(예시: `deploy/env.prod.example`) — [deploy.md](deploy.md) (D-53).
+비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다. 시연 서버는 `deploy/.env`(예시: `deploy/env.prod.example`) — [deploy.md](deploy.md) (D-54).
 
 ## 9. 원칙 점검 (constitution)
 
