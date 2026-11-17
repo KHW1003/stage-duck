@@ -2,13 +2,16 @@
 
 실제 API 가 아직 없어서, 의존성만 붙인 시험용 앱을 만들어 확인한다.
 """
+from datetime import datetime, timedelta, timezone
+
+import jwt
 import pytest
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.testclient import TestClient
 from itsdangerous import URLSafeTimedSerializer
 
 from app.auth.deps import current_user, require_role
-from app.auth.tokens import ACCESS_COOKIE, issue_access_token
+from app.auth.tokens import ACCESS_COOKIE, issue_access_token, issue_refresh_token
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.models import User
@@ -56,16 +59,25 @@ def test_current_user_other_user_cookie_is_other_user(probe, db):
     assert login_as(probe, b).get("/me").json()["id"] == b.id
 
 
+def _jwt(payload: dict, secret: str | None = None, algorithm: str = "HS256") -> str:
+    return jwt.encode(payload, secret or get_settings().jwt_secret, algorithm=algorithm)
+
+
+_SOON = datetime.now(timezone.utc) + timedelta(hours=1)
+
+
 @pytest.mark.parametrize(
     "token",
     [
         None,  # 쿠키 없음
         "",  # 빈 값
         "not-a-token",  # 형식이 틀림
-        URLSafeTimedSerializer("other-secret", salt="stageduck-access-token").dumps({"uid": 1}),  # 다른 키로 서명
-        URLSafeTimedSerializer(get_settings().jwt_secret, salt="wrong-salt").dumps({"uid": 1}),  # 다른 용도로 서명
-        URLSafeTimedSerializer(get_settings().jwt_secret, salt="stageduck-access-token").dumps({"uid": "1"}),  # id 가 글자
-        URLSafeTimedSerializer(get_settings().jwt_secret, salt="stageduck-access-token").dumps([1]),  # 모양이 틀림
+        _jwt({"sub": "1", "typ": "access", "exp": _SOON}, secret="other-secret"),  # 다른 키로 서명
+        _jwt({"sub": "1", "typ": "access", "exp": _SOON}, algorithm="HS512"),  # 정한 방식(HS256)이 아님
+        _jwt({"sub": "1", "typ": "access"}),  # 만료 시간이 없음
+        _jwt({"sub": "abc", "typ": "access", "exp": _SOON}),  # id 가 숫자가 아님
+        _jwt({"sub": "1", "exp": _SOON}),  # 종류(typ)가 없음
+        URLSafeTimedSerializer(get_settings().jwt_secret, salt="stageduck-access-token").dumps({"uid": 1}),  # #22 임시 토큰
     ],
 )
 def test_current_user_rejects_missing_or_forged_cookie(probe, db, token):
@@ -76,18 +88,25 @@ def test_current_user_rejects_missing_or_forged_cookie(probe, db, token):
 
 
 def test_current_user_tampered_cookie_is_401(probe, db):
-    """내 쿠키의 사용자 id 부분만 남의 것으로 바꾸면(서명은 내 것) 거부된다."""
+    """내 쿠키의 내용(사용자 id)만 남의 것으로 바꾸면(서명은 내 것) 거부된다."""
     me, other = make_user(db), make_user(db)
     mine = issue_access_token(me.id).split(".")
     others = issue_access_token(other.id).split(".")
-    probe.cookies.set(ACCESS_COOKIE, ".".join([others[0], *mine[1:]]))
+    probe.cookies.set(ACCESS_COOKIE, ".".join([mine[0], others[1], mine[2]]))
     _assert_error(probe.get("/me"), 401, "UNAUTHENTICATED")
 
 
-def test_current_user_expired_cookie_is_401(probe, db, monkeypatch):
+def test_current_user_refresh_token_cannot_be_used_as_access(probe, db):
     user = make_user(db)
-    login_as(probe, user)
-    monkeypatch.setattr(get_settings(), "access_token_minutes", -1)  # 이미 지난 만료 시간
+    probe.cookies.set(ACCESS_COOKIE, issue_refresh_token(user.id))
+    _assert_error(probe.get("/me"), 401, "UNAUTHENTICATED")
+
+
+def test_current_user_expired_cookie_is_401(probe, db):
+    """30분 전보다 더 이전에 발급된 access 는 만료."""
+    user = make_user(db)
+    old = datetime.now(timezone.utc) - timedelta(minutes=get_settings().access_token_minutes, seconds=1)
+    probe.cookies.set(ACCESS_COOKIE, issue_access_token(user.id, now=old))
     _assert_error(probe.get("/me"), 401, "UNAUTHENTICATED")
 
 

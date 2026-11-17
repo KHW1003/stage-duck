@@ -78,7 +78,7 @@ button.link { border: 0; background: none; padding: 0; cursor: pointer; }
 .input--num { text-align: right; font-variant-numeric: tabular-nums; }
 .select { appearance: none; padding-right: 34px; background: var(--sd-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23202e3d' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 10px center / 16px no-repeat; cursor: pointer; }
 .select--sm { height: 36px; font-size: var(--sd-text-desc); width: auto; }
-.textarea { height: auto; min-height: 110px; padding: 10px 12px; line-height: 1.6; resize: vertical; }
+.textarea { height: auto; min-height: 110px; padding: 10px 12px; line-height: 1.6; resize: none; }   /* 마우스로 크기를 늘리지 못하게 */
 .unit { display: flex; }
 .unit .input { border-radius: var(--sd-r-field) 0 0 var(--sd-r-field); }
 .unit > span { display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--sd-line-strong); border-left: 0; border-radius: 0 var(--sd-r-field) var(--sd-r-field) 0; background: var(--sd-th); color: var(--sd-muted); font-size: var(--sd-text-desc); white-space: nowrap; }
@@ -122,7 +122,7 @@ button.link { border: 0; background: none; padding: 0; cursor: pointer; }
 
 /* ── Tabs: 아래 1px 선 + 지금 탭은 굵은 아래선 ── */
 .tab-bar { border-bottom: 1px solid var(--sd-line-strong); }
-.tabs { display: flex; gap: 0; overflow-x: auto; }
+.tabs { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 1px; margin-bottom: -1px; }   /* 밑줄(-1px)이 넘쳐 세로 스크롤이 생기지 않게 */
 .tabs > button, .tabs > a { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 54px; padding: 0 22px; border: 0; background: transparent; color: var(--sd-muted); font-size: 15px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .tabs > button:hover, .tabs > a:hover { color: var(--sd-ink); }
 .tabs [aria-selected="true"], .tabs [aria-current="page"] { color: var(--sd-ink); font-weight: 700; }

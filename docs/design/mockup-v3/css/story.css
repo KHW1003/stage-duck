@@ -15,7 +15,7 @@
 .story-who[data-who="업체 D"] { background: #0368b6; color: #fff; }
 .story-who[data-who="관리자"] { background: #6f7680; color: #fff; }
 .story-who[data-who="사용자"] { background: #d62c2c; color: #fff; }
-body.has-story .mock-switch { bottom: auto; top: 84px; }   /* 띠와 겹치지 않게 위로 */
+body.has-story .mock-switch { bottom: 140px; }   /* 띠와 겹치지 않게 띠 위로 */
 body.has-story .footer { padding-bottom: 150px; }
 
 /* story.html */

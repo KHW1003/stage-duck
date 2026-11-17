@@ -8,3 +8,4 @@ sqladmin>=0.20
 itsdangerous>=2.2
 bcrypt>=4.2
 python-multipart>=0.0.18
+PyJWT>=2.10,<3

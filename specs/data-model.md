@@ -99,8 +99,8 @@ erDiagram
 | 컬럼 | 타입 | 제약 |
 |---|---|---|
 | id | BIGINT UNSIGNED | PK |
-| user_id | BIGINT UNSIGNED | FK → users |
-| terms_type | VARCHAR(20) | CHECK IN ('SERVICE','PRIVACY_REQUIRED','PRIVACY_OPTIONAL','MARKETING') |
+| user_id | BIGINT UNSIGNED | FK → users, NOT NULL |
+| terms_type | VARCHAR(20) | NOT NULL, CHECK IN ('SERVICE','PRIVACY_REQUIRED','PRIVACY_OPTIONAL','MARKETING') |
 | terms_version | VARCHAR(10) | NOT NULL |
 | agreed | BOOLEAN | NOT NULL |
 | agreed_at | DATETIME(3) | NOT NULL |

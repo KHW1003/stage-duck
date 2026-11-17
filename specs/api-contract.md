@@ -58,7 +58,7 @@
 | POST | `/auth/signup` | 🌐 | 사용자 이메일 가입 | F1-01~03 |
 | POST | `/auth/signup/supplier` | 🌐 | 업체 1단계 (이메일·담당자·약관) | F1-17 |
 | POST | `/auth/login` | 🌐 | 로그인 → 쿠키 발급, 응답에 `role`, `landing` | F1-11 |
-| POST | `/auth/logout` | 로그인 | 쿠키 삭제 | F1-12 |
+| POST | `/auth/logout` | 누구나 | 쿠키 삭제 (204). 로그인 쿠키가 만료됐어도 남은 쿠키를 지운다 | F1-12 |
 | POST | `/auth/refresh` | 쿠키 | Access 재발급 | |
 | GET | `/auth/naver/start` | 🌐 | 네이버 로그인 이동 (`state` 쿠키) | F1-04 |
 | GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 / 처음 → `signupToken` 발급 후 추가 정보 화면으로 | F1-04, F1-10 |

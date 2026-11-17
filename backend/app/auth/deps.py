@@ -23,10 +23,13 @@ def unauthenticated() -> AppError:
 
 
 def current_user(access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> User:
-    """FR-AUTH-07: 쿠키가 없거나, 위조·만료됐거나, 계정이 없거나 탈퇴했으면 401."""
+    """FR-AUTH-07: 쿠키가 없거나, 위조·만료됐거나, 계정이 없거나 탈퇴·정지됐으면 401.
+
+    정지 계정은 로그인 자체를 막으므로(#24), 이미 받은 쿠키로도 들어올 수 없다. 사유는 로그인할 때 보여 준다.
+    """
     user_id = read_access_token(access_token)
     user = db.get(User, user_id) if user_id is not None else None
-    if user is None or user.status == "WITHDRAWN":
+    if user is None or user.status in ("WITHDRAWN", "SUSPENDED"):
         raise unauthenticated()
     return user
 
