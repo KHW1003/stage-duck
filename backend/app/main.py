@@ -1,5 +1,8 @@
 """STAGE DUCK API 서버. 실행: uvicorn app.main:app --reload (backend 폴더에서)."""
+from pathlib import Path
+
 from fastapi import APIRouter, FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.admin import setup_admin
 from app.auth.csrf import CSRFMiddleware
@@ -8,6 +11,7 @@ from app.auth.router import router as auth_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.dev.router import router as dev_router
+from app.files.router import router as files_router
 
 
 def create_app() -> FastAPI:
@@ -23,9 +27,12 @@ def create_app() -> FastAPI:
 
     api.include_router(auth_router)
     api.include_router(me_router)
+    api.include_router(files_router)
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
+    # 공개 사진 (uploads.md 3장). 비공개 파일은 /media 로 나가지 않는다 — GET /api/v1/files/{id}
+    app.mount("/media", StaticFiles(directory=Path(get_settings().upload_dir) / "public", check_dir=False), name="media")
     setup_admin(app)
     return app
 
