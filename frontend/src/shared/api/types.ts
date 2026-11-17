@@ -18,3 +18,27 @@ export interface Me {
   supplierReviewStatus: SupplierReviewStatus | null;
   landing: string;
 }
+
+/** 업체 1단계 가입 응답·로그인 응답 (POST /auth/signup/supplier, POST /auth/login) */
+export interface AuthResult {
+  id: number;
+  role: Role;
+  nickname: string | null;
+  landing: string;
+}
+
+export interface Agreements {
+  service: boolean;
+  privacyRequired: boolean;
+  privacyOptional: boolean;
+  marketing: boolean;
+}
+
+/** POST /auth/signup/supplier (FR-SUP-01) */
+export interface SupplierSignupRequest {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  agreements: Agreements;
+}
