@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문의 내용 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* InquiryPostPage.module.css — 내 문의 + 운영자 답변 */
+  .narrow { max-width: 820px; margin: 0 auto; }
+  .q-head { padding: 24px 0 20px; border-top: 2px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line); }
+  .q-head__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .q-head h1 { margin-top: 10px; font-size: 24px; font-weight: 700; letter-spacing: -.6px; line-height: 1.4; }
+  .q-head .list__meta { margin-top: 10px; }
+  .q-body { padding: 28px 0; font-size: 15px; line-height: 1.85; white-space: pre-line; }
+  .q-files { display: flex; gap: 8px; padding-bottom: 28px; }
+  .file-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); font-size: var(--sd-text-small); }
+  .answer { border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
+  .answer__head { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--sd-line); background: var(--sd-soft); }
+  .answer__head .who { gap: 10px; }
+  .answer__body { padding: 24px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
+  .answer__body dl { margin-top: 12px; }
+  .answer__foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .wait { display: grid; justify-items: center; gap: 8px; padding: 40px 24px; border: 1px dashed var(--sd-line-strong); border-radius: var(--sd-r-box); color: var(--sd-muted); font-size: var(--sd-text-desc); text-align: center; }
+  .wait b { color: var(--sd-ink); font-size: var(--sd-text-body); }
+</style>
+</head>
+<!-- 시안: 문의 보기
+     화면: 문의 내용 · 제안 화면 (스펙에 아직 없음 — 해원 승인 전)
+     React(안): pages/InquiryPostPage.tsx = InquiryHeader + InquiryBody + (AnswerBox | AnswerWaiting). 남의 문의는 404.
+     답변 상태 보기: ?ans=wait | done -->
+<body data-layout="user">
+
+<div class="mock-switch" data-group="ans">
+  <span>답변</span>
+  <button type="button" data-value="wait" aria-pressed="true">답변 대기</button>
+  <button type="button" data-value="done">답변 완료</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="inquiry-list.html">1:1 문의</a></li><li>결제·환불</li></ol></div></div>
+
+<main class="container main">
+  <article class="narrow">
+    <div class="q-head">
+      <div class="q-head__top"><span class="tag">결제·환불</span><span class="state state--on" data-when="ans:wait">답변 대기</span><span class="state state--done" data-when="ans:done" hidden>답변 완료</span></div>
+      <h1>공연을 하루 앞두고 취소하면 위약금은 어떻게 나뉘나요?</h1>
+      <div class="list__meta"><span>11월 16일 15:10 문의</span><span>관련 공연 · 가을밤 밴드 공연 (11월 22일)</span></div>
+    </div>
+    <div class="q-body">공연장 C와 장비 D를 컨펌하고 모의 결제까지 했어요. 사정이 생겨 공연 하루 전에 취소하게 되면 위약금이 업체마다 어떻게 나뉘는지, 플랫폼 이용료도 돌려받는지 궁금해요.</div>
+    <div class="q-files"><span class="file-chip"><span data-icon="image" class="icon--sm"></span>청구서-캡처.png</span></div>
+
+    <section data-when="ans:wait">
+      <div class="wait"><span class="ico-box ico-box--round"><span data-icon="clock"></span></span><b>운영자가 문의를 확인하고 있어요</b>답변이 오면 알림으로 알려 드려요. 답변 전에는 문의를 고치거나 지울 수 있어요.</div>
+      <div class="btns btns--end mt-24"><button class="btn" type="button"><span data-icon="trash" class="icon--sm"></span>지우기</button><a class="btn" href="inquiry-write.html"><span data-icon="edit" class="icon--sm"></span>고치기</a><a class="btn" href="inquiry-list.html"><span data-icon="list" class="icon--sm"></span>목록</a></div>
+    </section>
+
+    <section data-when="ans:done" hidden>
+      <div class="answer">
+        <div class="answer__head"><span class="who"><span class="avatar avatar--sm" aria-hidden="true">S</span><b>STAGE DUCK 운영자</b></span><span class="small muted">11월 17일 10:20 답변</span></div>
+        <div class="answer__body">문의 주셔서 고마워요. 공연 하루 전(D-1)에 사용자가 취소하면 업체 금액의 70%가 위약금이에요. 위약금은 업체별 금액 비율로 나누고, 플랫폼 이용료는 돌려드리지 않아요.
+          <dl class="sum-rows"><div><dt>업체 금액 (공연장 C + 장비 D)</dt><dd>1,850,000원</dd></div><div><dt>위약금 70%</dt><dd>1,295,000원</dd></div><div><dt>└ 업체 C / 업체 D</dt><dd>350,000원 / 945,000원</dd></div><div><dt>환불 예정액</dt><dd>555,000원</dd></div></dl></div>
+        <div class="answer__foot"><span class="test-pay"><span data-icon="info" class="icon--sm"></span>테스트 결제 — 실제 청구되지 않습니다</span><a class="link link--point" href="cancel.html">공연 취소 화면에서 예상 금액 보기</a></div>
+      </div>
+      <div class="row row--end mt-24"><div class="btns"><a class="btn" href="inquiry-write.html">다시 문의하기</a><a class="btn" href="inquiry-list.html"><span data-icon="list" class="icon--sm"></span>목록</a></div></div>
+    </section>
+  </article>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

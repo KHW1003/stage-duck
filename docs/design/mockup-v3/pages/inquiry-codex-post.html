@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문의 보기 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .inquiry { max-width: 1000px; }
+  .inquiry .btn { min-height: 44px; border-radius: 8px; }
+  .inquiry .btn--primary { background: var(--sd-ink); border-color: var(--sd-ink); color: var(--sd-bg); }
+  .inquiry .btn--primary:hover { background: var(--sd-blue-button); }
+  .inquiry .mock-switch { position: static; width: fit-content; margin-bottom: 28px; padding: 0; gap: 8px; background: var(--sd-bg); color: var(--sd-muted); font-size: 14px; }
+  .inquiry .mock-switch > span { opacity: 1; }
+  .inquiry .mock-switch button { min-height: 44px; padding: 0 14px; border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-bg); color: var(--sd-ink); }
+  .inquiry .mock-switch button[aria-pressed="true"] { border-color: var(--sd-ink); background: var(--sd-band); font-weight: 700; }
+  .inquiry .status { font-size: 14px; }
+  .post-head { padding-bottom: 24px; border-bottom: 1px solid var(--sd-line-strong); }
+  .post-head h2 { margin-top: 16px; font-size: clamp(24px, 4vw, 30px); letter-spacing: -.6px; line-height: 1.5; }
+  .post-meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 16px; font-size: 14px; }
+  .post-meta > div { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+  .post-meta dt { color: var(--sd-muted); }
+  .post-body { padding: 32px 0; font-size: 16px; line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
+  .post-attachments { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 24px; padding: 20px 0; border-top: 1px solid var(--sd-line); border-bottom: 1px solid var(--sd-line); }
+  .post-attachments h3 { font-size: 15px; }
+  .post-attachments ul { flex: 1; min-width: 220px; }
+  .post-attachments li { display: flex; align-items: center; min-height: 44px; font-size: 14px; overflow-wrap: anywhere; }
+  .post-answer { margin-top: 36px; padding: 28px; border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-band); }
+  .post-answer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--sd-line-strong); }
+  .post-answer h2 { font-size: 18px; }
+  .post-answer time { font-size: 14px; color: var(--sd-muted); }
+  .post-answer p { margin-top: 20px; line-height: 1.9; white-space: pre-line; }
+  .post-wait { margin-top: 36px; padding: 24px; border: 1px solid var(--sd-line-strong); }
+  .post-wait h2 { font-size: 18px; }
+  .post-wait p { margin-top: 8px; }
+  .post-actions { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .post-private { margin-top: 24px; color: var(--sd-muted); font-size: 14px; }
+  @media (max-width: 600px) { .inquiry { padding-left: 20px; padding-right: 20px; } .post-answer { padding: 20px; } .post-meta { display: block; } }
+</style>
+</head>
+<body data-layout="user">
+<div class="page-top">
+  <div class="container inquiry page-top__inner"><div>
+    <ol class="page-top__crumb"><li><a href="inquiry-codex.html">1:1 문의</a></li><li>문의 보기</li></ol>
+    <h1>문의 보기</h1><p class="page-top__desc">내가 남긴 문의와 운영자의 답변을 확인해요.</p>
+  </div></div>
+</div>
+<main class="container inquiry main">
+  <div class="mock-switch" data-group="state" aria-label="답변 상태 목업 보기">
+    <span>목업 보기</span><button type="button" data-value="done" aria-pressed="true">답변 완료</button><button type="button" data-value="wait" aria-pressed="false">답변 대기</button>
+  </div>
+  <div class="notice mb-16" id="preview-note" hidden>보낸 문의를 미리 보고 있어요. 실제 문의 접수나 알림 전송은 이루어지지 않아요.</div>
+  <article aria-labelledby="post-title">
+    <header class="post-head">
+      <span class="status status--pass" data-when="state:done"><span aria-hidden="true">✓</span> 답변 완료</span>
+      <span class="status status--warn" data-when="state:wait" hidden><span aria-hidden="true">!</span> 답변 대기</span>
+      <h2 id="post-title">테스트 결제 취소 내역은 어디에서 보나요?</h2>
+      <dl class="post-meta">
+        <div><dt>문의 유형</dt><dd id="post-type">결제·환불</dd></div>
+        <div><dt>관련 공연</dt><dd id="post-performance">가을밤 밴드 공연 · 11월 22일</dd></div>
+        <div><dt>날짜</dt><dd><time id="post-date" datetime="2026-11-16T09:20">2026.11.16 09:20</time></dd></div>
+      </dl>
+    </header>
+    <div class="post-body" id="post-body">가을밤 밴드 공연을 준비하며 테스트 결제를 진행했어요.
+
+결제를 취소한 뒤 취소 내역을 어디에서 볼 수 있는지 궁금해요.
+플랫폼 이용료도 함께 확인할 수 있나요?</div>
+    <section class="post-attachments" aria-labelledby="files-heading"><h3 id="files-heading">첨부</h3><ul id="post-files"><li><span data-icon="file"></span> 결제 화면.png · 첨부 예시</li></ul></section>
+  </article>
+  <section class="post-answer" data-when="state:done" aria-labelledby="answer-heading">
+    <div class="post-answer__head"><h2 id="answer-heading">운영자 답변</h2><time id="answer-date" datetime="2026-11-16T11:05">2026.11.16 11:05</time></div>
+    <p id="answer-body">안녕하세요. 운영자예요.
+
+테스트 결제라 실제로 청구되지 않아요.
+해당 공연의 통합 청구서에서 결제 상태와 플랫폼 이용료를 확인할 수 있어요. 취소 내역이 보이지 않으면 이용한 화면을 첨부해 추가 문의를 남겨 주세요.
+
+첨부 화면에는 연락처·계좌번호가 보이지 않도록 가려 주세요.</p>
+  </section>
+  <section class="notice post-wait" data-when="state:wait" hidden aria-labelledby="wait-heading">
+    <span data-icon="clock"></span><div><h2 id="wait-heading">보통 1영업일 안에 답변해요</h2><p>운영자가 문의를 확인하고 있어요. 답변이 오면 이 화면과 알림으로 알려 드려요.<br>답변 전에는 문의 내용을 수정할 수 있어요.</p></div>
+  </section>
+  <div class="post-actions"><a class="btn" href="inquiry-codex.html">목록으로</a><div class="btns"><a class="btn" href="inquiry-codex-write.html?edit=1" data-when="state:wait" hidden>문의 수정</a><a class="btn btn--primary" href="inquiry-codex-write.html?followup=1">추가 문의</a></div></div>
+  <p class="post-private"><span data-icon="lock"></span> 작성한 사용자와 운영자만 볼 수 있어요.</p>
+</main>
+<script src="../layout.js"></script>
+<script>
+  (function () {
+    var query = new URLSearchParams(location.search);
+    var examples = {
+      '6': ['견적·컨펌', '견적서 내용을 바꾸고 다시 컨펌할 수 있나요?', '업체와 장비 구성을 바꾸기로 했어요. 새 견적서를 받은 뒤 다시 컨펌하는 방법이 궁금해요.', '업체에게 변경한 내용을 담은 새 견적서를 요청해 주세요. 새 견적 내역 확인 카드를 받은 뒤 내용을 확인하고 컨펌해 주세요.', '16'],
+      '5': ['업체 이용', '업체와 나눈 채팅을 다시 보고 싶어요', '가을밤 밴드 공연을 준비하며 업체와 나눈 대화를 다시 찾고 싶어요.', '상단 채팅 메뉴에서 해당 공연과 업체를 골라 대화를 확인해 주세요.', '15'],
+      '4': ['계정', '닉네임을 바꾸는 방법이 궁금해요', '닉네임을 락스피릿으로 바꾸고 싶어요. 어디에서 바꿀 수 있나요?', '마이페이지의 내 프로필에서 닉네임을 바꿀 수 있어요.', '13'],
+      '3': ['결제·환불', '플랫폼 이용료는 어디에서 확인하나요?', '공연의 결제 금액과 플랫폼 이용료를 나눠서 보고 싶어요.', '테스트 결제라 실제로 청구되지 않아요. 해당 공연의 통합 청구서에서 플랫폼 이용료 항목을 확인해 주세요.', '11'],
+      '2': ['기타', '답변 알림은 어디에서 볼 수 있나요?', '문의에 답변이 오면 어디에서 알 수 있나요?', '상단 알림 메뉴와 1:1 문의 목록에서 답변을 확인할 수 있어요.', '09'],
+      '1': ['견적·컨펌', '이전 견적서도 다시 볼 수 있나요?', '업체가 새 견적서를 보내 줬어요. 이전 내용과 비교하고 싶어요.', '해당 업체의 채팅에서 견적 정보와 이전 버전을 확인해 주세요.', '06']
+    };
+    var data = examples[query.get('id')];
+    var draft = { title: document.getElementById('post-title').textContent, type: '결제·환불', performance: '가을밤 밴드 공연 · 11월 22일', body: document.getElementById('post-body').textContent, files: ['결제 화면.png'] };
+    if (data) {
+      draft = { type: data[0], title: data[1], body: data[2], performance: ['계정', '기타'].includes(data[0]) ? '없음' : draft.performance, files: [] };
+      document.getElementById('answer-body').textContent = '안녕하세요. 운영자예요.\n\n' + data[3];
+      [['post-date', '09:20'], ['answer-date', '11:05']].forEach(function (entry) {
+        var el = document.getElementById(entry[0]); el.textContent = '2026.11.' + data[4] + ' ' + entry[1]; el.dateTime = '2026-11-' + data[4] + 'T' + entry[1];
+      });
+    }
+    if (query.get('preview') === '1') {
+      try {
+        var saved = JSON.parse(sessionStorage.getItem('inquiry-codex-draft') || 'null');
+        if (saved) {
+          draft = saved; document.getElementById('preview-note').hidden = false;
+          var now = new Date(), date = document.getElementById('post-date'); date.dateTime = now.toISOString(); date.textContent = now.toLocaleString('ko-KR');
+          document.getElementById('answer-body').textContent = '안녕하세요. 운영자예요.\n\n' + (draft.type === '결제·환불' ? '테스트 결제라 실제로 청구되지 않아요.\n' : '') + '남겨 주신 내용을 확인했어요. 더 궁금한 점은 추가 문의로 남겨 주세요.\n\n답변 완료 상태를 살펴보기 위한 예시 답변이에요.';
+          document.getElementById('answer-date').dateTime = now.toISOString(); document.getElementById('answer-date').textContent = now.toLocaleString('ko-KR');
+        }
+      } catch (error) { document.getElementById('preview-note').hidden = false; document.getElementById('preview-note').textContent = '작성한 목업을 불러오지 못해 예시 문의를 보여 드려요.'; }
+    }
+    ['title', 'type', 'performance', 'body'].forEach(function (key) { document.getElementById('post-' + key).textContent = draft[key]; });
+    var fileList = document.getElementById('post-files'); fileList.replaceChildren();
+    (draft.files.length ? draft.files : ['첨부한 파일이 없어요.']).forEach(function (name) { var li = document.createElement('li'); li.textContent = name + (draft.files.length ? ' · 첨부 예시' : ''); fileList.append(li); });
+    try { sessionStorage.setItem('inquiry-codex-current', JSON.stringify(draft)); } catch (error) { /* 저장이 제한되어도 예시 문의를 볼 수 있어요. */ }
+    document.querySelectorAll('.footer__links a').forEach(function (link) { if (link.textContent.trim() === '1:1 문의') link.href = 'inquiry-codex.html'; });
+  })();
+</script>
+</body>
+</html>
