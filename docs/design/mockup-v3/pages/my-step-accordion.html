@@ -1,0 +1,100 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>시안 D</title><link rel="stylesheet" href="../css/app.css"><style>
+.st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.st li{position:relative}
+.st li:not(:last-child)::after{content:"";position:absolute;top:17px;left:44px;right:8px;height:3px;border-radius:2px;background:var(--sd-line)}
+.st li.is-done:not(:last-child)::after{background:var(--sd-pass-text)}
+.st li.is-now:not(:last-child)::after{background:linear-gradient(90deg,var(--sd-blue) 0 45%,var(--sd-line) 45% 100%)}
+.st li.is-now:not(:last-child)::before{content:"";position:absolute;z-index:1;top:12px;left:calc(44px + (100% - 52px)*.45 - 6px);width:13px;height:13px;border:2px solid var(--sd-blue);border-radius:50%;background:var(--sd-bg)}
+.st .dot{position:relative;z-index:1;display:grid;place-items:center;width:36px;height:36px;border:2px solid var(--sd-line-strong);border-radius:50%;background:var(--sd-bg);color:var(--sd-on-blue)}
+.st .is-done .dot{border-color:var(--sd-pass-text);background:var(--sd-pass-text)}
+.st .is-now .dot{border-color:var(--sd-blue);border-width:3px}
+.st .is-now .dot::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--sd-blue)}
+.st .dot svg{width:18px;height:18px}
+.st small{display:block;margin-top:12px;color:var(--sd-muted);font-size:var(--sd-text-desc)}
+.st b{display:block;margin-top:2px;font-size:18px;font-weight:700;color:var(--sd-muted)}
+.st .is-done b{color:var(--sd-pass-text)}.st .is-now b{color:var(--sd-blue)}
+.st em{display:block;margin-top:4px;font-style:normal;color:var(--sd-muted);font-size:var(--sd-text-small)}
+.box{border:1px solid var(--sd-line-strong);border-radius:var(--sd-r-box);background:var(--sd-bg)}
+.acc{margin-top:16px}.acc>details,.acc>.row{border:1px solid var(--sd-line-strong);border-radius:var(--sd-r-box);background:var(--sd-bg)}
+.acc>*+*{margin-top:12px}
+.acc .row{display:flex;align-items:center;gap:16px;padding:18px 24px}
+.acc .row .no{font-size:var(--sd-text-small);color:var(--sd-muted);width:56px;font-weight:700}
+.acc .row b{font-size:16px;font-weight:700}
+.acc .open{border:2px solid var(--sd-ink);border-radius:var(--sd-r-box);background:var(--sd-bg)}
+.acc .open>.row{border:0;border-bottom:1px solid var(--sd-line)}
+.acc .open .in{padding:20px 24px 24px}
+.acc .row.is-wait{background:var(--sd-hover)}
+.stbox{padding:28px 32px 24px}.cmp{display:grid;grid-template-columns:200px 1fr 1fr 220px;border:1px solid var(--sd-line-strong);border-radius:var(--sd-r-box);overflow:hidden;background:var(--sd-bg)}
+.cmp>div{padding:16px 20px;border-top:1px solid var(--sd-line);font-size:var(--sd-text-desc)}
+.cmp>.h{border-top:0;padding:20px}
+.cmp>.k{color:var(--sd-muted);background:var(--sd-hover)}
+.cmp>.on{background:#fff8f8}
+.cmp .who{display:flex;gap:12px;align-items:center}.cmp .who b{font-size:16px;font-weight:700}.cmp .who small{display:block;color:var(--sd-muted);font-size:var(--sd-text-small)}
+.cmp .big{font-size:20px;font-weight:700}
+.cmp .add{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;color:var(--sd-muted);text-align:center;border-left:1px dashed var(--sd-line-strong)}
+.cmp .add.k2{background:var(--sd-bg)}
+.cmp .act{display:flex;gap:8px}.cmp .act .btn{flex:1}.acc .open .in{padding:20px 24px 24px}.in .cmp{grid-template-columns:170px 1fr 1fr 200px}.row .lk{display:inline-flex;align-items:center;gap:2px;color:var(--sd-muted);font-size:var(--sd-text-desc)}
+/* STEP 접기·펼치기 — 제안. 높이는 grid-template-rows 0fr→1fr 로 부드럽게 바꾼다 */
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.stp{border:1px solid var(--sd-line-strong);border-radius:var(--sd-r-box);background:var(--sd-bg);transition:border-color .2s}
+.stp.is-open{border:2px solid var(--sd-ink)}
+.stp[data-state="wait"]{background:var(--sd-hover)}
+.stp__head{display:flex;align-items:center;gap:16px;width:100%;min-height:64px;padding:16px 24px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:var(--sd-r-box)}
+.stp__head:focus-visible{outline:2px solid var(--sd-blue);outline-offset:2px}
+.stp__head .no{font-size:var(--sd-text-small);color:var(--sd-muted);width:56px;font-weight:700}
+.stp__head b{font-size:16px;font-weight:700}
+.stp__chev{display:grid;place-items:center;width:28px;height:28px;color:var(--sd-muted);transition:transform .3s ease}
+.stp.is-open .stp__chev{transform:rotate(90deg)}
+.stp__body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.stp.is-open .stp__body{grid-template-rows:1fr}
+.stp__clip{overflow:hidden;min-height:0}
+.stp__inner{padding:20px 24px 24px;border-top:1px solid var(--sd-line)}
+.stp__acts{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px}
+.kv2{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--sd-line-strong);border-radius:var(--sd-r-box)}
+.kv2>div{padding:16px 20px}.kv2>div+div{border-left:1px solid var(--sd-line)}
+.kv2 span{display:block;color:var(--sd-muted);font-size:var(--sd-text-small);margin-bottom:6px}.kv2 b{font-size:16px;font-weight:700}
+@media (prefers-reduced-motion:reduce){.stp__body,.stp__chev{transition:none}}
+</style></head><!-- 제안 화면: 내 공연 상세 — STEP 접기·펼치기 (시안 H 바탕). 세환 제안, 2026-11-17
+     처음 상태: 컨펌·대기 단계는 닫힘, 조율 중 단계는 열림. 머리줄을 누르면 슬라이드로 열고 닫는다 (여러 개를 동시에 열 수 있음)
+     React(제안): StepPanel({state, defaultOpen = state === "NEGOTIATING"}) — 열림 여부만 화면 상태(useState), 단계 상태는 서버 값
+     값은 모두 가상 데이터. 결제는 테스트 결제. -->
+<body data-layout="user" data-nav="my"><div class="page-top"><div class="container page-top__inner"><div class="page-top__lead"><span class="page-top__thumb" style="--img:url('../../mockup/assets/photos/photo-1598387993441-a364f854c3e1.jpg')"></span><div><ol class="page-top__crumb"><li>내 공연</li><li>진행 중</li></ol><h1>가을밤 밴드 공연 <span class="tag tag--point">D-15</span></h1><div class="page-top__meta"><span><span data-icon="calendar" class="icon--sm"></span>11월 28일(토)</span><span>공연 19:00~21:00 · 리허설 17:00</span><span><span data-icon="pin" class="icon--sm"></span>광주 동구</span><span>관객 80명</span><span>요청서 v1</span></div></div></div><div class="page-top__actions"><a class="btn btn--sm" href="#"><span data-icon="edit" class="icon--sm"></span>요청서 수정</a><button class="btn btn--sm btn--ghost">공고 내리기</button></div></div></div><main class="container main">
+<section class="sec"><div class="sec-head"><h2><span data-icon="layers"></span>섭외 진행</h2><p>단계를 누르면 펼치고 접을 수 있어요.</p></div>
+<div class="box stbox"><ol class="st "><li class="is-done"><span class="dot"><span data-icon="check"></span></span><small>공연장</small><b>컨펌</b><em>업체 C · 500,000원</em></li><li class="is-now"><span class="dot"></span><small>장비</small><b>조율 중 · 견적 2건</b><em>채팅 1곳 · 확인 카드 1</em></li><li><span class="dot"></span><small>엔지니어</small><b>대기</b><em>장비 컨펌 뒤 열려요</em></li></ol></div>
+<div class="steps"><section class="stp" data-state="done">
+<button class="stp__head" type="button" aria-expanded="false" aria-controls="step1-body"><span class="no">STEP 01</span><span class="status status--pass"><span data-icon="pass"></span>컨펌</span><b>공연장 · 업체 C</b><span class="muted">11월 12일 컨펌 · 500,000원</span><span class="grow"></span><span class="stp__chev"><span data-icon="right"></span></span></button>
+<div class="stp__body" id="step1-body" role="region" aria-label="STEP 01 공연장 · 업체 C"><div class="stp__clip"><div class="stp__inner"><div class="kv2"><div><span>업체 · 공간</span><b>업체 C · 공간 C</b></div><div><span>견적서</span><b>기본형 v1</b></div><div><span>컨펌</span><b>11월 12일 14:20</b></div><div><span>금액</span><b>500,000원</b></div></div>
+<div class="notice mt-12"><span data-icon="pass"></span><div class="grow">자동 검사 <b>통과</b> · 설치 시간 120분. 컨펌할 때의 조건으로 저장돼 있어요.</div><a class="btn btn--sm" href="#">내역서</a><a class="btn btn--sm" href="#">채팅 기록</a></div></div></div></div>
+</section><section class="stp is-open" data-state="now">
+<button class="stp__head" type="button" aria-expanded="true" aria-controls="step2-body"><span class="no">STEP 02</span><span class="state state--on">조율 중</span><b>장비 견적서 비교</b><span class="muted">견적서 2건 · 채팅 1곳</span><span class="grow"></span><span class="stp__chev"><span data-icon="right"></span></span></button>
+<div class="stp__body" id="step2-body" role="region" aria-label="STEP 02 장비 견적서 비교"><div class="stp__clip"><div class="stp__inner"><div class="stp__acts"><a class="btn btn--sm" href="#">표로 보기</a><a class="btn btn--sm btn--primary" href="#">단계별 비교</a></div><div class="notice notice--point"><span data-icon="doc"></span><div class="grow"><b>업체 D가 견적 내역 확인 카드를 보냈어요.</b> 내역서를 끝까지 보고 컨펌해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="#">채팅에서 확인</a></div><div class="mt-16"><div class="summary"><div><span>단계 상태</span><b class="point" style="font-size:20px">조율 중</b></div><div><span>받은 견적서</span><b>2<small>건</small></b></div><div><span>채팅 중</span><b>1<small>곳</small></b></div><div><span>보낸 오퍼</span><b>0<small>/ 10곳</small></b></div></div></div><div class="cmp mt-16">
+<div class="k h">업체</div>
+<div class="h on"><div class="who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')">D</span><div><b>업체 D <span class="tag">v2</span></b><small>거래 15건 · 13:18 수정</small></div></div></div>
+<div class="h"><div class="who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')">E</span><div><b>업체 E <span class="tag">v1</span></b><small>거래 3건 · 10:05 받음</small></div></div></div>
+<div class="h add" style="grid-row:span 7"><span data-icon="plus"></span><b style="color:var(--sd-ink)">업체 더 받기</b><span style="font-size:13px">관심 업체에 오퍼를 보내요<br>0 / 10곳</span><a class="btn btn--sm" href="#">오퍼 보내기</a></div>
+<div class="k">총액</div><div class="on"><span class="big">1,350,000원</span><br><span class="muted">v1 1,250,000원</span></div><div><span class="big">980,000원</span></div>
+<div class="k">포함</div><div class="on">장비 · 설치 · <b>엔지니어</b></div><div>장비 · 설치</div>
+<div class="k">자동 검사</div><div class="on"><span class="status status--pass"><span data-icon="pass"></span>통과</span> 설치 완료 15:45</div><div><span class="status status--info"><span data-icon="info"></span>확인 필요 1</span> 무선 마이크 수량</div>
+<div class="k">엔지니어 단계</div><div class="on">컨펌하면 건너뛸지 물어봐요</div><div>엔지니어 단계가 그대로 열려요</div>
+<div class="k">상태</div><div class="on"><span class="state state--on">확인 카드 받음</span></div><div><span class="state">채팅 전</span></div>
+<div class="k"></div><div class="on act"><a class="btn btn--sm" href="#">견적서</a><a class="btn btn--sm btn--primary" href="#">채팅</a></div><div class="act"><a class="btn btn--sm" href="#">견적서</a><a class="btn btn--sm" href="#">채팅 시작</a></div>
+</div><p class="muted mt-12" style="font-size:13px">한 단계에서 여러 업체와 채팅할 수 있지만, 컨펌은 한 업체만 할 수 있어요.</p></div></div></div>
+</section><section class="stp" data-state="wait">
+<button class="stp__head" type="button" aria-expanded="false" aria-controls="step3-body"><span class="no">STEP 03</span><span class="state">대기</span><b>엔지니어</b><span class="muted">장비를 컨펌하면 열려요</span><span class="grow"></span><span class="stp__chev"><span data-icon="right"></span></span></button>
+<div class="stp__body" id="step3-body" role="region" aria-label="STEP 03 엔지니어"><div class="stp__clip"><div class="stp__inner"><p class="muted">장비를 컨펌하면 엔지니어 업체에 공고가 열려요. 업체 D(엔지니어 포함)를 컨펌하면 이 단계를 건너뛸지 물어봐요.</p></div></div></div>
+</section></div></section>
+<section class="sec"><div class="sec-head"><h2><span data-icon="doc"></span>요청서</h2><div class="sec-head__side"><a class="link" href="#">전체 보기<span data-icon="right" class="icon--sm"></span></a></div></div><table class="info-table">
+          <tr><th>공연명</th><td>가을밤 밴드 공연</td><th>형태 · 편성</th><td>밴드 · 보컬 1, 기타 2, 베이스 1, 드럼 1</td></tr>
+          <tr><th>날짜 · 시간</th><td class="num">11월 28일(토) 19:00~21:00</td><th>리허설</th><td class="num">17:00</td></tr>
+          <tr><th>지역</th><td>광주 동구</td><th>관객</th><td>80명</td></tr>
+          <tr><th>필요해요</th><td colspan="3">공연장 · 장비 (업체 제안 받기) · 엔지니어 (FOH 믹싱, 설치 보조, 사운드체크·리허설)</td></tr>
+        </table></section>
+</main><script>
+/* STEP 박스: 머리줄을 누르면 펼치고 접는다. 처음 상태는 서버가 준 단계 상태로 정한다 (컨펌·대기=닫힘, 조율 중=열림) */
+document.querySelectorAll('.stp__head').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var box=btn.closest('.stp'); var open=!box.classList.contains('is-open');
+    box.classList.toggle('is-open',open); btn.setAttribute('aria-expanded',open?'true':'false');
+  });
+});
+</script><script src="../layout.js"></script></body></html>
