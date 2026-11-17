@@ -113,4 +113,8 @@ body[data-layout^="partner"] .partner-only { display: list-item; }
    - 스크롤바 자리를 항상 비워 둬서, 긴 화면·짧은 화면을 오가도 내용이 좌우로 움직이지 않게 (React에도 그대로)
    - 목업 전용: layout.js가 헤더를 넣기 전까지 헤더 높이만큼 자리를 비워 둬서 내용이 아래로 밀리지 않게 */
 html { scrollbar-gutter: stable; }
+
+/* 로고 크기를 메인 화면(home.html·partner.html: 머리 30px, 바닥글 26px)과 맞춘다. 사용자·업체·관리자 모두 같은 크기 */
+.gnb__logo img { height: 30px; }
+.footer__top img { height: 26px; }
 body:not(:has(> .gnb)) { padding-top: var(--sd-gnb-height); }
