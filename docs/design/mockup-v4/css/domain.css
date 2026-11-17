@@ -174,10 +174,12 @@
 .escrow li.is-now small { color: rgba(255,255,255,.75); }
 
 /* 취소 시점별 위약금 */
-.penalty { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
-.penalty li { padding: 14px 10px; text-align: center; background: var(--sd-bg); font-size: var(--sd-text-small); color: var(--sd-muted); }
+/* 취소 시점별 위약금: 7칸 한 줄 (2026-11-17 해원) */
+.penalty { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
+.penalty li { padding: 10px 6px; text-align: center; background: var(--sd-bg); font-size: var(--sd-text-meta); color: var(--sd-muted); white-space: nowrap; }
 .penalty li + li { border-left: 1px solid var(--sd-line); }
-.penalty li b { display: block; margin-top: 2px; font-size: 20px; color: var(--sd-ink); font-variant-numeric: tabular-nums; }
+.penalty li[hidden] + li { border-left: 0; }
+.penalty li b { display: block; margin-top: 2px; font-size: 16px; color: var(--sd-ink); font-variant-numeric: tabular-nums; }
 .penalty li.is-now { background: var(--sd-ink); color: rgba(255,255,255,.8); }
 .penalty li.is-now b { color: #fff; }
 

@@ -52,20 +52,36 @@
   .kv4 b { font-size: 16px; font-weight: 700; }
 
   /* 업체 비교표: 업체가 열, 항목이 줄 (Figma 시안 F·H) */
-  /* 비교표: 바깥 상자·바탕색 없이, 머리 아래 진한 1px 선 + 줄 사이 옅은 선 */
-  .cmp { display: grid; grid-template-columns: 140px 1fr 1fr 180px; margin-top: 20px; }
-  .cmp > div { padding: 14px 16px 14px 0; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
-  .cmp > .is-h { padding: 0 16px 14px 0; border-top: 0; border-bottom: 1px solid var(--sd-ink); }
+  /* 비교표 (2026-11-17 해원): 바깥 테두리·바탕색 없이 글자 크기와 굵기로 위계를 만든다.
+     머리 아래 진한 1px 선, 줄 사이 옅은 1px 선만. 업체 열은 같은 폭, 오른쪽 "업체 더 받기"는 세로 옅은 선 하나로만 나눈다 */
+  .cmp { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1fr) 176px; margin-top: 24px; }
+  .cmp > div:not(.cmp__more) { padding-right: 32px; }
+  .cmp > div { padding: 16px 0; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); line-height: 1.6; }
+  .cmp > .is-h { padding: 0 0 16px; border-top: 0; border-bottom: 1px solid var(--sd-ink); }
   .cmp > .is-h + div:not(.is-h) { border-top: 0; }
-  .cmp > .is-k { color: var(--sd-muted); }
+  .cmp > .is-k { padding-top: 18px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .cmp > .is-end { padding-bottom: 0; }
   .cmp__who { display: flex; align-items: center; gap: 12px; }
-  .cmp__who b { font-size: 16px; font-weight: 700; }
-  .cmp__who small { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .cmp__price { font-size: 20px; font-weight: 700; }
+  .cmp__who .avatar { width: 40px; height: 40px; border-radius: 6px; font-size: 14px; }
+  .cmp__name { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+  .cmp__name .tag { font-weight: 500; }
+  .cmp__meta { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .cmp__flag { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: var(--sd-text-small); font-weight: 600; color: var(--sd-muted); }
+  .cmp__flag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .cmp__flag.is-on { color: var(--sd-blue); }
+  .cmp__price { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+  .cmp__diff { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); font-variant-numeric: tabular-nums; }
+  .cmp__diff b { color: var(--sd-ink); font-weight: 600; }
+  .cmp__inc { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .cmp__inc span::before { content: "✓"; margin-right: 4px; color: var(--sd-pass-text); font-weight: 700; }
+  .cmp__inc span.is-no { color: var(--sd-photo-text); }
+  .cmp__inc span.is-no::before { content: "–"; color: var(--sd-photo-text); }
+  .cmp__inc b { font-weight: 700; }
+  .cmp__note { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
   .cmp__acts { display: flex; gap: 8px; }
-  .cmp__acts .btn { flex: 1; }
-  .cmp__more { grid-row: span 7; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px; padding-left: 20px !important; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .cmp > .cmp__more { border-bottom: 0; }
+  .cmp__more { grid-column: 4; grid-row: 1 / span 7; display: flex; flex-direction: column; gap: 6px; padding: 0 0 0 24px !important; border: 0 !important; border-left: 1px solid var(--sd-line) !important; color: var(--sd-muted); font-size: var(--sd-text-small); line-height: 1.6; }
+  .cmp__more b { color: var(--sd-ink); font-size: var(--sd-text-desc); }
+  .cmp__more .link { margin-top: 4px; font-weight: 700; color: var(--sd-ink); }
   .stat-line { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 14px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
   .stat-line b { margin-left: 4px; color: var(--sd-ink); }
   .stat-line .point { color: var(--sd-blue); }
@@ -76,7 +92,6 @@
   .todo .timer { margin-left: 6px; color: var(--sd-blue); }
   .todo--quiet > .icon { color: var(--sd-muted); }
 
-  .cmp__more b { color: var(--sd-ink); }
 </style>
 </head>
 <!-- 2026-11-17 해원: 상자·진한 펼침 테두리·파스텔 바탕을 빼고 선과 여백으로만 나눔 (카드형 쓰지 않기)
@@ -165,34 +180,43 @@
             <p class="stat-line"><span>단계 상태<b class="point">조율 중</b></span><span>받은 견적서<b>2건</b></span><span>채팅 중<b>1곳</b></span><span>보낸 오퍼<b>0 / 10곳</b></span></p>
 
             <div class="cmp" role="table" aria-label="장비 견적서 비교">
-              <div class="is-k is-h">업체</div>
-              <div class="is-h is-on"><div class="cmp__who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')">D</span><div><b>업체 D <span class="tag">v2</span></b><small>거래 15건 · 13:18 수정</small></div></div></div>
-              <div class="is-h"><div class="cmp__who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')">E</span><div><b>업체 E <span class="tag">v1</span></b><small>거래 3건 · 10:05 받음</small></div></div></div>
-              <div class="is-h cmp__more"><b>업체 더 받기</b><span style="font-size:13px">관심 업체에 오퍼를 보내요<br>0 / 10곳</span><a class="btn btn--sm" href="favorites.html">오퍼 보내기</a></div>
+              <div class="is-k is-h" role="columnheader">업체</div>
+              <div class="is-h" role="columnheader">
+                <div class="cmp__who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1545454675-3531b543be5d.jpg')">D</span>
+                  <div><span class="cmp__name">업체 D <span class="tag">v2</span></span><span class="cmp__meta">거래 15건 · 13:18 수정</span></div></div>
+                <span class="cmp__flag is-on">확인 카드 받음</span>
+              </div>
+              <div class="is-h" role="columnheader">
+                <div class="cmp__who"><span class="avatar" style="--img:url('../../mockup/assets/photos/photo-1511671782779-c97d3d27a1d4.jpg')">E</span>
+                  <div><span class="cmp__name">업체 E <span class="tag">v1</span></span><span class="cmp__meta">거래 3건 · 10:05 받음</span></div></div>
+                <span class="cmp__flag">채팅 전</span>
+              </div>
+              <div class="cmp__more">
+                <b>업체 더 받기</b>
+                <span>관심 업체에 오퍼를 보내 견적서를 더 받아요.</span>
+                <span>보낸 오퍼 0 / 10곳</span>
+                <a class="link" href="favorites.html">오퍼 보내기 →</a>
+              </div>
 
               <div class="is-k">총액</div>
-              <div class="is-on"><span class="cmp__price">1,350,000원</span><br><span class="muted">v1 1,250,000원</span></div>
-              <div><span class="cmp__price">980,000원</span></div>
+              <div><span class="cmp__price">1,350,000원</span><span class="cmp__diff">v1보다 <b>+100,000원</b> (1,250,000원)</span></div>
+              <div><span class="cmp__price">980,000원</span><span class="cmp__diff">업체 D보다 <b>370,000원</b> 적어요</span></div>
 
               <div class="is-k">포함</div>
-              <div class="is-on">장비 · 설치 · <b>엔지니어</b></div>
-              <div>장비 · 설치</div>
+              <div class="cmp__inc"><span>장비</span><span>설치·철수</span><span><b>엔지니어</b></span></div>
+              <div class="cmp__inc"><span>장비</span><span>설치·철수</span><span class="is-no">엔지니어 없음</span></div>
 
               <div class="is-k">자동 검사</div>
-              <div class="is-on"><span class="status status--pass"><span data-icon="pass"></span>통과</span> 설치 완료 15:45</div>
-              <div><span class="status status--info"><span data-icon="info"></span>확인 필요 1</span> 무선 마이크 수량</div>
+              <div><span class="status status--pass"><span data-icon="pass"></span>통과</span><span class="cmp__note">설치 15:45에 끝나요 (리허설 17:00)</span></div>
+              <div><span class="status status--info"><span data-icon="info"></span>확인 필요 1</span><span class="cmp__note">무선 마이크 수량을 업체에 물어보세요</span></div>
 
-              <div class="is-k">엔지니어 단계</div>
-              <div class="is-on">컨펌하면 건너뛸지 물어봐요</div>
-              <div>엔지니어 단계가 그대로 열려요</div>
+              <div class="is-k">컨펌하면</div>
+              <div>엔지니어 단계를 건너뛸지 물어봐요</div>
+              <div>엔지니어 단계가 이어서 열려요</div>
 
-              <div class="is-k">상태</div>
-              <div class="is-on"><span class="state state--on">확인 카드 받음</span></div>
-              <div><span class="state">채팅 전</span></div>
-
-              <div class="is-k"></div>
-              <div class="is-on cmp__acts"><a class="btn btn--sm" href="#">견적서</a><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅</a></div>
-              <div class="cmp__acts"><a class="btn btn--sm" href="#">견적서</a><a class="btn btn--sm" href="#chat" data-chat="e">채팅 시작</a></div>
+              <div class="is-k is-end"></div>
+              <div class="cmp__acts is-end"><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅에서 컨펌</a><a class="btn btn--sm" href="#">견적서</a></div>
+              <div class="cmp__acts is-end"><a class="btn btn--sm" href="#chat" data-chat="e">채팅 시작</a><a class="btn btn--sm" href="#">견적서</a></div>
             </div>
             <p class="muted mt-12" style="font-size:13px">한 단계에서 여러 업체와 채팅할 수 있지만, 컨펌은 한 업체만 할 수 있어요.</p>
 
