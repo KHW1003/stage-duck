@@ -1,7 +1,7 @@
 """신고 (T4-09 #54, data-model.md 9장 reports)
 
-Revision ID: 0003
-Revises: 0002
+Revision ID: 0004
+Revises: 0003
 Create Date: 2026-11-17
 """
 import sqlalchemy as sa
@@ -9,8 +9,8 @@ from alembic import op
 
 from app.core.db import BigID, DateTime3
 
-revision = "0003"
-down_revision = "0002"
+revision = "0004"
+down_revision = "0003"
 branch_labels = None
 depends_on = None
 

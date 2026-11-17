@@ -12,6 +12,7 @@ _tmp = Path(tempfile.mkdtemp(prefix="stageduck-test-"))
 os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{(_tmp / 'test.db').as_posix()}"
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("ADMIN_SESSION_SECRET", "test-secret")
+os.environ.setdefault("UPLOAD_DIR", (_tmp / "uploads").as_posix())  # 업로드 파일은 임시 폴더에
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
