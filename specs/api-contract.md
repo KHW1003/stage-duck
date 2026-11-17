@@ -259,6 +259,18 @@
 
 ---
 
+### 5.1 알림 (공통, 3번)
+
+| 메서드 | 경로 | 권한 | 설명 | AC |
+|---|---|---|---|---|
+| GET | `/me/notifications` | 로그인 (S\*, 정지 포함) | `?category=&before=` 최신순 20개 → `{ "items": [{ id, type, category, title, body, link, read, createdAt }], "nextBefore", "unreadCount" }` | |
+| GET | `/me/notifications/unread-count` | 로그인 | `{ "count" }` — 머리 종 배지 | |
+| POST | `/me/notifications/read` | 로그인 | `{ "ids": [12] }` 또는 `{ "all": true }` → `204`. 남의 id는 무시 | |
+
+- 어떤 일에 누구에게 어떤 알림이 가는지는 [notifications.md](notifications.md) 3장. 채팅 메시지는 알림을 만들지 않는다.
+
+---
+
 ## 6. F5 부가 기능
 
 ### 6.1 결제·취소
@@ -315,7 +327,7 @@
 | `quote.updated` | 견적서 새 버전 | `{ roomId, quoteId, version, changed: ["setupMinutes"] }` |
 | `confirm.updated` | 카드 상태 변경 | `{ roomId, confirmRequestId, status }` |
 | `stage.updated` | 단계 상태 변경 | `{ performanceId, stageId, stageType, status }` |
-| `notification` | 알림 배지 | `{ id, kind, title, link }` |
+| `notification` | 알림 배지 | `{ id, type, category, title, body, link, createdAt }` — 종류는 [notifications.md](notifications.md) |
 
 ```json
 { "type": "message.created", "data": { "roomId": 31, "message": { "id": 120, "type": "TEXT", "body": "드럼 마이크도 추가돼요?", "senderId": 12, "contactWarning": false, "createdAt": "2026-11-12T15:30:00+09:00" } } }

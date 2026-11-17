@@ -370,7 +370,7 @@ erDiagram
 | 테이블 | 주요 컬럼 | 설명 |
 |---|---|---|
 | status_histories | id, entity_type, entity_id, from_status, to_status, actor_user_id NULL, reason, created_at | 인덱스 (entity_type, entity_id). 추가만 (NFR-HIST-01, AC-F5-13) |
-| notifications | id, user_id, type, payload JSON, read_at | 사이트 안 알림 배지 |
+| notifications | id, user_id, type VARCHAR(40), category VARCHAR(20), title VARCHAR(100), body VARCHAR(200), link VARCHAR(255), payload JSON, read_at, created_at | 사이트 안 알림. 문구는 만들 때 확정. 인덱스 (user_id, id DESC), (user_id, read_at). 종류 28개·문구·받는 사람은 [notifications.md](notifications.md) (D-52) |
 | idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
 
 ---
