@@ -42,3 +42,33 @@ export interface SupplierSignupRequest {
   phone: string;
   agreements: Agreements;
 }
+
+export type BusinessType = "SOLE_PROPRIETOR" | "CORPORATION" | "INDIVIDUAL";
+export type SupplierCategory = "VENUE" | "EQUIPMENT" | "INSTALL" | "ENGINEER";
+
+/** POST·PUT /supplier/application (FR-SUP-02). 개인(INDIVIDUAL)은 businessRegNo·businessAddress 를 보내지 않는다 */
+export interface SupplierApplicationRequest {
+  businessType: BusinessType;
+  companyName: string;
+  representativeName: string;
+  businessRegNo?: string;
+  businessAddress?: string;
+  mainPhone: string;
+  mailOrderNo: string | null;
+  categories: SupplierCategory[];
+}
+
+/** GET /supplier/application — 내 신청 내용과 심사 상태 (AC-F1-20) */
+export interface SupplierApplication {
+  businessType: BusinessType;
+  companyName: string;
+  representativeName: string;
+  businessRegNo: string | null;
+  businessAddress: string | null;
+  mainPhone: string;
+  mailOrderNo: string | null;
+  categories: SupplierCategory[];
+  reviewStatus: SupplierReviewStatus;
+  rejectReason: string | null;
+  appliedAt: string;
+}
