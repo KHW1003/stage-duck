@@ -301,3 +301,21 @@ body.is-user .now.only-user { display: flex !important; }
 /* 로고: logo.svg (팀 로고 이미지를 그대로 따라 그린 SVG). 높이만 정하고 너비는 비율대로 */
 .logo__img { display: block; height: 30px; width: auto; }
 .footer .logo__img { height: 26px; }
+
+/* ── 디테일 정리 (안쪽 목업 v3와 맞춤, DESIGN.md 8장) ──
+   - 알약 모양 버튼·칩 금지 → 모서리 8px / 6px
+   - 상태 표시는 파스텔 바탕 없이 아이콘 + 글자
+   - 금액은 빨강(주조색)이 아니라 검정
+   - 이모지 대신 선 아이콘 */
+.pill { border-radius: var(--sd-r-button, 8px); }
+.chip { border-radius: 6px; }
+.chip--on { background: var(--sd-bg); color: var(--sd-ink); border-color: var(--sd-ink); }
+.slider__ctrl { border-radius: 8px; }
+.status { gap: 4px; padding: 0; background: transparent !important; }
+.status svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.bill__total b { color: var(--sd-ink); }
+.toast__icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sd-soft, #f4f6f8); color: var(--sd-ink); }
+.toast__icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hero__stats dd { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
+.footer__biz .tbd, .footer__tel .tbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px dashed var(--sd-footer-line); border-radius: 4px; font-size: 11px; }

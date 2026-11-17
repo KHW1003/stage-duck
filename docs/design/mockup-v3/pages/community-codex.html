@@ -1,0 +1,182 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 D · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .d-board .btn--primary:hover { background: var(--sd-ink); border-color: var(--sd-ink); }
+  .d-board .select { appearance: auto; background: var(--sd-bg); padding-right: 12px; }
+  .d-board :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 3px; }
+  .d-tools { display: flex; align-items: end; gap: 12px; margin-bottom: 28px; }
+  .d-search { display: flex; gap: 8px; flex: 1; align-items: end; }
+  .d-search .field { flex: 1; }
+  .d-tools > .field { width: 168px; }
+  .d-shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .d-shell > * { min-width: 0; }
+  .d-categories { position: sticky; top: calc(var(--sd-gnb-height) + 24px); }
+  .d-categories h2 { font-size: 15px; padding: 0 12px 12px; }
+  .d-categories [role="tablist"] { display: flex; flex-direction: column; gap: 6px; }
+  .d-categories button { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 10px 12px; border: 1px solid var(--sd-bg); border-radius: 8px; background: var(--sd-bg); color: var(--sd-muted); cursor: pointer; text-align: left; }
+  .d-categories button:hover { background: var(--sd-band); }
+  .d-categories button[aria-selected="true"] { border-color: var(--sd-ink); background: var(--sd-band); color: var(--sd-ink); font-weight: 700; }
+  .d-categories small { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .d-pin { border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-th); }
+  .d-pin details + details { border-top: 1px solid var(--sd-line); }
+  .d-pin summary { min-height: 52px; padding: 14px 16px; cursor: pointer; font-size: 14px; }
+  .d-pin summary b { margin: 0 10px 0 4px; }
+  .d-pin details p { padding: 0 20px 16px; color: var(--sd-muted); font-size: 14px; }
+  .d-result { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin: 24px 0 8px; font-size: 14px; }
+  .d-result .link { min-height: 44px; }
+  .d-group { display: grid; grid-template-columns: 92px minmax(0, 1fr); border-top: 1px solid var(--sd-line-strong); }
+  .d-group h2 { padding: 18px 8px 16px 0; font-size: 17px; }
+  .d-group h2 small { display: block; margin-top: 4px; font-size: 13px; color: var(--sd-muted); font-weight: 400; }
+  .d-entry { display: grid; grid-template-columns: minmax(0, 1fr) 62px; align-items: center; gap: 16px; min-height: 92px; padding: 16px; border-bottom: 1px solid var(--sd-line); }
+  .d-entry:hover { background: var(--sd-hover); }
+  .d-entry:hover .list__title { text-decoration: underline; text-underline-offset: 4px; }
+  .d-entry .list__title { font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; }
+  .d-entry .prefix { color: var(--sd-muted); font-size: 14px; font-weight: 500; margin-right: 8px; }
+  .d-entry .list__meta { margin-top: 8px; row-gap: 4px; }
+  .d-comments { text-align: center; border-left: 1px solid var(--sd-line); font-size: 13px; color: var(--sd-muted); }
+  .d-comments b { display: block; font-size: 21px; font-weight: 600; color: var(--sd-ink); line-height: 1.3; }
+  .d-end { margin-top: 24px; padding: 16px; text-align: center; color: var(--sd-muted); font-size: 13px; }
+  @media (max-width: 900px) {
+    :root { --sd-gnb-height: 108px; }
+    .gnb__inner { display: flex; flex-wrap: wrap; gap: 0 12px; height: auto; padding: 0 20px; }
+    .gnb__logo { min-height: 64px; margin-right: auto; }
+    .gnb__logo img { height: 22px; }
+    .gnb__right { flex: none; }
+    .gnb__menu { order: 3; flex: 0 0 100%; min-width: 0; justify-content: flex-start; gap: 24px; overflow-x: auto; }
+    .gnb__menu a { height: 44px; flex: none; }
+    .d-shell { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; }
+    .d-group { grid-template-columns: 1fr; }
+    .d-group h2 { display: flex; align-items: baseline; gap: 12px; padding: 16px 8px 0; }
+    .d-group h2 small { margin: 0; }
+  }
+  @media (max-width: 620px) {
+    .d-board, .page-top .container { padding-left: 20px; padding-right: 20px; }
+    .d-tools { flex-wrap: wrap; }
+    .d-search { flex-basis: 100%; }
+    .d-tools > .field { flex: 1; }
+    .d-shell { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .d-categories { position: static; }
+    .d-categories h2 { padding-left: 0; }
+    .d-categories [role="tablist"] { flex-direction: row; overflow-x: auto; padding: 4px; }
+    .d-categories button { flex: none; gap: 12px; }
+    .d-entry { padding: 16px 4px; gap: 8px; grid-template-columns: minmax(0, 1fr) 48px; }
+    .d-result { align-items: start; flex-direction: column; gap: 0; }
+  }
+</style>
+</head>
+<body data-layout="user" data-nav="community">
+<div class="page-top"><div class="container page-top__inner"><div>
+  <ol class="page-top__crumb"><li>커뮤니티</li><li>D안</li></ol>
+  <h1>커뮤니티</h1>
+  <p class="page-top__desc">공연을 준비하는 사용자끼리 묻고 나누는 곳이에요. 전화번호·계좌번호·외부 링크는 쓸 수 없어요.</p>
+</div></div></div>
+<main class="container main d-board">
+  <div class="d-tools">
+    <form class="d-search" id="search-form" role="search">
+      <label class="field"><span class="field__label">제목·닉네임 검색</span><input class="input" id="search" type="search" placeholder="찾고 싶은 이야기를 입력해 주세요"></label>
+      <button class="btn" type="submit">검색</button>
+    </form>
+    <label class="field"><span class="field__label">날짜 묶음 안 정렬</span><select class="select" id="sort"><option value="new">최신순</option><option value="comments">댓글 많은 순</option></select></label>
+    <a class="btn btn--primary" href="community-codex-write.html"><span data-icon="edit" class="icon--sm"></span>글쓰기</a>
+  </div>
+  <div class="d-shell">
+    <aside class="d-categories" aria-label="말머리 고르기">
+      <h2>말머리</h2>
+      <div role="tablist" aria-label="말머리" aria-orientation="vertical">
+        <button id="cat-all" role="tab" aria-selected="true" aria-controls="post-list" tabindex="0" data-category="전체" type="button">전체 <small>128</small></button>
+        <button id="cat-free" role="tab" aria-selected="false" aria-controls="post-list" tabindex="-1" data-category="자유" type="button">[자유] <small>54</small></button>
+        <button id="cat-question" role="tab" aria-selected="false" aria-controls="post-list" tabindex="-1" data-category="질문" type="button">[질문] <small>41</small></button>
+        <button id="cat-info" role="tab" aria-selected="false" aria-controls="post-list" tabindex="-1" data-category="정보" type="button">[정보] <small>22</small></button>
+        <button id="cat-news" role="tab" aria-selected="false" aria-controls="post-list" tabindex="-1" data-category="공연 소식" type="button">[공연 소식] <small>11</small></button>
+      </div>
+    </aside>
+    <div>
+      <section class="d-pin" aria-label="고정 공지 2개">
+        <details><summary><b>공지</b>커뮤니티 이용 규칙 · 연락처·외부 거래 유도 글은 블라인드돼요</summary><p>전화번호·계좌번호·외부 링크는 쓸 수 없어요. 특정 업체를 깎아내리거나 외부 거래를 권하는 글은 블라인드돼요.</p></details>
+        <details><summary><b>공지</b>공연 일정 홍보는 [공연 소식] 말머리로 올려 주세요</summary><p>공연 날짜와 지역을 제목에 적어 주세요. 연락처는 결제 뒤 최종 담당표에서 공개돼요.</p></details>
+      </section>
+      <div class="d-result"><p id="result-count" role="status"></p><button class="link" id="reset" type="button" hidden>검색·말머리 초기화</button></div>
+      <div id="post-list" role="tabpanel" aria-labelledby="cat-all" tabindex="0"></div>
+      <div class="empty" id="empty" hidden><b>찾는 글이 없어요</b><p>검색어를 바꾸거나 다른 말머리를 골라 주세요.</p></div>
+      <p class="d-end">전체 128개 중 최근 글 9개를 보여 드려요.</p>
+      <noscript><p class="notice">글 목록을 보려면 자바스크립트를 켜 주세요.</p></noscript>
+    </div>
+  </div>
+</main>
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+<script>
+(() => {
+  const posts = [
+    [128, '질문', '스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?', '광주밴드', 12, 86, '14:20', 0],
+    [127, '정보', "요청서 STEP2 '이미 있어요' 칸 잘 쓰는 법 정리했어요", '첫무대준비중', 8, 142, '11:05', 0],
+    [126, '자유', '첫 공연 끝났어요. 다음엔 장비 단계부터 일찍 준비하려고요', '노을극단', 21, 310, '11.15', 1],
+    [125, '공연 소식', '11월 22일 광주 동구에서 가을밤 밴드 공연 해요', '광주밴드', 5, 97, '11.15', 1],
+    [124, '질문', '장비 견적서에 엔지니어가 들어 있으면 엔지니어 단계는 건너뛰어도 되나요?', '빛고을합창단', 9, 201, '11.14', 2],
+    [123, '정보', "설치 시간 '경고'가 뜨는 이유와 공연장 고를 때 볼 것", '드럼치는목요일', 14, 388, '11.14', 2],
+    [122, '자유', '연습실 소음 문제, 다들 어떻게 해결하세요?', '새벽합주', 17, 254, '11.13', 2],
+    [121, '질문', '관객 150명이면 모니터 스피커는 몇 개가 적당할까요?', '어쿠스틱두시', 6, 133, '11.13', 2],
+    [120, '자유', '공연 포스터 직접 만드시는 분 계신가요', '노을극단', 3, 72, '11.12', 2]
+  ];
+  const tabs = [...document.querySelectorAll('[data-category]')];
+  const panel = document.getElementById('post-list');
+  const search = document.getElementById('search');
+  const sort = document.getElementById('sort');
+  let category = '전체';
+  function render() {
+    const term = search.value.trim().toLocaleLowerCase();
+    const visible = posts.filter(p => (category === '전체' || p[1] === category) && (p[2] + ' ' + p[3]).toLocaleLowerCase().includes(term));
+    panel.replaceChildren();
+    ['오늘', '어제', '이전'].forEach((label, index) => {
+      const rows = visible.filter(p => p[7] === index).sort((a, b) => sort.value === 'comments' ? b[4] - a[4] || b[0] - a[0] : b[0] - a[0]);
+      if (!rows.length) return;
+      const group = document.createElement('section');
+      group.className = 'd-group';
+      group.innerHTML = '<h2>' + label + '<small>' + rows.length + '개</small></h2><ul></ul>';
+      rows.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = '<a class="d-entry" href="community-codex-post.html?id=' + p[0] + '"><div><p class="list__title"><span class="prefix">[' + p[1] + ']</span>' + p[2] + '</p><p class="list__meta"><span>' + p[3] + '</span><span>조회 ' + p[5] + '</span><span>' + p[6] + '</span></p></div><span class="d-comments"><b>' + p[4] + '</b>댓글</span></a>';
+        group.querySelector('ul').append(li);
+      });
+      panel.append(group);
+    });
+    document.getElementById('result-count').textContent = category + ' · 최근 글 ' + visible.length + '개';
+    document.getElementById('empty').hidden = visible.length > 0;
+    document.getElementById('reset').hidden = !term && category === '전체';
+  }
+  function selectTab(tab) {
+    category = tab.dataset.category;
+    tabs.forEach(t => { t.setAttribute('aria-selected', String(t === tab)); t.tabIndex = t === tab ? 0 : -1; });
+    panel.setAttribute('aria-labelledby', tab.id);
+    render();
+  }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectTab(tab));
+    tab.addEventListener('keydown', e => {
+      let next = index;
+      if (['ArrowDown', 'ArrowRight'].includes(e.key)) next = (index + 1) % tabs.length;
+      else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) next = (index + tabs.length - 1) % tabs.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = tabs.length - 1;
+      else return;
+      e.preventDefault(); tabs[next].focus(); selectTab(tabs[next]);
+    });
+  });
+  const compact = matchMedia('(max-width: 620px)');
+  const orient = () => document.querySelector('[role="tablist"]').setAttribute('aria-orientation', compact.matches ? 'horizontal' : 'vertical');
+  compact.addEventListener('change', orient); orient();
+  document.getElementById('search-form').addEventListener('submit', e => { e.preventDefault(); render(); });
+  search.addEventListener('input', render);
+  sort.addEventListener('change', render);
+  document.getElementById('reset').addEventListener('click', () => { search.value = ''; selectTab(tabs[0]); search.focus(); });
+  render();
+})();
+</script>
+</body>
+</html>

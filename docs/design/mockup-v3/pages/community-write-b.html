@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글쓰기 B · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* CommunityWritePage.module.css — 시안 3개 */
+  .narrow { max-width: 820px; margin: 0 auto; }
+  .count-line { display: flex; justify-content: space-between; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .uploader { display: flex; gap: 10px; flex-wrap: wrap; }
+  .uploader__add { display: grid; place-items: center; align-content: center; gap: 4px; width: 96px; aspect-ratio: 1; border: 1px dashed var(--sd-line-strong); border-radius: var(--sd-r-box); color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .uploader__item { position: relative; width: 96px; aspect-ratio: 1; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
+  .uploader__item button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--sd-dim); color: var(--sd-on-photo); }
+  .rules li { position: relative; padding-left: 12px; font-size: var(--sd-text-desc); line-height: 1.6; color: var(--sd-muted); }
+  .rules li::before { content: ""; position: absolute; left: 0; top: .7em; width: 4px; height: 4px; border-radius: 50%; background: var(--sd-muted); }
+  .rules li + li { margin-top: 6px; }
+</style>
+</head>
+<!-- 시안: 글쓰기 B 표 폼 + 안내
+     화면: 커뮤니티 글쓰기 · 제안 화면 (스펙에 아직 없음 — 해원 승인 전)
+     React(안): pages/CommunityWritePage.tsx = PrefixSelect + TitleInput + BodyEditor + PhotoUploader + Submit — React Hook Form + zod, 서버 fieldErrors 우선
+     본문의 전화번호·계좌번호·외부 링크는 서버에서 막는다 (3번 has_contact_pattern 재사용 제안). 오류 값 보기: ?err=bad -->
+<body data-layout="user" data-nav="community">
+
+<div class="mock-switch" data-group="err" style="bottom:64px">
+  <span>입력</span>
+  <button type="button" data-value="ok" aria-pressed="true">정상</button>
+  <button type="button" data-value="bad">오류</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="community-list-a.html">커뮤니티</a></li><li>글쓰기</li></ol><h1>글쓰기</h1></div></div></div>
+
+<main class="container main">
+
+  <!-- ───── A 한 줄 폼: 위에서 아래로 한 칸씩. 가운데 좁은 폭이라 쓰는 데만 집중해요 ───── -->
+  
+
+  <!-- ───── B 표 폼 + 오른쪽 안내: 요청서와 같은 이름-값 표. 오른쪽에 쓰기 규칙이 늘 보여요 ───── -->
+  <div>
+    <div class="with-aside">
+      <form>
+        <div class="form-table">
+          <div><span class="form-table__th">말머리 <span class="req" style="color:var(--sd-conflict-text)">*</span></span><span class="form-table__td"><div class="filters"><button type="button" aria-pressed="true">질문</button><button type="button" aria-pressed="false">자유</button><button type="button" aria-pressed="false">정보</button><button type="button" aria-pressed="false">공연 소식</button></div></span></div>
+          <div><span class="form-table__th">제목 <span class="req" style="color:var(--sd-conflict-text)">*</span></span><span class="form-table__td"><input class="input wide" value="스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?" maxlength="60"><span class="field__hint">27 / 60자</span></span></div>
+          <div><span class="form-table__th">내용 <span class="req" style="color:var(--sd-conflict-text)">*</span></span><span class="form-table__td">
+            <textarea class="textarea wide" style="min-height:300px" data-when="err:ok">다음 달에 첫 공연을 해요. 공연장 입실이 15시이고 공연은 19시인데, 리허설을 언제 시작해야 장비 설치랑 안 겹칠지 모르겠어요.
+경험 있으신 분들 조언 부탁드려요.</textarea>
+            <textarea class="textarea wide" style="min-height:300px" aria-invalid="true" data-when="err:bad" hidden>장비 업체 사장님이 직접 연락 달라고 하셔서요. 010-0000-0000으로 문자 주세요.</textarea>
+            <span class="field__error" data-when="err:bad" hidden><span data-icon="warn" class="icon--sm"></span>전화번호는 쓸 수 없어요. 연락처를 빼고 다시 올려 주세요.</span>
+            <span class="field__hint">84 / 2,000자</span></span></div>
+          <div><span class="form-table__th">사진</span><span class="form-table__td"><div class="uploader"><button class="uploader__add" type="button"><span data-icon="upload"></span>사진 올리기</button><span class="uploader__item" role="img" aria-label="첨부 사진 1" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"><button type="button" aria-label="사진 1 빼기"><span data-icon="x" class="icon--sm"></span></button></span></div><span class="field__hint">JPG·PNG, 한 장 10MB까지, 최대 10장</span></span></div>
+        </div>
+        <div class="btns btns--end mt-24"><a class="btn" href="community-list-a.html">취소</a><button class="btn btn--primary" type="submit">올리기</button></div>
+      </form>
+      <aside class="side-box sticky">
+        <div class="side-box__sec"><p class="side-box__title">쓰기 전에 확인해 주세요</p><ul class="rules mt-12"><li>전화번호·계좌번호·외부 링크는 쓸 수 없어요. 연락처는 결제 뒤 최종 담당표에서 공개돼요.</li><li>특정 업체를 깎아내리거나 외부 거래를 권하는 글은 블라인드돼요.</li><li>신고가 쌓이면 관리자가 확인하고 경고를 줄 수 있어요. 경고 3회면 이용이 정지돼요.</li></ul></div>
+        <div class="side-box__sec side-box__sec--gray"><p class="small muted">공연 일정 홍보는 [공연 소식] 말머리로 올려 주세요.</p></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ───── C 쓰기 판: 말머리 칩 → 큰 제목 → 도구 줄 + 본문이 한 판에. 아래 줄은 따라와요 ───── -->
+  
+</main>
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+</body>
+</html>

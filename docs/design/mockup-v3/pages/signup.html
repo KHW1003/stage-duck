@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>가입 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/app.css">
 </head>
 <!-- 화면: 사용자 가입 + 네이버 추가 정보 · FR-AUTH-01·04 · AC-F1-01~03·05~07 · 묶음 1
@@ -53,14 +54,14 @@
     <div class="sec-head"><h2><span data-icon="shield"></span>약관 동의</h2></div>
     <div class="list">
       <div class="list__item"><label class="check strong"><input type="checkbox" checked>전체 동의</label><span></span></div>
-      <div class="list__item"><label class="check"><input type="checkbox" checked>STAGE DUCK 이용약관 (필수)</label><a class="link" href="#">보기</a></div>
-      <div class="list__item"><label class="check"><input type="checkbox" checked><span>개인정보 수집·이용 (필수)<small>이름, 전화번호, 이메일, 생년월일, 닉네임. 주소는 받지 않아요.</small></span></label><a class="link" href="#">보기</a></div>
+      <div class="list__item"><label class="check"><input type="checkbox" checked>STAGE DUCK 이용약관 (필수)</label><a class="link" href="terms.html">보기</a></div>
+      <div class="list__item"><label class="check"><input type="checkbox" checked><span>개인정보 수집·이용 (필수)<small>이름, 전화번호, 이메일, 생년월일, 닉네임. 주소는 받지 않아요.</small></span></label><a class="link" href="terms.html?tab=privacy">보기</a></div>
       <div class="list__item"><label class="check"><input type="checkbox">마케팅 정보 받기 (선택)</label><a class="link" href="#">보기</a></div>
     </div>
     <div class="notice mt-16" data-when="mode:social"><span data-icon="info"></span><div>네이버 동의와 따로 STAGE DUCK 약관에 동의해야 가입이 끝나요. 같은 이메일로 가입한 계정이 있어도 자동으로 합치지 않아요.</div></div>
   </section>
 
-  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="login.html" style="min-width:160px">취소</a><a class="btn btn--primary btn--lg" href="my.html" style="min-width:240px">가입하기</a></div>
+  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="login.html" style="min-width:160px">취소</a><a class="btn btn--primary btn--lg" href="done.html?kind=signup" style="min-width:240px">가입하기</a></div>
 </main>
 <script src="../layout.js"></script>
 </body>

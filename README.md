@@ -71,7 +71,7 @@
 | DB | MariaDB |
 | 테스트 | pytest / Vitest + React Testing Library |
 | 결제(테스트) | 자체 에스크로형 모의 결제 |
-| 배포 | Docker Compose |
+| 배포 | Docker Compose + Caddy, 시연 서버 AWS EC2 1대, main 머지 시 자동 배포 ([specs/deploy.md](specs/deploy.md)) |
 
 ## 개발 환경 실행
 

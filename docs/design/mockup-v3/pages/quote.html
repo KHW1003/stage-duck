@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>내역서 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/app.css">
 </head>
 <!-- 화면: 내역서 (견적서 상세 + 버전) · FR-QUOTE-03 · FR-CHAT-03 · AC-F2-20 · AC-F3-09·10 · 묶음 3
@@ -25,9 +26,9 @@
           <tr><td><b>마이크</b></td><td>보컬·악기용 (요청 추가 2 포함)</td><td class="r">8</td><td class="r">160,000원</td></tr>
           <tr><td><b>모니터 스피커</b></td><td>바닥형</td><td class="r">4</td><td class="r">120,000원</td></tr>
           <tr><td><b>설치·철수</b></td><td>설치 15:00~15:45 · 철수 21:00~22:00</td><td class="r">1</td><td class="r">200,000원</td></tr>
-          <tr class="is-added"><td><b>설치 인원</b></td><td>설치를 15:45까지 끝내기 위한 추가 1명</td><td class="r">1</td><td class="r">100,000원</td></tr>
+          <tr class="is-added"><td><b>설치 인원</b></td><td>설치를 15:45까지 끝내기 위한 추가 1명</td><td class="r">1</td><td class="r">150,000원</td></tr>
           <tr><td><b>현장 엔지니어</b></td><td>FOH 믹싱 · 사운드체크·리허설 · 설치 보조</td><td class="r">1</td><td class="r">150,000원</td></tr>
-        </tbody><tfoot><tr><td colspan="3">합계 (부가세 포함)</td><td class="r">1,350,000원</td></tr></tfoot></table>
+        </tbody><tfoot><tr class="is-sub"><td colspan="3">항목 합계</td><td class="r">1,400,000원</td></tr><tr class="is-sub is-discount"><td colspan="3"><b>업체할인</b></td><td class="r"><span class="discount">− 50,000원</span></td></tr><tr><td colspan="3">합계 (부가세 포함)</td><td class="r">1,350,000원</td></tr></tfoot></table>
         <p class="field__hint mt-8">합계는 업체가 적은 항목을 서버가 더해 확인한 값이에요.</p>
       </section>
       <section class="sec" id="v1" hidden>
@@ -53,8 +54,8 @@
     </div>
 
     <aside class="side-box sticky">
-      <div class="side-box__sec"><p class="side-box__title">견적서 v2</p><div class="sum-total"><span>합계</span><b>1,350,000<small>원</small></b></div><p class="small point mt-4">v1보다 100,000원 늘었어요 · 설치 인원 +1</p></div>
-      <div class="side-box__sec"><p class="small strong mb-8">버전 기록</p><ul class="versions"><li class="is-now"><span><span class="versions__v">v2</span>설치 인원 +1</span><span class="num">1,350,000원</span></li><li><span><span class="versions__v">v1</span>처음 보냄</span><span class="num muted">1,250,000원</span></li></ul></div>
+      <div class="side-box__sec"><p class="side-box__title">견적서 v2</p><div class="sum-total"><span>합계</span><b>1,350,000<small>원</small></b></div><dl class="sum-rows mt-12"><div><dt>항목 합계</dt><dd>1,400,000원</dd></div><div><dt>업체할인</dt><dd><span class="discount">− 50,000원</span></dd></div></dl><p class="small muted mt-8">v1보다 100,000원 늘었어요 · 설치 인원 +1 (150,000원), 업체할인 50,000원</p></div>
+      <div class="side-box__sec"><p class="small strong mb-8">버전 기록</p><ul class="versions"><li class="is-now"><span><span class="versions__v">v2</span>설치 인원 +1 · 업체할인</span><span class="num">1,350,000원</span></li><li><span><span class="versions__v">v1</span>처음 보냄</span><span class="num muted">1,250,000원</span></li></ul></div>
       <div class="side-box__sec side-box__sec--gray"><p class="small">확인 카드 남은 시간 <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12</span></p><p class="small muted mt-4">지나면 만료되고 업체가 다시 보낼 수 있어요.</p></div>
       <div class="side-box__sec"><button class="btn btn--primary btn--lg btn--block" type="button" data-open="confirm">컨펌</button><a class="btn btn--block mt-8" href="#chat" data-chat="d">다시 조율</a></div>
     </aside>

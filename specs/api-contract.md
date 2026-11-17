@@ -39,6 +39,7 @@
 |---|---|---|
 | 400 | `VALIDATION_FAILED` | 입력 형식·범위 오류 (fieldErrors 포함) |
 | 400 | `TOTAL_MISMATCH` · `AMOUNT_MISMATCH` | 견적 합계·결제 금액 조작 |
+| 400 | `TOTAL_TOO_LARGE` | 견적 항목 합이 합계 칸(INT UNSIGNED) 최댓값을 넘음 |
 | 400 | `UNDER_AGE` · `TERMS_REQUIRED` · `INVALID_BUSINESS_NO` | 가입·입점 규칙 |
 | 401 | `UNAUTHENTICATED` · `LOGIN_LOCKED` | 로그인 필요 / 5회 실패 잠금 |
 | 403 | `SUPPLIER_NOT_APPROVED` · `ACCOUNT_SUSPENDED` · `POSTING_RATE_LIMITED` · `CHAT_NOT_STARTED` · `CATEGORY_NOT_APPROVED` | 내 리소스지만 지금 할 수 없음 |
@@ -109,7 +110,8 @@
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
 | GET | `/venues/{venueId}` | 🌐 | 상세 (미확인 조건 구분) | |
-| POST | `/files` | 로그인 | 파일 업로드 (이미지·PDF, 10MB 이하 (제안)) → `{ "id", "url" }` | |
+| POST | `/files` | 로그인 | multipart `file`, `purpose` → `201 { "id", "url", "thumbUrl" }`. 용도별 형식·크기·공개 여부는 [uploads.md](uploads.md). 크기 초과 `413 FILE_TOO_LARGE` | |
+| GET · DELETE | `/files/{id}` | 비공개 파일 권한자 / 본인(TEMP) | 비공개 파일 내려받기(남의 것 404) / 올렸다 뺀 사진 지우기 | |
 
 ### 3.2 요청서·공고
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -137,7 +139,7 @@
   }
 }
 ```
-- 규칙 위반: `audience` 0·501, `rehearsalStart >= showStart`, `showDate < 오늘+3일`, 엔지니어 필요인데 `tasks` 비어 있음 → `400 VALIDATION_FAILED`.
+- 규칙 위반: `audience` 0·501, `rehearsalStart >= showStart`, `showDate < 오늘+14일` (D-53), 엔지니어 필요인데 `tasks` 비어 있음 → `400 VALIDATION_FAILED`.
 - `needs`의 전체 구조는 data-model.md `performances.needs`.
 
 ### 3.3 공고(업체)·견적서
@@ -160,12 +162,13 @@
   "setupStart": "15:00", "setupMinutes": 90, "teardownMinutes": 60,
   "includes": { "equipment": true, "engineer": true, "install": true, "transport": true },
   "amounts": { "items": 600000, "transport": 150000, "install": 200000, "labor": 300000, "etc": 0 },
+  "discountAmount": 0,
   "totalAmount": 1250000,
   "extraCostNote": "주차비 별도", "validUntil": "2026-11-19", "techNote": "전원 위치 확인 필요"
 }
 ```
 - 공연장 견적서는 `venueId`, `checkinTime`, `setupAvailableTime` 필수. `includes.equipment && includes.engineer`면 서버가 `isFullSpec=true`.
-- `totalAmount ≠ amounts 합` → `400 TOTAL_MISMATCH`. 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
+- 합계 검사 순서: `amounts 합 > INT UNSIGNED 최댓값` → `400 TOTAL_TOO_LARGE`, `discountAmount > amounts 합` → `400 VALIDATION_FAILED` (field `discountAmount`), `totalAmount ≠ amounts 합 − discountAmount` → `400 TOTAL_MISMATCH`, `totalAmount < 10,000` → `400 VALIDATION_FAILED` (`fieldErrors: [{ "field": "totalAmount", "reason": "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요." }]`, D-43·D-44). `discountAmount`는 생략하면 0. 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
 - 응답 `201`: `{ "quoteId": 77, "version": 1, "chatRoomId": 31, "checks": [ ... ] }`
 
 ---
@@ -253,7 +256,28 @@
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
-| POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` | F4-03 |
+| POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` — targetType: `CHAT_ROOM` · `PR_POST` · `FREE_POST` · `FREE_COMMENT` · `USER` | F4-03, F4-15 |
+| GET | `/free-posts` | 🌐 | 커뮤니티 `?category=&sort=&field=&q=&page=` (category: FREE · QUESTION · INFO · NEWS, sort: latest · comments · views, field: all · title · author) — 20개, 정지 회원·블라인드 글 제외 | F4-12, F4-13 |
+| GET | `/free-posts/{id}` | 🌐 | 글 + 댓글·답글 목록 + 이전·다음 글, 조회수 +1. 로그인했으면 내 도움 돼요·저장 여부 포함. 블라인드 글은 작성자만(사유 포함), 나머지 404 | F4-12 |
+| POST | `/free-posts` | U, S | `{ "category", "title", "body", "photos" }` — 1분에 1개(`403 POSTING_RATE_LIMITED`), 연락처 패턴 경고 | F4-16 |
+| PUT · DELETE | `/free-posts/{id}` | 본인 | 수정·삭제 (댓글 있으면 DELETED로 남김) | |
+| POST | `/free-posts/{id}/comments` | U, S | `{ "body", "parentId": null }` 500자 — 10초에 1개, 글쓴이(답글이면 댓글 작성자)에게 알림. 답글의 답글은 `400 VALIDATION_FAILED` | F4-14 |
+| PUT · DELETE | `/free-helpfuls` | U, S | `{ "targetType": "POST", "targetId": 12 }` — 도움 돼요 누르기 / 취소. 응답 `{ "helpfulCount" }` | F4-17 |
+| PUT · DELETE | `/free-posts/{id}/bookmark` | U, S | 저장 / 저장 취소 | F4-17 |
+| GET | `/me/free-bookmarks` | U, S | 내 저장 글 | F4-17 |
+| DELETE | `/free-comments/{id}` | 본인 | "삭제된 댓글이에요"로 남김 | |
+
+---
+
+### 5.1 알림 (공통, 3번)
+
+| 메서드 | 경로 | 권한 | 설명 | AC |
+|---|---|---|---|---|
+| GET | `/me/notifications` | 로그인 (S\*, 정지 포함) | `?category=&before=` 최신순 20개 → `{ "items": [{ id, type, category, title, body, link, read, createdAt }], "nextBefore", "unreadCount" }` | |
+| GET | `/me/notifications/unread-count` | 로그인 | `{ "count" }` — 머리 종 배지 | |
+| POST | `/me/notifications/read` | 로그인 | `{ "ids": [12] }` 또는 `{ "all": true }` → `204`. 남의 id는 무시 | |
+
+- 어떤 일에 누구에게 어떤 알림이 가는지는 [notifications.md](notifications.md) 3장. 채팅 메시지는 알림을 만들지 않는다.
 
 ---
 
@@ -281,8 +305,23 @@
   "feeRefunded": 0, "refundTotal": 555000
 }
 ```
+- `phase`: `BEFORE_PAYMENT`·`UNTIL_D6`(0%) / `D5_D4` 10% / `D3` 30% / `D2` 50% / `D1` 70% / `D0` 100% / `SUPPLIER_FAULT` (D-53). D-5 0시가 지나 자동 취소된 공연에 결제를 요청하면 `409 INVALID_STATE`.
 - 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고, 업체 사정 취소 시 전액 환불한다 (D-39).
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
+
+### 6.1.1 고객지원
+
+| 메서드 | 경로 | 권한 | 설명 | AC |
+|---|---|---|---|---|
+| GET | `/notices` | 🌐 | 공지 목록 `?page=` — 고정 글 먼저 | F5-21 |
+| GET | `/notices/{id}` | 🌐 | 공지 상세 + 이전·다음 글 | |
+| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | `{ "category", "performanceId", "title", "body", "fileIds": [41] }` — category: PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC. 사진은 먼저 `POST /files` (purpose `INQUIRY`, 최대 3장, uploads.md) | F5-18 |
+| GET | `/me/inquiries` | 로그인 | 내 문의 목록 | |
+| GET | `/inquiries/{id}` | 본인 | 문의 + 답변. 남의 문의는 404 | F5-20 |
+| PUT · DELETE | `/inquiries/{id}` | 본인 | 답변 대기일 때만. 답변 완료면 `409 INVALID_STATE` | F5-19 |
+
+- 정지된 계정은 다른 API에서 `403 ACCOUNT_SUSPENDED`를 받지만, 로그인·로그아웃·`/inquiries`·`/me/inquiries`·공지·약관은 쓸 수 있다.
+- FAQ·업체 이용 가이드·약관은 화면 코드에 둔다 (API 없음).
 
 ### 6.2 관리자
 
@@ -296,6 +335,9 @@
 | 액션 | 신고 → [대상 열기] | A | 신고된 채팅방·게시글 열람 | |
 | 액션 | 회원 → [경고] | A | 경고 (3회째 자동 정지) | F4-08, F5-10 |
 | 액션 | PR 게시글 → [블라인드] / [블라인드 해제] | A | 블라인드 (사유) + 업체 경고 1회 / 해제 | F4-03, F4-10 |
+| 액션 | 커뮤니티 글·댓글 → [블라인드] / [블라인드 해제] | A | 블라인드 (사유) + 작성자 경고 1회 / 해제 | F4-15 |
+| 액션 | 1:1 문의 → [답변] | A | 답변 저장 → 상태 ANSWERED + 알림 | F5-19 |
+| 목록·편집 | 공지사항 뷰 | A | 작성·수정·상단 고정·삭제 | F5-21 |
 | 상세 | 공연 상세 → 이력 패널 | A | 상태 변경·결제·취소 이력 시간순 | F5-13 |
 | 액션 | 시연 도구 → [시연 데이터 초기화] | A + **T** | 시연 데이터 초기화 | F5-14 |
 
@@ -313,7 +355,7 @@
 | `quote.updated` | 견적서 새 버전 | `{ roomId, quoteId, version, changed: ["setupMinutes"] }` |
 | `confirm.updated` | 카드 상태 변경 | `{ roomId, confirmRequestId, status }` |
 | `stage.updated` | 단계 상태 변경 | `{ performanceId, stageId, stageType, status }` |
-| `notification` | 알림 배지 | `{ id, kind, title, link }` |
+| `notification` | 알림 배지 | `{ id, type, category, title, body, link, createdAt }` — 종류는 [notifications.md](notifications.md) |
 
 ```json
 { "type": "message.created", "data": { "roomId": 31, "message": { "id": 120, "type": "TEXT", "body": "드럼 마이크도 추가돼요?", "senderId": 12, "contactWarning": false, "createdAt": "2026-11-12T15:30:00+09:00" } } }
@@ -322,4 +364,4 @@
 ---
 
 ## 8. 열린 질문
-- 파일 업로드 크기 제한 (제안 10MB)
+- ~~파일 업로드 크기 제한~~ → uploads.md (D-51)
