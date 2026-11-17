@@ -19,7 +19,7 @@ from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.core.errors import AppError
 from app.demo import service as demo_service
-from app.models import Sanction, StatusHistory, Supplier, User
+from app.models import Report, Sanction, StatusHistory, Supplier, User
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
 
@@ -130,6 +130,29 @@ class SanctionAdmin(ModelView, model=Sanction):
     column_default_sort = [(Sanction.created_at, True)]
 
 
+class ReportAdmin(ModelView, model=Report):
+    """신고 — 회원 신고는 [경고]로 경고 1회(3회면 정지), 아니면 [기각] (FR-POL-04)."""
+
+    name = "신고"
+    name_plural = "신고"
+    icon = "fa-solid fa-flag"
+    can_create = can_edit = can_delete = False
+    column_list = [Report.id, Report.target_type, Report.target_id, Report.reporter_user_id, Report.reason,
+                   Report.status, Report.handled_by, Report.created_at]
+    column_sortable_list = [Report.id, Report.status, Report.created_at]
+    column_default_sort = [(Report.created_at, True)]
+    column_labels = {Report.target_type: "대상 종류", Report.target_id: "대상 번호", Report.reporter_user_id: "신고자",
+                     Report.reason: "사유", Report.status: "상태", Report.handled_by: "처리자", Report.created_at: "신고일"}
+
+    @action(name="warn", label="경고 (사유 입력)")
+    async def warn(self, request: Request) -> Response:
+        return _to_reason_form(request, "report_warn", self.identity)
+
+    @action(name="dismiss", label="기각 (사유 입력)")
+    async def dismiss(self, request: Request) -> Response:
+        return _to_reason_form(request, "report_dismiss", self.identity)
+
+
 class StatusHistoryAdmin(ModelView, model=StatusHistory):
     """상태 변경 이력 (NFR-HIST-01, AC-F5-13) — 읽기 전용."""
 
@@ -150,6 +173,8 @@ REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "supplier_reject": ("업체 반려", supplier_service.reject),
     "supplier_suspend": ("업체 정지", supplier_service.suspend),
     "user_warn": ("회원 경고 (3회면 정지)", policy_service.warn),
+    "report_warn": ("신고 경고 (3회면 정지)", policy_service.warn_report),
+    "report_dismiss": ("신고 기각", policy_service.dismiss_report),
 }
 
 
