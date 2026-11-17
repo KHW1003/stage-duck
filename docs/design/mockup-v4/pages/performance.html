@@ -11,21 +11,21 @@
   /* 섭외 진행바 (Figma Group 11) */
   .st { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .st li { position: relative; }
-  .st li:not(:last-child)::after { content: ""; position: absolute; top: 17px; left: 44px; right: 8px; height: 3px; border-radius: 2px; background: var(--sd-line); }
+  .st li:not(:last-child)::after { content: ""; position: absolute; top: 11px; left: 32px; right: 8px; height: 2px; border-radius: 2px; background: var(--sd-line); }
   .st li.is-done:not(:last-child)::after { background: var(--sd-pass-text); }
   .st li.is-now:not(:last-child)::after { background: linear-gradient(90deg, var(--sd-blue) 0 45%, var(--sd-line) 45% 100%); }
-  .st li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 12px; left: calc(44px + (100% - 52px) * .45 - 6px); width: 13px; height: 13px; border: 2px solid var(--sd-blue); border-radius: 50%; background: var(--sd-bg); }
-  .st__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 36px; height: 36px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: var(--sd-bg); }
-  .st__dot svg { width: 18px; height: 18px; }
+  .st li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 7px; left: calc(32px + (100% - 40px) * .45 - 5px); width: 10px; height: 10px; border: 2px solid var(--sd-blue); border-radius: 50%; background: var(--sd-bg); }
+  .st__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: var(--sd-bg); }
+  .st__dot svg { width: 13px; height: 13px; }
   .is-done .st__dot { border-color: var(--sd-pass-text); background: var(--sd-pass-text); }
-  .is-now .st__dot { border-width: 3px; border-color: var(--sd-blue); }
-  .is-now .st__dot::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--sd-blue); }
-  .st small { display: block; margin-top: 12px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
-  .st b { display: block; margin-top: 2px; font-size: 18px; font-weight: 700; color: var(--sd-muted); }
+  .is-now .st__dot { border-width: 2px; border-color: var(--sd-blue); }
+  .is-now .st__dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sd-blue); }
+  .st small { display: block; margin-top: 10px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .st b { display: block; margin-top: 2px; font-size: 15px; font-weight: 700; color: var(--sd-muted); }
   .st .is-done b { color: var(--sd-pass-text); }
   .st .is-now b { color: var(--sd-blue); }
   .st em { display: block; margin-top: 4px; font-style: normal; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .st-box { padding: 8px 0 28px; border: 0; border-radius: 0; border-bottom: 1px solid var(--sd-line); }
+  .st-box { padding: 4px 0 22px; border: 0; border-radius: 0; border-bottom: 1px solid var(--sd-line); }
 
   /* STEP 박스: 머리줄을 누르면 펼치고 접는다 (grid-template-rows 0fr → 1fr) */
   /* 단계 목록: 상자 없이 줄로만 나눈다. 펼쳐도 테두리·바탕은 그대로, 화살표만 돈다 */
@@ -122,7 +122,7 @@
 <main class="container main">
 
   <section class="sec">
-    <div class="sec-head"><h2><span data-icon="layers"></span>섭외 진행</h2><p>공연장 → 장비 → 엔지니어 순서로 정해요. 단계를 누르면 펼치고 접을 수 있어요.</p></div>
+    <div class="sec-head"><h2><span data-icon="layers"></span>섭외 진행</h2><p>공연장 → 장비 → 엔지니어 순서로 정해요.</p></div>
 
     <div class="st-box">
       <ol class="st">
