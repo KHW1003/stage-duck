@@ -110,7 +110,8 @@
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
 | GET | `/venues/{venueId}` | 🌐 | 상세 (미확인 조건 구분) | |
-| POST | `/files` | 로그인 | 파일 업로드 (이미지·PDF, 10MB 이하 (제안)) → `{ "id", "url" }` | |
+| POST | `/files` | 로그인 | multipart `file`, `purpose` → `201 { "id", "url", "thumbUrl" }`. 용도별 형식·크기·공개 여부는 [uploads.md](uploads.md). 크기 초과 `413 FILE_TOO_LARGE` | |
+| GET · DELETE | `/files/{id}` | 비공개 파일 권한자 / 본인(TEMP) | 비공개 파일 내려받기(남의 것 404) / 올렸다 뺀 사진 지우기 | |
 
 ### 3.2 요청서·공고
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -268,6 +269,18 @@
 
 ---
 
+### 5.1 알림 (공통, 3번)
+
+| 메서드 | 경로 | 권한 | 설명 | AC |
+|---|---|---|---|---|
+| GET | `/me/notifications` | 로그인 (S\*, 정지 포함) | `?category=&before=` 최신순 20개 → `{ "items": [{ id, type, category, title, body, link, read, createdAt }], "nextBefore", "unreadCount" }` | |
+| GET | `/me/notifications/unread-count` | 로그인 | `{ "count" }` — 머리 종 배지 | |
+| POST | `/me/notifications/read` | 로그인 | `{ "ids": [12] }` 또는 `{ "all": true }` → `204`. 남의 id는 무시 | |
+
+- 어떤 일에 누구에게 어떤 알림이 가는지는 [notifications.md](notifications.md) 3장. 채팅 메시지는 알림을 만들지 않는다.
+
+---
+
 ## 6. F5 부가 기능
 
 ### 6.1 결제·취소
@@ -302,7 +315,7 @@
 |---|---|---|---|---|
 | GET | `/notices` | 🌐 | 공지 목록 `?page=` — 고정 글 먼저 | F5-21 |
 | GET | `/notices/{id}` | 🌐 | 공지 상세 + 이전·다음 글 | |
-| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | multipart: `category`(PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC), `performanceId`, `title`, `body`, `images[]`(최대 3장, 한 장 5MB, jpg·png) | F5-18 |
+| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | `{ "category", "performanceId", "title", "body", "fileIds": [41] }` — category: PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC. 사진은 먼저 `POST /files` (purpose `INQUIRY`, 최대 3장, uploads.md) | F5-18 |
 | GET | `/me/inquiries` | 로그인 | 내 문의 목록 | |
 | GET | `/inquiries/{id}` | 본인 | 문의 + 답변. 남의 문의는 404 | F5-20 |
 | PUT · DELETE | `/inquiries/{id}` | 본인 | 답변 대기일 때만. 답변 완료면 `409 INVALID_STATE` | F5-19 |
@@ -342,7 +355,7 @@
 | `quote.updated` | 견적서 새 버전 | `{ roomId, quoteId, version, changed: ["setupMinutes"] }` |
 | `confirm.updated` | 카드 상태 변경 | `{ roomId, confirmRequestId, status }` |
 | `stage.updated` | 단계 상태 변경 | `{ performanceId, stageId, stageType, status }` |
-| `notification` | 알림 배지 | `{ id, kind, title, link }` |
+| `notification` | 알림 배지 | `{ id, type, category, title, body, link, createdAt }` — 종류는 [notifications.md](notifications.md) |
 
 ```json
 { "type": "message.created", "data": { "roomId": 31, "message": { "id": 120, "type": "TEXT", "body": "드럼 마이크도 추가돼요?", "senderId": 12, "contactWarning": false, "createdAt": "2026-11-12T15:30:00+09:00" } } }
@@ -351,4 +364,4 @@
 ---
 
 ## 8. 열린 질문
-- 파일 업로드 크기 제한 (제안 10MB)
+- ~~파일 업로드 크기 제한~~ → uploads.md (D-51)

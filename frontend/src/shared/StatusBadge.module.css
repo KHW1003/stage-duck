@@ -1,0 +1,5 @@
+.status { display: inline-flex; align-items: center; gap: 4px; font-size: var(--sd-text-small); font-weight: 600; white-space: nowrap; }
+.pass { color: var(--sd-pass-text); }
+.warn { color: var(--sd-warn-text); }
+.info { color: var(--sd-info-text); }
+.conflict { color: var(--sd-conflict-text); }

@@ -1,0 +1,21 @@
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.label { font-size: var(--sd-text-desc); font-weight: 700; }
+.req { margin-left: 2px; color: var(--sd-conflict-text); }
+.opt { margin-left: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); font-weight: 400; }
+.hint { font-size: var(--sd-text-small); color: var(--sd-muted); }
+.error { display: flex; align-items: center; gap: 4px; font-size: var(--sd-text-small); color: var(--sd-conflict-text); }
+
+.input {
+  width: 100%;
+  height: var(--sd-input);
+  padding: 0 12px;
+  border: 1px solid var(--sd-line-strong);
+  border-radius: var(--sd-r-field);
+  background: var(--sd-bg);
+  font-size: var(--sd-text-body);
+}
+.input:focus { outline: none; border-color: var(--sd-ink); }
+.input::placeholder { color: var(--sd-photo-text); }
+.input[aria-invalid="true"] { border-color: var(--sd-conflict-text); }
+.input:disabled { background: var(--sd-band); color: var(--sd-muted); }
+.numeric { text-align: right; font-variant-numeric: tabular-nums; }
