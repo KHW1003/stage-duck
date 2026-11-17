@@ -51,7 +51,7 @@
     user: {
       filterBy: 'stage', tabs: [['all', '전체'], ['공연장', '공연장'], ['장비', '장비'], ['엔지니어', '엔지니어']],
       ctx: '가을밤 밴드 공연 · 11월 28일(토)',
-      note: '견적함에서 견적서를 보고 <b>[채팅 시작]</b>을 누르면 그 업체와 대화가 여기에 생겨요. <a href="' + B + 'inbox.html">견적함</a>',
+      note: '견적함에서 견적서를 보고 <b>[채팅 시작]</b>을 누르면 그 업체와 대화가 여기에 생겨요. <a href="' + B + 'inbox-list.html">견적함</a>',
       list: ['d', 'e', 'c', 'a'],
       d: { letter: 'D', name: '업체 D', photo: '1545454675-3531b543be5d', stage: '장비', on: 1, unread: 1, time: '13:24',
         last: '최종 견적을 보냈어요', sub: '견적서 v2 · 1,350,000원 · ' + (cardState === 'done' ? '확정' : '조율 중'), doc: 'quote.html',
