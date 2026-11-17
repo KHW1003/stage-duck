@@ -2,12 +2,12 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | 0.1 |
+| 버전 | 0.2 (2026-11-17: 커뮤니티·고객지원 작업 T2-07~T2-10 추가) |
 | 작성일 | 2026-11-13 |
-| 입력 | [spec.md](spec.md) 93개 AC, [traceability.md](traceability.md), [roles.md](roles.md) |
+| 입력 | [spec.md](spec.md) 103개 AC, [traceability.md](traceability.md), [roles.md](roles.md) |
 | 원칙 | 이슈 하나 = 하루~이틀 작업. 이슈 본문에 그 AC의 추적표 행(API·테이블·화면·테스트)이 들어 있다 |
 
-> AC 93개 = 작업에 배정 90개 + 이미 구현 3개(AC-F1-19, F1-20, F4-08 — PR #9). AC-F3-20은 검사 엔진(T4-02)과 비교 화면(T4-03)이 나눠 맡는다.
+> AC 103개 = 작업에 배정 100개 + 이미 구현 3개(AC-F1-19, F1-20, F4-08 — PR #9). AC-F3-20은 검사 엔진(T4-02)과 비교 화면(T4-03)이 나눠 맡는다.
 > Claude에게 시킬 때: "이슈 #번호 해 줘"로 시작한다 ([클로드_사용법](../docs/guides/클로드_사용법.md)).
 
 ## 첫날 할 일 (priority:high)
@@ -87,6 +87,10 @@
 |---|---|---|---|---|
 | T2-05 | [#39](https://github.com/KHW1003/stage-duck/issues/39) | 반려 카운트·게시 제한 | F4-05, F4-06, F4-07 | T2-03 ([#37](https://github.com/KHW1003/stage-duck/issues/37)), T3-02 ([#42](https://github.com/KHW1003/stage-duck/issues/42)) |
 | T2-06 | [#40](https://github.com/KHW1003/stage-duck/issues/40) | 내 공연 현황 (단계와 다음 할 일) | F5-02 | T2-04 ([#38](https://github.com/KHW1003/stage-duck/issues/38)) |
+| T2-07 | (이슈 만들 예정) | 커뮤니티 목록·글 보기·글쓰기(F 문서형)·도배 방지 | F4-12, F4-13, F4-16 | T1-03 ([#24](https://github.com/KHW1003/stage-duck/issues/24)), T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)) |
+| T2-08 | (이슈 만들 예정) | 커뮤니티 댓글·답글·도움 돼요·저장·링크 공유·신고·블라인드 | F4-14, F4-15, F4-17 | T2-07, T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)), T4-09 ([#54](https://github.com/KHW1003/stage-duck/issues/54)) |
+| T2-09 | (이슈 만들 예정) | 1:1 문의 (쓰기·목록·보기, 사진 첨부) + SQLAdmin 답변 | F5-18, F5-19, F5-20 | T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)) |
+| T2-10 | (이슈 만들 예정) | 공지사항(SQLAdmin 작성·고정)·FAQ·업체 이용 가이드·약관 화면 | F5-21 | T1-02 ([#23](https://github.com/KHW1003/stage-duck/issues/23)) |
 
 ### 묶음 3 — 채은
 
@@ -112,7 +116,7 @@
 | 묶음 | 담당 | 이슈 | 배정 AC |
 |---|---|---|---|
 | 1 | 세환 | 15 | 36 |
-| 2 | 해원 | 8 | 19 |
+| 2 | 해원 | 12 | 29 |
 | 3 | 채은 | 7 | 18 |
 | 4 | 목산 | 11 | 18 |
 
