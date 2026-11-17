@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import calc
-from app.auth.schemas import SignupIn
+from app.auth.schemas import AgreementsIn, SignupIn, SupplierSignupIn
 from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import hash_password, verify_password
@@ -75,14 +75,7 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
         raise AppError(
             400, "UNDER_AGE", "만 14세 이상만 가입할 수 있어요.", [{"field": "birthDate", "reason": "만 14세 미만"}]
         )
-    agreements = body.agreements
-    missing_terms = [
-        {"field": f"agreements.{field}", "reason": "필수 약관이에요"}
-        for field, agreed in (("service", agreements.service), ("privacyRequired", agreements.privacy_required))
-        if not agreed
-    ]
-    if missing_terms:
-        raise AppError(400, "TERMS_REQUIRED", "필수 약관에 동의해야 가입할 수 있어요.", missing_terms)
+    _require_terms(body.agreements)
 
     email = normalize_email(body.email)
     nickname = body.nickname.strip()
@@ -113,6 +106,23 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
             raise _email_taken() from None
         raise _nickname_taken() from None
 
+    _save_terms(db, user.id, body.agreements, now)
+    db.commit()
+    return user
+
+
+def _require_terms(agreements: AgreementsIn) -> None:
+    missing_terms = [
+        {"field": f"agreements.{field}", "reason": "필수 약관이에요"}
+        for field, agreed in (("service", agreements.service), ("privacyRequired", agreements.privacy_required))
+        if not agreed
+    ]
+    if missing_terms:
+        raise AppError(400, "TERMS_REQUIRED", "필수 약관에 동의해야 가입할 수 있어요.", missing_terms)
+
+
+def _save_terms(db: Session, user_id: int, agreements: AgreementsIn, now: datetime) -> None:
+    """약관 4종을 버전·동의 일시와 함께 저장한다 (FR-AUTH-01)."""
     for terms_type, agreed in (
         ("SERVICE", agreements.service),
         ("PRIVACY_REQUIRED", agreements.privacy_required),
@@ -121,9 +131,35 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
     ):
         db.add(
             TermsAgreement(
-                user_id=user.id, terms_type=terms_type, terms_version=TERMS_VERSION, agreed=agreed, agreed_at=now
+                user_id=user_id, terms_type=terms_type, terms_version=TERMS_VERSION, agreed=agreed, agreed_at=now
             )
         )
+
+
+def signup_supplier(db: Session, body: SupplierSignupIn, *, now: datetime) -> User:
+    """FR-SUP-01: 업체 1단계 가입 → 역할 SUPPLIER, 업체 정보는 아직 없음 → 첫 화면은 입점 신청(/supplier/onboarding)."""
+    errors = calc.supplier_signup_field_errors(body.name, body.phone, body.email, body.password)
+    if errors:
+        raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
+    _require_terms(body.agreements)
+
+    email = normalize_email(body.email)
+    if db.scalar(select(User.id).where(User.email == email)) is not None:
+        raise _email_taken()
+    user = User(
+        role="SUPPLIER",
+        email=email,
+        password_hash=hash_password(body.password),
+        name=body.name.strip(),
+        phone=body.phone.strip(),
+    )
+    db.add(user)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()  # 동시에 같은 이메일로 가입한 경우
+        raise _email_taken() from None
+    _save_terms(db, user.id, body.agreements, now)
     db.commit()
     return user
 

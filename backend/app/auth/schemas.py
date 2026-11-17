@@ -35,6 +35,18 @@ class SignupIn(BaseModel):
     agreements: AgreementsIn = Field(default_factory=AgreementsIn)
 
 
+class SupplierSignupIn(BaseModel):
+    """FR-SUP-01 업체 1단계. 업체는 이메일로만 가입한다 (담당자 한 명이 계정을 쓴다)."""
+
+    model_config = _IN
+
+    email: str | None = None
+    password: str | None = Field(default=None, json_schema_extra={"format": "password"})
+    name: str | None = None  # 담당자 이름
+    phone: str | None = None  # 담당자 전화
+    agreements: AgreementsIn = Field(default_factory=AgreementsIn)
+
+
 class LoginIn(BaseModel):
     model_config = _IN
 

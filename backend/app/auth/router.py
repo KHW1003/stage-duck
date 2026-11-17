@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import service
 from app.auth.deps import current_user, unauthenticated
-from app.auth.schemas import AuthOut, LoginIn, MeOut, SignupIn
+from app.auth.schemas import AuthOut, LoginIn, MeOut, SignupIn, SupplierSignupIn
 from app.auth.tokens import clear_login_cookies, read_refresh_token, set_login_cookies
 from app.core.db import get_db
 from app.models.user import User
@@ -23,6 +23,14 @@ def _auth_out(db: Session, user: User) -> AuthOut:
 def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)) -> AuthOut:
     """AC-F1-01·02·03: 가입되면 바로 로그인 쿠키를 붙인다."""
     user = service.signup(db, body, now=datetime.now())
+    set_login_cookies(response, user.id)
+    return _auth_out(db, user)
+
+
+@router.post("/signup/supplier", response_model=AuthOut, status_code=status.HTTP_201_CREATED)
+def signup_supplier(body: SupplierSignupIn, response: Response, db: Session = Depends(get_db)) -> AuthOut:
+    """FR-SUP-01 업체 1단계: 가입되면 바로 로그인 쿠키를 붙이고, 첫 화면은 입점 신청(2단계)."""
+    user = service.signup_supplier(db, body, now=datetime.now())
     set_login_cookies(response, user.id)
     return _auth_out(db, user)
 
