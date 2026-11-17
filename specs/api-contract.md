@@ -256,7 +256,16 @@
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
-| POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` | F4-03 |
+| POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` — targetType: `CHAT_ROOM` · `PR_POST` · `FREE_POST` · `FREE_COMMENT` · `USER` | F4-03, F4-15 |
+| GET | `/free-posts` | 🌐 | 커뮤니티 `?category=&sort=&field=&q=&page=` (category: FREE · QUESTION · INFO · NEWS, sort: latest · comments · views, field: all · title · author) — 20개, 정지 회원·블라인드 글 제외 | F4-12, F4-13 |
+| GET | `/free-posts/{id}` | 🌐 | 글 + 댓글·답글 목록 + 이전·다음 글, 조회수 +1. 로그인했으면 내 도움 돼요·저장 여부 포함. 블라인드 글은 작성자만(사유 포함), 나머지 404 | F4-12 |
+| POST | `/free-posts` | U, S | `{ "category", "title", "body", "photos" }` — 1분에 1개(`403 POSTING_RATE_LIMITED`), 연락처 패턴 경고 | F4-16 |
+| PUT · DELETE | `/free-posts/{id}` | 본인 | 수정·삭제 (댓글 있으면 DELETED로 남김) | |
+| POST | `/free-posts/{id}/comments` | U, S | `{ "body", "parentId": null }` 500자 — 10초에 1개, 글쓴이(답글이면 댓글 작성자)에게 알림. 답글의 답글은 `400 VALIDATION_FAILED` | F4-14 |
+| PUT · DELETE | `/free-helpfuls` | U, S | `{ "targetType": "POST", "targetId": 12 }` — 도움 돼요 누르기 / 취소. 응답 `{ "helpfulCount" }` | F4-17 |
+| PUT · DELETE | `/free-posts/{id}/bookmark` | U, S | 저장 / 저장 취소 | F4-17 |
+| GET | `/me/free-bookmarks` | U, S | 내 저장 글 | F4-17 |
+| DELETE | `/free-comments/{id}` | 본인 | "삭제된 댓글이에요"로 남김 | |
 
 ---
 
@@ -287,6 +296,20 @@
 - 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고, 업체 사정 취소 시 전액 환불한다 (D-39).
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
 
+### 6.1.1 고객지원
+
+| 메서드 | 경로 | 권한 | 설명 | AC |
+|---|---|---|---|---|
+| GET | `/notices` | 🌐 | 공지 목록 `?page=` — 고정 글 먼저 | F5-21 |
+| GET | `/notices/{id}` | 🌐 | 공지 상세 + 이전·다음 글 | |
+| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | `{ "category", "performanceId", "title", "body", "fileIds": [41] }` — category: PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC. 사진은 먼저 `POST /files` (purpose `INQUIRY`, 최대 3장, uploads.md) | F5-18 |
+| GET | `/me/inquiries` | 로그인 | 내 문의 목록 | |
+| GET | `/inquiries/{id}` | 본인 | 문의 + 답변. 남의 문의는 404 | F5-20 |
+| PUT · DELETE | `/inquiries/{id}` | 본인 | 답변 대기일 때만. 답변 완료면 `409 INVALID_STATE` | F5-19 |
+
+- 정지된 계정은 다른 API에서 `403 ACCOUNT_SUSPENDED`를 받지만, 로그인·로그아웃·`/inquiries`·`/me/inquiries`·공지·약관은 쓸 수 있다.
+- FAQ·업체 이용 가이드·약관은 화면 코드에 둔다 (API 없음).
+
 ### 6.2 관리자
 
 > 관리자 기능은 **REST API가 아니라 SQLAdmin(`/admin`)의 액션**으로 제공한다 ([plan.md 6.5](plan.md)). 아래 표는 각 액션이 부르는 서비스와 AC를 정리한 것이며, React 앱은 이 경로들을 호출하지 않는다.
@@ -299,6 +322,9 @@
 | 액션 | 신고 → [대상 열기] | A | 신고된 채팅방·게시글 열람 | |
 | 액션 | 회원 → [경고] | A | 경고 (3회째 자동 정지) | F4-08, F5-10 |
 | 액션 | PR 게시글 → [블라인드] / [블라인드 해제] | A | 블라인드 (사유) + 업체 경고 1회 / 해제 | F4-03, F4-10 |
+| 액션 | 커뮤니티 글·댓글 → [블라인드] / [블라인드 해제] | A | 블라인드 (사유) + 작성자 경고 1회 / 해제 | F4-15 |
+| 액션 | 1:1 문의 → [답변] | A | 답변 저장 → 상태 ANSWERED + 알림 | F5-19 |
+| 목록·편집 | 공지사항 뷰 | A | 작성·수정·상단 고정·삭제 | F5-21 |
 | 상세 | 공연 상세 → 이력 패널 | A | 상태 변경·결제·취소 이력 시간순 | F5-13 |
 | 액션 | 시연 도구 → [시연 데이터 초기화] | A + **T** | 시연 데이터 초기화 | F5-14 |
 

@@ -85,11 +85,11 @@
   var nav = body.dataset.nav || '';
 
   var MENU = {
-    guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['how', '이용 방법', '../../mockup/home.html#flow']],
-    user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html']],
-    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html']],
+    guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community-list-a.html'], ['how', '이용 방법', '../../mockup/home.html#flow']],
+    user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community-list-a.html']],
+    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community-list-a.html']],
     'partner-review': [],
-    admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['demo', '시연 도구', 'a-demo.html']]
+    admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['cs', '문의·공지', 'a-cs.html'], ['demo', '시연 도구', 'a-demo.html']]
   };
 
   /* 알림 (notifications 테이블 모양: type, payload, read_at) */
@@ -125,8 +125,8 @@
   } else {
     var who = partner ? ['D', '업체 D', '업체 계정 · ' + (layout === 'partner-review' ? '심사 중' : '승인')] : ['가', '가을밤밴드', '사용자 계정'];
     var links = partner
-      ? (layout === 'partner-review' ? '' : '<a href="supplier.html">' + icon('venue') + '업체 프로필</a><a href="p-post.html">' + icon('edit') + '내 PR 게시글</a><a href="sheet.html?as=partner">' + icon('receipt') + '최종 담당표</a>')
-      : '<a href="mypage.html">' + icon('user') + '마이페이지</a><a href="favorites.html">' + icon('heart') + '관심 업체</a><a href="sheet.html">' + icon('receipt') + '최종 담당표</a>';
+      ? (layout === 'partner-review' ? '' : '<a href="supplier.html">' + icon('venue') + '업체 프로필</a><a href="p-post.html">' + icon('edit') + '내 PR 게시글</a><a href="sheet.html?as=partner">' + icon('receipt') + '최종 담당표</a><a href="inquiry-list.html?as=partner">' + icon('chat') + '1:1 문의</a>')
+      : '<a href="mypage.html">' + icon('user') + '마이페이지</a><a href="favorites.html">' + icon('heart') + '관심 업체</a><a href="sheet.html">' + icon('receipt') + '최종 담당표</a><a href="inquiry-list.html">' + icon('chat') + '1:1 문의</a>';
     right = (layout === 'partner-review' ? '' :
       '<div class="gnb__pop"><button class="icon-btn" type="button" aria-label="알림 2개" data-pop="pop-noti">' + icon('bell') + '<span class="icon-btn__badge">2</span></button>' +
       '<div class="noti-panel" id="pop-noti" hidden><div class="noti-panel__head"><b>알림</b><button class="link" type="button">모두 읽음</button></div><div class="noti-panel__list">' +
@@ -140,8 +140,8 @@
     '<header class="gnb"><div class="container gnb__inner"><a class="gnb__logo" href="' + home + '"><img src="' + logo + '" alt="STAGE DUCK">' + (partner ? '<span class="gnb__role">파트너</span>' : layout === 'admin' ? '<span class="gnb__role gnb__role--admin">관리자</span>' : '') + '</a>' +
     '<nav class="gnb__menu" aria-label="주 메뉴">' + menu + '</nav><div class="gnb__right">' + right + '</div></div></header>');
   body.insertAdjacentHTML('beforeend', '<footer class="footer"><div class="container"><div class="footer__top"><img src="' + logo + '" alt="STAGE DUCK">' +
-    '<nav class="footer__links" aria-label="바닥글"><a href="#">이용약관</a><a href="#"><b>개인정보처리방침</b></a><a href="#">업체 이용약관</a><a href="#">공지사항</a><a href="#">1:1 문의</a></nav></div>' +
-    '<p class="footer__biz">사업자 정보 <span class="tag tag--tbd">내용 미정</span><br>STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니에요. © 2026 STAGE DUCK</p></div></footer>');
+    '<nav class="footer__links" aria-label="바닥글"><a href="terms.html">이용약관</a><a href="terms.html?tab=privacy"><b>개인정보처리방침</b></a><a href="terms.html?tab=supplier">업체 이용약관</a><a href="notices.html">공지사항</a><a href="faq.html">자주 묻는 질문</a>' + (partner ? '<a href="guide.html">업체 이용 가이드</a>' : '') + '<a href="inquiry-list.html' + (partner ? '?as=partner' : '') + '">1:1 문의</a></nav></div>' +
+    '<p class="footer__biz">포트폴리오 프로젝트 · 실제 사업자가 아니에요<br>STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니에요. © 2026 STAGE DUCK</p></div></footer>');
 
   /* pages/ 밖에서 쓸 때 (components.html): body data-base="pages/" 로 링크·로고 경로를 맞춘다 */
   var B = body.dataset.base;
@@ -167,6 +167,8 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.querySelectorAll('.layer').forEach(function (l) { if (!l.closest('.frame')) l.hidden = true; }); });
 
+  /* 목업 전용: 주소 ?tab=x 로 aria-controls가 t-x 인 탭을 먼저 연다 (약관 화면 등) */
+  if (q.get('tab')) document.addEventListener('DOMContentLoaded', function () { var b = document.querySelector('[role="tab"][aria-controls="t-' + q.get('tab') + '"]'); if (b) b.click(); });
   /* 탭: [data-tabs] 안 [role=tab] aria-controls ↔ 패널 */
   document.querySelectorAll('[data-tabs]').forEach(function (tabs) {
     tabs.addEventListener('click', function (e) {

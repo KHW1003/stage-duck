@@ -53,6 +53,9 @@ erDiagram
     users ||--o{ rejection_events : "반려"
     suppliers ||--o{ pr_posts : writes
     users ||--o{ reports : reports
+    users ||--o{ free_posts : writes
+    free_posts ||--o{ free_comments : has
+    users ||--o{ inquiries : asks
     users ||--o{ sanctions : receives
     users ||--o{ notifications : receives
 ```
@@ -362,7 +365,11 @@ erDiagram
 |---|---|---|
 | rejection_events | id, user_id, performance_id, kind CHECK IN ('AFTER_CHAT','NO_CHAT'), created_at | 인덱스 (user_id, created_at). 최근 180일만 계산 (AC-F4-05·06) |
 | pr_posts | id, supplier_id, category CHECK IN ('VENUE','EQUIPMENT','ENGINEER'), title, body, photos JSON [file_id] (최대 10), sido, price_range, status CHECK IN ('ACTIVE','HIDDEN','BLINDED','DELETED'), blind_reason NULL, bumped_at | **active_guard PERSISTENT = IF(status IN ('ACTIVE','BLINDED'), CONCAT(supplier_id,'-',category), NULL) UNIQUE** → 부문당 활성 1개 (AC-F4-02), 블라인드 글이 있으면 새 글 불가 (AC-F4-10). 정지 업체 글은 조회할 때 `suppliers.review_status <> 'SUSPENDED'`로 걸러 숨긴다 — 상태를 바꾸지 않으므로 정지가 풀리면 그대로 다시 보인다 (AC-F4-11) |
-| reports | id, reporter_user_id, target_type CHECK IN ('CHAT_ROOM','PR_POST','USER'), target_id, reason, status CHECK IN ('OPEN','WARNED','DISMISSED'), handled_by, handled_at | |
+| free_posts | id, author_user_id FK → users, category CHECK IN ('FREE','QUESTION','INFO','NEWS'), title VARCHAR(100), body TEXT (5,000자), photos JSON [file_id] (최대 5), status CHECK IN ('ACTIVE','BLINDED','DELETED'), blind_reason NULL, view_count INT UNSIGNED, comment_count INT UNSIGNED, helpful_count INT UNSIGNED, created_at, updated_at | 커뮤니티 (D-47). 인덱스 (status, created_at), (category, created_at). 정지 회원 글은 조회할 때 걸러 숨긴다 (pr_posts와 같은 방식). 댓글 있는 글 삭제는 DELETED로 남김 |
+| free_comments | id, post_id FK → free_posts, parent_id NULL FK → free_comments, author_user_id FK → users, body VARCHAR(500), status CHECK IN ('ACTIVE','BLINDED','DELETED'), blind_reason NULL, helpful_count INT UNSIGNED, created_at | 답글은 한 단계: parent의 parent_id가 NULL일 때만 저장 (서비스 검사). 인덱스 (post_id, created_at) |
+| free_helpfuls | id, user_id FK, target_type CHECK IN ('POST','COMMENT'), target_id, created_at | 도움 돼요. **UNIQUE (user_id, target_type, target_id)** → 한 사람 한 번, 다시 누르면 행 삭제 |
+| free_bookmarks | id, user_id FK, post_id FK → free_posts, created_at | 저장. **UNIQUE (user_id, post_id)** |
+| reports | id, reporter_user_id, target_type CHECK IN ('CHAT_ROOM','PR_POST','FREE_POST','FREE_COMMENT','USER'), target_id, reason, status CHECK IN ('OPEN','WARNED','DISMISSED'), handled_by, handled_at | |
 | sanctions | id, user_id, type CHECK IN ('WARNING','SUSPENSION','BLIND','UNSUSPEND'), reason, report_id NULL, created_by | 경고 3회 → SUSPENSION 자동 기록 (AC-F4-08) |
 
 ## 10. 공통
@@ -371,6 +378,8 @@ erDiagram
 |---|---|---|
 | status_histories | id, entity_type, entity_id, from_status, to_status, actor_user_id NULL, reason, created_at | 인덱스 (entity_type, entity_id). 추가만 (NFR-HIST-01, AC-F5-13) |
 | notifications | id, user_id, type, payload JSON, read_at | 사이트 안 알림 배지 |
+| inquiries | id, user_id FK, category CHECK IN ('PAYMENT','QUOTE','SUPPLIER','ACCOUNT','ETC'), performance_id NULL FK, title VARCHAR(50), body TEXT (2,000자), status CHECK IN ('WAITING','ANSWERED'), answer TEXT NULL, answered_by NULL FK → users, attachments JSON [file_id] (이미지 최대 3장, 한 장 5MB), answered_at NULL, created_at, updated_at | 1:1 문의 (D-48). 본인·관리자만 조회. ANSWERED면 회원 수정·삭제 불가 |
+| notices | id, category CHECK IN ('GUIDE','MAINTENANCE','POLICY'), title VARCHAR(100), body TEXT, is_pinned BOOLEAN DEFAULT FALSE, published_at, created_by FK → users | 공지사항. 정렬 is_pinned DESC, published_at DESC |
 | files | id, owner_user_id, purpose, visibility (PUBLIC·PRIVATE), status (TEMP·ATTACHED·DELETED), storage_key UNIQUE, thumb_key, original_name, mime_type, size_bytes, width, height, created_at, attached_at | 업로드 파일 메타 (D-51). 인덱스 (status, created_at). 다른 테이블의 사진·서류 칸은 `file_id`를 가리킨다 — 상세는 [uploads.md](uploads.md) 5장 |
 | venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신 |
 | idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
