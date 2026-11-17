@@ -53,7 +53,10 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 | 빈 화면·오류 상태 모음 | `pages/states.html` | 빈 화면 10종 / 불러오는 중 / 불러오기 실패 / 입력 오류 / 상태 충돌 / 토스트 (목업 전용) |
 | 관리자: 업체 심사 (첫 화면) | `pages/a-review.html` | 서류 갖춤 / 보완 필요 |
 | 관리자: 신고·제재 | `pages/a-reports.html` | 경고 0회 / 경고 2회 (이번이 3회째 → 정지) |
-| 관리자: 게시글·공간 | `pages/a-posts.html` | 블라인드·해제, 공간 숨김 |
+| 관리자: 게시글·공간 | `pages/a-posts.html` | PR 게시글·커뮤니티 블라인드·해제, 공간 숨김 |
+| 관리자: 문의·공지 | `pages/a-cs.html` | 1:1 문의 답변, 공지사항 작성·고정 |
+| 커뮤니티 | `pages/community-list-a.html`, `community-post-a.html`·`-b`, `community-share-c.html`, `community-write-f.html` | 목산 시안 #92 중 사용 안 + 글쓰기 F (모아보기 `community-index.html`) |
+| 고객지원 | `pages/notices.html`, `faq.html`, `guide.html`, `terms.html`, `inquiry-list.html`(목산 시안) | 공지사항 / FAQ / 업체 이용 가이드 / 약관 3종 / 1:1 문의 |
 | 관리자: 거래 이력 | `pages/a-orders.html` | 결제·보관 중 / D-1 사용자 취소 |
 | 관리자: 시연 도구 | `pages/a-demo.html` | 기본 / 초기화한 뒤 |
 

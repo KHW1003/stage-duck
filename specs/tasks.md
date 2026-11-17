@@ -94,7 +94,7 @@
 |---|---|---|---|---|
 | T3-03 | [#43](https://github.com/KHW1003/stage-duck/issues/43) | 견적 내역 확인 카드·내역서·컨펌(동시성)·다른 견적 자동 마감 | F3-09, F3-10, F3-11, F3-12, F3-14 | T3-02 ([#42](https://github.com/KHW1003/stage-duck/issues/42)), T2-04 ([#38](https://github.com/KHW1003/stage-duck/issues/38)), T4-02 ([#47](https://github.com/KHW1003/stage-duck/issues/47)) |
 | T3-04 | [#44](https://github.com/KHW1003/stage-duck/issues/44) | 자동 마감 알림·연락처 감지 경고·결제 전 연락처 비공개 | F3-13, F3-15, F5-12 | T3-03 ([#43](https://github.com/KHW1003/stage-duck/issues/43)) |
-| T3-05 | [#45](https://github.com/KHW1003/stage-duck/issues/45) | 사이트 안 알림 | — | T3-02 ([#42](https://github.com/KHW1003/stage-duck/issues/42)) |
+| T3-05 | [#45](https://github.com/KHW1003/stage-duck/issues/45) | 사이트 안 알림 — 종류 28개·문구·목록/읽음 API는 [notifications.md](notifications.md) | — | T3-02 ([#42](https://github.com/KHW1003/stage-duck/issues/42)) |
 
 ### 묶음 4 — 목산
 
