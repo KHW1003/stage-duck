@@ -273,7 +273,7 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `PLATFORM_FEE_RATE` | 수수료율 (시연 기본 0.05 (제안)) |
 | `SETUP_WARNING_MINUTES` | CHK-02 기준 (기본 60) |
 
-비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다.
+비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다. 시연 서버는 `deploy/.env`(예시: `deploy/env.prod.example`) — [deploy.md](deploy.md) (D-53).
 
 ## 9. 원칙 점검 (constitution)
 
