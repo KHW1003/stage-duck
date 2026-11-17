@@ -39,6 +39,7 @@
 |---|---|---|
 | 400 | `VALIDATION_FAILED` | 입력 형식·범위 오류 (fieldErrors 포함) |
 | 400 | `TOTAL_MISMATCH` · `AMOUNT_MISMATCH` | 견적 합계·결제 금액 조작 |
+| 400 | `TOTAL_TOO_LARGE` | 견적 항목 합이 합계 칸(INT UNSIGNED) 최댓값을 넘음 |
 | 400 | `UNDER_AGE` · `TERMS_REQUIRED` · `INVALID_BUSINESS_NO` | 가입·입점 규칙 |
 | 401 | `UNAUTHENTICATED` · `LOGIN_LOCKED` | 로그인 필요 / 5회 실패 잠금 |
 | 403 | `SUPPLIER_NOT_APPROVED` · `ACCOUNT_SUSPENDED` · `POSTING_RATE_LIMITED` · `CHAT_NOT_STARTED` · `CATEGORY_NOT_APPROVED` | 내 리소스지만 지금 할 수 없음 |
@@ -165,7 +166,7 @@
 }
 ```
 - 공연장 견적서는 `venueId`, `checkinTime`, `setupAvailableTime` 필수. `includes.equipment && includes.engineer`면 서버가 `isFullSpec=true`.
-- `totalAmount ≠ amounts 합` → `400 TOTAL_MISMATCH`. 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
+- 합계 검사 순서: `amounts 합 > INT UNSIGNED 최댓값` → `400 TOTAL_TOO_LARGE`, `totalAmount ≠ amounts 합` → `400 TOTAL_MISMATCH`, `totalAmount < 10,000` → `400 VALIDATION_FAILED` (`fieldErrors: [{ "field": "totalAmount", "reason": "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요." }]`, D-43). 단계 부문과 견적 종류가 안 맞거나 단계가 열려 있지 않음 → `409 STAGE_NOT_OPEN`.
 - 응답 `201`: `{ "quoteId": 77, "version": 1, "chatRoomId": 31, "checks": [ ... ] }`
 
 ---
