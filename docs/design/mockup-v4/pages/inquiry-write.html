@@ -47,13 +47,13 @@
 <main class="container main">
   <form class="narrow">
     <p class="step-label">문의 유형<span class="req">*</span></p>
-    <div class="chips" role="radiogroup" aria-label="문의 유형"><label><input type="radio" name="type" checked><span>결제·환불</span></label><label><input type="radio" name="type"><span>견적·컨펌</span></label><label><input type="radio" name="type"><span>업체 이용</span></label><label><input type="radio" name="type"><span>계정</span></label><label><input type="radio" name="type"><span>기타</span></label></div>
+    <div class="chips" role="radiogroup" aria-label="문의 유형"><label><input type="radio" name="type" checked><span>결제·환불</span></label><label><input type="radio" name="type"><span>견적·결정</span></label><label><input type="radio" name="type"><span>업체 이용</span></label><label><input type="radio" name="type"><span>계정</span></label><label><input type="radio" name="type"><span>기타</span></label></div>
 
     <div class="editor mt-24">
       <input class="editor__title" value="공연을 하루 앞두고 취소하면 위약금은 어떻게 나뉘나요?" placeholder="무엇이 궁금한지 한 줄로 적어 주세요" aria-label="제목" maxlength="60">
       <div class="editor__tools"><button class="btn btn--sm btn--ghost" type="button"><span data-icon="clip" class="icon--sm"></span>파일 첨부</button><button class="btn btn--sm btn--ghost" type="button"><span data-icon="image" class="icon--sm"></span>화면 캡처</button>
         <select class="select select--sm" aria-label="관련 공연"><option>관련 공연: 가을밤 밴드 공연 · 11월 22일</option><option>관련 공연 없음</option></select></div>
-      <textarea class="editor__body" aria-label="내용" data-when="err:ok">공연장 C와 장비 D를 컨펌하고 모의 결제까지 했어요. 사정이 생겨 공연 하루 전에 취소하게 되면 위약금이 업체마다 어떻게 나뉘는지, 플랫폼 이용료도 돌려받는지 궁금해요.</textarea>
+      <textarea class="editor__body" aria-label="내용" data-when="err:ok">공연장 C와 장비 D를 정하고 모의 결제까지 했어요. 사정이 생겨 공연 하루 전에 취소하게 되면 위약금이 업체마다 어떻게 나뉘는지, 플랫폼 이용료도 돌려받는지 궁금해요.</textarea>
       <textarea class="editor__body" aria-label="내용" aria-invalid="true" data-when="err:bad" hidden>환불은 이 계좌로 부탁드려요. 000-000000-00-000</textarea>
       <div class="editor__files"><span class="file-chip"><span data-icon="image" class="icon--sm"></span>청구서-캡처.png<button class="link" type="button" aria-label="첨부 빼기"><span data-icon="x" class="icon--sm"></span></button></span></div>
       <div class="editor__foot"><span data-when="err:ok"><span data-icon="info" class="icon--sm"></span> 전화번호·계좌번호는 적지 말아 주세요. 결제 내역은 운영자가 직접 확인해요</span><span class="field__error" data-when="err:bad" hidden><span data-icon="warn" class="icon--sm"></span>계좌번호는 적을 수 없어요. 계좌번호를 빼고 다시 보내 주세요.</span><span>96 / 2,000</span></div>
