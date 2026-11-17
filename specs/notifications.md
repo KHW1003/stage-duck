@@ -72,7 +72,9 @@
 |---|---|---|---|---|---|---|---|
 | `INVOICE_READY` | 사용자 | 결제 | 통합 청구서가 나왔어요 | 합계 {금액}원 · 결제하면 섭외가 확정돼요 | `/performances/{id}/order` | 4 | F5-03 |
 | `PAID` | 컨펌된 업체 모두 | 결제 | 결제가 끝나 섭외가 확정됐어요 | {공연명} · 최종 담당표를 확인해 주세요 | `/performances/{id}/sheet` | 4 | F5-11 |
-| `CANCELLED_BY_USER` | 컨펌된 업체 모두 | 결제 | 사용자가 공연을 취소했어요 | {공연명} · 위약금 {금액}원 정산 예정 | `/supplier/postings/{id}` | 4 | F5-08 |
+| `CANCELLED_BY_USER` | 컨펌된 업체 모두 | 결제 | 사용자가 공연을 취소했어요 | {공연명} · 위약금 {금액}원 정산 예정 (위약금 0원 구간이면 "위약금은 없어요", D-53) | `/supplier/postings/{id}` | 4 | F5-08 |
+| `PAYMENT_DUE` | 사용자 | 결제 | 결제 기한이 {N}일 남았어요 | {공연명} · 공연 6일 전까지 결제하지 않으면 5일 전 0시에 자동으로 취소돼요 | `/performances/{id}/order` | 4 (스케줄러, D-7·D-6 하루 한 번) | F5-22 |
+| `AUTO_CANCELLED` | 사용자, 컨펌된 업체 모두 | 결제 | 결제 기한이 지나 공연이 취소됐어요 | {공연명} · 수수료는 없어요 | 사용자 `/performances/{id}`, 업체 `/supplier/postings/{id}` | 4 (스케줄러, D-5 0시) | F5-22 |
 | `CANCELLED_BY_SUPPLIER` | 사용자 | 결제 | {업체} 사정으로 {단계}가 취소됐어요 | 전액 환불 예정 · 그 단계만 다시 모집할 수 있어요 | `/performances/{id}` | 4 | F5-10 |
 | `SETTLEMENT_SCHEDULED` | 컨펌된 업체 | 결제 | 공연이 끝나 정산 예정이에요 | {공연명} · {금액}원 | `/supplier/postings/{id}` | 4 (스케줄러) | F5-07 |
 

@@ -139,7 +139,7 @@
   }
 }
 ```
-- 규칙 위반: `audience` 0·501, `rehearsalStart >= showStart`, `showDate < 오늘+3일`, 엔지니어 필요인데 `tasks` 비어 있음 → `400 VALIDATION_FAILED`.
+- 규칙 위반: `audience` 0·501, `rehearsalStart >= showStart`, `showDate < 오늘+14일` (D-53), 엔지니어 필요인데 `tasks` 비어 있음 → `400 VALIDATION_FAILED`.
 - `needs`의 전체 구조는 data-model.md `performances.needs`.
 
 ### 3.3 공고(업체)·견적서
@@ -305,6 +305,7 @@
   "feeRefunded": 0, "refundTotal": 555000
 }
 ```
+- `phase`: `BEFORE_PAYMENT`·`UNTIL_D6`(0%) / `D5_D4` 10% / `D3` 30% / `D2` 50% / `D1` 70% / `D0` 100% / `SUPPLIER_FAULT` (D-53). D-5 0시가 지나 자동 취소된 공연에 결제를 요청하면 `409 INVALID_STATE`.
 - 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고, 업체 사정 취소 시 전액 환불한다 (D-39).
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
 

@@ -180,7 +180,7 @@ erDiagram
 | current_version | INT UNSIGNED | NOT NULL DEFAULT 1 | |
 | title | VARCHAR(100) | NOT NULL | 현재 버전 값 (조회용) |
 | form | VARCHAR(20) | CHECK IN ('BAND','THEATER','TALK_EVENT','RELIGIOUS','ETC') | |
-| show_date | DATE | NOT NULL | 오늘 + 3일 이후 (서비스 검사) |
+| show_date | DATE | NOT NULL | 오늘 + 14일 이후 (서비스 검사, D-53) |
 | rehearsal_start · show_start · show_end | TIME | **CHECK (rehearsal_start < show_start AND show_start < show_end)** | AC-F2-05 |
 | audience | SMALLINT UNSIGNED | **CHECK BETWEEN 1 AND 500** | AC-F2-04 |
 | sido · sigungu | VARCHAR | NOT NULL | 공고 지역 필터 |
@@ -353,10 +353,10 @@ erDiagram
 |---|---|---|
 | id | BIGINT UNSIGNED | PK |
 | performance_id · order_id | BIGINT UNSIGNED | order NULL = 결제 전 |
-| requested_by | VARCHAR(10) | CHECK IN ('USER','SUPPLIER') |
+| requested_by | VARCHAR(10) | CHECK IN ('USER','SUPPLIER','SYSTEM') — `SYSTEM` = 미결제 자동 취소 (D-53) |
 | fault_supplier_id | BIGINT UNSIGNED | NULL — 업체 사정 취소 |
-| phase | VARCHAR(20) | CHECK IN ('BEFORE_PAYMENT','UNTIL_D3','D2','D1','D0','SUPPLIER_FAULT') |
-| rate_percent | TINYINT UNSIGNED | 10·10·50·70·100·0 |
+| phase | VARCHAR(20) | CHECK IN ('BEFORE_PAYMENT','UNTIL_D6','D5_D4','D3','D2','D1','D0','SUPPLIER_FAULT') (D-53) |
+| rate_percent | TINYINT UNSIGNED | 0·0·10·30·50·70·100·0 |
 | penalty_total · refund_total | INT UNSIGNED | |
 
 ## 9. 반려·게시판·신고·제재 (F4)
