@@ -96,16 +96,17 @@
   .todo .timer { margin-left: 6px; color: var(--sd-blue); }
   .todo--quiet > .icon { color: var(--sd-muted); }
 
-  /* STEP 목록·할 일 줄·요약 줄은 무채색 톤으로만 구분 (2026-11-18): 지금 = 가장 진함·굵게, 확정 = 중간 회색, 보조 = 옅은 회색, 대기 = 가장 옅음 */
+  /* STEP 목록·할 일 줄·요약 줄: 글자는 무채색 톤(지금 = 가장 진함·굵게, 확정 = 중간 회색, 대기 = 가장 옅음), 색은 아이콘에만 (확정 체크 초록, 조율 중 점 파랑, 할 일·남은 시간 빨강) */
   .stp .status, .stp .state, .stp .state--on { color: var(--sd-muted) !important; }
-  .stp .status .icon { color: var(--sd-muted); }
-  .stp .state::before, .stp .state--on::before { background: currentColor !important; }
+  .stp .status .icon { color: var(--sd-pass-text); }
+  .stp .state::before { background: var(--sd-line-strong) !important; }
+  .stp .state--on::before { background: #228be6 !important; }
   .stp[data-state="now"] .stp__head .state--on { color: var(--sd-ink) !important; font-weight: 700; }
   .stp[data-state="done"] .stp__title { color: #4a5059; }
   .stp[data-state="wait"] .stp__title, .stp[data-state="wait"] .stp__head .muted { color: var(--sd-photo-text); }
-  .todo > .icon { color: var(--sd-ink) !important; }
+  .todo > .icon { color: var(--sd-blue) !important; }
   .todo .timer { color: var(--sd-ink) !important; }
-  .todo .timer .icon { color: var(--sd-muted); }
+  .todo .timer .icon { color: var(--sd-blue); }
   .stat-line .point { color: var(--sd-ink) !important; }
 </style>
 </head>
