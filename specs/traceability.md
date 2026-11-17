@@ -168,5 +168,6 @@ API 경로의 `/api/v1`은 생략했다.
 | SEC-10 소셜 위조 방지 | plan 4 (`state` 쿠키 비교) |
 | HIST-01~05 | plan 5.1·5.3, data-model `status_histories`, `*_versions`, 생성 컬럼 유니크, 행 잠금 |
 | UX-02 색+글자 | StatusBadge 컴포넌트 |
+| UX-07 검색·공유 노출 | [seo.md](seo.md) — 서버가 공개 화면 head 채움, robots·sitemap, `SEO_INDEXING`. 테스트 8개 (seo.md 9장) |
 | OPS-01 환경 분리 | plan 8 (`APP_ENV`) |
 | TEST-01~03 | plan 7 (AC ID 이름, CI `test`) |

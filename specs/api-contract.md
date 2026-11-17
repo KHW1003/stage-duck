@@ -110,7 +110,8 @@
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
 | GET | `/venues/{venueId}` | 🌐 | 상세 (미확인 조건 구분) | |
-| POST | `/files` | 로그인 | 파일 업로드 (이미지·PDF, 10MB 이하 (제안)) → `{ "id", "url" }` | |
+| POST | `/files` | 로그인 | multipart `file`, `purpose` → `201 { "id", "url", "thumbUrl" }`. 용도별 형식·크기·공개 여부는 [uploads.md](uploads.md). 크기 초과 `413 FILE_TOO_LARGE` | |
+| GET · DELETE | `/files/{id}` | 비공개 파일 권한자 / 본인(TEMP) | 비공개 파일 내려받기(남의 것 404) / 올렸다 뺀 사진 지우기 | |
 
 ### 3.2 요청서·공고
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -313,7 +314,7 @@
 |---|---|---|---|---|
 | GET | `/notices` | 🌐 | 공지 목록 `?page=` — 고정 글 먼저 | F5-21 |
 | GET | `/notices/{id}` | 🌐 | 공지 상세 + 이전·다음 글 | |
-| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | multipart: `category`(PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC), `performanceId`, `title`, `body`, `images[]`(최대 3장, 한 장 5MB, jpg·png) | F5-18 |
+| POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | `{ "category", "performanceId", "title", "body", "fileIds": [41] }` — category: PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC. 사진은 먼저 `POST /files` (purpose `INQUIRY`, 최대 3장, uploads.md) | F5-18 |
 | GET | `/me/inquiries` | 로그인 | 내 문의 목록 | |
 | GET | `/inquiries/{id}` | 본인 | 문의 + 답변. 남의 문의는 404 | F5-20 |
 | PUT · DELETE | `/inquiries/{id}` | 본인 | 답변 대기일 때만. 답변 완료면 `409 INVALID_STATE` | F5-19 |
@@ -362,4 +363,4 @@
 ---
 
 ## 8. 열린 질문
-- 파일 업로드 크기 제한 (제안 10MB)
+- ~~파일 업로드 크기 제한~~ → uploads.md (D-51)
