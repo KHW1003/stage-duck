@@ -110,7 +110,8 @@
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
 | GET | `/venues/{venueId}` | 🌐 | 상세 (미확인 조건 구분) | |
-| POST | `/files` | 로그인 | 파일 업로드 (이미지·PDF, 10MB 이하 (제안)) → `{ "id", "url" }` | |
+| POST | `/files` | 로그인 | multipart `file`, `purpose` → `201 { "id", "url", "thumbUrl" }`. 용도별 형식·크기·공개 여부는 [uploads.md](uploads.md). 크기 초과 `413 FILE_TOO_LARGE` | |
+| GET · DELETE | `/files/{id}` | 비공개 파일 권한자 / 본인(TEMP) | 비공개 파일 내려받기(남의 것 404) / 올렸다 뺀 사진 지우기 | |
 
 ### 3.2 요청서·공고
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -324,4 +325,4 @@
 ---
 
 ## 8. 열린 질문
-- 파일 업로드 크기 제한 (제안 10MB)
+- ~~파일 업로드 크기 제한~~ → uploads.md (D-51)
