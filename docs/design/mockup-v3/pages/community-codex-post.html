@@ -1,0 +1,219 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글 보기 D · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .d-post .btn--primary:hover { background: var(--sd-ink); border-color: var(--sd-ink); }
+  .d-post :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 3px; }
+  .d-near { display: grid; grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr); border: 1px solid var(--sd-line-strong); border-radius: 8px; margin-bottom: 28px; }
+  .d-near a, .d-near > span { display: flex; flex-direction: column; justify-content: center; min-height: 68px; padding: 12px 20px; font-size: 14px; }
+  .d-near > * + * { border-left: 1px solid var(--sd-line); }
+  .d-near a:hover { background: var(--sd-hover); }
+  .d-near small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sd-muted); font-size: 13px; margin-top: 4px; }
+  .d-near .d-to-list { text-align: center; font-weight: 700; }
+  .d-near > :last-child { text-align: right; }
+  .d-near [aria-disabled="true"] { color: var(--sd-muted); }
+  .d-article { max-width: 960px; margin: 0 auto; }
+  .d-post-head { padding-bottom: 24px; border-bottom: 1px solid var(--sd-line-strong); }
+  .d-prefix { margin-bottom: 12px; font-size: 14px; color: var(--sd-muted); font-weight: 600; }
+  .d-post-head h1 { font-size: 28px; letter-spacing: -.6px; line-height: 1.5; overflow-wrap: anywhere; }
+  .d-post-head .list__meta { margin-top: 16px; gap: 4px 0; }
+  .d-post-body { padding: 28px 0; font-size: 17px; line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
+  .d-photo { margin: 0 0 28px; max-width: 680px; }
+  .d-photo img { width: 100%; max-height: 340px; object-fit: cover; border: 1px solid var(--sd-line); border-radius: 8px; }
+  .d-photo figcaption { margin-top: 8px; color: var(--sd-muted); font-size: 13px; }
+  .d-share-area { padding-bottom: 28px; border-bottom: 1px solid var(--sd-line-strong); }
+  .d-share-area .btn[aria-expanded="true"] { background: var(--sd-band); border-color: var(--sd-ink); }
+  .d-share-panel { margin-top: 12px; padding: 20px; border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-th); }
+  .d-share-panel h2 { font-size: 17px; }
+  .d-copy { display: flex; gap: 8px; margin-top: 8px; }
+  .d-copy .input { flex: 1; min-width: 0; }
+  .d-copy-status { min-height: 24px; margin-top: 8px; font-size: 14px; color: var(--sd-ink); }
+  .d-discussion { margin-top: 32px; }
+  .d-discussion .sec-head { align-items: center; }
+  .d-thread > li { padding: 20px 0; border-bottom: 1px solid var(--sd-line); }
+  .d-comment-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+  .d-comment-head time { font-size: 13px; color: var(--sd-muted); }
+  .d-comment-text { margin-top: 8px; line-height: 1.8; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .d-reply-button { min-height: 44px; }
+  .d-replies { margin: 12px 0 0 28px; padding-left: 20px; border-left: 1px solid var(--sd-line-strong); }
+  .d-replies > li { padding: 16px 0 0; }
+  .d-replies > li + li { border-top: 1px solid var(--sd-line); margin-top: 16px; }
+  .d-comment-form { margin-top: 28px; }
+  .d-comment-form .textarea { min-height: 136px; margin-top: 8px; }
+  .d-comment-form [aria-invalid="true"] { border-color: var(--sd-conflict-text); }
+  .d-comment-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
+  .d-reply-context { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 8px 12px; margin-bottom: 12px; background: var(--sd-band); border-radius: 8px; font-size: 14px; }
+  .d-note { font-size: 13px; color: var(--sd-muted); margin-top: 12px; }
+  @media (max-width: 900px) {
+    :root { --sd-gnb-height: 108px; }
+    .gnb__inner { display: flex; flex-wrap: wrap; gap: 0 12px; height: auto; padding: 0 20px; }
+    .gnb__logo { min-height: 64px; margin-right: auto; }
+    .gnb__logo img { height: 22px; }
+    .gnb__right { flex: none; }
+    .gnb__menu { order: 3; flex: 0 0 100%; min-width: 0; justify-content: flex-start; gap: 24px; overflow-x: auto; }
+    .gnb__menu a { height: 44px; flex: none; }
+  }
+  @media (max-width: 620px) {
+    .d-post, .page-top .container { padding-left: 20px; padding-right: 20px; }
+    .d-near { grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr); }
+    .d-near a, .d-near > span { padding: 12px; }
+    .d-post-head h1 { font-size: 23px; }
+    .d-replies { margin-left: 12px; padding-left: 16px; }
+    .d-share-panel { padding: 16px; }
+    .d-copy { flex-wrap: wrap; }
+    .d-copy .input { flex-basis: 100%; }
+  }
+</style>
+</head>
+<body data-layout="user" data-nav="community">
+<div class="page-top"><div class="container page-top__inner"><ol class="page-top__crumb"><li><a href="community-codex.html">커뮤니티</a></li><li>글 보기 D</li></ol></div></div>
+<main class="container main d-post">
+  <nav class="d-near" aria-label="글 이동">
+    <a id="previous" href="community-codex-post.html?id=127"><span>이전 글</span><small>요청서 STEP2 '이미 있어요' 칸 잘 쓰는 법 정리했어요</small></a>
+    <a class="d-to-list" href="community-codex.html">목록</a>
+    <a id="next" aria-disabled="true" tabindex="-1"><span>다음 글</span><small>가장 최근 글이에요</small></a>
+  </nav>
+  <article class="d-article" id="article">
+    <header class="d-post-head"><p class="d-prefix" id="post-category">[질문]</p>
+      <h1 id="post-title">스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?</h1>
+      <div class="list__meta"><span><b id="post-author">광주밴드</b></span><span id="post-time">11월 16일 14:20</span><span id="post-views">조회 86</span><span id="post-comments">댓글 12</span></div>
+    </header>
+    <div class="d-post-body" id="post-body">다음 달에 첫 공연을 해요. 공연장 입실이 15시이고 공연은 19시인데, 리허설을 언제 시작해야 장비 설치랑 안 겹칠지 모르겠어요.
+
+장비 업체 견적서에는 설치 90분이라고 적혀 있어요. 경험 있으신 분들 조언 부탁드려요.</div>
+    <figure class="d-photo" id="post-photo"><img src="../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg" alt="공연장 내부 사진"><figcaption>첨부 사진 · 공연장 내부</figcaption></figure>
+    <div class="d-share-area">
+      <button class="btn" id="share-button" type="button" aria-expanded="false" aria-controls="share-panel"><span data-icon="out" class="icon--sm"></span><span id="share-label">공유</span></button>
+      <section class="d-share-panel" id="share-panel" aria-labelledby="share-title" hidden>
+        <h2 id="share-title">이 글을 함께 읽어 보세요</h2><p class="small muted mt-4">아래 링크를 복사해서 보내 주세요.</p>
+        <label class="field__label mt-16" for="share-link">글 링크</label>
+        <div class="d-copy"><input class="input" id="share-link" readonly><button class="btn btn--primary" id="copy-button" type="button">복사</button></div>
+        <p class="d-copy-status" id="copy-status" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+    <section class="d-discussion" id="discussion" aria-labelledby="comment-heading">
+      <div class="sec-head"><h2 id="comment-heading">댓글 <span class="muted" id="comment-count">12</span></h2><p id="comment-sample">댓글 12개 중 3개를 보여 드려요.</p></div>
+      <ol class="d-thread" id="comments" aria-label="댓글과 답글">
+        <li id="comment-1"><div class="d-comment-head"><b>드럼치는목요일</b><time>14:42</time></div>
+          <p class="d-comment-text">입실 15시에 설치 90분이면 16시 30분에 끝나요. 리허설은 17시로 잡으면 여유 있어요.</p>
+          <button class="link d-reply-button" type="button" data-reply="comment-1" data-name="드럼치는목요일">답글</button>
+          <ol class="d-replies" aria-label="드럼치는목요일님에게 달린 답글"><li><div class="d-comment-head"><b>광주밴드</b><span class="small muted">글쓴이</span><time>14:50</time></div><p class="d-comment-text">감사해요! 17시로 요청서 고쳐 볼게요.</p><button class="link d-reply-button" type="button" data-reply="comment-1" data-name="광주밴드">답글</button></li></ol>
+        </li>
+        <li id="comment-2"><div class="d-comment-head"><b>노을극단</b><time>15:03</time></div><p class="d-comment-text">공연장 견적서의 '장비 설치 가능 시각'을 꼭 보세요. 입실보다 늦은 곳도 있어요.</p><button class="link d-reply-button" type="button" data-reply="comment-2" data-name="노을극단">답글</button></li>
+      </ol>
+      <form class="d-comment-form" id="comment-form" novalidate>
+        <div class="d-reply-context" id="reply-context" hidden><span id="reply-to"></span><button class="btn" id="cancel-reply" type="button">답글 취소</button></div>
+        <label class="field__label" for="comment-input" id="comment-label">댓글 남기기</label>
+        <textarea class="textarea" id="comment-input" maxlength="500" required placeholder="공연을 준비하는 사용자에게 도움이 될 이야기를 남겨 주세요." aria-describedby="comment-hint comment-error comment-length"></textarea>
+        <p class="field__error" id="comment-error" hidden></p>
+        <div class="d-comment-foot"><span class="small muted" id="comment-length">0 / 500</span><button class="btn btn--primary" type="submit">등록</button></div>
+        <p class="d-note" id="comment-hint">전화번호·계좌번호·외부 링크는 쓸 수 없어요.</p><p class="d-note" id="comment-status" role="status"></p>
+      </form>
+    </section>
+    <div class="btns btns--end mt-24"><a class="btn" href="community-codex.html">목록으로</a><a class="btn" href="community-codex-write.html">글쓰기</a></div>
+  </article>
+  <div class="empty" id="missing" hidden><b>찾는 글이 없어요</b><p>목록에서 다른 글을 골라 주세요.</p><a class="btn" href="community-codex.html">목록으로</a></div>
+</main>
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+<script>
+(() => {
+  const get = id => document.getElementById(id);
+  const posts = [
+    [128, '질문', '스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?', '광주밴드', 12, 86, '11월 16일 14:20', get('post-body').textContent],
+    [127, '정보', "요청서 STEP2 '이미 있어요' 칸 잘 쓰는 법 정리했어요", '첫무대준비중', 8, 142, '11월 16일 11:05', "가지고 있는 악기 앰프나 마이크를 '이미 있어요'에 적어 두면 장비 업체 견적서가 훨씬 정확해져요. 제가 적었던 예시를 그대로 옮겨 볼게요."],
+    [126, '자유', '첫 공연 끝났어요. 다음엔 장비 단계부터 일찍 준비하려고요', '노을극단', 21, 310, '11월 15일', '공연장은 금방 정했는데 장비 단계에서 견적서를 비교하느라 시간이 꽤 걸렸어요. 다음에는 요청서를 올릴 때부터 편성을 자세히 적으려고요.'],
+    [125, '공연 소식', '11월 22일 광주 동구에서 가을밤 밴드 공연 해요', '광주밴드', 5, 97, '11월 15일', '11월 22일 광주 동구에서 가을밤 밴드 공연을 해요. 공연을 준비하는 사용자들과 소식을 나누고 싶어요.'],
+    [124, '질문', '장비 견적서에 엔지니어가 들어 있으면 엔지니어 단계는 건너뛰어도 되나요?', '빛고을합창단', 9, 201, '11월 14일', '장비 업체 견적서에 엔지니어 1명이 포함돼 있다고 적혀 있어요. 이럴 때 엔지니어 단계를 건너뛰면 현장 운영은 누가 맡는 건지 궁금해요.'],
+    [123, '정보', "설치 시간 '경고'가 뜨는 이유와 공연장 고를 때 볼 것", '드럼치는목요일', 14, 388, '11월 14일', '공연장 견적서의 장비 설치 가능 시각부터 리허설까지가 60분이 안 되면 경고가 떠요. 경고가 떠도 고를 수는 있지만, 장비 업체와 꼭 미리 맞춰 보세요.'],
+    [122, '자유', '연습실 소음 문제, 다들 어떻게 해결하세요?', '새벽합주', 17, 254, '11월 13일', '합주 시간을 정하면서 연습실 소음도 함께 살펴보고 있어요. 다른 사용자들은 어떻게 준비하시는지 궁금해요.'],
+    [121, '질문', '관객 150명이면 모니터 스피커는 몇 개가 적당할까요?', '어쿠스틱두시', 6, 133, '11월 13일', '관객 150명 공연을 준비하고 있어요. 장비 업체와 이야기하기 전에 모니터 스피커를 고를 때 어떤 정보를 전달하면 좋을지 궁금해요.'],
+    [120, '자유', '공연 포스터 직접 만드시는 분 계신가요', '노을극단', 3, 72, '11월 12일', '공연 포스터에 날짜와 장소를 보기 쉽게 담고 싶어요. 직접 만들어 보신 사용자들의 이야기를 듣고 싶어요.']
+  ];
+  const query = new URLSearchParams(location.search);
+  const index = posts.findIndex(p => String(p[0]) === (query.get('id') || '128'));
+  if (index < 0) { get('article').hidden = true; get('missing').hidden = false; return; }
+  const post = posts[index];
+  get('post-category').textContent = '[' + post[1] + ']';
+  get('post-title').textContent = post[2]; get('post-author').textContent = post[3];
+  get('post-time').textContent = post[6]; get('post-views').textContent = '조회 ' + post[5];
+  get('post-comments').textContent = '댓글 ' + post[4]; get('post-body').textContent = post[7];
+  document.title = post[2] + ' · 커뮤니티 D';
+  get('post-photo').hidden = post[0] !== 128;
+  let total = post[4], shown = post[0] === 128 ? 3 : 0, replyTarget = null;
+  if (post[0] !== 128) get('comments').replaceChildren();
+  function counts() {
+    get('comment-count').textContent = total;
+    get('post-comments').textContent = '댓글 ' + total;
+    get('comment-sample').textContent = '댓글 ' + total + '개 중 ' + shown + '개를 보여 드려요.';
+  }
+  counts();
+  [['previous', index + 1, '첫 글이에요'], ['next', index - 1, '가장 최근 글이에요']].forEach(([id, i, fallback]) => {
+    const link = get(id), item = posts[i];
+    if (item) { link.href = 'community-codex-post.html?id=' + item[0]; link.removeAttribute('aria-disabled'); link.removeAttribute('tabindex'); }
+    else { link.removeAttribute('href'); link.setAttribute('aria-disabled', 'true'); link.tabIndex = -1; }
+    link.querySelector('small').textContent = item ? item[2] : fallback;
+  });
+  const shareURL = new URL(location.href); shareURL.search = ''; shareURL.hash = ''; shareURL.searchParams.set('id', post[0]);
+  get('share-link').value = shareURL.href;
+  function share(open) {
+    get('share-panel').hidden = !open; get('share-button').setAttribute('aria-expanded', String(open));
+    get('share-label').textContent = open ? '공유 접기' : '공유';
+    if (!open) get('copy-status').textContent = '';
+  }
+  share(query.get('share') === 'd');
+  get('share-button').addEventListener('click', () => share(get('share-panel').hidden));
+  get('share-panel').addEventListener('keydown', e => { if (e.key === 'Escape') { share(false); get('share-button').focus(); } });
+  get('copy-button').addEventListener('click', async () => {
+    const field = get('share-link'); let copied = false;
+    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(field.value); copied = true; } } catch {}
+    if (!copied) {
+      field.focus(); field.select();
+      try { copied = document.execCommand('copy'); } catch {}
+    }
+    get('copy-status').textContent = copied ? '복사했어요. 원하는 곳에 붙여 넣어 주세요.' : '자동으로 복사하지 못했어요. 선택된 링크를 직접 복사해 주세요.';
+    if (copied) get('copy-button').focus();
+  });
+  const input = get('comment-input');
+  function clearReply() { replyTarget = null; get('reply-context').hidden = true; get('comment-label').textContent = '댓글 남기기'; }
+  get('comments').addEventListener('click', e => {
+    const button = e.target.closest('[data-reply]'); if (!button) return;
+    replyTarget = get(button.dataset.reply);
+    get('reply-to').textContent = button.dataset.name + '님에게 답글을 남겨요.';
+    get('reply-context').hidden = false; get('comment-label').textContent = '답글 남기기'; input.focus();
+  });
+  get('cancel-reply').addEventListener('click', () => { clearReply(); input.focus(); });
+  input.addEventListener('input', () => {
+    get('comment-length').textContent = input.value.length + ' / 500';
+    input.removeAttribute('aria-invalid'); get('comment-error').hidden = true; get('comment-status').textContent = '';
+  });
+  get('comment-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const value = input.value.trim();
+    const blocked = /0\d{1,2}[- .]?\d{3,4}[- .]?\d{4}|\d{2,6}(?:[- ]\d{2,6}){2,}|\d{10,}|https?:\/\/|www\.|[\w.+-]+@[\w.-]+\.[a-z]{2,}/i.test(value);
+    if (!value || blocked) {
+      get('comment-error').textContent = blocked ? '전화번호·계좌번호·외부 링크를 지우고 다시 남겨 주세요.' : '댓글 내용을 입력해 주세요.';
+      get('comment-error').hidden = false; input.setAttribute('aria-invalid', 'true'); input.focus(); return;
+    }
+    let target = get('comments');
+    if (replyTarget) {
+      target = replyTarget.querySelector('.d-replies');
+      if (!target) { target = document.createElement('ol'); target.className = 'd-replies'; target.setAttribute('aria-label', '답글'); replyTarget.append(target); }
+    }
+    const li = document.createElement('li'); li.id = 'added-comment-' + total;
+    li.innerHTML = '<div class="d-comment-head"><b>광주밴드</b><time>방금</time></div><p class="d-comment-text"></p><button class="link d-reply-button" type="button">답글</button>';
+    li.querySelector('p').textContent = value;
+    const reply = li.querySelector('button'); reply.dataset.reply = replyTarget ? replyTarget.id : li.id; reply.dataset.name = '광주밴드';
+    target.append(li); total++; shown++; counts(); clearReply(); input.value = '';
+    get('comment-length').textContent = '0 / 500'; input.removeAttribute('aria-invalid'); get('comment-error').hidden = true;
+    get('comment-status').textContent = '목업에 댓글을 추가했어요. 새로고침하면 사라져요.';
+  });
+})();
+</script>
+</body>
+</html>
