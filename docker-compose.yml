@@ -1,5 +1,5 @@
 # 개발용 MariaDB (Docker가 있는 팀원용). Docker가 없으면 MariaDB 11.4를 직접 설치해도 된다 (README 참고).
-# 백엔드·프론트 컨테이너는 배포 단계에서 추가한다.
+# 시연 서버(백엔드·프론트·Caddy 포함)는 deploy/docker-compose.prod.yml — specs/deploy.md
 services:
   mariadb:
     image: mariadb:11.4
