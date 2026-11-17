@@ -87,10 +87,10 @@
 |---|---|---|---|---|
 | T2-05 | [#39](https://github.com/KHW1003/stage-duck/issues/39) | 반려 카운트·게시 제한 | F4-05, F4-06, F4-07 | T2-03 ([#37](https://github.com/KHW1003/stage-duck/issues/37)), T3-02 ([#42](https://github.com/KHW1003/stage-duck/issues/42)) |
 | T2-06 | [#40](https://github.com/KHW1003/stage-duck/issues/40) | 내 공연 현황 (단계와 다음 할 일) | F5-02 | T2-04 ([#38](https://github.com/KHW1003/stage-duck/issues/38)) |
-| T2-07 | (이슈 만들 예정) | 커뮤니티 목록·글 보기·글쓰기(F 문서형)·도배 방지 | F4-12, F4-13, F4-16 | T1-03 ([#24](https://github.com/KHW1003/stage-duck/issues/24)), T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)) |
-| T2-08 | (이슈 만들 예정) | 커뮤니티 댓글·답글·도움 돼요·저장·링크 공유·신고·블라인드 | F4-14, F4-15, F4-17 | T2-07, T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)), T4-09 ([#54](https://github.com/KHW1003/stage-duck/issues/54)) |
-| T2-09 | (이슈 만들 예정) | 1:1 문의 (쓰기·목록·보기, 사진 첨부) + SQLAdmin 답변 | F5-18, F5-19, F5-20 | T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)) |
-| T2-10 | (이슈 만들 예정) | 공지사항(SQLAdmin 작성·고정)·FAQ·업체 이용 가이드·약관 화면 | F5-21 | T1-02 ([#23](https://github.com/KHW1003/stage-duck/issues/23)) |
+| T2-07 | [#100](https://github.com/KHW1003/stage-duck/issues/100) | 커뮤니티 목록·글 보기·글쓰기(F 문서형)·도배 방지 | F4-12, F4-13, F4-16 | T1-03 ([#24](https://github.com/KHW1003/stage-duck/issues/24)), T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)) |
+| T2-08 | [#101](https://github.com/KHW1003/stage-duck/issues/101) | 커뮤니티 댓글·답글·도움 돼요·저장·링크 공유·신고·블라인드 | F4-14, F4-15, F4-17 | T2-07 ([#100](https://github.com/KHW1003/stage-duck/issues/100)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)), T4-09 ([#54](https://github.com/KHW1003/stage-duck/issues/54)) |
+| T2-09 | [#102](https://github.com/KHW1003/stage-duck/issues/102) | 1:1 문의 (쓰기·목록·보기, 사진 첨부) + SQLAdmin 답변 | F5-18, F5-19, F5-20 | T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)) |
+| T2-10 | [#103](https://github.com/KHW1003/stage-duck/issues/103) | 공지사항(SQLAdmin 작성·고정)·FAQ·업체 이용 가이드·약관 화면 | F5-21 | T1-02 ([#23](https://github.com/KHW1003/stage-duck/issues/23)) |
 
 ### 묶음 3 — 채은
 
