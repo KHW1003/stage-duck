@@ -37,7 +37,7 @@
 | T1-05 | [#26](https://github.com/KHW1003/stage-duck/issues/26) | 업체 가입·입점 3단계·심사 상태 화면 | F1-17, F1-18 | T1-03 ([#24](https://github.com/KHW1003/stage-duck/issues/24)) |
 | T1-06 | [#27](https://github.com/KHW1003/stage-duck/issues/27) | 서비스·공간 등록 + 공간 스냅샷 함수 | F2-01, F2-02, F2-03 | T1-05 ([#26](https://github.com/KHW1003/stage-duck/issues/26)) |
 | T1-07 | [#28](https://github.com/KHW1003/stage-duck/issues/28) | 공간 탐색 목록·상세 | F5-01 | T1-06 ([#27](https://github.com/KHW1003/stage-duck/issues/27)) |
-| T1-08 | [#29](https://github.com/KHW1003/stage-duck/issues/29) | 파일 업로드 API (`POST /files`) | — | T1-01 ([#22](https://github.com/KHW1003/stage-duck/issues/22)) |
+| T1-08 | [#29](https://github.com/KHW1003/stage-duck/issues/29) | 파일 업로드 API (`POST /files`) — 용도·공개 여부·사진 처리·임시 파일 정리는 [uploads.md](uploads.md) | — | T1-01 ([#22](https://github.com/KHW1003/stage-duck/issues/22)) |
 | T1-09 | [#30](https://github.com/KHW1003/stage-duck/issues/30) | PR 게시판 목록·상세·작성 (말머리·필터·부문당 1개) | F4-01, F4-02, F4-04, F4-09 | T1-05 ([#26](https://github.com/KHW1003/stage-duck/issues/26)), T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)) |
 
 ### 묶음 2 — 해원

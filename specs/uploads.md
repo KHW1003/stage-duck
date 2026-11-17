@@ -102,7 +102,7 @@ files
 | GET | `/files/{id}` | 비공개 파일의 권한자 | 파일 내려받기. 남의 것 404 |
 | DELETE | `/files/{id}` | 본인 (`TEMP`만) | 올렸다가 뺀 사진 바로 지우기 |
 
-- 기존 api-contract의 `POST /files` 줄을 이 표로 바꾼다. 문의 `POST /inquiries`의 multipart(`images[]`)도 이 흐름에 맞춰 **`fileIds`**로 바꾼다.
+- api-contract의 `POST /files` 줄과 문의 `POST /inquiries`(`fileIds`)는 이 흐름에 맞췄다.
 - 올리기 제한: 한 사람 1분에 30개 (`429 UPLOAD_RATE_LIMITED`).
 
 ## 7. 화면
