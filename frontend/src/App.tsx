@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
+import { SupplierSignupPage } from "./pages/SupplierSignupPage";
 import { AppLayout } from "./shared/layout/AppLayout";
 import { NotFound } from "./shared/layout/NotFound";
 
@@ -13,6 +14,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/signup/supplier" element={<SupplierSignupPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

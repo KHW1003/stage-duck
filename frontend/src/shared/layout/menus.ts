@@ -21,6 +21,7 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
   guest: [
     { label: "공간 찾기", to: "/venues" },
     { label: "PR 게시판", to: "/board" },
+    { label: "커뮤니티", to: "/community" }, // #93, plan.md 6장
     { label: "이용 방법", to: "/" }, // 목업: 홈의 이용 방법 구역 (home.html#flow)
   ],
   user: [
@@ -29,12 +30,14 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
     { label: "채팅", to: "/chats" }, // 목업은 오른쪽 아래 채팅 위젯을 연다 — 위젯(3번)이 생기면 바꾼다
     { label: "공간 찾기", to: "/venues" },
     { label: "PR 게시판", to: "/board" },
+    { label: "커뮤니티", to: "/community" },
   ],
   partner: [
     { label: "공고 목록", to: "/supplier/postings" },
     { label: "채팅", to: "/chats" },
     { label: "기술 확인", to: "/supplier/tech" }, // [주소 미정] 목업 p-tech.html — 4번 묶음
     { label: "PR 게시판", to: "/board" },
+    { label: "커뮤니티", to: "/community" },
   ],
   "partner-review": [],
   // 관리자 화면은 React 가 아니라 서버의 SQLAdmin (plan.md 6.5). 목업 a-*.html 과 같은 메뉴를 SQLAdmin 주소로 잇는다
@@ -54,11 +57,13 @@ export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
     { label: "마이페이지", to: "/mypage", icon: "user" }, // [주소 미정] 목업 mypage.html — 1번 profile
     { label: "관심 업체", to: "/favorites", icon: "heart" }, // [주소 미정] 목업 favorites.html — 1번 offer
     { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정] plan.md 는 공연별 /performances/:id/sheet
+    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
   ],
   partner: [
     { label: "업체 프로필", to: "/supplier/profile", icon: "venue" },
     { label: "내 PR 게시글", to: "/supplier/posts", icon: "edit" }, // [주소 미정] 목업 p-post.html
     { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정]
+    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" },
   ],
   "partner-review": [],
   admin: [],

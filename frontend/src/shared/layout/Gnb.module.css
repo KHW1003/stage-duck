@@ -42,12 +42,18 @@
 .item { display: flex; align-items: center; gap: 10px; width: 100%; height: var(--sd-touch); padding: 0 16px; border: 0; background: transparent; font-size: var(--sd-text-desc); text-align: left; cursor: pointer; }
 .item:hover { background: var(--sd-hover); }
 
-/* 모바일 (768px 미만, CLAUDE.md 6.2 "모바일이 기본"). 미디어 쿼리에는 CSS 변수를 쓸 수 없어 폭만 숫자로 적는다 */
+/* 모바일·태블릿 (1024px 미만, CLAUDE.md 6.2 "모바일이 기본"): 주 메뉴가 한 줄에 안 들어가는 폭. 미디어 쿼리에는 CSS 변수를 쓸 수 없어 폭만 숫자로 적는다 */
 .menuBtn { display: none; place-items: center; width: var(--sd-touch); height: var(--sd-touch); border: 0; border-radius: var(--sd-r-btn); background: transparent; cursor: pointer; }
 .menuBtn:hover { background: var(--sd-band); }
 .mobileOnly { display: none !important; }
 
-@media (max-width: 767px) {
+/* 1024~1279px: 메뉴가 많은 역할(관리자·사용자)도 한 줄에 들어가게 간격만 줄인다 */
+@media (max-width: 1279px) {
+  .inner { gap: 24px; }
+  .menu { gap: 0 24px; }
+}
+
+@media (max-width: 1023px) {
   /* 오른쪽 버튼이 많으면(업체·관리자 표시) 로고가 줄어들어 겹치지 않게 한다 */
   .inner { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
   .logo { min-width: 0; }
