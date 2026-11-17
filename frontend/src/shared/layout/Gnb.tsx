@@ -5,9 +5,11 @@
  * - 심사 중 업체: 알림 종 없이 계정 메뉴(알림 · 로그아웃)
  * - 관리자: "테스트 환경" 표시 + 계정 메뉴(로그아웃). 메뉴는 서버의 SQLAdmin 으로 간다
  * 알림 목록·안 읽은 수는 3번 묶음(notification)이 붙인다 — 지금은 패널 틀만 둔다.
+ * 모바일(768px 미만, CLAUDE.md 6.2): 주 메뉴는 오른쪽 끝 [메뉴] 버튼으로 열고 닫는 판으로 옮긴다.
+ *   화면을 옮기거나 Esc 를 누르면 닫힌다. 메뉴가 없는 화면(심사 중 업체)에는 버튼을 두지 않는다.
  */
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import type { Me } from "../api/types";
 import type { LayoutKind } from "../auth/useMe";
 import { useLogout } from "../auth/useMe";
@@ -41,6 +43,17 @@ function MenuLink({ item }: { item: MenuItem }) {
 
 export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
   const partner = kind === "partner" || kind === "partner-review";
+  const { pathname } = useLocation();
+  const [navOpen, setNavOpen] = useState(false);
+  const hasMenu = MENUS[kind].length > 0 || !me;
+  // 화면을 옮기면 모바일 메뉴 판을 닫는다
+  useEffect(() => setNavOpen(false), [pathname]);
+  useEffect(() => {
+    if (!navOpen) return;
+    const close = (e: KeyboardEvent) => e.key === "Escape" && setNavOpen(false);
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [navOpen]);
   const logo = (
     <>
       <img src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
@@ -60,10 +73,15 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
             {logo}
           </Link>
         )}
-        <nav className={styles.menu} aria-label="주 메뉴">
+        <nav id="gnb-menu" className={`${styles.menu} ${navOpen ? styles.menuOpen : ""}`} aria-label="주 메뉴">
           {MENUS[kind].map((m) => (
             <MenuLink key={m.label} item={m} />
           ))}
+          {!me && (
+            <Link className={styles.mobileOnly} to="/signup/supplier">
+              업체신가요?
+            </Link>
+          )}
         </nav>
         <div className={styles.right}>
           {me ? (
@@ -74,10 +92,10 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
             </>
           ) : (
             <>
-              <Link className={styles.text} to="/signup/supplier">
+              <Link className={`${styles.text} ${styles.desktopOnly}`} to="/signup/supplier">
                 업체신가요?
               </Link>
-              <span className={styles.sep} />
+              <span className={`${styles.sep} ${styles.desktopOnly}`} />
               <Link className={styles.text} to="/login">
                 로그인
               </Link>
@@ -85,6 +103,18 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
                 가입하기
               </ButtonLink>
             </>
+          )}
+          {hasMenu && (
+            <button
+              type="button"
+              className={styles.menuBtn}
+              aria-label={navOpen ? "메뉴 닫기" : "메뉴 열기"}
+              aria-expanded={navOpen}
+              aria-controls="gnb-menu"
+              onClick={() => setNavOpen((v) => !v)}
+            >
+              <Icon name={navOpen ? "x" : "menu"} />
+            </button>
           )}
         </div>
       </div>
@@ -148,7 +178,7 @@ function AccountMenu({ me, kind }: { me: Me; kind: LayoutKind }) {
           <span className={styles.avatar} aria-hidden="true">
             {name.slice(0, 1)}
           </span>
-          {name}
+          <span className={styles.userName}>{name}</span>
           <Icon name="down" size="sm" />
         </button>
       )}

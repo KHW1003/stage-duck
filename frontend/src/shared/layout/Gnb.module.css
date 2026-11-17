@@ -41,3 +41,33 @@
 
 .item { display: flex; align-items: center; gap: 10px; width: 100%; height: var(--sd-touch); padding: 0 16px; border: 0; background: transparent; font-size: var(--sd-text-desc); text-align: left; cursor: pointer; }
 .item:hover { background: var(--sd-hover); }
+
+/* 모바일 (768px 미만, CLAUDE.md 6.2 "모바일이 기본"). 미디어 쿼리에는 CSS 변수를 쓸 수 없어 폭만 숫자로 적는다 */
+.menuBtn { display: none; place-items: center; width: var(--sd-touch); height: var(--sd-touch); border: 0; border-radius: var(--sd-r-btn); background: transparent; cursor: pointer; }
+.menuBtn:hover { background: var(--sd-band); }
+.mobileOnly { display: none !important; }
+
+@media (max-width: 767px) {
+  /* 오른쪽 버튼이 많으면(업체·관리자 표시) 로고가 줄어들어 겹치지 않게 한다 */
+  .inner { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .logo { min-width: 0; }
+  .logo img { min-width: 0; max-width: 100%; height: auto; max-height: var(--sd-logo-mark); }
+  .role { flex: none; }
+  .right { justify-content: flex-end; gap: 2px; }
+  .menuBtn { display: inline-grid; }
+  .desktopOnly { display: none; }
+  .mobileOnly { display: flex !important; }
+  .envTag { display: none; }
+  /* 이름은 화면에서 숨기되 읽어 주는 프로그램에는 남긴다 (버튼 이름이 비지 않게) */
+  .userName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .user { padding: 0 4px; }
+
+  .menu { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; flex-wrap: nowrap; gap: 0; padding: 4px 0 8px; border-bottom: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
+  .menuOpen { display: flex; }
+  .menu a { height: var(--sd-touch); padding: 0 var(--sd-page-pad); font-size: var(--sd-text-body); }
+  .menu a::after { display: none; }
+  .menu a:hover { background: var(--sd-hover); }
+
+  .dropdown { position: fixed; top: calc(var(--sd-gnb-height) + 4px); left: var(--sd-page-pad); right: var(--sd-page-pad); }
+  .notiPanel { position: fixed; top: calc(var(--sd-gnb-height) + 4px); left: var(--sd-page-pad); right: var(--sd-page-pad); width: auto; max-width: none; }
+}
