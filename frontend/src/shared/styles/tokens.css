@@ -1,0 +1,147 @@
+/* STAGE DUCK 디자인 값 (#23). 화면 CSS에는 색·크기 숫자를 직접 적지 않고 아래 이름만 쓴다 (DESIGN.md 2장, CLAUDE.md 6.2).
+   출처: docs/design/mockup/tokens.css + docs/design/mockup-v3/css/refine.css (팀 결정 2026-11-16: 목업 v3 값을 쓴다).
+   DESIGN.md 의 표는 아직 확정 체크 전이다 — 바뀌면 이 파일만 고친다.
+
+   색 이름 규칙: --sd-이름 (띠·아이콘·테두리) / --sd-이름-text (흰 바탕 위 글자) / --sd-이름-soft (옅은 바탕) */
+
+/* Pretendard (SIL OFL 1.1, public/fonts/LICENSE.txt). 인터넷 없이도 보이게 저장소 안 파일을 쓴다 */
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations"), url("/fonts/PretendardVariable.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: only light;
+
+  /* 바탕과 선 */
+  --sd-bg: #ffffff;
+  --sd-soft: #f5f8fb;
+  --sd-line: #e4e9ee;
+  --sd-line-strong: #d4dce3;
+  --sd-photo: #eef2f6;
+  --sd-photo-line: #e0e6ec;
+  --sd-photo-text: #8a97a4;
+
+  /* 글자 */
+  --sd-ink: #202e3d;
+  --sd-muted: #677583;
+
+  /* 강조 (레드 시안): 포인트는 레드, 주 버튼은 차콜 */
+  --sd-blue: #d62c2c;
+  --sd-blue-button: #2b3138;
+  --sd-blue-button-hover: var(--sd-blue);
+  --sd-accent: #f4f6f8;
+  --sd-featured: #202e3d;
+  --sd-focus: #677583;
+  --sd-on-blue: #ffffff;
+
+  /* 상태: 자동 검사 결과 4종 (아이콘 + 글자를 함께 쓴다) */
+  --sd-pass-text: #43647b;     --sd-pass-soft: #edf3f7;
+  --sd-warn-text: #96601f;     --sd-warn-soft: #fbf3e8;
+  --sd-info-text: #677583;     --sd-info-soft: #f1f4f7;
+  --sd-conflict-text: #b3261e; --sd-conflict-soft: #fdf0ef;
+
+  /* 글꼴 */
+  --sd-font: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  /* 글자 크기 */
+  --sd-text-hero: 36px;
+  --sd-text-section: 24px;
+  --sd-text-page: 24px;   /* 안쪽 화면 제목 (v3) */
+  --sd-text-sub: 18px;    /* 구역 제목 (v3) */
+  --sd-text-total: 29px;
+  --sd-text-price: 17px;
+  --sd-text-card: 15px;
+  --sd-text-body: 14px;
+  --sd-text-desc: 13px;
+  --sd-text-small: 12px;
+  --sd-text-meta: 11px;
+  --sd-text-tiny: 10px;
+  --sd-text-logo: 20px;
+  --sd-text-nav: 16px;
+  --sd-text-lg: 16px;     /* 큰 버튼 */
+
+  /* 폭·간격 */
+  --sd-page-width: 1200px;
+  --sd-page-pad: 42px;
+  --sd-gnb-height: 72px;
+  --sd-gap-space: 20px;
+  --sd-gap-quote: 13px;
+  --sd-inner-section: 48px;
+  --sd-row: 52px;
+
+  /* 모서리 */
+  --sd-r-card: 12px;
+  --sd-r-sample: 16px;
+  --sd-r-band: 14px;
+  --sd-r-box: 6px;
+  --sd-r-btn: 6px;
+  --sd-r-field: 4px;
+  --sd-r-tag: 3px;
+
+  /* 크기 */
+  --sd-touch: 44px;
+  --sd-input: 44px;
+  --sd-button-sm: 36px;
+  --sd-button-lg: 54px;
+  --sd-icon: 18px;
+  --sd-icon-sm: 14px;
+  --sd-icon-photo: 26px;
+  --sd-photo-ratio: 1.7;
+  --sd-logo-mark: 28px;
+  --sd-avatar: 48px;
+  --sd-aside: 320px;
+
+  /* 안쪽 화면 */
+  --sd-band: #f4f6f8;
+  --sd-th: #f7f9fb;
+  --sd-hover: #fafbfc;
+  --sd-rule: #5a6774;
+
+  /* 바닥글 */
+  --sd-footer-bg: #d3d9df;
+  --sd-footer-ink: #1f2b37;
+  --sd-footer-muted: #44525f;
+  --sd-footer-line: #bcc5cd;
+
+  /* 겹치는 순서 */
+  --sd-z-header: 40;
+  --sd-z-float: 60;
+  --sd-z-modal: 80;
+  --sd-z-toast: 90;
+}
+
+/* 안쪽 화면 본문 (v3 다듬은 값). 머리(GNB)·바닥글은 위 기본값 그대로 — 목업 refine.css 와 같은 범위 */
+[data-sd-area="content"] {
+  --sd-ink: #1f2227;
+  --sd-muted: #6f7680;
+  --sd-photo-text: #9aa0a8;
+  --sd-line: #ebedf0;
+  --sd-line-strong: #dcdfe4;
+  --sd-band: #f6f7f8;
+  --sd-th: #fafafb;
+  --sd-hover: #fafafb;
+  --sd-rule: #1f2227;
+  --sd-pass-text: #16864f;
+  --sd-r-box: 8px;
+  --sd-r-btn: 8px;
+  --sd-r-field: 8px;
+  --sd-r-tag: 4px;
+  --sd-text-body: 15px;
+  --sd-text-desc: 14px;
+  --sd-text-small: 13px;
+  --sd-text-meta: 12px;
+  --sd-row: 60px;
+  --sd-inner-section: 56px;
+  color: var(--sd-ink);
+}
+
+/* 업체 화면 색 (팀 결정: 주조색 #0368B6). AppLayout 이 업체 계정에서 data-theme="partner" 를 단다 */
+[data-theme="partner"] {
+  --sd-blue: #0368b6;
+  --sd-blue-button: #0368b6;
+  --sd-blue-button-hover: #02579a;
+}
