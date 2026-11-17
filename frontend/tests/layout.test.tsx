@@ -112,19 +112,19 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     renderAt("/");
     await screen.findByRole("button", { name: /광주밴드/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["내 공연", "견적함", "채팅", "공간 찾기", "PR 게시판"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["내 공연", "견적함", "채팅", "공간 찾기", "PR 게시판", "커뮤니티"]);
     expect(screen.getByRole("button", { name: "알림" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /광주밴드/ }));
-    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "관심 업체", "최종 담당표", "알림", "로그아웃"]);
+    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "관심 업체", "최종 담당표", "1:1 문의", "알림", "로그아웃"]);
     expect(screen.getByText("사용자 계정")).toBeInTheDocument();
   });
 
-  it("승인 업체 메뉴는 목업과 같다 (공고 목록·채팅·기술 확인·PR 게시판)", async () => {
+  it("승인 업체 메뉴는 목업과 같다 (공고 목록·채팅·기술 확인·PR 게시판·커뮤니티)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     renderAt("/");
     await screen.findByRole("button", { name: /업체D담당/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "채팅", "기술 확인", "PR 게시판"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "채팅", "기술 확인", "PR 게시판", "커뮤니티"]);
   });
 
   it("심사 중 업체는 알림 종이 없고 계정 메뉴는 알림·로그아웃뿐이다 (목업)", async () => {
