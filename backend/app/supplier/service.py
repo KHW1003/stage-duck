@@ -3,11 +3,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, time
 
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
-from app.models.supplier import Supplier
+from app.models.supplier import Supplier, SupplierCategory
+from app.models.user import User
+from app.supplier import calc
+from app.supplier.schemas import ApplicationIn
 
 # 허용되는 심사 상태 전이 (data-model.md 11장)
 _ALLOWED = {
@@ -80,6 +85,83 @@ def suspend(db: Session, supplier_id: int, *, actor_id: int | None, reason: str 
 def unsuspend(db: Session, supplier_id: int, *, actor_id: int | None) -> Supplier:
     supplier = _transition(db, supplier_id, "APPROVED", actor_id, None)
     supplier.reject_reason = None
+    db.commit()
+    return supplier
+
+
+# ---------------------------------------------------------------------------
+# 입점 신청 2단계 (FR-SUP-02) — 업체 본인
+# ---------------------------------------------------------------------------
+
+
+def _checked(body: ApplicationIn) -> calc.ApplicationInput:
+    """AC-F1-18: 칸 검사 → 사업자번호 체크섬. 틀리면 저장하지 않고 이유를 돌려준다."""
+    data = calc.ApplicationInput(**body.model_dump())
+    errors = calc.application_field_errors(data)
+    if errors:
+        raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
+    bad_no = calc.business_no_error(data)
+    if bad_no:
+        raise AppError(400, "INVALID_BUSINESS_NO", calc.BAD_BUSINESS_NO, [bad_no])
+    return data
+
+
+def _fill(supplier: Supplier, data: calc.ApplicationInput) -> None:
+    """AC-F1-17: 개인(프리랜서)은 사업자등록번호·사업장 주소를 저장하지 않는다 (보내도 무시)."""
+    business = data.business_type != "INDIVIDUAL"
+    supplier.business_type = data.business_type
+    supplier.company_name = data.company_name.strip()
+    supplier.representative_name = data.representative_name.strip()
+    supplier.business_reg_no = calc.normalize_business_no(data.business_reg_no.strip()) if business else None
+    supplier.business_address = data.business_address.strip() if business else None
+    supplier.main_phone = data.main_phone.strip()
+    supplier.mail_order_no = (data.mail_order_no or "").strip() or None
+    supplier.categories = [SupplierCategory(category=c) for c in data.categories]
+
+
+def _mine(db: Session, user: User, *, lock: bool = False) -> Supplier | None:
+    stmt = select(Supplier).where(Supplier.user_id == user.id)
+    return db.scalar(stmt.with_for_update() if lock else stmt)
+
+
+def apply(db: Session, user: User, body: ApplicationIn) -> Supplier:
+    """FR-SUP-02: 입점 신청 → 심사 중(PENDING). 이미 신청했으면 409 (고칠 때는 PUT)."""
+    data = _checked(body)
+    if _mine(db, user) is not None:
+        raise invalid_state("이미 입점을 신청했어요. 신청 내용은 심사 상태 화면에서 확인해 주세요.")
+    supplier = Supplier(user_id=user.id, review_status="PENDING")
+    _fill(supplier, data)
+    db.add(supplier)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()  # 같은 신청이 동시에 두 번 들어온 경우 (suppliers.user_id UNIQUE)
+        raise invalid_state("이미 입점을 신청했어요. 신청 내용은 심사 상태 화면에서 확인해 주세요.") from None
+    record_transition(
+        db, entity_type="supplier", entity_id=supplier.id, from_status=None, to_status="PENDING", actor_user_id=user.id
+    )
+    db.commit()
+    return supplier
+
+
+def get_application(db: Session, user: User) -> Supplier:
+    """AC-F1-20: 내 신청 내용·심사 상태·반려 사유. 아직 신청 전이면 404."""
+    supplier = _mine(db, user)
+    if supplier is None:
+        raise not_found()
+    return supplier
+
+
+def update_application(db: Session, user: User, body: ApplicationIn) -> Supplier:
+    """AC-F1-20: 반려된 신청을 고쳐서 다시 신청 → 심사 중. 반려 상태가 아니면 409."""
+    data = _checked(body)
+    supplier = _mine(db, user, lock=True)
+    if supplier is None:
+        raise not_found()
+    if supplier.review_status != "REJECTED":
+        raise invalid_state("반려된 신청만 고쳐서 다시 신청할 수 있어요.")
+    _fill(supplier, data)
+    _transition(db, supplier.id, "PENDING", user.id, None)
     db.commit()
     return supplier
 

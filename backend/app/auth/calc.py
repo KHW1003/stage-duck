@@ -94,6 +94,28 @@ def signup_field_errors(data: SignupInput, today: date) -> list[dict]:
     return errors
 
 
+def supplier_signup_field_errors(name: str | None, phone: str | None, email: str | None, password: str | None) -> list[dict]:
+    """FR-SUP-01: 업체 1단계(이메일·비밀번호·담당자 이름·담당자 전화). 칸 규칙은 사용자 가입과 같다."""
+    errors: list[dict] = []
+    for field, value, reason in (
+        ("email", email, "이메일을 입력해 주세요"),
+        ("password", password, "비밀번호를 입력해 주세요"),
+        ("name", name, "담당자 이름을 입력해 주세요"),
+        ("phone", phone, "담당자 전화번호를 입력해 주세요"),
+    ):
+        if _blank(value):
+            errors.append({"field": field, "reason": reason})
+    if not _blank(email) and (len(email.strip()) > 255 or not EMAIL_RE.fullmatch(email.strip())):
+        errors.append({"field": "email", "reason": "이메일 형식을 확인해 주세요"})
+    if not _blank(password) and not _password_ok(password):
+        errors.append({"field": "password", "reason": "비밀번호는 8~72자, 영문과 숫자를 함께 넣어 주세요"})
+    if not _blank(name) and len(name.strip()) > 50:
+        errors.append({"field": "name", "reason": "이름은 50자까지 입력할 수 있어요"})
+    if not _blank(phone) and not PHONE_RE.fullmatch(phone.strip()):
+        errors.append({"field": "phone", "reason": "전화번호는 숫자만 9~11자리로 입력해 주세요 (예: 01012345678)"})
+    return errors
+
+
 def landing_for(role: str, supplier_review_status: str | None) -> str:
     """AC-F1-11: 사용자 = 내 공연 / 업체 = 공고 목록(승인 전에는 입점·심사 상태) / 관리자 = 심사 대기(SQLAdmin)."""
     if role == "USER":
