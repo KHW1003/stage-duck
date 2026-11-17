@@ -120,7 +120,8 @@ API 경로의 `/api/v1`은 생략했다.
 | F5-06 | 중복 응답·더블 클릭 1회만 | PAY-02 | POST /orders/{id}/payments (`Idempotency-Key`), POST /payments/mock/callback | payments UNIQUE(idempotency_key, provider_tx_id) | 결제 화면 | BE (동시성), FE |
 | F5-07 | 보관 중 → 정산 예정 | PAY-02 | 스케줄러(공연 완료), GET …/order | ledger_entries (HOLD, SETTLE_SCHEDULED) | /performances/:id/order | BE (시간 고정) |
 | F5-08 | D-1 취소 70% 배분, 이용료 환불 없음 | PAY-03 | GET …/cancel-quote, POST …/cancel | cancellations, ledger_entries (PENALTY, REFUND) | 취소 화면 | BE (단위: 계산) |
-| F5-09 | 결제 전 취소 10% 배분 | PAY-03 | POST …/cancel | cancellations, ledger_entries (CANCEL_FEE) | 취소 화면 | BE (단위) |
+| F5-09 | 결제 전 취소 0원 + 채팅 반려 +1 | PAY-03, POL-02 | POST …/cancel | cancellations, rejection_events | 취소 화면 | BE (단위) |
+| F5-22 | D-7 독촉, D-4 0시 미결제 자동 취소 | PAY-03 | 스케줄러 (`payment/`), POST …/pay (`409 INVALID_STATE`) | orders.status, cancellations (SYSTEM), rejection_events, notifications | 내 공연, 채팅방 안내 카드 | BE (시간 고정) |
 | F5-10 | 업체 사정 취소 → 전액 환불 + 경고 | PAY-03, POL-04 | POST …/cancel-by-supplier | cancellations, sanctions, users.warning_count | 업체 확정 내역 | BE |
 | F5-11 | 결제 후 담당표·연락처, 미확정 업체 불가 | PAY-04 | GET /performances/{id}/sheet | orders, stages | /performances/:id/sheet | BE |
 | F5-12 | 결제 전 연락처 비공개 | CHAT-06, PAY-04 | GET /postings/{id}, GET …/sheet | performances.contact_phone | 공고 상세 | BE |
