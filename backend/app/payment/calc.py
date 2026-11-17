@@ -31,9 +31,11 @@ def invoice_amounts(line_amounts: Sequence[int], fee_rate: Decimal) -> InvoiceAm
     return InvoiceAmounts(items_total, platform_fee, items_total + platform_fee)
 
 
-# 취소 시점별 비율 (FR-PAY-03, data-model.md cancellations.phase · rate_percent)
-PHASE_RATE = {"BEFORE_PAYMENT": 10, "UNTIL_D3": 10, "D2": 50, "D1": 70, "D0": 100, "SUPPLIER_FAULT": 0}
-_DAY_PHASE = {0: "D0", 1: "D1", 2: "D2"}
+# 취소 시점별 비율 (FR-PAY-03, D-53, data-model.md cancellations.phase · rate_percent)
+PHASE_RATE = {
+    "BEFORE_PAYMENT": 0, "UNTIL_D6": 0, "D5_D4": 10, "D3": 30, "D2": 50, "D1": 70, "D0": 100, "SUPPLIER_FAULT": 0,
+}
+_DAY_PHASE = {0: "D0", 1: "D1", 2: "D2", 3: "D3", 4: "D5_D4", 5: "D5_D4"}
 
 
 @dataclass(frozen=True)
@@ -44,7 +46,7 @@ class CancelAmounts:
     rate_percent: int
     paid: int  # 결제한 금액 (결제 전이면 0)
     penalty_base: int  # 업체 금액 합
-    penalty_total: int  # 위약금·취소 수수료
+    penalty_total: int  # 위약금
     penalty_by_line: tuple[int, ...]  # line_amounts 순서대로 업체별 몫
     fee_refunded: int  # 돌려주는 플랫폼 이용료
     refund_total: int  # 환불 예정액
@@ -57,7 +59,7 @@ def cancel_phase(performance_date: date, now: datetime, *, paid: bool) -> str:
         raise ValueError("공연 날짜가 지난 뒤에는 취소 금액을 계산하지 않는다")
     if not paid:
         return "BEFORE_PAYMENT"
-    return _DAY_PHASE.get(days_left, "UNTIL_D3")
+    return _DAY_PHASE.get(days_left, "UNTIL_D6")
 
 
 def split_by_amount(total: int, amounts: Sequence[int]) -> tuple[int, ...]:
@@ -81,7 +83,7 @@ def cancel_amounts(line_amounts: Sequence[int], platform_fee: int, phase: str) -
 
     위약금은 업체 금액 합 × 비율(원 미만 버림). 사용자 사정이면 이용료는 돌려주지 않고,
     SUPPLIER_FAULT(결제한 공연의 업체 사정 취소)면 위약금 없이 이용료까지 전액 돌려준다 (D-39).
-    결제 전 취소는 낸 돈이 없어 환불 0원, 취소 수수료만 업체에 나눈다.
+    결제 전 취소는 낸 돈도 위약금도 없다 (D-53, 반려 카운트는 서비스에서 기록).
     """
     if phase not in PHASE_RATE:
         raise ValueError(f"모르는 phase: {phase}")

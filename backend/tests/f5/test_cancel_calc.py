@@ -1,4 +1,4 @@
-"""F5 취소 위약금·환불 계산 — AC-F5-08·09·10 (FR-PAY-03, D-39). 값은 docs/guides/시연_예시값.md."""
+"""F5 취소 위약금·환불 계산 — AC-F5-08·09·10 (FR-PAY-03, D-39, D-53). 값은 docs/guides/시연_예시값.md."""
 from datetime import date, datetime
 
 import pytest
@@ -17,11 +17,16 @@ def test_ac_f5_08_d1_user_cancel_70_percent():
     )
 
 
-def test_ac_f5_09_before_payment_cancel_fee_10_percent():
-    """결제 전 취소: 취소 수수료 185,000원 → C 50,000 / D 135,000, 낸 돈이 없어 환불 0원."""
+def test_ac_f5_09_before_payment_cancel_is_free():
+    """결제 전 취소: 낸 돈이 없어 수수료·환불 모두 0원 (D-53)."""
     assert cancel_amounts(LINES, FEE, "BEFORE_PAYMENT") == CancelAmounts(
-        "BEFORE_PAYMENT", 10, 0, 1850000, 185000, (50000, 135000), 0, 0
+        "BEFORE_PAYMENT", 0, 0, 1850000, 0, (0, 0), 0, 0
     )
+
+
+def test_ac_f5_08_d3_split_matches_demo_values():
+    """D-3 30%: 555,000원 → C 150,000 / D 405,000 (시연 예시값)."""
+    assert cancel_amounts(LINES, FEE, "D3").penalty_by_line == (150000, 405000)
 
 
 def test_ac_f5_10_supplier_fault_full_refund_with_fee():
@@ -32,7 +37,9 @@ def test_ac_f5_10_supplier_fault_full_refund_with_fee():
 
 
 @pytest.mark.parametrize(("phase", "penalty", "refund"), [
-    ("UNTIL_D3", 185000, 1665000), ("D2", 925000, 925000), ("D0", 1850000, 0),
+    ("UNTIL_D6", 0, 1850000),  # 위약금 없음, 이용료 92,500원은 돌려주지 않음
+    ("D5_D4", 185000, 1665000), ("D3", 555000, 1295000),
+    ("D2", 925000, 925000), ("D0", 1850000, 0),
 ])
 def test_ac_f5_08_rate_by_phase(phase, penalty, refund):
     result = cancel_amounts(LINES, FEE, phase)
@@ -41,8 +48,12 @@ def test_ac_f5_08_rate_by_phase(phase, penalty, refund):
 
 
 @pytest.mark.parametrize(("now", "phase"), [
-    (datetime(2026, 12, 17, 0, 0), "UNTIL_D3"),
-    (datetime(2026, 12, 17, 23, 59), "UNTIL_D3"),  # D-3 마지막 분
+    (datetime(2026, 12, 1, 0, 0), "UNTIL_D6"),
+    (datetime(2026, 12, 14, 23, 59), "UNTIL_D6"),  # D-6 마지막 분
+    (datetime(2026, 12, 15, 0, 0), "D5_D4"),  # D-5 시작 (자정)
+    (datetime(2026, 12, 16, 23, 59), "D5_D4"),  # D-4 마지막 분
+    (datetime(2026, 12, 17, 0, 0), "D3"),
+    (datetime(2026, 12, 17, 23, 59), "D3"),
     (datetime(2026, 12, 18, 0, 0), "D2"),  # D-2 시작 (자정)
     (datetime(2026, 12, 18, 23, 59), "D2"),
     (datetime(2026, 12, 19, 0, 0), "D1"),
