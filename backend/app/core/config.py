@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14  # plan.md 4장 Refresh 14일
     login_max_failures: int = 5  # FR-AUTH-06 연속 실패 횟수
     login_lock_minutes: int = 10  # FR-AUTH-06 잠금 시간
+    upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
     @property
     def is_test_env(self) -> bool:
