@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공지사항 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .nt { max-width: 860px; }
+  .nt-table td.l a { color: var(--sd-ink); }
+  .nt-table td.l a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .nt-table tr.is-pin td { background: var(--sd-th); }
+  .nt-table th:nth-child(1) { width: 90px; } .nt-table th:nth-child(3) { width: 120px; }
+  .nt-view h1 { margin-top: 8px; font-size: 24px; letter-spacing: -.6px; line-height: 1.4; }
+  .nt-view__meta { margin-top: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .nt-view__body { padding: 28px 0 36px; font-size: 15px; line-height: 1.85; }
+  .nt-view__body p + p, .nt-view__body ul { margin-top: 12px; }
+  .nt-view__body ul { padding-left: 18px; list-style: disc; }
+  .nt-nav { border-top: 1px solid var(--sd-line-strong); }
+  .nt-nav a { display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; gap: 12px; padding: 16px 8px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .nt-nav a span:first-child, .nt-nav small { color: var(--sd-muted); }
+</style>
+</head>
+<!-- 화면: 공지사항 목록·상세 · FR-CS-02 · AC-F5-21 · D-48 · 담당 미정
+     React: pages/NoticeListPage.tsx · NoticeDetailPage.tsx. 관리자가 SQLAdmin에서 쓴다 (a-cs.html). 고정 글이 맨 위. 누구나 본다. -->
+<body data-layout="guest">
+
+<div class="mock-switch" data-group="view">
+  <span>목업 보기</span>
+  <button type="button" data-value="list" aria-pressed="true">목록</button>
+  <button type="button" data-value="detail">글 보기</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>고객지원</li><li data-when="view:detail"><a href="notices.html">공지사항</a></li></ol><h1 data-when="view:list">공지사항</h1></div></div></div>
+
+<main class="container main">
+  <div class="nt" data-when="view:list">
+    <div class="table-box"><table class="table nt-table">
+      <thead><tr><th>분류</th><th>제목</th><th>게시일</th></tr></thead>
+      <tbody>
+        <tr class="is-pin"><td><span class="tag tag--fill">고정</span></td><td class="l"><a href="notices.html?view=detail"><b>포트폴리오 시연 서비스 안내</b></a></td><td>11.10</td></tr>
+        <tr class="is-pin"><td><span class="tag tag--fill">고정</span></td><td class="l"><a href="notices.html?view=detail"><b>커뮤니티 이용 규칙</b></a></td><td>11.10</td></tr>
+        <tr><td><span class="tag">점검</span></td><td class="l"><a href="notices.html?view=detail">11월 20일(목) 02:00~04:00 서버 점검</a></td><td>11.17</td></tr>
+        <tr><td><span class="tag">정책</span></td><td class="l"><a href="notices.html?view=detail">견적서 최소 금액 10,000원 적용</a></td><td>11.16</td></tr>
+        <tr><td><span class="tag">안내</span></td><td class="l"><a href="notices.html?view=detail">견적서에 업체할인 칸이 생겼어요</a></td><td>11.16</td></tr>
+        <tr><td><span class="tag">안내</span></td><td class="l"><a href="notices.html?view=detail">커뮤니티을 열었어요</a></td><td>11.10</td></tr>
+      </tbody>
+    </table></div>
+    <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span></nav>
+  </div>
+
+  <article class="nt nt-view" data-when="view:detail">
+    <span class="tag">정책</span>
+    <h1>견적서 최소 금액 10,000원 적용</h1>
+    <p class="nt-view__meta">운영팀 · 2026년 11월 16일</p>
+    <div class="nt-view__body">
+      <p>11월 16일부터 견적서 최종 합계가 10,000원 이상이어야 보낼 수 있어요.</p>
+      <ul><li>모든 금액이 0원인 견적서는 보낼 수 없어요.</li><li>업체할인을 넣었다면 할인 뒤 합계가 10,000원 이상이어야 해요.</li></ul>
+      <p>궁금한 점은 1:1 문의로 알려 주세요.</p>
+    </div>
+    <nav class="nt-nav" aria-label="이전·다음 글"><a href="notices.html?view=detail"><span>이전 글</span><span>견적서에 업체할인 칸이 생겼어요</span><small>11.16</small></a><a href="notices.html?view=detail"><span>다음 글</span><span>11월 20일(목) 02:00~04:00 서버 점검</span><small>11.17</small></a></nav>
+    <div class="btns btns--center mt-24"><a class="btn" href="notices.html">목록</a></div>
+  </article>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

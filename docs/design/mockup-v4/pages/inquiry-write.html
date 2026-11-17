@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문의하기 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* InquiryWritePage.module.css — 커뮤니티 글쓰기 C안(쓰기 판)을 문의 폼으로 */
+  .narrow { max-width: 820px; margin: 0 auto; }
+  .step-label { margin-bottom: 10px; font-size: var(--sd-text-desc); font-weight: 700; }
+  .step-label .req { color: var(--sd-conflict-text); margin-left: 2px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips label { position: relative; }
+  .chips input { position: absolute; opacity: 0; }
+  .chips span { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border: 1px solid var(--sd-line-strong); border-radius: 999px; font-size: var(--sd-text-desc); cursor: pointer; }
+  .chips input:checked + span { border-color: var(--sd-ink); background: var(--sd-ink); color: var(--sd-on-blue); font-weight: 700; }
+  .chips input:focus-visible + span { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+  .editor { border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
+  .editor__title { width: 100%; height: 72px; padding: 0 24px; border: 0; border-bottom: 1px solid var(--sd-line); font: inherit; font-size: 22px; font-weight: 700; letter-spacing: -.4px; }
+  .editor__title::placeholder { color: var(--sd-muted); font-weight: 500; }
+  .editor__tools { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--sd-line); background: var(--sd-soft); }
+  .editor__tools .select { height: 36px; margin-left: auto; }
+  .editor__body { width: 100%; min-height: 300px; padding: 24px; border: 0; font: inherit; font-size: var(--sd-text-body); line-height: 1.8; resize: none; }
+  .editor__body::placeholder { color: var(--sd-muted); }
+  .editor__files { display: flex; gap: 8px; padding: 0 24px 16px; }
+  .file-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); font-size: var(--sd-text-small); }
+  .editor__foot { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-top: 1px solid var(--sd-line); color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .sticky-foot { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding: 16px 0; border-top: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
+</style>
+</head>
+<!-- 시안: 문의 쓰기 (커뮤니티 글쓰기 C안 '쓰기 판' 기반)
+     화면: 문의하기 · 제안 화면 (스펙에 아직 없음 — 해원 승인 전)
+     React(안): pages/InquiryWritePage.tsx = TypeChips + PerformanceSelect + TitleInput + BodyEditor + FileAttach + Submit — React Hook Form + zod, 서버 fieldErrors 우선
+     본문의 전화번호·계좌번호는 서버에서 막는다. 오류 값 보기: ?err=bad -->
+<body data-layout="user">
+
+<div class="mock-switch" data-group="err">
+  <span>입력</span>
+  <button type="button" data-value="ok" aria-pressed="true">정상</button>
+  <button type="button" data-value="bad">오류</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="inquiry-list.html">1:1 문의</a></li><li>문의하기</li></ol><h1>문의하기</h1><p class="page-top__desc">운영자만 볼 수 있어요. 답변이 오면 알림으로 알려 드려요.</p></div></div></div>
+
+<main class="container main">
+  <form class="narrow">
+    <p class="step-label">문의 유형<span class="req">*</span></p>
+    <div class="chips" role="radiogroup" aria-label="문의 유형"><label><input type="radio" name="type" checked><span>결제·환불</span></label><label><input type="radio" name="type"><span>견적·컨펌</span></label><label><input type="radio" name="type"><span>업체 이용</span></label><label><input type="radio" name="type"><span>계정</span></label><label><input type="radio" name="type"><span>기타</span></label></div>
+
+    <div class="editor mt-24">
+      <input class="editor__title" value="공연을 하루 앞두고 취소하면 위약금은 어떻게 나뉘나요?" placeholder="무엇이 궁금한지 한 줄로 적어 주세요" aria-label="제목" maxlength="60">
+      <div class="editor__tools"><button class="btn btn--sm btn--ghost" type="button"><span data-icon="clip" class="icon--sm"></span>파일 첨부</button><button class="btn btn--sm btn--ghost" type="button"><span data-icon="image" class="icon--sm"></span>화면 캡처</button>
+        <select class="select select--sm" aria-label="관련 공연"><option>관련 공연: 가을밤 밴드 공연 · 11월 22일</option><option>관련 공연 없음</option></select></div>
+      <textarea class="editor__body" aria-label="내용" data-when="err:ok">공연장 C와 장비 D를 컨펌하고 모의 결제까지 했어요. 사정이 생겨 공연 하루 전에 취소하게 되면 위약금이 업체마다 어떻게 나뉘는지, 플랫폼 이용료도 돌려받는지 궁금해요.</textarea>
+      <textarea class="editor__body" aria-label="내용" aria-invalid="true" data-when="err:bad" hidden>환불은 이 계좌로 부탁드려요. 000-000000-00-000</textarea>
+      <div class="editor__files"><span class="file-chip"><span data-icon="image" class="icon--sm"></span>청구서-캡처.png<button class="link" type="button" aria-label="첨부 빼기"><span data-icon="x" class="icon--sm"></span></button></span></div>
+      <div class="editor__foot"><span data-when="err:ok"><span data-icon="info" class="icon--sm"></span> 전화번호·계좌번호는 적지 말아 주세요. 결제 내역은 운영자가 직접 확인해요</span><span class="field__error" data-when="err:bad" hidden><span data-icon="warn" class="icon--sm"></span>계좌번호는 적을 수 없어요. 계좌번호를 빼고 다시 보내 주세요.</span><span>96 / 2,000</span></div>
+    </div>
+
+    <div class="sticky-foot"><span class="small muted">답변은 1:1 문의 목록과 알림에서 볼 수 있어요</span><div class="btns"><a class="btn" href="inquiry-list.html">취소</a><button class="btn btn--primary" type="submit">문의 보내기</button></div></div>
+  </form>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

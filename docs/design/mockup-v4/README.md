@@ -1,0 +1,162 @@
+# 목업 v4 (mockup-v4/) · 기준 목업
+
+> **2026-11-17부터 화면은 v4가 기준이에요.** React로 옮길 때 이 폴더만 보면 돼요. v1(`../mockup/`)·v2·v3는 기록으로만 남겨요.
+> v3에서 화면마다 시안이 여러 개였던 것을 하나씩만 남기고, 파일 이름에서 시안 표시(-a, -f 등)를 뗐어요.
+
+| 화면 | v4 파일 | 고른 시안 (v3 파일) |
+|---|---|---|
+| 커뮤니티 목록 | `community.html` | 목산 A 표 목록 (`community-list-a`) |
+| 커뮤니티 글 보기 | `community-post.html` | 목산 A 게시판 표준 (`community-post-a`) |
+| 공유 창 | `community-share.html` | 목산 C 작은 창 + 복사 알림 (`community-share-c`). 카카오톡·QR은 후속 |
+| 커뮤니티 글쓰기 | `community-write.html` | F 문서형 (`community-write-f`) |
+| 1:1 문의 | `inquiry-list` · `inquiry-write` · `inquiry-post` | Claude 시안 (Codex 시안 뺌) |
+| 내 공연 목록 | `my.html` | 세환 시안 (`my-performances`) + 상자 없이 정리 (#117) |
+| 공연 상세 | `performance.html` | 세환 단계형 (`my-steps`) + 상자 없이 정리 (#117). 아코디언형 뺌 |
+| 견적함 목록 | `inbox-list.html` (메뉴 "견적함") | 세환 표형. 카드형 뺌 |
+| 견적함 (공연별) | `inbox.html` | v3 그대로 |
+
+뺀 시안 파일 19개는 v3 폴더에 그대로 있어요. 나머지 화면은 v3와 같아요.
+
+---
+
+## (아래는 v3 설명 그대로)
+
+
+v2(`../mockup-v2/`)와 화면·내용은 같고, **스타일만 다듬은** 버전이에요. 둘을 나란히 열어 비교해 보세요. 머리(GNB)와 바닥글은 v2와 같아요.
+
+## v2에서 바뀐 것 (`css/refine.css` 하나)
+
+근거는 국내 서비스 22곳 조사예요: `../references/ui-조사.md`
+
+| 바뀐 것 | v2 | v3 |
+|---|---|---|
+| 회색 | 푸른 기가 도는 회색 | 중립 회색 2단계 (본문 #1f2227 / 설명 #6f7680) |
+| 모서리 | 상자·버튼 6px, 입력칸 4px | 모두 8px |
+| 글자 | 본문 14 · 설명 13 · 작은 글자 12 | 15 · 14 · 13 |
+| 화면 제목 | 회색 띠 | 흰 바탕 |
+| 표 | 위 2px 진한 선, 머리 회색 바탕, 가운데 정렬 | 머리 아래 1px 선, 바탕 없음, 왼쪽 정렬 |
+| 구역 제목 | 앞에 아이콘 | 글자만 |
+| 요약 칸 | 아이콘 상자 + 숫자 | 숫자만 크게 |
+| 오른쪽 상자 | 위 2px 선 | 둥근 테두리 |
+| 컨펌·통과 색 | 진한 청회색 | 초록 #16864f |
+| 거래 이력 | 표 중심 | 현황 3칸 + 줄 목록 + 따라오는 결제 요약 (v2의 a-orders-v4 시안) |
+
+- 팀이 확정하면 이 값을 `../mockup/tokens.css`와 DESIGN.md에 옮겨요 (지금은 `refine.css`가 덮어쓰는 방식).
+- 아래는 v2 안내 그대로예요.
+
+---
+
+# 안쪽 화면 목업 v2 (mockup-v2/) · 아이콘·사진 더한 버전
+
+v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더한** 버전이에요. 둘을 나란히 열어 비교해 보세요.
+
+## v1에서 더한 것
+| 곳 | 더한 것 |
+|---|---|
+| 모든 구간 제목 | 앞에 내용 아이콘 (요청서·견적서·일정·연락처 등) |
+| 요약 칸·단계 칸 | 아이콘 상자, 단계 번호 옆 아이콘 |
+| 섭외 단계 | 공연장·장비·엔지니어 아이콘 (컨펌은 채운 원, 지금 단계는 주조색 원) |
+| 업체 | 프로필 사진 (업체 A~G) |
+| 공간 찾기 | 공간 유형 타일(아이콘), 아래 기능 줄 |
+| 공연 형태 | 요청서 STEP1 형태 타일, 내 공연·공고 제목 옆 공연 형태 사진 |
+| 단계별 비교 | 견적서 칸 위 공간·장비 사진 (마감된 칸은 흑백) |
+| 로그인·가입 | 왼쪽 무대 사진, 가입 유형 사진 |
+| 청구서·담당표·기술 확인 | 업체 작은 사진, 시간표·항목 아이콘 |
+| 알림 | 종류별 아이콘 (견적·채팅, 오퍼, 공고, 결제) |
+| 컴포넌트 시안 9번 | 아이콘 전체 목록, 아이콘 상자·분류 타일·기능 줄·사진 규칙 |
+| **채팅** | 채팅 화면(`chat.html`, `p-chat.html`)을 없애고 **채팅 위젯**으로 바꿈 (아래) |
+
+## 새로 더한 화면 (명세 8장 중 빠져 있던 것)
+
+| 화면 | 파일 | 상태 (목업 보기) |
+|---|---|---|
+| 테스트 결제 | `pages/pay.html` | 결제 수단 / 처리 중 / 결제 전 검사 실패 / 결제 실패 |
+| 오류 | `pages/error.html` | 404 / 401 로그인 / 403 권한 / 이용 정지 / 500 / 503 점검 / 연결 끊김 |
+| 빈 화면·오류 상태 모음 | `pages/states.html` | 빈 화면 10종 / 불러오는 중 / 불러오기 실패 / 입력 오류 / 상태 충돌 / 토스트 (목업 전용) |
+| 관리자: 업체 심사 (첫 화면) | `pages/a-review.html` | 서류 갖춤 / 보완 필요 |
+| 관리자: 신고·제재 | `pages/a-reports.html` | 경고 0회 / 경고 2회 (이번이 3회째 → 정지) |
+| 관리자: 게시글·공간 | `pages/a-posts.html` | PR 게시글·커뮤니티 블라인드·해제, 공간 숨김 |
+| 관리자: 문의·공지 | `pages/a-cs.html` | 1:1 문의 답변, 공지사항 작성·고정 |
+| 커뮤니티 | `pages/community.html`, `community-post.html`·`-b`, `community-share.html`, `community-write.html` | 목산 시안 #92 중 사용 안 + 글쓰기 F (모아보기 `community.html`) |
+| 고객지원 | `pages/notices.html`, `faq.html`, `guide.html`, `terms.html`, `inquiry-list.html`(목산 시안) | 공지사항 / FAQ / 업체 이용 가이드 / 약관 3종 / 1:1 문의 |
+| 관리자: 거래 이력 | `pages/a-orders.html` | 결제·보관 중 / D-1 사용자 취소 |
+| 관리자: 시연 도구 | `pages/a-demo.html` | 기본 / 초기화한 뒤 |
+
+- 관리자 화면은 `data-layout="admin"`이에요. 실제로는 SQLAdmin(`backend/app/admin`)이라 React로 옮기지 않고, `admin.css`로 이 모양을 입힐지 팀이 정해요.
+- 값은 시드 데이터(host@, supplier-a~g@stageduck.test, 업체 A~G 모두 승인)와 `docs/guides/시연_예시값.md`에 맞췄어요. 심사 대기 업체 H·I는 "시연 중 가입" 예시예요.
+
+## 채팅 위젯
+
+로그인한 모든 화면(사용자·승인된 업체) 오른쪽 아래에 둥근 채팅 버튼이 있어요. 누르면 페이지 이동 없이 화면 위층(`--sd-z-float`)에 채팅 창이 버튼 자리(오른쪽·아래 24px)에 뜨고, 버튼은 숨어요. 닫기는 창 머리줄의 X예요.
+
+| 화면 | 머리줄 | 탭 (머리줄 바로 아래) | 내용 |
+|---|---|---|---|
+| 목록 | 채팅 · 안 읽음 수 · 닫기 | 사용자: 전체·공연장·장비·엔지니어 / 업체: 전체·진행 중·시작 전·마감 | 공연 고르기(사용자), 대화 목록 |
+| 대화 | 뒤로 · 상대 · 내역서 · 신고 · 닫기 | 대화 · 견적 정보 | 대화: 말풍선·견적서 카드·확인 카드·입력칸 / 견적 정보: 예전 3단 화면의 오른쪽 칸 |
+
+- 파일: `chat-widget.js`(그리기·동작, `layout.js`가 불러옴), `css/chat.css`(창·버튼). 말풍선·카드 같은 대화 안 부품은 `css/domain.css` 그대로이고, 창 안에서는 **둥글기만** 키웠어요 (창 16px, 말풍선 16px, 카드·입력칸 12px).
+- React: `shared/chat/ChatWidget.tsx` = `ChatFab` + `ChatPanel`(view: list | room) > `ChatList` · `Room`(탭: 대화 | 견적 정보). `AppLayout`에 한 번만 둔다.
+- 다른 화면의 [채팅] 버튼(알림·견적함·내 공연·내역서·공고)은 `useChat().open(방 id)`를 불러요. 목업에서는 `data-chat="d"`.
+- 화면을 옮겨도 열린 창·방·탭이 이어져요 (목업: sessionStorage).
+- 비로그인·심사 중 업체 화면에는 버튼이 없어요. 알림 토스트는 버튼 위로 올라가요. 560px 이하에서는 창이 화면을 꽉 채워요.
+- 목업 주소: `?chat=list`, `?chat=d`(방 id: 사용자 d·e·c·a / 업체 ga·bom·ha), `&pane=info`, `?card=opened` · `?card=done`(업체 D 확인 카드)
+- 그림자 없이(DESIGN.md 8장) 진한 테두리와 진한 머리줄로 층을 나눠요.
+
+- 새 부품 CSS는 `css/visual.css` 하나에 있어요 (나머지 CSS는 v1과 같음).
+- 글꼴·로고·사진은 `../mockup/`의 것을 함께 써요 (`../mockup/tokens.css`, `../mockup/assets/`).
+- 사진은 `style="--img:url(...)"` CSS 변수로 넘겨요. 브라우저는 이 주소를 **CSS 파일(`css/`) 기준**으로 풀기 때문에, 화면 위치와 상관없이 `../../mockup/assets/photos/...`로 적어요. React에서는 `import` 한 이미지 주소를 넘기면 돼요.
+- **팀 확인 필요:** 공연에는 사진 칸이 없어서(명세서), 공연 형태별 **기본 사진**을 서비스가 정해 두는 방식으로 그렸어요.
+
+---
+
+
+메인(`../home.html`, `../partner.html`)을 뺀 나머지 화면의 HTML 목업이에요. 나중에 React로 옮기기 쉽게 **부품 단위**로 나눠 만들었어요.
+
+- 전체 목록: [`index.html`](index.html)
+- 컴포넌트 시안 고르기: [`components.html`](components.html) (알림·결제창·확인 팝업·단계 표시·목록을 모양 A·B·C로, 채팅 위젯 상태 모음)
+- 화면마다 왼쪽 아래 **목업 보기**로 상태를 바꿔 볼 수 있어요. 주소 끝 `?그룹=값`으로도 돼요 (예: `invoice.html?pay=paid`).
+
+## 디자인 원칙
+
+| 원칙 | 어떻게 |
+|---|---|
+| 카드를 쌓지 않는다 | 구역은 ① 회색 제목 띠(`.page-top`) ② 표·목록 위 굵은 선(`--sd-rule` 2px) ③ 줄 사이 1px 선으로 나눈다 |
+| 이름-값은 표로 | 이름 칸은 회색 바탕(`--sd-th`), 값 칸은 흰 바탕 (`.info-table`, `.form-table`) |
+| 강조는 최소로 | 파스텔 바탕을 쓰지 않는다. 지금 할 일·선택은 진한 선, 진한 머리줄, 글자색으로만 표시한다 |
+| 단계는 칸으로 | 요청서·입점·결제 단계는 번호가 붙은 칸(`.step-bar`), 섭외 단계는 칸 나눔(`.track`) |
+| 오른쪽 행동 상자 | 결제·오퍼·컨펌은 오른쪽 `.side-box`에 모은다 (티켓 예매 상자와 같은 배치) |
+| 상태는 글자와 함께 | 자동 검사는 아이콘 + 글자(`.status`), 진행 상태는 점 + 글자(`.state`) |
+| 그림자·그라데이션·이모지 없음 | DESIGN.md 8장 |
+
+## 파일 → React 옮기는 곳
+
+| 목업 파일 | React | 담는 것 |
+|---|---|---|
+| `../tokens.css` | `src/shared/styles/tokens.css` | 색·크기·간격 변수. 업체 색은 `[data-theme="partner"]`로 |
+| `css/base.css` | `src/shared/styles/base.css` | 기본 스타일, `.container`, `.with-aside`, `.sec` |
+| `css/layout.css` | `src/shared/layout/` | `Gnb`, `PageTop`, `SideNav`, `Footer` |
+| `css/ui.css` | `src/shared/ui/` | `Button`, `Tag`, `StatusBadge`, `StateText`, `Field`, `Choice`, `Toggle`, `FormTable`, `Tabs`, `Filters`, `DataTable`, `InfoTable`, `List`, `Summary`, `Notice`, `Empty`, `Photo`, `Gallery`, `Avatar`, `Pagination`, `Fold`, `Modal`, `Drawer`, `NotificationPanel`, `Toast` |
+| `css/domain.css` | `src/features/*` | `StepBar`, `StageTrack`, `SideBox`, `QuoteColumns`, `QuoteLines`, `PriorInfo`, `Versions`, `ChatLayout`·`ChatCard`, `Invoice`, `Escrow`, `PenaltyScale`, `Timeline`, `Contacts` |
+| `css/theme-partner.css` | `tokens.css`의 `[data-theme="partner"]` | 업체 화면 주조색 `#0368B6` |
+| `layout.js` | `AppLayout.tsx`, `Icon.tsx` | 헤더·바닥글·아이콘. 목업 전환(`.mock-switch`, `data-when`)은 옮기지 않는다 |
+| `pages/*.html` 위 주석 | `src/pages/*Page.tsx` | 화면마다 부품 조합·관련 AC·API를 적어 뒀다 |
+| 페이지 `<style>` | 그 화면의 `*.module.css` | 그 화면에서만 쓰는 배치 |
+
+클래스 이름은 BEM 비슷하게 `부품__부분--모양`이에요. CSS Modules로 옮길 때 `styles.부품`, `styles.부분`처럼 쓰면 돼요.
+
+## 지킨 규칙 (CLAUDE.md · DESIGN.md)
+
+- 결제·취소 화면에 "테스트 결제 — 실제 청구되지 않습니다" (모든 화면 맨 위 안내 띠는 두지 않는다, D-41)
+- 용어: 사용자·업체·공고·견적서·컨펌·견적 내역 확인 카드·플랫폼 이용료·통합 청구서
+- 예시 값은 `docs/guides/시연_예시값.md` (공간 A·B·C, 업체 A~G, 1,850,000 / 92,500 / 1,942,500원, D-1 위약금 1,295,000원)
+- 이메일은 `@stageduck.test`, 전화는 `010-0000-00xx`
+- 후속 기능(리얼 후기·평점, 익스프레스, 댓글)은 넣지 않음
+- 연락처는 결제 뒤 최종 담당표에서만 보임
+- 금액은 화면에서 계산하지 않고 "서버 계산" 값으로 표시
+
+## 아직 정하지 않은 것 (DESIGN.md에 적어야 함)
+
+- 컴포넌트 시안 A·B·C 중 무엇을 쓸지 (`components.html`)
+- 사업자 정보 (바닥글 `내용 미정`)
+- 아이콘 세트 (지금은 Lucide 모양을 따라 그림)
+- 모바일 배치 (웹 완성 뒤 760px·560px 미디어 쿼리)

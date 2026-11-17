@@ -2,7 +2,7 @@
 
 > 초안 (2026-11-17, 해원). 결정 D-52. 팀 검토 전.
 > 알림 모듈은 plan.md 3장대로 **3번 `app/notification/`**. 다른 묶음은 `notification.service.notify(...)`만 부른다.
-> 메일·문자 알림은 MVP에서 하지 않는다 (요구사항 명세서 범위 밖). 목업: `mockup-v3/pages/notifications.html`, 머리 종 아이콘 패널.
+> 메일·문자 알림은 MVP에서 하지 않는다 (요구사항 명세서 범위 밖). 목업: `mockup-v4/pages/notifications.html`, 머리 종 아이콘 패널.
 
 ---
 

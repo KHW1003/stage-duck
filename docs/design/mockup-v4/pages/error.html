@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오류 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 오류 화면: 가운데 한 덩어리 (큰 상태 번호 + 제목 + 할 일 한 문장 + 버튼 2개). 머리·바닥글은 그대로 둔다 */
+  .err { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - var(--sd-gnb-height) - 220px); padding: 64px 0 96px; text-align: center; }
+  .err .err__code { max-width: none; margin: 0; font-size: clamp(96px, 16vw, 168px); font-weight: 800; line-height: 1; letter-spacing: -.04em; color: var(--sd-blue); font-variant-numeric: tabular-nums; }
+  .err__ico { display: inline-flex; align-items: center; justify-content: center; width: 96px; height: 96px; border-radius: 50%; background: var(--sd-band); color: var(--sd-muted); }
+  .err__ico--bad { color: var(--sd-conflict-text); }
+  .err .info-table { width: 100%; max-width: 480px; margin-top: 24px; text-align: left; }
+  .err .info-table th { width: 120px; }
+  .err__ico .icon { width: 40px; height: 40px; }
+  .err h1 { margin: 20px 0 0; font-size: 26px; letter-spacing: -.6px; }
+  .err p { margin: 10px 0 0; max-width: 420px; font-size: var(--sd-text-body); line-height: 1.7; color: var(--sd-muted); }
+  .err__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 28px; }
+  .err .err__meta { margin-top: 24px; font-size: var(--sd-text-small); color: var(--sd-photo-text); }
+</style>
+</head>
+<!-- 화면: 오류 (공통) · FR-AUTH-06·07 · FR-POL-04 · 예전 notice.html을 합침 · 참고: Money to Home 오류 화면 (큰 번호 + 제목 + 설명 + 버튼 2개)을 STAGE DUCK 스타일로
+     React: pages/ErrorPage.tsx (code만 바꾼다). 라우터에 없는 주소 = 404, API가 401/403/404/500을 돌려주면 화면 전체를 이걸로 바꾼다.
+     폼 입력 오류(400 VALIDATION_FAILED)는 화면을 바꾸지 않고 칸 아래 문구로 보여 준다 (states.html).
+     문구 원본: docs/design/문구.md 1장. 404는 "없음"과 "권한 없음"을 구분하지 않는다 (api-contract.md). -->
+<body data-layout="user">
+
+<div class="mock-switch" data-group="code">
+  <span>목업 보기</span>
+  <button type="button" data-value="404" aria-pressed="true">404 없음</button>
+  <button type="button" data-value="401">401 로그인</button>
+  <button type="button" data-value="403">403 권한</button>
+  <button type="button" data-value="suspended">이용 정지</button>
+  <button type="button" data-value="500">500 서버</button>
+  <button type="button" data-value="503">503 점검</button>
+  <button type="button" data-value="offline">연결 끊김</button>
+</div>
+
+<main class="container main">
+
+  <section class="err" data-when="code:404">
+    <p class="err__code">404</p>
+    <h1>화면을 찾을 수 없어요</h1>
+    <p>주소가 바뀌었거나, 지워졌거나, 볼 수 없는 화면이에요. 주소를 다시 확인해 주세요.</p>
+    <div class="err__actions"><a class="btn btn--sm btn--primary" href="my.html">홈으로</a><button class="btn btn--sm" type="button" onclick="history.length > 1 ? history.back() : location.assign('my.html')">이전 화면</button></div>
+  </section>
+
+  <section class="err" data-when="code:401">
+    <p class="err__code">401</p>
+    <h1>로그인이 필요해요</h1>
+    <p>로그인 시간이 지났거나 로그아웃됐어요. 다시 로그인하면 보던 화면으로 돌아와요.</p>
+    <div class="err__actions"><a class="btn btn--sm btn--primary" href="login.html">로그인</a><a class="btn btn--sm" href="../../mockup/home.html">처음으로</a></div>
+  </section>
+
+  <section class="err" data-when="code:403">
+    <p class="err__code">403</p>
+    <h1>지금은 볼 수 없는 화면이에요</h1>
+    <p>계정 종류가 다르거나, 업체 심사가 끝나지 않았거나, 이용이 정지된 계정이에요. 궁금한 점은 1:1 문의로 알려 주세요.</p>
+    <div class="err__actions"><a class="btn btn--sm btn--primary" href="my.html">홈으로</a><a class="btn btn--sm" href="inquiry-write.html">1:1 문의</a></div>
+  </section>
+
+  <section class="err" data-when="code:suspended">
+    <span class="err__ico err__ico--bad"><span data-icon="lock"></span></span>
+    <h1>이용이 정지된 계정이에요</h1>
+    <p>경고가 3회 쌓여 공고·견적서·채팅을 쓸 수 없어요. 정지에 대해 궁금한 점은 1:1 문의로 알려 주세요.</p>
+    <table class="info-table"><tr><th>계정</th><td>업체 B · supplier-b@stageduck.test</td></tr><tr><th>정지일</th><td>11월 13일</td></tr><tr><th>마지막 경고</th><td>채팅에서 계좌 이체 유도 (외부 거래)</td></tr><tr><th>진행 중인 섭외</th><td>관리자가 확인한 뒤 사용자에게 안내해요</td></tr></table>
+    <div class="err__actions"><a class="btn btn--sm btn--primary" href="inquiry-write.html">1:1 문의</a><a class="btn btn--sm" href="login.html">로그아웃</a></div>
+  </section>
+
+  <section class="err" data-when="code:500">
+    <p class="err__code">500</p>
+    <h1>서버에 문제가 생겼어요</h1>
+    <p>잠시 후 다시 시도해 주세요. 결제 중이었다면 결제가 되었는지 결제 내역에서 먼저 확인해 주세요.</p>
+    <div class="err__actions"><button class="btn btn--sm btn--primary" type="button" onclick="location.reload()"><span data-icon="refresh" class="icon--sm"></span>다시 시도</button><a class="btn btn--sm" href="my.html">홈으로</a></div>
+    <p class="err__meta">오류 번호 req_7f3a2c · 문의할 때 알려 주세요</p>
+  </section>
+
+  <section class="err" data-when="code:503">
+    <p class="err__code">503</p>
+    <h1>잠시 점검하고 있어요</h1>
+    <p>점검이 끝나면 바로 다시 쓸 수 있어요. 점검 시간은 공지사항에서 볼 수 있어요.</p>
+    <div class="err__actions"><button class="btn btn--sm btn--primary" type="button" onclick="location.reload()"><span data-icon="refresh" class="icon--sm"></span>다시 시도</button></div>
+  </section>
+
+  <section class="err" data-when="code:offline">
+    <span class="err__ico"><span data-icon="plug"></span></span>
+    <h1>인터넷 연결이 끊겼어요</h1>
+    <p>연결을 확인한 뒤 다시 시도해 주세요. 쓰고 있던 내용은 이 화면에 그대로 남아 있어요.</p>
+    <div class="err__actions"><button class="btn btn--sm btn--primary" type="button" onclick="location.reload()"><span data-icon="refresh" class="icon--sm"></span>다시 시도</button></div>
+  </section>
+
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

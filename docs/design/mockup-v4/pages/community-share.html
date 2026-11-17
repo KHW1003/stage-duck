@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글 공유 C · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* CommunityPostPage.module.css — 시안 3개 + 공유 창 3개 */
+  .post-head { padding: 24px 0 20px; border-top: 2px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line); }
+  .post-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -.6px; line-height: 1.4; }
+  .post-head .list__meta { margin-top: 10px; }
+  .post-body { padding: 28px 0 8px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
+  .post-photo { max-width: 640px; margin-top: 20px; aspect-ratio: 16/9; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
+  .react { display: flex; justify-content: center; gap: 8px; padding: 32px 0; border-bottom: 1px solid var(--sd-line); }
+  .react .btn { min-width: 120px; }
+  .react .btn[aria-pressed="true"] { border-color: var(--sd-ink); font-weight: 700; }
+
+  .cmts__head { display: flex; align-items: baseline; gap: 8px; padding: 24px 0 12px; font-size: 17px; font-weight: 700; }
+  .cmt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 18px 0; border-top: 1px solid var(--sd-line); }
+  .cmt--reply { margin-left: 48px; }
+  .cmt__name { font-size: var(--sd-text-desc); font-weight: 700; }
+  .cmt__name .tag { margin-left: 6px; }
+  .cmt__text { margin-top: 4px; font-size: var(--sd-text-body); line-height: 1.7; }
+  .cmt__meta { display: flex; gap: 12px; margin-top: 6px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .cmt-form { display: grid; gap: 8px; margin-top: 8px; padding: 16px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
+  .cmt-form .textarea { min-height: 72px; border: 0; padding: 0; }
+  .cmt-form__foot { display: flex; justify-content: space-between; align-items: center; color: var(--sd-muted); font-size: var(--sd-text-small); }
+
+  .near { margin-top: 40px; border-top: 1px solid var(--sd-line-strong); }
+  .near a { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: center; height: 52px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .near a span:first-child { color: var(--sd-muted); }
+  .near a span:last-child { color: var(--sd-muted); font-size: var(--sd-text-small); }
+
+  /* 공유 창 */
+  .share-preview { display: flex; gap: 12px; padding: 14px; border-radius: var(--sd-r-box); background: var(--sd-soft); }
+  .share-preview__thumb { width: 64px; aspect-ratio: 1; flex: none; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
+  .share-preview b { display: block; font-size: var(--sd-text-desc); line-height: 1.45; }
+  .share-preview small { display: block; margin-top: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .copy { display: flex; gap: 8px; }
+  .copy .input { flex: 1; color: var(--sd-muted); }
+  .share-ways { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 8px; }
+  .share-ways button { display: grid; justify-items: center; gap: 8px; padding: 16px 8px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); font: inherit; font-size: var(--sd-text-small); cursor: pointer; }
+  .share-ways button:hover { background: var(--sd-hover); }
+  .share-ways .ico-box { margin: 0 auto; }
+  .qr { display: grid; place-items: center; width: 132px; aspect-ratio: 1; margin: 20px auto 0; border: 1px dashed var(--sd-line-strong); border-radius: var(--sd-r-box); color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .pop-anchor { position: relative; display: inline-block; }
+  .share-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: var(--sd-z-float); width: 300px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); }
+  .share-pop { overflow: hidden; }
+  .share-pop__item { display: flex; align-items: center; gap: 10px; width: 100%; height: 48px; padding: 0 16px; border: 0; background: var(--sd-bg); color: var(--sd-ink); font: inherit; font-size: var(--sd-text-desc); text-align: left; cursor: pointer; }
+  .share-pop__item + .share-pop__item { border-top: 1px solid var(--sd-line); }
+  .share-pop__item:hover { background: var(--sd-hover); }
+</style>
+</head>
+<!-- 시안: 공유 창 C 작은 창 + 복사 알림
+     화면: 커뮤니티 글 보기 · 제안 화면 (스펙에 아직 없음 — 해원 승인 전)
+     React(안): pages/CommunityPostPage.tsx = PostHeader + PostBody + ReactBar + CommentList + CommentForm + NearPosts / ShareModal
+     시안 A 게시판 표준 / B 오른쪽 칸 / C 읽기형 (?v=a|b|c), 공유 창 A 가운데 창 / B 아래 판 / C 작은 창 (?share=a|b|c)
+     댓글: PR 게시판에서는 후속 기능이라 뺀 것 — 커뮤니티에 넣을지 팀 결정 필요 -->
+<body data-layout="user" data-nav="community">
+
+<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li><a href="community.html">[질문]</a></li></ol></div></div>
+
+<main class="container main">
+
+  <!-- ───── A 게시판 표준: 머리 → 본문 → 공감·공유 → 댓글 → 이전·다음 글 ───── -->
+  <article>
+    <div class="post-head"><h1><span class="prefix">[질문]</span>스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?</h1>
+      <div class="row row--between" style="margin-top:10px"><div class="list__meta" style="margin-top:0"><span><b style="color:var(--sd-ink)">광주밴드</b></span><span>11월 16일 14:20</span><span>조회 86</span><span>댓글 12</span></div>
+        <div class="row" style="--gap:4px"><span class="pop-anchor"><button class="btn btn--sm btn--ghost" type="button"><span data-icon="out" class="icon--sm"></span>공유</button>
+          <div class="share-pop"><button class="share-pop__item" type="button"><span data-icon="clip" class="icon--sm"></span>링크 복사</button><button class="share-pop__item" type="button"><span data-icon="talk" class="icon--sm"></span>카카오톡으로 보내기</button><button class="share-pop__item" type="button"><span data-icon="layers" class="icon--sm"></span>QR 코드 보기</button></div></span>
+          <button class="btn btn--sm btn--ghost" type="button"><span data-icon="flag" class="icon--sm"></span>신고</button></div></div></div>
+    <div class="post-body">다음 달에 첫 공연을 해요. 공연장 입실이 15시이고 공연은 19시인데, 리허설을 언제 시작해야 장비 설치랑 안 겹칠지 모르겠어요.
+
+장비 업체 견적서에는 설치 90분이라고 적혀 있어요. 경험 있으신 분들 조언 부탁드려요.</div>
+    <div class="post-photo" role="img" aria-label="공연장 내부 사진" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"></div>
+    <div class="react"><button class="btn" type="button" aria-pressed="true"><span data-icon="heart" class="icon--sm"></span>도움 돼요 24</button><button class="btn" type="button"><span data-icon="bookmark" class="icon--sm"></span>저장</button><button class="btn" type="button"><span data-icon="out" class="icon--sm"></span>공유</button></div>
+
+    <section class="cmts"><p class="cmts__head">댓글 <span class="muted">12</span></p>
+      <div class="cmt"><span class="avatar" aria-hidden="true">드</span><div><p class="cmt__name">드럼치는목요일</p><p class="cmt__text">입실 15시에 설치 90분이면 16시 30분쯤 끝나요. 리허설은 17시로 잡으면 여유 있어요.</p><p class="cmt__meta"><span>14:42</span><button class="link" type="button">답글</button><button class="link" type="button">도움 돼요 8</button></p></div></div>
+      <div class="cmt cmt--reply"><span class="avatar avatar--sm" aria-hidden="true">광</span><div><p class="cmt__name">광주밴드<span class="tag">글쓴이</span></p><p class="cmt__text">감사해요! 17시로 요청서 고쳐 볼게요.</p><p class="cmt__meta"><span>14:50</span><button class="link" type="button">답글</button></p></div></div>
+      <div class="cmt"><span class="avatar" aria-hidden="true">노</span><div><p class="cmt__name">노을극단</p><p class="cmt__text">공연장 견적서의 '장비 설치 가능 시각'도 꼭 보세요. 입실보다 늦은 곳도 있어요.</p><p class="cmt__meta"><span>15:03</span><button class="link" type="button">답글</button><button class="link" type="button">도움 돼요 5</button></p></div></div>
+      <form class="cmt-form"><textarea class="textarea" placeholder="댓글을 남겨 주세요. 전화번호·계좌번호·외부 링크는 쓸 수 없어요." aria-label="댓글"></textarea><div class="cmt-form__foot"><span>0 / 500</span><button class="btn btn--sm btn--primary" type="submit">등록</button></div></form>
+    </section>
+
+    <nav class="near" aria-label="이전·다음 글"><a href="community-post.html"><span>다음 글</span><span>[정보] 요청서 STEP2 '이미 있어요' 칸 잘 쓰는 법 정리했어요</span><span>11:05</span></a><a href="community-post.html"><span>이전 글</span><span>[자유] 첫 공연 끝났어요. 다음엔 장비 단계부터 일찍 준비하려고요</span><span>11.15</span></a></nav>
+    <div class="btns btns--end mt-24"><a class="btn" href="community.html"><span data-icon="list" class="icon--sm"></span>목록</a></div>
+  </article>
+
+  <!-- ───── B 오른쪽 칸: 본문·댓글은 왼쪽, 글쓴이·공감·같은 말머리 글은 따라오는 오른쪽 칸 ───── -->
+  
+
+  <!-- ───── C 읽기형: 가운데 좁은 폭, 큰 제목과 큰 본문 글자. 아래에 비슷한 글 세 개 ───── -->
+  
+</main>
+
+<!-- ───── 공유 창 A: 기존 모달(가운데 창) 그대로. 글 미리보기 + 링크 복사 + 보내는 방법 ───── -->
+
+
+<!-- ───── 공유 창 B: 아래에서 올라오는 판 (기존 layer--sheet). 큰 타일 4개 + QR, 모바일에서 손가락으로 누르기 좋아요 ───── -->
+
+
+<!-- 공유 창 C: 공유 버튼 아래 작은 창(위 A 시안 머리에 붙음) + 복사한 뒤 알림 -->
+<div class="toasts"><div class="toast" role="status"><div><b>링크를 복사했어요</b><small>원하는 곳에 붙여 넣어 보내 주세요.</small></div><button class="icon-btn" type="button" aria-label="닫기"><span data-icon="x"></span></button></div></div>
+
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+</body>
+</html>

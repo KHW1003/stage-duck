@@ -1,0 +1,116 @@
+/* v2 추가: 아이콘·이미지 부품. web/ 목업 위에 더한다.
+   React: shared/ui/IconBox.tsx, Thumb.tsx, CategoryTiles.tsx, FeatureRow.tsx, features/performance/StageTrack.tsx(아이콘)
+   원칙: 아이콘은 선 1.5 단색(글자색 또는 주조색), 사진은 실제 내용을 보여 줄 때만. 꾸미기 전용 그림·이모지는 쓰지 않는다. */
+
+/* 아이콘 상자: 선 테두리 정사각형 안 아이콘 */
+.ico-box { display: inline-grid; place-items: center; width: var(--s, 40px); height: var(--s, 40px); flex: none; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); }
+.ico-box .icon { width: calc(var(--s, 40px) * .5); height: calc(var(--s, 40px) * .5); vertical-align: 0; }
+.ico-box--sm { --s: 32px; }
+.ico-box--lg { --s: 56px; }
+.ico-box--xl { --s: 72px; }
+.ico-box--fill { border-color: var(--sd-ink); background: var(--sd-ink); color: #fff; }
+.ico-box--point { border-color: var(--sd-blue); color: var(--sd-blue); }
+.ico-box--round { border-radius: 50%; }
+.ico-box--band { border-color: transparent; background: var(--sd-band); }
+
+/* 구간 제목 앞 아이콘 */
+.sec-head h2 { display: inline-flex; align-items: center; gap: 8px; }
+.sec-head h2 > .icon { width: 20px; height: 20px; color: var(--sd-muted); vertical-align: 0; }
+
+/* 요약 칸 + 아이콘 */
+.summary > .has-ico { display: flex; align-items: center; gap: 14px; }
+.summary > .has-ico b { margin-top: 0; }
+
+/* 작은 사진 (목록·표·청구서 안) */
+.thumb { display: block; width: var(--w, 64px); aspect-ratio: var(--r, 4 / 3); flex: none; border-radius: 4px; background: var(--sd-photo) var(--img) center / cover no-repeat; }
+.thumb--sq { --r: 1; }
+.thumb--lg { --w: 120px; }
+.with-thumb { display: flex; align-items: center; gap: 14px; min-width: 0; text-align: left; }
+.with-thumb > div { min-width: 0; }
+
+/* 사진 프로필 (업체) */
+.avatar[style*="--img"] { color: transparent; }
+
+/* 분류 타일 (공간 유형, 공연 형태, 게시판 말머리): 붙은 칸 + 아이콘 + 이름 */
+.cat-tiles { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
+.cat-tiles > * { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 104px; padding: 14px 8px; border: 0; background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; cursor: pointer; text-align: center; }
+.cat-tiles > * + * { border-left: 1px solid var(--sd-line); }
+.cat-tiles > *:hover { background: var(--sd-hover); }
+.cat-tiles .icon { width: 30px; height: 30px; stroke-width: 1.4; }
+.cat-tiles small { font-size: var(--sd-text-meta); color: var(--sd-muted); font-weight: 400; }
+.cat-tiles [aria-pressed="true"] { position: relative; color: var(--sd-blue); }
+.cat-tiles [aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--sd-blue); }
+
+/* 기능 줄: 아이콘 + 제목 + 설명, 칸 사이 세로선 */
+.feature-row { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); border-top: 2px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line); }
+.feature-row > div { display: flex; gap: 14px; padding: 22px 20px; }
+.feature-row > div + div { border-left: 1px solid var(--sd-line); }
+.feature-row b { display: block; font-size: 15px; }
+.feature-row p { margin-top: 3px; font-size: var(--sd-text-small); color: var(--sd-muted); line-height: 1.6; }
+
+/* 제목 띠 안 대표 사진 */
+.page-top__lead { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.page-top__thumb { width: 132px; aspect-ratio: 4 / 3; flex: none; border-radius: var(--sd-r-box); background: var(--sd-photo) var(--img) center / cover no-repeat; }
+
+/* 섭외 단계 칸 + 아이콘 */
+.track li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; align-items: center; }
+.track__ico { grid-row: span 3; display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid var(--sd-line-strong); border-radius: 50%; color: var(--sd-muted); }
+.track__ico .icon { width: 22px; height: 22px; vertical-align: 0; }
+.track li.is-done .track__ico { border-color: var(--sd-ink); background: var(--sd-ink); color: #fff; }
+.track li.is-now .track__ico { border: 2px solid var(--sd-blue); color: var(--sd-blue); }
+.track__bar { grid-column: 1 / -1; }
+
+/* 단계 칸 안 아이콘 */
+.step-bar li .icon { width: 18px; height: 18px; vertical-align: 0; opacity: .85; }
+
+/* 빈 화면 아이콘을 둥근 바탕 안에 */
+.empty > .icon { box-sizing: content-box; width: 32px; height: 32px; padding: 20px; border-radius: 50%; background: var(--sd-band); color: var(--sd-muted); }
+
+/* 알림 줄 종류 아이콘 */
+.noti { grid-template-columns: 36px minmax(0, 1fr) auto; align-items: start; }
+.noti::before { display: none; }
+.noti__ico { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); color: var(--sd-ink); }
+.noti__ico .icon { width: 18px; height: 18px; vertical-align: 0; }
+.noti.is-unread .noti__ico::after { content: ""; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border: 2px solid var(--sd-bg); border-radius: 50%; background: var(--sd-blue); }
+
+/* 견적서 칸 위 사진 띠 */
+.q-col__photo { aspect-ratio: 2.4; background: var(--sd-photo) var(--img) center / cover no-repeat; border-bottom: 1px solid var(--sd-line); }
+.q-col.is-off .q-col__photo { filter: grayscale(1); opacity: .6; }
+
+/* 청구서 줄 단계 아이콘 */
+.invoice__stage { display: flex; align-items: center; gap: 8px; }
+.invoice__stage .ico-box { --s: 32px; }
+
+/* 시간표 아이콘 */
+.timeline li { grid-template-columns: 90px 52px minmax(0, 1fr); }
+.timeline__dot { display: grid; place-items: center; }
+.timeline__dot::after { display: none; }
+.timeline__dot .ico-box { --s: 32px; border-radius: 50%; }
+
+/* 로그인 옆 사진 */
+.auth-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); min-height: 640px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; margin: 48px 0 80px; }
+.auth-visual { position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; background: var(--sd-ink) var(--img) center / cover no-repeat; color: #fff; }
+.auth-visual::before { content: ""; position: absolute; inset: 0; background: rgba(20, 28, 38, .62); }
+.auth-visual > * { position: relative; }
+.auth-visual h2 { font-size: 26px; font-weight: 700; letter-spacing: -.6px; line-height: 1.4; }
+.auth-visual ul { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; font-size: var(--sd-text-desc); color: rgba(255, 255, 255, .85); }
+.auth-visual li { display: flex; align-items: center; gap: 10px; }
+.auth-visual .ico-box { --s: 32px; border-color: rgba(255, 255, 255, .35); background: transparent; color: #fff; }
+
+/* 고르기 칸 위 사진 */
+.choice__photo { display: block; margin: -18px -20px 14px; aspect-ratio: 2.6; background: var(--sd-photo) var(--img) center / cover no-repeat; }
+.choice--photo .choice__item { flex-direction: column; gap: 0; }
+.choice--photo .choice__item > span:last-child { display: flex; gap: 12px; }
+
+/* 정보 칩 (아이콘 + 짧은 값) */
+.chips-ico { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
+.chips-ico > div { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 14px; }
+.chips-ico > div + div { border-left: 1px solid var(--sd-line); }
+.chips-ico span:not(.ico-box) { display: block; font-size: var(--sd-text-meta); color: var(--sd-muted); }
+.chips-ico b { display: block; font-size: var(--sd-text-body); }
+
+/* 아이콘 목록 (컴포넌트 시안) */
+.icon-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border-top: 2px solid var(--sd-rule); }
+.icon-grid > div { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 6px; border-bottom: 1px solid var(--sd-line); border-right: 1px solid var(--sd-line); font-size: var(--sd-text-meta); color: var(--sd-muted); }
+.icon-grid > div:nth-child(8n) { border-right: 0; }
+.icon-grid .icon { width: 24px; height: 24px; color: var(--sd-ink); }

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글쓰기 F · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 시안 F 문서형: 글 보기(community-post-a)와 같은 자리·같은 글자 크기에 바로 쓴다. 칸 테두리 없이 선 하나로만 나눈다 */
+  .wf { max-width: 820px; }
+  .wf__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-ink); }
+  .wf__cat { display: flex; gap: 6px; }
+  .wf__cat button { height: 32px; padding: 0 12px; border: 1px solid var(--sd-line-strong); border-radius: 6px; background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
+  .wf__cat button[aria-pressed="true"] { border-color: var(--sd-blue); color: var(--sd-blue); font-weight: 700; }
+  .wf__title { display: flex; align-items: baseline; gap: 8px; padding: 22px 0 10px; }
+  .wf__title .prefix { flex: none; font-size: 22px; font-weight: 700; color: var(--sd-blue); }
+  .wf__title input { flex: 1; min-width: 0; border: 0; padding: 0; font: inherit; font-size: 22px; font-weight: 700; letter-spacing: -.5px; color: var(--sd-ink); background: transparent; }
+  .wf__title input:focus { outline: none; }
+  .wf__title input::placeholder, .wf__body::placeholder { color: var(--sd-photo-text); }
+  .wf__meta { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .wf__tools { display: flex; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--sd-line); }
+  .wf__tools button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
+  .wf__tools button:hover { background: var(--sd-band); color: var(--sd-ink); }
+  .wf__body { display: block; width: 100%; min-height: 320px; padding: 24px 0; border: 0; resize: none; font: inherit; font-size: 15px; line-height: 1.85; color: var(--sd-ink); background: transparent; }
+  .wf__body:focus { outline: none; }
+  .wf__photos { display: flex; gap: 8px; padding-bottom: 24px; }
+  .wf__photos div { position: relative; width: 160px; height: 110px; border-radius: var(--sd-r-box); background: var(--img) center / cover; }
+  .wf__photos button { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+  .wf__photos .icon { width: 12px; height: 12px; }
+  .wf__foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid var(--sd-line-strong); }
+  .wf__foot small { color: var(--sd-muted); font-size: var(--sd-text-small); }
+</style>
+</head>
+<!-- 시안 F (Claude): 커뮤니티 글쓰기 문서형 · FR-COMM-02 · D-47
+     - 글 보기 화면과 같은 모양 그대로 쓴다: 말머리 + 큰 제목, 글쓴이 줄, 본문. 올리면 거의 같은 모습으로 보인다
+     - 입력 칸 테두리 없이 선으로만 나누고, 사진은 본문 위 도구 줄 [사진]으로 넣는다
+     - 글자 수는 제목 줄·아래 줄에 작게 -->
+<body data-layout="user" data-nav="community">
+
+<div class="mock-switch" data-group="st" style="bottom:64px">
+  <span>목업 보기</span>
+  <button type="button" data-value="fill" aria-pressed="true">쓰는 중</button>
+  <button type="button" data-value="empty">빈 화면</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li>글쓰기</li></ol></div></div>
+
+<main class="container main">
+  <form class="wf" onsubmit="return false">
+    <div class="wf__top"><div class="wf__cat" role="radiogroup" aria-label="말머리"><button type="button" aria-pressed="true">질문</button><button type="button" aria-pressed="false">자유</button><button type="button" aria-pressed="false">정보</button><button type="button" aria-pressed="false">공연 소식</button></div><small class="muted">말머리를 골라 주세요</small></div>
+
+    <div class="wf__title"><span class="prefix">[질문]</span>
+      <input data-when="st:fill" aria-label="제목" maxlength="100" value="관객 80명 소극장인데 모니터 스피커는 몇 개가 적당할까요?">
+      <input data-when="st:empty" aria-label="제목" maxlength="100" placeholder="제목을 적어 주세요">
+    </div>
+    <div class="wf__meta"><span><b style="color:var(--sd-ink)">가을밤밴드</b> · 지금</span><span data-when="st:fill">제목 31 / 100</span><span data-when="st:empty">제목 0 / 100</span></div>
+
+    <div class="wf__tools"><button type="button"><span data-icon="image" class="icon--sm"></span>사진 <span data-when="st:fill">2 / 5</span><span data-when="st:empty">0 / 5</span></button></div>
+
+    <textarea class="wf__body" data-when="st:fill" aria-label="내용" maxlength="5000">11월 28일에 공간 C에서 첫 공연을 해요. 보컬 1, 기타 2, 베이스 1, 드럼 1 구성이에요.
+장비 업체 견적서를 받아 보니 모니터 스피커가 2개로 적혀 있었는데, 다섯 명이 나눠 듣기에 충분한지 궁금해요.
+비슷한 규모로 해 보신 분들은 몇 개 쓰셨나요?</textarea>
+    <textarea class="wf__body" data-when="st:empty" aria-label="내용" maxlength="5000" placeholder="공연을 준비하면서 궁금한 것, 알게 된 것을 적어 주세요."></textarea>
+
+    <div class="wf__photos" data-when="st:fill">
+      <div style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"><button type="button" aria-label="사진 빼기"><span data-icon="x"></span></button></div>
+      <div style="--img:url('../../mockup/assets/photos/photo-1598488035139-bdbb2231ce04.jpg')"><button type="button" aria-label="사진 빼기"><span data-icon="x"></span></button></div>
+    </div>
+
+    <div class="wf__foot"><small>본문 <span data-when="st:fill">152</span><span data-when="st:empty">0</span> / 5,000 · 전화번호·계좌번호·외부 링크는 쓸 수 없어요</small><div class="btns"><a class="btn" href="community.html">취소</a><button class="btn btn--primary" type="button" onclick="location.href='community-post.html'">올리기</button></div></div>
+  </form>
+</main>
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+</body>
+</html>
