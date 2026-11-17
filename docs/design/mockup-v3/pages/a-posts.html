@@ -7,7 +7,7 @@
 <link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/app.css">
 </head>
-<!-- 화면: PR 게시글·자유게시판 블라인드·해제, 공간 정보 숨김 · FR-ADMIN-04·05 · FR-BOARD · FR-COMM-04 · 묶음 1·4
+<!-- 화면: PR 게시글·커뮤니티 블라인드·해제, 공간 정보 숨김 · FR-ADMIN-04·05 · FR-BOARD · FR-COMM-04 · 묶음 1·4
      React 아님: SQLAdmin. 블라인드는 사유 필수, 블라인드하면 업체 경고 1회 (제재 이력). 해제해도 경고는 남는다.
      공간 숨김은 공간 목록·상세와 요청서 공간 고르기에서 빠진다. 진행 중인 섭외에는 영향 없음. -->
 <body data-layout="admin" data-nav="posts">
@@ -15,7 +15,7 @@
 <div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>게시글·공간</li></ol><h1>게시글·공간</h1><p class="page-top__desc">문제가 있는 PR 게시글을 가리고, 잘못된 공간 정보를 숨겨요.</p></div></div></div>
 
 <main class="container main">
-  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="b1" type="button">PR 게시글</button><button role="tab" aria-selected="false" aria-controls="b3" type="button">자유게시판</button><button role="tab" aria-selected="false" aria-controls="b2" type="button">공간 정보</button></div></div>
+  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="b1" type="button">PR 게시글</button><button role="tab" aria-selected="false" aria-controls="b3" type="button">커뮤니티</button><button role="tab" aria-selected="false" aria-controls="b2" type="button">공간 정보</button></div></div>
 
   <section id="b1" class="mt-24">
     <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">게시 중</button><button type="button" aria-pressed="false">블라인드</button></div><select class="select select--sm" aria-label="말머리"><option>말머리 전체</option><option>공연장</option><option>장비</option><option>엔지니어</option></select></div>
