@@ -2,9 +2,9 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | 0.2 (초안) |
-| 작성일 | 2026-11-12 |
-| 목적 | spec.md의 **모든 수용 기준(93개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
+| 버전 | 0.3 (초안) |
+| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개) |
+| 목적 | spec.md의 **모든 수용 기준(103개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
 | 입력 | [spec.md](spec.md) · [plan.md](plan.md) · [data-model.md](data-model.md) · [api-contract.md](api-contract.md) · [user-flow.md](user-flow.md) |
 
 표기: 테스트 `BE` = pytest (`backend/tests/`), `FE` = Vitest (`frontend/tests/`), `E2E` = Playwright. 테스트 이름에 AC ID를 넣는다 (예: `test_ac_f1_01_...`).
@@ -57,7 +57,7 @@ API 경로의 `/api/v1`은 생략했다.
 | F2-14 | 남의 견적서 안 보임 | QUOTE-01 | GET /postings/{id}, GET /quotes/{id} | — | /supplier/postings/:id | BE |
 | F2-15 | D 견적서 전송 → 견적함·알림 | QUOTE-02 | POST /stages/{id}/quotes | quotes, quote_versions, chat_rooms, notifications | 견적서 작성, 견적함 | BE |
 | F2-16 | 견적서 2개 각각 표시 | QUOTE-02 | POST /stages/{id}/quotes ×2 | quotes.label | 견적함 | BE |
-| F2-17 | 합계 조작 거부 | QUOTE-02 | POST /stages/{id}/quotes (`TOTAL_MISMATCH`) | quote_versions CHECK total | — | BE |
+| F2-17 | 합계 조작·10,000원 미만·업체할인 초과 거부 (D-43·44) | QUOTE-02 | POST /stages/{id}/quotes (`TOTAL_TOO_LARGE` → `TOTAL_MISMATCH` → `VALIDATION_FAILED`) | quote_versions CHECK total = 항목 합 − discount_amount, total ≥ 10000 | 견적서 작성 (합계·업체할인 칸 오류) | BE (단위: `verify_total`) |
 | F2-18 | 공연장 단계 아닌데 공간 견적 거부 | QUOTE-02 | POST /stages/{id}/quotes (`STAGE_NOT_OPEN`) | stages.stage_type | — | BE |
 | F2-19 | 풀스펙 표시 | QUOTE-02, ASSIGN-03 | POST /stages/{id}/quotes | quotes.is_full_spec | 견적함, 비교 화면 | BE, FE |
 | F2-20 | 수정 → v2, v1 보관 | QUOTE-03 | PUT /quotes/{id} | quote_versions | 견적서 수정 | BE |
@@ -107,6 +107,12 @@ API 경로의 `/api/v1`은 생략했다.
 | F4-09 | 말머리 필터 (엔지니어만 / 전체) | BOARD-01 | GET /pr-posts?category= | pr_posts.category | /board | BE, FE |
 | F4-10 | 블라인드 부문 새 글 불가, 해제 후 가능 | BOARD-03 | POST /pr-posts (`BLINDED_POST_EXISTS`), SQLAdmin [블라인드 해제] | pr_posts.active_guard (ACTIVE·BLINDED) | PR 게시글 작성 | BE |
 | F4-11 | 정지 업체 글 숨김·복귀 | BOARD-03, SUP-03 | GET /pr-posts (정지 업체 제외) | suppliers.review_status, pr_posts | /board | BE |
+| F4-12 | 방문자 커뮤니티 열람, 쓰기·도움 돼요·저장은 로그인으로 | COMM-01 | GET /free-posts, GET /free-posts/{id} | free_posts, free_comments | /community, /community/:id | BE, FE |
+| F4-13 | 말머리 필터 (질문만) | COMM-01 | GET /free-posts?category= | free_posts.category | /community | BE, FE |
+| F4-14 | 업체 댓글 → 글쓴이 알림, 답글은 한 단계 | COMM-03 | POST /free-posts/{id}/comments (`parentId`, 답글의 답글 `VALIDATION_FAILED`) | free_comments.parent_id, notifications | /community/:id | BE |
+| F4-15 | 댓글 블라인드 + 작성자 경고 1회 | COMM-04, ADMIN-05 | POST /reports (`FREE_COMMENT`), SQLAdmin [블라인드] | free_comments.status, reports, sanctions | SQLAdmin 게시글·공간 (커뮤니티 탭) | BE |
+| F4-16 | 1분 안에 두 번째 글 거부 | COMM-04 | POST /free-posts (`POSTING_RATE_LIMITED`) | free_posts.created_at | 글쓰기 (F 문서형) | BE (시간 고정) |
+| F4-17 | 도움 돼요 두 번 → 취소, 저장 글 모아 보기 | COMM-02 | PUT·DELETE /free-helpfuls, PUT /free-posts/{id}/bookmark, GET /me/free-bookmarks | free_helpfuls UNIQUE, free_bookmarks UNIQUE | /community/:id, 마이페이지 저장 글 | BE, FE |
 
 ## F5 부가 기능
 
@@ -129,6 +135,10 @@ API 경로의 `/api/v1`은 생략했다.
 | F5-15 | 업체 프로필, 연락처 비공개 | PROFILE-01 | GET /suppliers/{id}/profile | suppliers, pr_posts, venues | /suppliers/:id | BE, FE |
 | F5-16 | 개인 프로필 공개 항목 | PROFILE-02 | GET /users/{id}/profile | users (nickname, profile_image_url, created_at), rejection_events | 사용자 프로필 (업체 화면) | BE, FE |
 | F5-17 | 관계없는 업체는 개인 프로필 404 | PROFILE-02 | GET /users/{id}/profile (`404`) | performances, offers, chat_rooms | — | BE |
+| F5-18 | 정지 업체도 1:1 문의 (사진 1장) | CS-01 | POST /inquiries (정지 계정 허용) | inquiries, inquiries.attachments | /inquiries/new | BE |
+| F5-19 | 관리자 답변 → 알림, 답변 완료 후 수정·삭제 불가 | CS-01, ADMIN-06 | SQLAdmin [답변] → `answer_inquiry()`, PUT·DELETE /inquiries/{id} (`INVALID_STATE`) | inquiries.status·answer, notifications | /inquiries/:id, SQLAdmin 문의·공지 | BE |
+| F5-20 | 남의 문의 404 | CS-01 | GET /inquiries/{id} (`404`) | inquiries.user_id | — | BE |
+| F5-21 | 고정 공지가 맨 위 | CS-02, ADMIN-06 | GET /notices | notices.is_pinned | /notices | BE, FE |
 
 ---
 
@@ -140,6 +150,10 @@ API 경로의 `/api/v1`은 생략했다.
 | 테이블이 연결된 것 | 83개 (나머지 10개는 권한·화면 동작) |
 | 테스트가 정해진 것 | **93개 전부** (BE 89 · FE 29 · E2E 4, 한 기준에 여러 종류 가능) |
 | 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
+| 수용 기준 103개 중 API가 연결된 것 | 102개 (F2-09는 화면 동작 — FE 테스트로 확인) |
+| 테이블이 연결된 것 | 93개 (나머지 10개는 권한·화면 동작) |
+| 테스트가 정해진 것 | **103개 전부** (BE 99 · FE 33 · E2E 4, 한 기준에 여러 종류 가능) |
+| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`, `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 
 ## 비기능 요구사항 연결
