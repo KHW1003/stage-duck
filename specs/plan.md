@@ -55,7 +55,7 @@ flowchart LR
 ```
 
 - **모놀리스 + 모듈 분리**: 4명·짧은 일정에서 서비스를 나누면 배포·통신 비용만 는다. 대신 담당 영역별로 패키지를 나누고, 영역 사이는 각 모듈의 서비스 함수로만 부른다.
-- 파일(사진·사업자등록증·채팅 첨부)은 MVP에서 서버 로컬 디스크(`/uploads`, Docker 볼륨)에 저장하고 DB에는 경로만 둔다.
+- 파일(사진·사업자등록증·채팅 첨부)은 MVP에서 서버 로컬 디스크(`/uploads`, Docker 볼륨)에 저장하고 DB `files`에는 메타만 둔다. 용도별 제한·공개/비공개·사진 처리·정리는 [uploads.md](uploads.md) (D-51).
 
 ## 3. 저장소 구조
 
@@ -157,7 +157,7 @@ sequenceDiagram
 - 보내기: 메시지는 **REST로 저장**(`POST /chat-rooms/{id}/messages`)하고, 저장 성공 후 같은 방 참여자 연결로 이벤트를 푸시한다. WebSocket은 받기 전용으로 써서 저장·권한 로직을 REST 한 곳에 둔다.
 - 끊겼다가 다시 연결하면 `GET /chat-rooms/{id}/messages?after={lastId}`로 빠진 메시지를 채운다.
 - 읽음: `POST /chat-rooms/{id}/read {lastMessageId}` → 상대에게 `read` 이벤트.
-- 첨부: `POST /files` 업로드(이미지·PDF, 10MB 이하 (제안)) → 받은 URL로 메시지 전송.
+- 첨부: `POST /files` 업로드(purpose `CHAT`, 이미지·PDF 10MB 이하, uploads.md) → 받은 `fileId`로 메시지 전송.
 - 연락처·계좌 패턴 검사: 정규식으로 감지하면 메시지에 `contactWarning=true` 표시 + 경고 카드 (막지는 않음).
 - 한계: 서버 1대 메모리 기반이라 여러 대로 늘리면 Redis Pub/Sub 등이 필요 (후속).
 
@@ -186,6 +186,8 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 오퍼 만료 | 48시간 지나면 `EXPIRED` |
 | 공연 완료 | 공연 종료 시각이 지나면 `COMPLETED` + 장부 `SETTLE_SCHEDULED` |
 | 반려 카운트 | 조회 시 계산 (마지막 반려 후 180일 지나면 0) — 스케줄 불필요 |
+| 알림 | 확인 카드 만료 6시간 전 `CONFIRM_EXPIRING`, 오퍼·카드 만료·정산 예정 알림, 90일 지난 알림 삭제 (notifications.md) |
+| 임시 파일 정리 | 1시간마다 `files.status=TEMP`이고 24시간 지난 파일 삭제 (uploads.md) |
 
 ### 5.8 반려·신고·정지
 - 공고 내리기(`withdraw`) 때 그 공연의 채팅방 중 `started_at`이 있으면 `AFTER_CHAT`, 견적서만 받았으면 `NO_CHAT` 반려 이벤트 기록. 다른 업체 컨펌으로 자동 마감된 견적은 기록하지 않는다.
@@ -202,12 +204,15 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | API 계약 | `shared/api/types.ts`에 api-contract.md의 요청·응답 타입 |
 | 공통 컴포넌트 | StatusBadge(색+글자), StageStepper(단계 현황), QuoteCard, CheckResultList, MoneyText |
 | 반응형 | CSS Modules + Grid/Flex, 모바일 우선 |
+| 검색·공유 노출 | 화면은 SPA 그대로, **FastAPI가 처음 HTML의 `<head>`만 채운다** (공개 화면의 title·description·og:*). 화면 안 이동은 `usePageMeta`. robots.txt·sitemap.xml도 서버 — [seo.md](seo.md) (D-50) |
 
 ### 라우트 (화면 목록은 user-flow.md)
 
 | 경로 | 화면 | 권한 |
 |---|---|---|
-| `/` · `/venues` · `/venues/:id` · `/board` | 시작, 공간 탐색·상세, PR 게시판 | 누구나 |
+| `/` · `/venues` · `/venues/:id` · `/board` · `/board/:id` · `/suppliers/:id` | 시작, 공간 탐색·상세, PR 게시판·게시글, 업체 프로필 | 누구나 (검색 공개, seo.md) |
+| `/community` · `/community/:id` · `/notices` · `/notices/:id` · `/faq` · `/guide/supplier` · `/terms/:type` | 커뮤니티, 공지, FAQ, 업체 이용 가이드, 약관 | 누구나 (검색 공개) |
+| `/community/new` · `/me/inquiries` · `/inquiries/new` · `/inquiries/:id` | 커뮤니티 글쓰기, 1:1 문의 | 로그인 |
 | `/signup` · `/signup/supplier` · `/login` · `/signup/extra` | 가입·로그인·추가 정보 | 비로그인 |
 | `/me/performances` · `/performances/new` · `/performances/:id` | 내 공연, 요청서, 공연 상세(단계 현황) | 사용자 |
 | `/performances/:id/stages/:stage/quotes` | 단계별 견적 비교 (대표 화면) | 사용자 |
@@ -272,6 +277,8 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `KAKAO_LOGIN_ENABLED`, `KAKAO_REST_KEY` | 카카오 로그인 (기본 false) |
 | `PLATFORM_FEE_RATE` | 수수료율 (시연 기본 0.05 (제안)) |
 | `SETUP_WARNING_MINUTES` | CHK-02 기준 (기본 60) |
+| `PUBLIC_BASE_URL` | canonical·공유 미리보기·sitemap 절대 주소 (seo.md) |
+| `SEO_INDEXING` | 검색 허용 (기본 false — 시연 데이터가 검색에 남지 않게) |
 
 비밀 값은 `.env`에만 두고 `.env.example`에 이름만 적는다. 시연 서버는 `deploy/.env`(예시: `deploy/env.prod.example`) — [deploy.md](deploy.md) (D-53).
 
@@ -299,5 +306,5 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 범위가 큼 (채팅·오퍼·게시판·결제) | 개발 순서: ① 가입·입점 ② 요청서·공고·견적 ③ 채팅 확정·순차 배정 ④ 결제 ⑤ 오퍼·게시판·제재 |
 
 ## 11. 열린 질문
-- 첨부 파일 크기 제한 (제안 10MB)
+- ~~첨부 파일 크기 제한~~ → uploads.md 2장 (용도별 5·10MB)
 - 공연 완료 처리 시점: 공연 종료 시각 즉시 / 다음 날 (제안: 종료 시각)
