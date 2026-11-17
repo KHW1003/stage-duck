@@ -13,8 +13,8 @@
   .st li { position: relative; }
   .st li:not(:last-child)::after { content: ""; position: absolute; top: 11px; left: 32px; right: 8px; height: 2px; border-radius: 2px; background: var(--sd-line); }
   .st li.is-done:not(:last-child)::after { background: var(--sd-pass-text); }
-  /* 조율 중(진행 중) 단계: 주황. 빨강은 "지금 해야 할 일"(확인 카드 남은 시간 등)에만 쓴다 */
-  .st, .stp, .stat-line { --prog: #c45f00; }
+  /* 조율 중(진행 중) 단계: 파랑 (원·선 #228be6, 글자 #1971c2). 초록 = 완료, 빨강 = 지금 해야 할 일(확인 카드 남은 시간 등) */
+  .st, .stp, .stat-line { --prog: #228be6; --prog-text: #1971c2; }
   .st li.is-now:not(:last-child)::after { background: linear-gradient(90deg, var(--prog) 0 45%, var(--sd-line) 45% 100%); }
   .st li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 7px; left: calc(32px + (100% - 40px) * .45 - 5px); width: 10px; height: 10px; border: 2px solid var(--prog); border-radius: 50%; background: var(--sd-bg); }
   .st__dot { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: var(--sd-bg); }
@@ -24,9 +24,9 @@
   .st small { display: block; margin-top: 10px; color: var(--sd-muted); font-size: var(--sd-text-small); }
   .st b { display: block; margin-top: 2px; font-size: 15px; font-weight: 700; color: var(--sd-muted); }
   .st .is-done b { color: var(--sd-pass-text); }
-  .st .is-now b { color: var(--prog); }
-  .stp .state--on { color: var(--prog); } .stp .state--on::before { background: var(--prog); }
-  .stat-line .point { color: var(--prog) !important; }
+  .st .is-now b { color: var(--prog-text); }
+  .stp .state--on { color: var(--prog-text); } .stp .state--on::before { background: var(--prog); }
+  .stat-line .point { color: var(--prog-text) !important; }
   .st em { display: block; margin-top: 4px; font-style: normal; color: var(--sd-muted); font-size: var(--sd-text-small); }
   .st-box { padding: 4px 0 22px; border: 0; border-radius: 0; border-bottom: 1px solid var(--sd-line); }
 
