@@ -7,14 +7,15 @@
 <link rel="stylesheet" href="../css/app.css">
 <style>
   /* 이 제안 화면에서만 쓰는 배치. 나머지는 my.html 과 같은 목업 부품(.page-top__thumb·meta, .track, .notice)을 그대로 쓴다 */
-  .pf { border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); }
-  .pf + .pf { margin-top: 16px; }
-  .pf__head { display: flex; align-items: center; gap: 20px; padding: 22px 24px; }
+  /* 공연 한 줄: 상자 없이 아래 선으로만 나눈다 */
+  .pf { border-bottom: 1px solid var(--sd-line); }
+  .sec-head + .pf { border-top: 1px solid var(--sd-ink); }
+  .pf__head { display: flex; align-items: center; gap: 20px; padding: 22px 0 14px; }
   .pf__head .page-top__thumb { width: 112px; }
   .pf__name { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
   .pf__name a:hover { text-decoration: underline; }
   .pf__head .page-top__meta { margin-top: 6px; }
-  .pf__body { padding: 0 24px 22px; }
+  .pf__body { padding: 0 0 18px 132px; }
   /* 섭외 진행: 견적함 카드 시안(inbox-list-cards.html)의 단계 점 모양과 같다 */
   .rq-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rq-steps li { position: relative; }
@@ -31,14 +32,21 @@
   .rq-steps .is-done b { color: var(--sd-pass-text); font-weight: 700; }
   .rq-steps .is-now b { color: var(--sd-blue); font-weight: 700; }
   .rq-steps em { display: block; margin-top: 2px; font-style: normal; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .pf--draft { border-style: dashed; }
-  .pf--draft .pf__head, .pf--past .pf__head { padding: 18px 24px; }
+  .pf--draft .pf__head, .pf--past .pf__head { padding: 18px 0; }
   .pf--past .page-top__thumb, .pf--draft .page-top__thumb { width: 88px; }
-  .pf--past { background: var(--sd-hover); }
+  .pf--past .pf__name a { color: var(--sd-muted); }
+  /* 할 일 줄: 상자 없이 주조색 아이콘 + 굵은 글씨 + 오른쪽 버튼 (2026-11-17 해원: 카드·진한 테두리·파스텔 바탕 빼기) */
+  .todo { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  .todo > .icon { flex: none; color: var(--sd-blue); }
+  .todo .grow { flex: 1; min-width: 0; }
+  .todo .timer { margin-left: 6px; color: var(--sd-blue); }
+  .todo--quiet > .icon { color: var(--sd-muted); }
+  .pf .todo { margin-top: 14px; }
   .pf .track-line { margin-top: 8px; }
 </style>
 </head>
-<!-- 제안 화면: 내 공연 (공연 목록) — my.html 디자인을 이어받은 시안. 세환 제안, 2026-11-16
+<!-- 2026-11-17 해원: 카드 상자·점선·회색 바탕을 빼고 선과 여백으로만 나눔
+     제안 화면: 내 공연 (공연 목록) — my.html 디자인을 이어받은 시안. 세환 제안, 2026-11-16
      위치: [이 화면] 내 공연  ›  my.html (공연 하나의 상세). 공연 이름·[공연 보기]를 누르면 그 공연의 my.html 로 간다
      구성: my.html 위쪽(사진·제목·D-day·정보 줄) + 섭외 진행(.track STEP 01~03) + 할 일 안내(.notice)를 공연마다 한 덩어리로.
            묶음은 my.html 왼쪽 목록과 같은 진행 중 / 작성 중 / 지난 공연
@@ -72,7 +80,7 @@
           <li class="is-now"><span class="rq-dot"></span><small>장비</small><b>조율 중 · 견적 2건</b><em>채팅 1곳</em></li>
           <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b><em>장비 컨펌 뒤 열려요</em></li>
         </ol>
-        <div class="notice notice--point mt-12"><span data-icon="doc"></span><div class="grow"><b>업체 D가 견적 내역 확인 카드를 보냈어요.</b> 내역서를 끝까지 보고 컨펌해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅에서 확인</a></div>
+        <div class="todo"><span data-icon="doc"></span><div class="grow"><b>업체 D가 견적 내역 확인 카드를 보냈어요.</b> 내역서를 끝까지 보고 컨펌해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅에서 확인</a></div>
       </div>
     </article>
 
@@ -92,7 +100,7 @@
           <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>장비</small><b>컨펌</b><em>업체 E · 엔지니어 포함</em></li>
           <li class="is-skip"><span class="rq-dot"></span><small>엔지니어</small><b>건너뜀</b><em>장비 견적서에 포함</em></li>
         </ol>
-        <div class="notice notice--point mt-12"><span data-icon="receipt"></span><div class="grow"><b>섭외가 모두 끝났어요.</b> 통합 청구서를 확인하고 테스트 결제를 해 주세요. 실제 청구되지 않습니다.</div><a class="btn btn--sm btn--primary" href="invoice.html">청구서 보기</a></div>
+        <div class="todo"><span data-icon="receipt"></span><div class="grow"><b>섭외가 모두 끝났어요.</b> 통합 청구서를 확인하고 테스트 결제를 해 주세요. 실제 청구되지 않습니다.</div><a class="btn btn--sm btn--primary" href="invoice.html">청구서 보기</a></div>
       </div>
     </article>
 
@@ -112,7 +120,7 @@
           <li><span class="rq-dot"></span><small>장비</small><b>대기</b><em>공연장 컨펌 뒤 열려요</em></li>
           <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b><em>장비 컨펌 뒤 열려요</em></li>
         </ol>
-        <div class="notice mt-12"><span data-icon="doc"></span><div class="grow"><b>업체 B의 견적서 v2가 도착했어요.</b> 공연장 견적서 3건을 비교해 보세요. <span class="muted">· 11월 14일</span></div><a class="btn btn--sm" href="compare.html">단계별 비교</a></div>
+        <div class="todo todo--quiet"><span data-icon="doc"></span><div class="grow"><b>업체 B의 견적서 v2가 도착했어요.</b> 공연장 견적서 3건을 비교해 보세요. <span class="muted">· 11월 14일</span></div><a class="btn btn--sm" href="compare.html">단계별 비교</a></div>
       </div>
     </article>
   </section>
