@@ -77,7 +77,7 @@ erDiagram
 | phone | VARCHAR(20) | NOT NULL | 숫자만 저장 |
 | birth_date | DATE | NULL | 사용자 필수(서비스 검사), 업체 NULL |
 | nickname | VARCHAR(30) | NULL, UNIQUE | 사용자 필수, 마이페이지에서 변경 (FR-PROFILE-02) |
-| profile_image_url | VARCHAR(255) | NULL | 개인 프로필 사진 (선택) |
+| profile_file_id | BIGINT UNSIGNED | NULL, FK → files | 개인 프로필 사진 (선택, uploads.md) |
 | signup_purpose | VARCHAR(30) | NULL | 사용자 필수 |
 | musician_type | VARCHAR(20) | NULL | 밴드 / 극단 / 교회 / 학원 / 기타 |
 | signup_channel | VARCHAR(30) | NULL | 가입 경로 |
@@ -117,12 +117,12 @@ erDiagram
 | company_name | VARCHAR(100) | NOT NULL | 개인은 활동명 |
 | representative_name | VARCHAR(50) | NOT NULL | |
 | business_reg_no | CHAR(10) | NULL | 개인 NULL, 그 외 필수(서비스 검사) + 체크섬 |
-| business_reg_file | VARCHAR(255) | NULL | 등록증 사본 경로 |
+| business_doc_file_id | BIGINT UNSIGNED | NULL, FK → files (PRIVATE) | 등록증 사본 (uploads.md) |
 | business_address | VARCHAR(255) | NULL | 개인은 NULL (활동 지역 사용) |
 | main_phone | VARCHAR(20) | NOT NULL | |
 | mail_order_no | VARCHAR(50) | NULL | 통신판매업 신고번호, NULL = 해당 없음 |
 | intro | TEXT | NULL | 3단계 |
-| photo_url | VARCHAR(255) | NULL | |
+| image_file_id | BIGINT UNSIGNED | NULL, FK → files | 업체 대표 이미지 (uploads.md) |
 | setup_minutes | SMALLINT UNSIGNED | NULL | 기본 설치 소요 (설치·철수 부문) |
 | teardown_minutes | SMALLINT UNSIGNED | NULL | |
 | engineer_years | TINYINT UNSIGNED | NULL | |
@@ -159,7 +159,7 @@ erDiagram
 | has_resident_engineer | BOOLEAN | NOT NULL DEFAULT FALSE | 풀스펙 판단 참고 |
 | band_allowed · external_equipment_allowed · external_engineer_allowed · has_waiting_room · has_stage_platform · has_parking | BOOLEAN | **NULL = 미확인** | 공간 조건 (CHK-03) |
 | hall_registered | BOOLEAN | NULL | 공연법상 공연장 등록, 선택 |
-| photo_url | VARCHAR(255) | NULL | |
+| ~~photo_url~~ | | | → `venue_photos` (uploads.md) |
 | status | VARCHAR(20) | DEFAULT 'ACTIVE', CHECK IN ('ACTIVE','HIDDEN') | 관리자 숨김 |
 
 ### venue_equipment
@@ -274,7 +274,7 @@ erDiagram
 | sender_user_id | BIGINT UNSIGNED | NULL = 시스템 |
 | type | VARCHAR(20) | CHECK IN ('TEXT','IMAGE','FILE','QUOTE','CONFIRM_REQUEST','CONFIRMED','NOTICE') |
 | body | TEXT | NULL |
-| attachment_url | VARCHAR(255) | NULL |
+| file_id | BIGINT UNSIGNED | NULL, FK → files (PRIVATE, 그 방 참여자만) |
 | ref_id | BIGINT UNSIGNED | NULL — quote_version_id 또는 confirm_request_id |
 | contact_warning | BOOLEAN | DEFAULT FALSE — 연락처·계좌 패턴 감지 (AC-F3-15) |
 
@@ -364,8 +364,8 @@ erDiagram
 | 테이블 | 주요 컬럼 | 제약·설명 |
 |---|---|---|
 | rejection_events | id, user_id, performance_id, kind CHECK IN ('AFTER_CHAT','NO_CHAT'), created_at | 인덱스 (user_id, created_at). 최근 180일만 계산 (AC-F4-05·06) |
-| pr_posts | id, supplier_id, category CHECK IN ('VENUE','EQUIPMENT','ENGINEER'), title, body, photos JSON(최대 10), sido, price_range, status CHECK IN ('ACTIVE','HIDDEN','BLINDED','DELETED'), blind_reason NULL, bumped_at | **active_guard PERSISTENT = IF(status IN ('ACTIVE','BLINDED'), CONCAT(supplier_id,'-',category), NULL) UNIQUE** → 부문당 활성 1개 (AC-F4-02), 블라인드 글이 있으면 새 글 불가 (AC-F4-10). 정지 업체 글은 조회할 때 `suppliers.review_status <> 'SUSPENDED'`로 걸러 숨긴다 — 상태를 바꾸지 않으므로 정지가 풀리면 그대로 다시 보인다 (AC-F4-11) |
-| free_posts | id, author_user_id FK → users, category CHECK IN ('FREE','QUESTION','INFO','NEWS'), title VARCHAR(100), body TEXT (5,000자), photos JSON(최대 5), status CHECK IN ('ACTIVE','BLINDED','DELETED'), blind_reason NULL, view_count INT UNSIGNED, comment_count INT UNSIGNED, helpful_count INT UNSIGNED, created_at, updated_at | 커뮤니티 (D-47). 인덱스 (status, created_at), (category, created_at). 정지 회원 글은 조회할 때 걸러 숨긴다 (pr_posts와 같은 방식). 댓글 있는 글 삭제는 DELETED로 남김 |
+| pr_posts | id, supplier_id, category CHECK IN ('VENUE','EQUIPMENT','ENGINEER'), title, body, photos JSON [file_id] (최대 10), sido, price_range, status CHECK IN ('ACTIVE','HIDDEN','BLINDED','DELETED'), blind_reason NULL, bumped_at | **active_guard PERSISTENT = IF(status IN ('ACTIVE','BLINDED'), CONCAT(supplier_id,'-',category), NULL) UNIQUE** → 부문당 활성 1개 (AC-F4-02), 블라인드 글이 있으면 새 글 불가 (AC-F4-10). 정지 업체 글은 조회할 때 `suppliers.review_status <> 'SUSPENDED'`로 걸러 숨긴다 — 상태를 바꾸지 않으므로 정지가 풀리면 그대로 다시 보인다 (AC-F4-11) |
+| free_posts | id, author_user_id FK → users, category CHECK IN ('FREE','QUESTION','INFO','NEWS'), title VARCHAR(100), body TEXT (5,000자), photos JSON [file_id] (최대 5), status CHECK IN ('ACTIVE','BLINDED','DELETED'), blind_reason NULL, view_count INT UNSIGNED, comment_count INT UNSIGNED, helpful_count INT UNSIGNED, created_at, updated_at | 커뮤니티 (D-47). 인덱스 (status, created_at), (category, created_at). 정지 회원 글은 조회할 때 걸러 숨긴다 (pr_posts와 같은 방식). 댓글 있는 글 삭제는 DELETED로 남김 |
 | free_comments | id, post_id FK → free_posts, parent_id NULL FK → free_comments, author_user_id FK → users, body VARCHAR(500), status CHECK IN ('ACTIVE','BLINDED','DELETED'), blind_reason NULL, helpful_count INT UNSIGNED, created_at | 답글은 한 단계: parent의 parent_id가 NULL일 때만 저장 (서비스 검사). 인덱스 (post_id, created_at) |
 | free_helpfuls | id, user_id FK, target_type CHECK IN ('POST','COMMENT'), target_id, created_at | 도움 돼요. **UNIQUE (user_id, target_type, target_id)** → 한 사람 한 번, 다시 누르면 행 삭제 |
 | free_bookmarks | id, user_id FK, post_id FK → free_posts, created_at | 저장. **UNIQUE (user_id, post_id)** |
@@ -378,8 +378,10 @@ erDiagram
 |---|---|---|
 | status_histories | id, entity_type, entity_id, from_status, to_status, actor_user_id NULL, reason, created_at | 인덱스 (entity_type, entity_id). 추가만 (NFR-HIST-01, AC-F5-13) |
 | notifications | id, user_id, type, payload JSON, read_at | 사이트 안 알림 배지 |
-| inquiries | id, user_id FK, category CHECK IN ('PAYMENT','QUOTE','SUPPLIER','ACCOUNT','ETC'), performance_id NULL FK, title VARCHAR(50), body TEXT (2,000자), status CHECK IN ('WAITING','ANSWERED'), answer TEXT NULL, answered_by NULL FK → users, attachments JSON (이미지 최대 3장, 한 장 5MB), answered_at NULL, created_at, updated_at | 1:1 문의 (D-48). 본인·관리자만 조회. ANSWERED면 회원 수정·삭제 불가 |
+| inquiries | id, user_id FK, category CHECK IN ('PAYMENT','QUOTE','SUPPLIER','ACCOUNT','ETC'), performance_id NULL FK, title VARCHAR(50), body TEXT (2,000자), status CHECK IN ('WAITING','ANSWERED'), answer TEXT NULL, answered_by NULL FK → users, attachments JSON [file_id] (이미지 최대 3장, 한 장 5MB), answered_at NULL, created_at, updated_at | 1:1 문의 (D-48). 본인·관리자만 조회. ANSWERED면 회원 수정·삭제 불가 |
 | notices | id, category CHECK IN ('GUIDE','MAINTENANCE','POLICY'), title VARCHAR(100), body TEXT, is_pinned BOOLEAN DEFAULT FALSE, published_at, created_by FK → users | 공지사항. 정렬 is_pinned DESC, published_at DESC |
+| files | id, owner_user_id, purpose, visibility (PUBLIC·PRIVATE), status (TEMP·ATTACHED·DELETED), storage_key UNIQUE, thumb_key, original_name, mime_type, size_bytes, width, height, created_at, attached_at | 업로드 파일 메타 (D-51). 인덱스 (status, created_at). 다른 테이블의 사진·서류 칸은 `file_id`를 가리킨다 — 상세는 [uploads.md](uploads.md) 5장 |
+| venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신 |
 | idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
 
 ---
