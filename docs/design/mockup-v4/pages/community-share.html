@@ -13,8 +13,11 @@
   .post-head .list__meta { margin-top: 10px; }
   .post-body { padding: 28px 0 8px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
   .post-photo { max-width: 640px; margin-top: 20px; aspect-ratio: 16/9; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
-  .react { display: flex; justify-content: center; gap: 8px; padding: 32px 0; border-bottom: 1px solid var(--sd-line); }
-  .react .btn { min-width: 120px; }
+  /* 도움 돼요·저장·공유: 글(또는 사진) 끝에서 50px 아래, 테두리 선 없이, 작은 버튼 (2026-11-18) */
+  .post-body + .react { margin-top: 42px; }   /* post-body 아래 여백 8px + 42px = 50px */
+  .post-photo + .react { margin-top: 50px; }
+  .react { display: flex; justify-content: center; gap: 6px; padding: 0 0 32px; }
+  .react .btn { height: 32px; min-width: 0; padding: 0 12px; font-size: var(--sd-text-small); }
   .react .btn[aria-pressed="true"] { border-color: var(--sd-ink); font-weight: 700; }
 
   .cmts__head { display: flex; align-items: baseline; gap: 8px; padding: 24px 0 12px; font-size: 17px; font-weight: 700; }
