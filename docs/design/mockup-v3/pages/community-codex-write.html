@@ -1,0 +1,184 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글쓰기 D · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .d-write .btn--primary:hover { background: var(--sd-ink); border-color: var(--sd-ink); }
+  .d-write .select { appearance: auto; background: var(--sd-bg); padding-right: 12px; }
+  .d-write :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 3px; }
+  .d-write [aria-invalid="true"] { border-color: var(--sd-conflict-text); }
+  .d-layout { display: grid; grid-template-columns: minmax(0, 1fr) 304px; gap: 40px; align-items: start; }
+  .d-form { display: grid; gap: 24px; min-width: 0; }
+  .d-fields { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 20px; }
+  .d-form .textarea { min-height: 340px; font-size: 16px; line-height: 1.8; resize: vertical; }
+  .d-count { display: flex; justify-content: space-between; gap: 12px; color: var(--sd-muted); font-size: 13px; }
+  .d-errors { display: block; margin-bottom: 24px; border: 1px solid var(--sd-conflict-text); color: var(--sd-conflict-text); }
+  .d-errors ul { margin-top: 8px; }
+  .d-errors a { display: flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
+  .d-form-foot { padding-top: 20px; border-top: 1px solid var(--sd-line-strong); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .d-preview { position: sticky; top: calc(var(--sd-gnb-height) + 24px); }
+  .d-preview h2 { font-size: 16px; }
+  .d-preview .side-box__sec { padding: 20px; }
+  .d-preview-line { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 12px; padding: 16px 0; margin-top: 12px; border-top: 1px solid var(--sd-line-strong); border-bottom: 1px solid var(--sd-line); }
+  .d-preview-title { font-size: 16px; font-weight: 700; line-height: 1.55; overflow-wrap: anywhere; }
+  .d-preview-prefix { display: block; color: var(--sd-muted); font-size: 13px; font-weight: 400; margin-bottom: 4px; }
+  .d-preview-comments { text-align: center; align-self: center; border-left: 1px solid var(--sd-line); color: var(--sd-muted); font-size: 12px; }
+  .d-preview-comments b { display: block; color: var(--sd-ink); font-size: 20px; }
+  .d-preview-body { margin-top: 12px; font-size: 14px; color: var(--sd-muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+  .d-rules li { margin-top: 12px; font-size: 14px; line-height: 1.8; color: var(--sd-muted); }
+  .d-files { padding: 12px; height: auto; min-height: 44px; }
+  .d-files::file-selector-button { min-height: 44px; margin-right: 12px; padding: 0 12px; border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-bg); color: var(--sd-ink); font: inherit; cursor: pointer; }
+  .d-file-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid var(--sd-line); font-size: 14px; }
+  .d-file-list span { overflow-wrap: anywhere; min-width: 0; }
+  .d-file-list button { flex: none; }
+  .d-mode { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--sd-line); }
+  .d-mode a { min-height: 44px; }
+  @media (max-width: 900px) {
+    :root { --sd-gnb-height: 108px; }
+    .gnb__inner { display: flex; flex-wrap: wrap; gap: 0 12px; height: auto; padding: 0 20px; }
+    .gnb__logo { min-height: 64px; margin-right: auto; }
+    .gnb__logo img { height: 22px; }
+    .gnb__right { flex: none; }
+    .gnb__menu { order: 3; flex: 0 0 100%; min-width: 0; justify-content: flex-start; gap: 24px; overflow-x: auto; }
+    .gnb__menu a { height: 44px; flex: none; }
+    .d-layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; }
+    .d-fields { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .d-write, .page-top .container { padding-left: 20px; padding-right: 20px; }
+    .d-layout { grid-template-columns: 1fr; }
+    .d-preview { position: static; }
+    .d-form .textarea { min-height: 280px; }
+  }
+</style>
+</head>
+<body data-layout="user" data-nav="community">
+<div class="page-top"><div class="container page-top__inner"><div>
+  <ol class="page-top__crumb"><li><a href="community-codex.html">커뮤니티</a></li><li>글쓰기 D</li></ol>
+  <h1>이야기를 나눠 주세요</h1><p class="page-top__desc">말머리를 고르고 제목과 내용을 쓰면 돼요. 오른쪽에서 목록에 보일 모습을 확인해 보세요.</p>
+</div></div></div>
+<main class="container main d-write">
+  <div class="notice d-errors" id="error-summary" role="alert" tabindex="-1" hidden><b>입력을 다시 확인해 주세요</b><ul id="error-links"></ul></div>
+  <div class="d-layout">
+    <form class="d-form" id="write-form" novalidate>
+      <div class="d-fields">
+        <div class="field"><label class="field__label" for="category">말머리 <span class="req">필수</span></label>
+          <select class="select" id="category" required aria-describedby="category-error"><option value="">골라 주세요</option value="질문" selected>[질문]</option><option value="자유">[자유]</option><option value="정보">[정보]</option><option value="공연 소식">[공연 소식]</option></select>
+          <p class="field__error" id="category-error" hidden></p>
+        </div>
+        <div class="field"><label class="field__label" for="title">제목 <span class="req">필수</span></label>
+          <input class="input" id="title" required maxlength="60" value="스탠딩 80명 공연, 리허설은 몇 시간 전에 시작하나요?" aria-describedby="title-error title-count">
+          <p class="field__error" id="title-error" hidden></p><p class="d-count"><span>60자까지 쓸 수 있어요.</span><span id="title-count"></span></p>
+        </div>
+      </div>
+      <div class="field"><label class="field__label" for="body">내용 <span class="req">필수</span></label>
+        <textarea class="textarea" id="body" required maxlength="2000" aria-describedby="body-error body-hint body-count">다음 달에 첫 공연을 해요. 공연장 입실이 15시이고 공연은 19시인데, 리허설을 언제 시작해야 장비 설치랑 안 겹칠지 모르겠어요.
+
+장비 업체 견적서에는 설치 90분이라고 적혀 있어요. 경험 있으신 분들 조언 부탁드려요.</textarea>
+        <p class="field__error" id="body-error" hidden></p>
+        <p class="d-count"><span id="body-hint">전화번호·계좌번호·외부 링크는 쓸 수 없어요.</span><span id="body-count"></span></p>
+      </div>
+      <div class="field"><label class="field__label" for="photos">사진 <span class="opt">선택 · 최대 10장</span></label>
+        <input class="input d-files" id="photos" type="file" accept="image/jpeg,image/png" multiple aria-describedby="photos-hint photos-error">
+        <p class="field__hint" id="photos-hint">JPG·PNG, 한 장 10MB까지 올릴 수 있어요.</p><p class="field__error" id="photos-error" hidden></p>
+        <ul class="d-file-list" id="photo-list" aria-label="고른 사진"></ul>
+      </div>
+      <div class="d-form-foot"><p class="small muted">글쓴이 · 광주밴드</p><div class="btns"><a class="btn" href="community-codex.html">취소</a><button class="btn btn--primary" type="submit">올리기</button></div></div>
+      <p class="notice" id="submit-status" role="status" hidden></p>
+    </form>
+    <aside class="side-box d-preview" aria-label="미리보기와 쓰기 규칙">
+      <section class="side-box__sec"><h2>목록에서 이렇게 보여요</h2>
+        <div class="d-preview-line"><div><p class="d-preview-title"><span class="d-preview-prefix" id="preview-category">[질문]</span><span id="preview-title"></span></p><p class="list__meta"><span>광주밴드</span><span>조회 0</span><span>방금</span></p></div><span class="d-preview-comments"><b>0</b>댓글</span></div>
+        <p class="field__hint mt-12">제목과 말머리를 바꾸면 바로 보여요.</p>
+      </section>
+      <section class="side-box__sec"><h2>내용 미리보기</h2><p class="d-preview-body" id="preview-body"></p><p class="field__hint mt-12" id="mask-status" role="status"></p></section>
+      <section class="side-box__sec side-box__sec--gray"><h2>쓰기 전에 확인해 주세요</h2><ul class="d-rules">
+        <li>전화번호·계좌번호·외부 링크와 외부 거래를 권하는 내용은 쓸 수 없어요.</li>
+        <li>010-0000-0000 같은 번호를 쓰면 미리보기에서 가려져요. 올리기 전에 연락처를 지워 주세요.</li>
+        <li>특정 업체를 깎아내리는 글이나 외부 거래 유도 글은 블라인드돼요.</li>
+        <li>공연 일정 홍보는 [공연 소식] 말머리로 올려 주세요.</li>
+      </ul></section>
+    </aside>
+  </div>
+  <nav class="row d-mode" aria-label="D안 입력 상태"><span class="small muted">목업 보기</span><a class="btn" href="community-codex-write.html">정상 입력</a><a class="btn" href="community-codex-write.html?err=bad">오류 입력</a></nav>
+</main>
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+<script>
+(() => {
+  const get = id => document.getElementById(id);
+  const category = get('category'), title = get('title'), body = get('body');
+  const contact = /(?:0\d{1,2}[- .]?\d{3,4}[- .]?\d{4}|\d{2,6}(?:[- ]\d{2,6}){2,}|\d{10,}|https?:\/\/\S+|www\.\S+|[\w.+-]+@[\w.-]+\.[a-z]{2,})/gi;
+  const mask = text => text.replace(contact, '(가려진 정보)');
+  let checked = false, photos = [], photoError = '';
+  function errors() {
+    return {
+      category: category.value ? '' : '말머리를 골라 주세요.',
+      title: !title.value.trim() ? '제목을 입력해 주세요.' : mask(title.value) !== title.value ? '연락처·외부 링크를 제목에서 지워 주세요.' : '',
+      body: !body.value.trim() ? '내용을 입력해 주세요.' : mask(body.value) !== body.value ? '전화번호·계좌번호·외부 링크는 쓸 수 없어요. 지우고 다시 올려 주세요.' : '',
+      photos: photoError
+    };
+  }
+  function validate() {
+    const messages = errors();
+    const links = get('error-links'); links.replaceChildren();
+    Object.entries(messages).forEach(([id, message]) => {
+      get(id).setAttribute('aria-invalid', String(Boolean(message)));
+      get(id + '-error').textContent = message; get(id + '-error').hidden = !message;
+      if (message) {
+        const li = document.createElement('li'), a = document.createElement('a');
+        a.href = '#' + id; a.textContent = message;
+        a.addEventListener('click', e => { e.preventDefault(); get(id).focus(); });
+        li.append(a); links.append(li);
+      }
+    });
+    get('error-summary').hidden = !links.childElementCount;
+    return !links.childElementCount;
+  }
+  function update() {
+    get('preview-category').textContent = category.value ? '[' + category.value + ']' : '말머리를 골라 주세요';
+    get('preview-title').textContent = mask(title.value.trim()) || '제목을 입력해 주세요';
+    get('preview-body').textContent = mask(body.value.trim()).slice(0, 220) || '내용을 입력하면 여기에 보여요.';
+    get('title-count').textContent = title.value.length + ' / 60';
+    get('body-count').textContent = body.value.length + ' / 2,000';
+    get('mask-status').textContent = mask(title.value + body.value) !== title.value + body.value ? '연락처·외부 링크를 미리보기에서 가렸어요.' : '';
+    get('submit-status').hidden = true;
+    if (checked) validate();
+  }
+  function renderPhotos() {
+    const list = get('photo-list'); list.replaceChildren();
+    photos.forEach((photo, index) => {
+      const li = document.createElement('li'), name = document.createElement('span'), remove = document.createElement('button');
+      name.textContent = photo.name;
+      remove.type = 'button'; remove.className = 'btn'; remove.textContent = '빼기'; remove.setAttribute('aria-label', photo.name + ' 빼기');
+      remove.addEventListener('click', () => { photos.splice(index, 1); photoError = ''; renderPhotos(); update(); });
+      li.append(name, remove); list.append(li);
+    });
+  }
+  get('photos').addEventListener('change', e => {
+    const selected = [...e.target.files];
+    photoError = selected.some(file => !['image/jpeg', 'image/png'].includes(file.type) || file.size > 10 * 1024 * 1024) ? 'JPG·PNG 사진을 한 장 10MB 이하로 골라 주세요.' : photos.length + selected.length > 10 ? '사진은 최대 10장까지 골라 주세요.' : '';
+    if (!photoError) photos.push(...selected);
+    e.target.value = ''; checked = true; renderPhotos(); update();
+  });
+  [category, title, body].forEach(field => field.addEventListener('input', update));
+  get('write-form').addEventListener('submit', e => {
+    e.preventDefault(); checked = true;
+    if (!validate()) { get('error-summary').focus(); return; }
+    get('submit-status').textContent = '입력 확인을 마쳤어요. 목업에서는 실제로 게시되지 않아요.';
+    get('submit-status').hidden = false;
+  });
+  if (new URLSearchParams(location.search).get('err') === 'bad') {
+    category.value = ''; title.value = '';
+    body.value = '장비 업체 사장님이 직접 연락 달라고 하셔서요. 010-0000-0000으로 문자 주세요.';
+    checked = true;
+  }
+  update();
+})();
+</script>
+</body>
+</html>
