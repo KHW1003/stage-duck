@@ -7,39 +7,41 @@
 <link rel="stylesheet" href="../css/app.css">
 <style>
   /* 이 제안 화면에서만 쓰는 배치. 나머지는 my.html 과 같은 목업 부품(.page-top__thumb·meta, .track, .notice)을 그대로 쓴다 */
-  /* 공연 한 줄: 상자 없이 아래 선으로만 나눈다 */
+  /* 공연 한 줄: 상자 없이 아래 선으로만 나눈다. 크기 줄임 (2026-11-18) */
   .pf { border-bottom: 1px solid var(--sd-line); }
   .sec-head + .pf { border-top: 1px solid var(--sd-ink); }
-  .pf__head { display: flex; align-items: center; gap: 20px; padding: 22px 0 14px; }
-  .pf__head .page-top__thumb { width: 112px; }
-  .pf__name { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+  .sec-head h2 em { color: var(--sd-ink) !important; }
+  .pf__head { display: flex; align-items: center; gap: 16px; padding: 18px 0 14px; }
+  .pf__head .page-top__thumb { width: 80px; }
+  .pf__name { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
   .pf__name a:hover { text-decoration: underline; }
-  .pf__head .page-top__meta { margin-top: 6px; }
-  .pf__body { padding: 0 0 18px 132px; }
-  /* 섭외 진행: 견적함 카드 시안(inbox-list.html)의 단계 점 모양과 같다 */
-  .rq-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pf__head .page-top__meta { margin-top: 4px; font-size: var(--sd-text-small); }
+  .pf__body { padding: 0 0 14px; }
+  /* 섭외 진행: 공연 상세(performance.html)와 같은 모양 — 원 24px · 선 2px, 확정 초록 체크, 조율 중 파랑 원 + 말풍선, 대기 회색 */
+  .rq-steps { --prog: #228be6; --prog-text: #1971c2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rq-steps li { position: relative; }
-  .rq-steps li:not(:last-child)::after { content: ""; position: absolute; top: 11px; left: 30px; right: 6px; height: 2px; background: var(--sd-line); }
+  .rq-steps li:not(:last-child)::after { content: ""; position: absolute; top: 11px; left: 32px; right: 8px; height: 2px; background: var(--sd-line); }
   .rq-steps li.is-done:not(:last-child)::after { background: var(--sd-pass-text); }
-  .rq-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: var(--sd-on-blue); }
-  .is-done .rq-dot { border-color: var(--sd-pass-text); background: var(--sd-pass-text); }
-  .is-now .rq-dot { border-color: var(--sd-blue); }
-  .is-now .rq-dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sd-blue); }
-  .is-skip .rq-dot { border-style: dashed; }
+  .rq-steps li.is-now:not(:last-child)::after { background: linear-gradient(90deg, var(--prog) 0 45%, var(--sd-line) 45% 100%); }
+  .rq-steps li.is-now:not(:last-child)::before { content: ""; position: absolute; z-index: 1; top: 7px; left: calc(32px + (100% - 40px) * .45 - 5px); width: 10px; height: 10px; border: 2px solid var(--prog); border-radius: 50%; background: var(--sd-bg); }
+  .rq-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--sd-line-strong); border-radius: 50%; background: var(--sd-bg); color: #fff; }
   .rq-dot svg { width: 13px; height: 13px; }
+  .is-done .rq-dot { border-color: var(--sd-pass-text); background: var(--sd-pass-text); }
+  .is-now .rq-dot { border-color: var(--prog); background: var(--prog); }
+  .is-skip .rq-dot { border-style: dashed; }
   .rq-steps small { display: block; margin-top: 10px; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .rq-steps b { font-size: var(--sd-text-desc); font-weight: 600; color: var(--sd-muted); }
-  .rq-steps .is-done b { color: var(--sd-pass-text); font-weight: 700; }
-  .rq-steps .is-now b { color: var(--sd-blue); font-weight: 700; }
-  .rq-steps em { display: block; margin-top: 2px; font-style: normal; color: var(--sd-muted); font-size: var(--sd-text-small); }
-  .pf--draft .pf__head, .pf--past .pf__head { padding: 18px 0; }
-  .pf--past .page-top__thumb, .pf--draft .page-top__thumb { width: 88px; }
+  .rq-steps b { display: block; margin-top: 2px; font-size: 15px; font-weight: 700; color: var(--sd-muted); }
+  .rq-steps .is-done b { color: var(--sd-pass-text); }
+  .rq-steps .is-now b { color: var(--prog-text); }
+  .pf--draft .pf__head, .pf--past .pf__head { padding: 16px 0; }
+  .pf--past .page-top__thumb, .pf--draft .page-top__thumb { width: 64px; }
   .pf--past .pf__name a { color: var(--sd-muted); }
-  /* 할 일 줄: 상자 없이 주조색 아이콘 + 굵은 글씨 + 오른쪽 버튼 (2026-11-17 해원: 카드·진한 테두리·파스텔 바탕 빼기) */
-  .todo { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+  /* 할 일 줄: 글자는 무채색, 색은 아이콘에만 */
+  .todo { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
   .todo > .icon { flex: none; color: var(--sd-blue); }
   .todo .grow { flex: 1; min-width: 0; }
-  .todo .timer { margin-left: 6px; color: var(--sd-blue); }
+  .todo .timer { margin-left: 6px; color: var(--sd-ink); }
+  .todo .timer .icon { color: var(--sd-blue); }
   .todo--quiet > .icon { color: var(--sd-muted); }
   .pf .todo { margin-top: 14px; }
   .pf .track-line { margin-top: 8px; }
@@ -62,23 +64,23 @@
 <main class="container main">
 
   <section class="sec">
-    <div class="sec-head"><h2>진행 중 <em>3</em></h2><p>공연장 → 장비 → 엔지니어 순서로 정해요.</p></div>
+    <div class="sec-head"><h2>진행 중 <em>3</em></h2></div>
 
     <!-- 공연 1: 장비 조율 중 + 확인 카드 -->
     <article class="pf">
       <div class="pf__head">
         <span class="page-top__thumb" style="--img:url('../../mockup/assets/photos/photo-1598387993441-a364f854c3e1.jpg')" role="img" aria-label="밴드 공연 기본 이미지"></span>
         <div class="grow">
-          <h3 class="pf__name"><a href="performance.html">가을밤 밴드 공연</a> <span class="tag tag--point">D-12</span></h3>
+          <h3 class="pf__name"><a href="performance.html">가을밤 밴드 공연</a> <span class="tag">D-12</span></h3>
           <div class="page-top__meta"><span><span data-icon="calendar" class="icon--sm"></span>11월 28일(토)</span><span>공연 19:00~21:00 · 리허설 17:00</span><span><span data-icon="pin" class="icon--sm"></span>광주 동구</span><span>관객 80명</span></div>
         </div>
         <a class="btn btn--sm" href="performance.html">공연 보기</a>
       </div>
       <div class="pf__body">
         <ol class="rq-steps">
-          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>공연장</small><b>확정</b><em>공간 C · 500,000원</em></li>
-          <li class="is-now"><span class="rq-dot"></span><small>장비</small><b>조율 중 · 견적 2건</b><em>채팅 1곳</em></li>
-          <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b><em>장비 확정 뒤 열려요</em></li>
+          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>공연장</small><b>확정</b></li>
+          <li class="is-now"><span class="rq-dot"><span data-icon="chat"></span></span><small>장비</small><b>조율 중 · 견적 2건</b></li>
+          <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b></li>
         </ol>
         <div class="todo"><span data-icon="doc"></span><div class="grow"><b>업체 D가 최종 견적을 보냈어요.</b> 내역서를 끝까지 보고 확정해 주세요. <span class="timer"><span data-icon="clock" class="icon--sm"></span>47:12 남음</span></div><a class="btn btn--sm btn--primary" href="#chat" data-chat="d">채팅에서 확인</a></div>
       </div>
@@ -96,9 +98,9 @@
       </div>
       <div class="pf__body">
         <ol class="rq-steps">
-          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>공연장</small><b>확정</b><em>공간 A · 700,000원</em></li>
-          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>장비</small><b>확정</b><em>업체 E · 엔지니어 포함</em></li>
-          <li class="is-skip"><span class="rq-dot"></span><small>엔지니어</small><b>건너뜀</b><em>장비 견적서에 포함</em></li>
+          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>공연장</small><b>확정</b></li>
+          <li class="is-done"><span class="rq-dot"><span data-icon="check"></span></span><small>장비</small><b>확정</b></li>
+          <li class="is-skip"><span class="rq-dot"></span><small>엔지니어</small><b>건너뜀</b></li>
         </ol>
         <div class="todo"><span data-icon="receipt"></span><div class="grow"><b>섭외가 모두 끝났어요.</b> 통합 청구서를 확인하고 테스트 결제를 해 주세요. 실제 청구되지 않습니다.</div><a class="btn btn--sm btn--primary" href="invoice.html">청구서 보기</a></div>
       </div>
@@ -116,9 +118,9 @@
       </div>
       <div class="pf__body">
         <ol class="rq-steps">
-          <li class="is-now"><span class="rq-dot"></span><small>공연장</small><b>조율 중 · 견적 3건</b><em>채팅 1곳</em></li>
-          <li><span class="rq-dot"></span><small>장비</small><b>대기</b><em>공연장 확정 뒤 열려요</em></li>
-          <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b><em>장비 확정 뒤 열려요</em></li>
+          <li class="is-now"><span class="rq-dot"><span data-icon="chat"></span></span><small>공연장</small><b>조율 중 · 견적 3건</b></li>
+          <li><span class="rq-dot"></span><small>장비</small><b>대기</b></li>
+          <li><span class="rq-dot"></span><small>엔지니어</small><b>대기</b></li>
         </ol>
         <div class="todo todo--quiet"><span data-icon="doc"></span><div class="grow"><b>업체 B의 견적서 v2가 도착했어요.</b> 공연장 견적서 3건을 비교해 보세요. <span class="muted">· 11월 14일</span></div><a class="btn btn--sm" href="compare.html">단계별 비교</a></div>
       </div>
