@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자유게시판 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* FreeBoardPage.module.css */
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 16px; }
+  .bar__search { display: flex; gap: 8px; width: min(100%, 360px); }
+  .free-table td.l a { color: var(--sd-ink); }
+  .free-table td.l a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .free-table .prefix { margin-right: 6px; color: var(--sd-muted); font-weight: 600; }
+  .free-table .cmt { margin-left: 6px; color: var(--sd-blue); font-size: var(--sd-text-small); font-weight: 700; }
+  .free-table tr.is-pin td { background: var(--sd-th); }
+  .free-table .who-sup { margin-left: 4px; }
+  .free-table th:nth-child(1) { width: 80px; } .free-table th:nth-child(3) { width: 150px; } .free-table th:nth-child(4) { width: 90px; } .free-table th:nth-child(5) { width: 70px; }
+</style>
+</head>
+<!-- 화면: 자유게시판 목록 · FR-COMM-01·04 · AC-F4-12·13 · D-47 · 담당 미정
+     React: pages/FreeBoardPage.tsx = PrefixTabs + SearchBox + FreePostTable + Pagination
+     방문자도 읽는다. [글쓰기]는 비로그인이면 로그인 화면으로 (?as=guest로 보기). 업체 홍보는 PR 게시판으로. -->
+<body data-layout="user" data-nav="free">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>자유게시판</li></ol><h1>자유게시판</h1><p class="page-top__desc">공연 준비하면서 궁금한 것, 알게 된 것을 나눠요. 업체 홍보는 PR 게시판에 올려 주세요.</p></div></div></div>
+<div class="tab-bar"><div class="container"><div class="tabs" role="tablist"><button role="tab" aria-selected="true" type="button">전체</button><button role="tab" aria-selected="false" type="button">[질문]</button><button role="tab" aria-selected="false" type="button">[정보]</button><button role="tab" aria-selected="false" type="button">[자유]</button></div></div></div>
+
+<main class="container main" style="padding-top:0">
+  <div class="bar">
+    <form class="bar__search" role="search" onsubmit="return false"><input class="input" style="height:36px" type="search" placeholder="제목·내용 검색" aria-label="제목·내용 검색"><button class="btn btn--sm" type="submit"><span data-icon="search" class="icon--sm"></span>검색</button></form>
+    <a class="btn btn--sm btn--primary" href="free-post.html?view=write"><span data-icon="edit" class="icon--sm"></span>글쓰기</a>
+  </div>
+
+  <div class="table-box"><table class="table free-table">
+    <thead><tr><th>말머리</th><th>제목</th><th>작성자</th><th>작성일</th><th class="r">조회</th></tr></thead>
+    <tbody>
+      <tr class="is-pin"><td><span class="tag tag--fill">공지</span></td><td class="l"><a href="notices.html?view=detail"><b>자유게시판 이용 규칙</b></a></td><td>운영팀</td><td>11.10</td><td class="r">-</td></tr>
+      <tr><td><span class="prefix">질문</span></td><td class="l"><a href="free-post.html">관객 80명 소극장인데 모니터 스피커는 몇 개가 적당할까요?</a><span class="cmt">4</span></td><td>가을밤밴드</td><td>11.16</td><td class="r">38</td></tr>
+      <tr><td><span class="prefix">정보</span></td><td class="l"><a href="free-post.html">광주 동구 공연장 장비 반입구 정리했어요</a><span class="cmt">3</span></td><td>업체 C <span class="tag who-sup">업체</span></td><td>11.15</td><td class="r">52</td></tr>
+      <tr><td><span class="prefix">자유</span></td><td class="l"><a href="free-post.html">첫 공연 끝났어요. 준비하면서 배운 것들</a><span class="cmt">7</span></td><td>재즈트리오</td><td>11.14</td><td class="r">71</td></tr>
+      <tr><td><span class="prefix">질문</span></td><td class="l"><a href="free-post.html">리허설 시간은 보통 얼마나 잡으세요?</a><span class="cmt">2</span></td><td>새벽합창단</td><td>11.13</td><td class="r">24</td></tr>
+      <tr><td><span class="prefix">정보</span></td><td class="l"><a href="free-post.html">드럼 세트 가져갈 때 챙기면 좋은 것</a><span class="cmt">5</span></td><td>업체 D <span class="tag who-sup">업체</span></td><td>11.12</td><td class="r">46</td></tr>
+      <tr><td><span class="prefix">자유</span></td><td class="l"><a href="free-post.html">겨울에 야외 공연 해 보신 분 있나요</a></td><td>포크듀오</td><td>11.11</td><td class="r">12</td></tr>
+    </tbody>
+  </table></div>
+  <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span><a href="#">2</a><a href="#" aria-label="다음 쪽"><span data-icon="right" class="icon--sm"></span></a></nav>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

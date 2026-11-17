@@ -52,7 +52,10 @@ v1(`../mockup/web/`)과 화면·구성은 같고, **아이콘과 사진을 더�
 | 공통 안내 | `pages/notice.html` | 찾을 수 없음(404) / 이용 정지 / 로그인 필요 / 서버 오류 |
 | 관리자: 업체 심사 (첫 화면) | `pages/a-review.html` | 서류 갖춤 / 보완 필요 |
 | 관리자: 신고·제재 | `pages/a-reports.html` | 경고 0회 / 경고 2회 (이번이 3회째 → 정지) |
-| 관리자: 게시글·공간 | `pages/a-posts.html` | 블라인드·해제, 공간 숨김 |
+| 관리자: 게시글·공간 | `pages/a-posts.html` | PR 게시글·자유게시판 블라인드·해제, 공간 숨김 |
+| 관리자: 문의·공지 | `pages/a-cs.html` | 1:1 문의 답변, 공지사항 작성·고정 |
+| 자유게시판 | `pages/free.html`, `pages/free-post.html` | 목록 / 글 보기·댓글 / 비로그인 / 글쓰기 / 블라인드 |
+| 고객지원 | `pages/notices.html`, `faq.html`, `guide.html`, `terms.html`, `inquiry.html` | 공지사항 / FAQ / 업체 이용 가이드 / 약관 3종 / 1:1 문의 |
 | 관리자: 거래 이력 | `pages/a-orders.html` | 결제·보관 중 / D-1 사용자 취소 |
 | 관리자: 시연 도구 | `pages/a-demo.html` | 기본 / 초기화한 뒤 |
 

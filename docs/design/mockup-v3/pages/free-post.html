@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자유게시판 글 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* FreePostPage.module.css */
+  .fp { max-width: 820px; }
+  .fp h1 { font-size: 26px; letter-spacing: -.6px; line-height: 1.4; }
+  .fp h1 .prefix { margin-right: 8px; color: var(--sd-muted); }
+  .fp__meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--sd-line); }
+  .fp__body { padding: 28px 0 32px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
+  .fp__acts { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 28px; border-bottom: 1px solid var(--sd-line); }
+  .cmts h2 { margin-top: 32px; font-size: 18px; }
+  .cmts h2 em { margin-left: 4px; color: var(--sd-blue); font-style: normal; }
+  .cmt { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--sd-line); }
+  .cmt .avatar { width: 36px; height: 36px; font-size: 13px; }
+  .cmt__head { display: flex; align-items: center; gap: 6px; font-size: var(--sd-text-desc); }
+  .cmt__head small { color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .cmt__act { margin-left: auto; background: none; border: 0; cursor: pointer; font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .cmt p { margin-top: 4px; font-size: var(--sd-text-body); line-height: 1.7; }
+  .cmt.is-gone p { color: var(--sd-muted); }
+  .cmt-form { margin-top: 20px; }
+  .cmt-form__foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .cmt-form textarea { min-height: 88px; padding: 12px; }
+  .guest-cmt { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; padding: 18px 20px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); font-size: var(--sd-text-desc); }
+  .write { max-width: 820px; }
+  .write .textarea--body { min-height: 280px; padding: 14px; }
+</style>
+</head>
+<!-- 화면: 자유게시판 글 보기·쓰기 · FR-COMM-02~04 · AC-F4-12·14·15·16 · D-47 · 담당 미정
+     React: pages/FreePostPage.tsx = PostHeader + PostBody + CommentList + CommentForm / FreePostWritePage.tsx
+     댓글은 한 단계만 (답글 버튼 없음). 업체는 "업체" 표시. 블라인드된 글은 작성자에게만 사유와 함께 보인다. -->
+<body data-layout="user" data-nav="free">
+
+<div class="mock-switch" data-group="view">
+  <span>목업 보기</span>
+  <button type="button" data-value="detail" aria-pressed="true">글 보기</button>
+  <button type="button" data-value="guest">글 보기 (비로그인)</button>
+  <button type="button" data-value="write">글쓰기</button>
+  <button type="button" data-value="blinded">블라인드 (작성자)</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="free.html">자유게시판</a></li><li data-when="view:detail view:guest view:blinded">[질문]</li><li data-when="view:write">글쓰기</li></ol></div></div>
+
+<main class="container main">
+
+  <article class="fp" data-when="view:detail view:guest">
+    <h1><span class="prefix">[질문]</span>관객 80명 소극장인데 모니터 스피커는 몇 개가 적당할까요?</h1>
+    <div class="fp__meta"><div class="list__meta" style="margin:0"><span><b style="color:var(--sd-ink)">가을밤밴드</b></span><span>11월 16일 14:20</span><span>조회 38</span></div></div>
+    <div class="fp__body">11월 28일에 공간 C에서 첫 공연을 해요. 보컬 1, 기타 2, 베이스 1, 드럼 1 구성이에요.
+장비 업체 견적서를 받아 보니 모니터 스피커가 2개로 적혀 있었는데, 다섯 명이 나눠 듣기에 충분한지 궁금해요.
+비슷한 규모로 해 보신 분들은 몇 개 쓰셨나요?</div>
+    <div class="fp__acts"><a class="btn btn--sm" href="free.html">목록</a><button class="btn btn--sm btn--ghost" type="button"><span data-icon="flag" class="icon--sm"></span>신고</button></div>
+
+    <section class="cmts">
+      <h2>댓글<em>4</em></h2>
+      <div class="cmt"><span class="avatar">D</span><div><div class="cmt__head"><a class="link link--point" href="supplier.html"><b>업체 D</b></a><span class="tag">업체</span><small>11월 16일 15:02</small><button class="cmt__act" type="button">신고</button></div><p>5인 밴드면 보컬 앞 1개, 기타·베이스 쪽 1개, 드럼 1개로 3개를 많이 써요. 2개면 기타 두 분이 하나를 나눠 들으셔야 해요. 견적서 받으신 업체와 채팅으로 조정해 보세요.</p></div></div>
+      <div class="cmt"><span class="avatar">재</span><div><div class="cmt__head"><b>재즈트리오</b><small>11월 16일 16:40</small><button class="cmt__act" type="button">신고</button></div><p>저희는 같은 공간에서 3개 썼어요. 드럼은 자기 소리가 커서 빼도 괜찮았어요.</p></div></div>
+      <div class="cmt is-gone"><span class="avatar">-</span><div><div class="cmt__head"><small>11월 16일 17:05</small></div><p>삭제된 댓글이에요.</p></div></div>
+      <div class="cmt"><span class="avatar">가</span><div><div class="cmt__head"><b>가을밤밴드</b><span class="tag tag--point">글쓴이</span><small>11월 16일 18:11</small><button class="cmt__act" type="button">삭제</button></div><p>감사해요. 업체 D와 3개로 다시 얘기해 볼게요.</p></div></div>
+
+      <form class="cmt-form" data-when="view:detail" onsubmit="return false">
+        <label class="sr-only" for="cmt">댓글</label>
+        <textarea class="textarea" id="cmt" maxlength="500" placeholder="댓글을 남겨 주세요. 전화번호·계좌번호·외부 링크는 쓸 수 없어요."></textarea>
+        <div class="cmt-form__foot"><span class="field__hint">0 / 500</span><button class="btn btn--sm btn--primary" type="submit">댓글 등록</button></div>
+      </form>
+      <div class="guest-cmt" data-when="view:guest"><span>로그인하면 댓글을 쓸 수 있어요.</span><a class="btn btn--sm btn--primary" href="login.html">로그인</a></div>
+    </section>
+  </article>
+
+  <article class="fp" data-when="view:blinded">
+    <div class="notice notice--warn"><span data-icon="warn"></span><div><b>관리자가 가린 글이에요. 다른 사람에게는 보이지 않아요.</b><br>사유: 업체 홍보 글 (홍보는 PR 게시판에 올려 주세요) · 11월 15일. 이 일로 경고 1회가 기록됐어요. 궁금한 점은 <a class="link link--point" href="inquiry.html?view=write">1:1 문의</a>로 알려 주세요.</div></div>
+    <h1 class="mt-24"><span class="prefix">[정보]</span>음향 장비 대여 특가 안내</h1>
+    <div class="fp__meta"><div class="list__meta" style="margin:0"><span><b style="color:var(--sd-ink)">업체 E</b></span><span>11월 15일 10:12</span></div></div>
+    <div class="fp__body">이번 달 음향 장비 대여를 할인해 드려요. 문의는 채팅으로 주세요.</div>
+    <div class="fp__acts"><a class="btn btn--sm" href="free.html">목록</a><button class="btn btn--sm btn--ghost" type="button"><span data-icon="trash" class="icon--sm"></span>삭제</button></div>
+  </article>
+
+  <form class="write" data-when="view:write" onsubmit="return false">
+    <h1 style="font-size:24px;letter-spacing:-.6px">글쓰기</h1>
+    <div class="notice notice--line mt-16"><span data-icon="info"></span><div>전화번호·계좌번호·외부 링크는 쓸 수 없어요. 업체 홍보 글은 <a class="link link--point" href="board.html">PR 게시판</a>에 올려 주세요. 규칙을 어기면 글이 가려지고 경고가 기록돼요.</div></div>
+    <div class="form-table mt-24">
+      <div><div class="form-table__th">말머리<span class="req">*</span></div><div class="form-table__td"><div class="filters" role="radiogroup" aria-label="말머리"><button type="button" aria-pressed="true">질문</button><button type="button" aria-pressed="false">정보</button><button type="button" aria-pressed="false">자유</button></div></div></div>
+      <div><div class="form-table__th"><label for="w-title">제목</label><span class="req">*</span></div><div class="form-table__td"><input class="input" id="w-title" maxlength="100" placeholder="100자까지"></div></div>
+      <div><div class="form-table__th"><label for="w-body">내용</label><span class="req">*</span></div><div class="form-table__td"><textarea class="textarea textarea--body" id="w-body" maxlength="5000" placeholder="5,000자까지"></textarea><p class="field__hint mt-4">0 / 5,000</p></div></div>
+      <div><div class="form-table__th">사진</div><div class="form-table__td"><button class="btn btn--sm" type="button"><span data-icon="upload" class="icon--sm"></span>사진 올리기</button><p class="field__hint mt-4">최대 5장, 한 장에 10MB까지</p></div></div>
+    </div>
+    <div class="btns btns--center mt-24"><a class="btn btn--lg" href="free.html">취소</a><button class="btn btn--lg btn--primary" type="submit">올리기</button></div>
+  </form>
+
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>
