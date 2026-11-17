@@ -13,14 +13,13 @@
   .post-head .list__meta { margin-top: 10px; }
   .post-body { padding: 28px 0 8px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
   .post-photo { max-width: 640px; margin-top: 20px; aspect-ratio: 16/9; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
-  /* 도움 돼요·저장·공유: 글(또는 사진) 끝에서 50px 아래, 테두리 선 없이, 작은 버튼 (2026-11-18) */
-  .post-body + .react { margin-top: 42px; }   /* post-body 아래 여백 8px + 42px = 50px */
-  .post-photo + .react { margin-top: 50px; }
-  .react { display: flex; justify-content: center; gap: 6px; padding: 0 0 32px; }
+  /* 도움 돼요·저장·공유: 댓글 줄과 같은 높이 가운데, 글(사진) 끝에서 50px, 작은 버튼 (2026-11-18) */
+  .react { position: absolute; left: 50%; top: 0; display: flex; gap: 6px; transform: translateX(-50%); }
   .react .btn { height: 32px; min-width: 0; padding: 0 12px; font-size: var(--sd-text-small); }
   .react .btn[aria-pressed="true"] { border-color: var(--sd-ink); font-weight: 700; }
 
-  .cmts__head { display: flex; align-items: baseline; gap: 8px; padding: 24px 0 12px; font-size: 17px; font-weight: 700; }
+  .cmts__head { position: relative; display: flex; align-items: center; gap: 8px; min-height: 32px; margin-top: 50px; padding: 0 0 12px; font-size: 17px; font-weight: 700; }
+  .post-body + .cmts .cmts__head { margin-top: 42px; }
   .cmt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 18px 0; border-top: 1px solid var(--sd-line); }
   .cmt--reply { margin-left: 48px; }
   .cmt__name { font-size: var(--sd-text-desc); font-weight: 700; }
@@ -59,9 +58,8 @@
 
 장비 업체 견적서에는 설치 90분이라고 적혀 있어요. 경험 있으신 분들 조언 부탁드려요.</div>
     <div class="post-photo" role="img" aria-label="공연장 내부 사진" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"></div>
-    <div class="react"><button class="btn" type="button" aria-pressed="true"><span data-icon="heart" class="icon--sm"></span>도움 돼요 24</button><button class="btn" type="button"><span data-icon="bookmark" class="icon--sm"></span>저장</button><button class="btn" type="button"><span data-icon="out" class="icon--sm"></span>공유</button></div>
 
-    <section class="cmts"><p class="cmts__head">댓글 <span class="muted">12</span></p>
+    <section class="cmts"><div class="cmts__head"><span>댓글 <span class="muted">12</span></span><div class="react"><button class="btn" type="button" aria-pressed="true"><span data-icon="heart" class="icon--sm"></span>도움 돼요 24</button><button class="btn" type="button"><span data-icon="bookmark" class="icon--sm"></span>저장</button><button class="btn" type="button"><span data-icon="out" class="icon--sm"></span>공유</button></div></div>
       <div class="cmt"><span class="avatar" aria-hidden="true">드</span><div><p class="cmt__name">드럼치는목요일</p><p class="cmt__text">입실 15시에 설치 90분이면 16시 30분쯤 끝나요. 리허설은 17시로 잡으면 여유 있어요.</p><p class="cmt__meta"><span>14:42</span><button class="link" type="button">답글</button><button class="link" type="button">도움 돼요 8</button></p></div></div>
       <div class="cmt cmt--reply"><span class="avatar avatar--sm" aria-hidden="true">광</span><div><p class="cmt__name">광주밴드<span class="tag">글쓴이</span></p><p class="cmt__text">감사해요! 17시로 요청서 고쳐 볼게요.</p><p class="cmt__meta"><span>14:50</span><button class="link" type="button">답글</button></p></div></div>
       <div class="cmt"><span class="avatar" aria-hidden="true">노</span><div><p class="cmt__name">노을극단</p><p class="cmt__text">공연장 견적서의 '장비 설치 가능 시각'도 꼭 보세요. 입실보다 늦은 곳도 있어요.</p><p class="cmt__meta"><span>15:03</span><button class="link" type="button">답글</button><button class="link" type="button">도움 돼요 5</button></p></div></div>
