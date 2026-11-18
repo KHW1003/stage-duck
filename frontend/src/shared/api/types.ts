@@ -205,3 +205,55 @@ export interface AdvanceResult {
   performanceStatus: PerformanceStatus;
   next: { stageId: number; stageType: StageType; status: StageStatus };
 }
+
+// ---- 커뮤니티 (#100, api-contract.md 7장) ----
+export type FreePostCategory = "FREE" | "QUESTION" | "INFO" | "NEWS";
+
+export interface FreePostSummary {
+  id: number;
+  category: FreePostCategory;
+  title: string;
+  /** 업체 회원이면 kind=SUPPLIER, name=상호 */
+  author: { name: string; kind: "USER" | "SUPPLIER" };
+  viewCount: number;
+  commentCount: number;
+  helpfulCount: number;
+  hasPhotos: boolean;
+  createdAt: string;
+}
+
+export interface FreePostPage {
+  items: FreePostSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface FreePost extends FreePostSummary {
+  body: string;
+  /** 사진 파일 id (주소는 files 함수가 생기면 붙는다) */
+  photoIds: number[];
+  status: "ACTIVE" | "BLINDED" | "DELETED";
+  blindReason: string | null;
+  prevId: number | null;
+  nextId: number | null;
+  isMine: boolean;
+  updatedAt: string;
+}
+
+export interface FreePostSaved extends FreePost {
+  contactWarning: boolean;
+}
+
+export interface FreePostRequest {
+  category: FreePostCategory | "";
+  title: string;
+  body: string;
+  fileIds: number[];
+}
+
+export interface UploadedFile {
+  id: number;
+  url: string;
+  thumbUrl: string;
+}
