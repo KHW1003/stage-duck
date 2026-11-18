@@ -11,6 +11,7 @@ import pytest
 
 from app.chat import service as chat
 from app.check import calc
+from app.payment import service as payment
 from app.policy import service as policy
 from app.quote import service as quote
 from app.request import service as request
@@ -54,6 +55,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (policy.report, [("db", POS), ("reporter_id", KW), ("target_type", KW), ("target_id", KW), ("reason", KW)]),
         (policy.blind_post, [("db", POS), ("post_id", POS), ("actor_id", KW), ("reason", KW)]),
         (policy.suspension_reason, [("db", POS), ("user_id", POS)]),
+        (payment.payment_deadline, [("db", POS), ("performance_id", POS)]),
     ],
     ids=lambda v: getattr(v, "__qualname__", ""),
 )
