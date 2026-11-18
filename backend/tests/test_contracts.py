@@ -9,8 +9,10 @@ from dataclasses import fields
 
 import pytest
 
+from app.chat import service as chat
 from app.check import calc
 from app.policy import service as policy
+from app.quote import service as quote
 from app.request import service as request
 from app.supplier import service as supplier
 
@@ -40,6 +42,9 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.open_postings_for, [("db", POS), ("supplier", POS), ("sido", KW)]),
         (request.after_confirm, [("db", POS), ("stage_id", POS), ("full_spec", KW)]),
         (request.is_related, [("db", POS), ("user_id", POS), ("supplier_id", POS)]),
+        # 3 → 2
+        (chat.invalidate_pending_cards, [("db", POS), ("stage_id", POS)]),
+        (quote.quote_counts, [("db", POS), ("stage_ids", POS)]),
         # 4 → 3
         (calc.run_checks, [("performance", POS), ("quote", POS), ("confirmed", POS), ("setup_warning_minutes", KW)]),
         (calc.has_conflict, [("results", POS)]),
