@@ -7,6 +7,7 @@
    - 열린 상태(창, 방, 탭)는 화면을 옮겨도 이어진다 (목업: sessionStorage)
    - 새 메시지·읽음은 WebSocket으로 새로고침 없이 바뀐다 (AC-F3-08)
    - 비로그인(guest)·심사 중 업체(partner-review)에는 버튼이 없다
+   - 상단 고정: 고정한 방은 목록 맨 위 + 아바타 왼쪽 위 핀 배지. 대화방 머리줄 [⋯] 메뉴 또는 목록에서 오른쪽 클릭으로 고정·해제
    목업 전용 주소: ?chat=list | 방 id (d, e, c, a / ga, bom, ha), &pane=info, ?card=pending | opened | done (업체 D 확인 카드) */
 (function () {
   var body = document.body, layout = body.dataset.layout || 'guest';
@@ -53,7 +54,7 @@
       ctx: '가을밤 밴드 공연 · 11월 28일(토)',
       note: '견적함에서 견적서를 보고 <b>[채팅 시작]</b>을 누르면 그 업체와 대화가 여기에 생겨요. <a href="' + B + 'inbox.html">견적함</a>',
       list: ['d', 'e', 'c', 'a'],
-      d: { letter: 'D', name: '업체 D', photo: '1545454675-3531b543be5d', stage: '장비', on: 1, unread: 1, time: '13:24',
+      d: { letter: 'D', name: '업체 D', photo: '1545454675-3531b543be5d', stage: '장비', on: 1, pin: 1, unread: 1, time: '13:24',
         last: '견적 내역 확인 카드를 보냈어요', sub: '견적서 v2 · 1,350,000원 · ' + (cardState === 'done' ? '컨펌' : '조율 중'), doc: 'quote.html',
         msgs: function () {
           return day('11월 13일 (금)') +
@@ -116,7 +117,7 @@
       filterBy: 'st', tabs: [['all', '전체'], ['on', '진행 중'], ['wait', '시작 전'], ['closed', '마감']],
       note: '사용자가 견적서를 보고 <b>[채팅 시작]</b>을 누르면 메시지를 보낼 수 있어요.',
       list: ['ga', 'bom', 'ha'],
-      ga: { letter: '가', name: '가을밤밴드', stage: '장비', st: 'on', on: 1, unread: 1, time: '13:24',
+      ga: { letter: '가', name: '가을밤밴드', stage: '장비', st: 'on', on: 1, pin: 1, unread: 1, time: '13:24',
         last: '내역서 확인했어요. 이대로 진행할게요.', sub: '가을밤 밴드 공연 · 11월 28일(토) · 이용 0 · 반려 0', doc: 'p-quote.html',
         msgs: function () {
           return day('11월 13일 (금)') + sys('가을밤밴드님이 채팅을 시작했어요') +
@@ -148,6 +149,9 @@
   function avatar(r) {
     return r.photo ? '<span class="avatar" style="--img:url(\'' + PH + r.photo + '.jpg\')" role="img" aria-label="' + r.name + ' 사진">' + r.letter + '</span>' : '<span class="avatar">' + r.letter + '</span>';
   }
+  /* 핀 아이콘 (채움). 색은 currentColor = 포인트 색 */
+  var PIN = '<svg class="cw-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3H7l3-3z"/><path d="M12 16v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  function pinMenu(r, id) { return '<button class="cw-menu__item cw-menu__item--point" type="button" role="menuitem" data-cw-pin="' + id + '">' + PIN + (r.pin ? '고정 해제' : '상단에 고정') + '</button>'; }
   function tag(r) { return '<span class="tag' + (r.on && !r.closed ? ' tag--point' : '') + '">' + r.stage + '</span>'; }
   function tabs(list, cur, attr) {
     return '<div class="tab-bar chat-panel__tabs"><div class="tabs" role="tablist">' + list.map(function (t) {
@@ -161,8 +165,10 @@
       var r = R[s.room], pane = s.pane || 'talk';
       html = '<div class="chat-panel__bar chat-panel__bar--room"><button class="icon-btn" type="button" data-cw-back aria-label="목록으로">' + I('left') + '</button>' +
         '<div class="chat-panel__who">' + avatar(r) + '<div><b>' + r.name + ' ' + tag(r) + '</b><small>' + r.sub + '</small></div></div>' +
-        (r.doc ? '<a class="icon-btn" href="' + B + r.doc + '" aria-label="' + (p.dataset.role === 'user' ? '내역서' : '견적서') + '">' + I('doc') + '</a>' : '') +
-        '<button class="icon-btn" type="button" data-open="cw-report" aria-label="신고">' + I('flag') + '</button>' + close + '</div>' +
+        '<span class="cw-more"><button class="icon-btn" type="button" data-cw-more aria-haspopup="menu" aria-expanded="false" aria-label="더보기">' + I('more') + '</button>' +
+        '<span class="cw-menu" role="menu" hidden>' + pinMenu(r, s.room) +
+        (r.doc ? '<a class="cw-menu__item" role="menuitem" href="' + B + r.doc + '">' + I('doc') + (p.dataset.role === 'user' ? '내역서' : '견적서') + ' 보기</a>' : '') +
+        '<button class="cw-menu__item" type="button" role="menuitem" data-open="cw-report">' + I('flag') + '신고하기</button></span></span>' + close + '</div>' +
         tabs([['talk', '대화'], ['info', '견적 정보']], pane, 'data-cw-pane') +
         '<div class="chat-panel__body">' + (pane === 'info' ? '<div class="chat-panel__scroll">' + r.info() + '</div>'
           : '<div class="room__msgs">' + r.msgs() + '</div>' + (r.locked ? '<div class="composer composer--locked">' + I('lock', 'icon--sm') + r.locked + '</div>'
@@ -202,7 +208,8 @@
       var r = R[id];
       return (f === 'all' || r[R.filterBy] === f) && (s.unread !== '1' || r.unread) && (!k || has(r.name, k) || has(r.last, k));
     });
-    return { ids: s.sort === 'old' ? ids.reverse() : ids, k: k };
+    if (s.sort === 'old') ids.reverse();
+    return { ids: ids.filter(function (id) { return R[id].pin; }).concat(ids.filter(function (id) { return !R[id].pin; })), k: k };   /* 정렬 = 고정 여부 → 마지막 메시지 시각 (고정한 방끼리도 최근 대화순) */
   }
   function listBody(p) {
     var R = ROOMS[p.dataset.role], s = p.dataset, f = s.filter || 'all', L = listed(p), k = L.k;
@@ -214,7 +221,7 @@
     }
     return L.ids.map(function (id) {
       var r = R[id];
-      return '<button class="chat-item' + (r.unread ? ' is-unread' : '') + (r.closed ? ' is-closed' : '') + '" type="button" data-cw-room="' + id + '">' + avatar(r) +
+      return '<button class="chat-item' + (r.unread ? ' is-unread' : '') + (r.closed ? ' is-closed' : '') + '" type="button" data-cw-room="' + id + '"><span class="chat-item__av">' + avatar(r) + (r.pin ? '<span class="chat-item__pin" role="img" aria-label="고정됨">' + PIN + '</span>' : '') + '</span>' +
         '<span style="min-width:0"><span class="chat-item__name">' + hl(r.name, k) + ' ' + tag(r) + '</span><span class="chat-item__last" style="display:block">' + hl(r.last, k) + '</span></span>' +
         '<span class="chat-item__side">' + r.time + (r.unread ? '<span class="count">' + r.unread + '</span>' : '') + '</span></button>';
     }).join('') + (k ? '' : '<p class="chat-panel__note">' + I('info') + '<span>' + R.note + '</span></p>');
@@ -222,7 +229,7 @@
 
   /* ── 살아 있는 위젯 ── */
   var fab, panel, KEY = 'sd-chat-' + role;
-  function save() { if (!panel) return; try { sessionStorage.setItem(KEY, JSON.stringify({ open: !panel.hidden, view: panel.dataset.view, room: panel.dataset.room, pane: panel.dataset.pane, filter: panel.dataset.filter, unread: panel.dataset.unread, sort: panel.dataset.sort, read: readIds })); } catch (e) {} }
+  function save() { if (!panel) return; try { sessionStorage.setItem(KEY, JSON.stringify({ open: !panel.hidden, view: panel.dataset.view, room: panel.dataset.room, pane: panel.dataset.pane, filter: panel.dataset.filter, unread: panel.dataset.unread, sort: panel.dataset.sort, read: readIds, pins: ROOMS[role].list.filter(function (id) { return ROOMS[role][id].pin; }) })); } catch (e) {} }
   var readIds = [];
   function markRead(id) {
     var R = ROOMS[role]; if (!R[id] || !R[id].unread) return;
@@ -262,6 +269,7 @@
 
     var st = {}; try { st = JSON.parse(sessionStorage.getItem(KEY)) || {}; } catch (e) {}
     (st.read || []).forEach(markRead);
+    if (st.pins) ROOMS[role].list.forEach(function (id) { ROOMS[role][id].pin = st.pins.indexOf(id) > -1 ? 1 : 0; });
     ['view', 'room', 'pane', 'filter', 'unread', 'sort'].forEach(function (k) { if (st[k]) panel.dataset[k] = st[k]; });
     var want = q.get('chat');
     if (want) { panel.dataset.view = want === 'list' ? 'list' : 'room'; if (want !== 'list') panel.dataset.room = want; panel.dataset.pane = q.get('pane') || 'talk'; }
@@ -284,8 +292,20 @@
   document.addEventListener('click', function (e) {
     var o = e.target.closest('[data-chat]');
     if (o && panel) { e.preventDefault(); document.querySelectorAll('.noti-panel, .dropdown, .layer').forEach(function (m) { if (!m.closest('.frame')) m.hidden = true; }); openChat(o.dataset.chat); return; }
+    /* 고정 메뉴: [⋯] 더보기(대화방 머리줄) · 오른쪽 클릭(목록) */
+    var mt = e.target.closest('[data-cw-more]'), it = e.target.closest('.cw-menu__item'), t;
+    if (mt) {
+      var mm = mt.nextElementSibling, open = mm.hidden;
+      closeMenus(); mm.hidden = !open; mt.setAttribute('aria-expanded', open); return;
+    }
+    if (it && (it.dataset.cwPin || it.dataset.cwRead)) {
+      var mp = it.closest('.chat-panel') || ctxPanel, MR = ROOMS[mp.dataset.role], id = it.dataset.cwPin || it.dataset.cwRead;
+      if (it.dataset.cwPin) MR[id].pin = MR[id].pin ? 0 : 1;
+      else if (mp === panel) markRead(id); else MR[id].unread = 0;
+      closeMenus(); render(mp); if (mp === panel) save(); return;
+    }
+    if (!e.target.closest('.cw-menu') || it) closeMenus();
     var p = e.target.closest('.chat-panel'); if (!p) return;
-    var t;
     if (e.target.closest('[data-cw-close]')) { setOpen(false); return; }
     if ((t = e.target.closest('[data-cw-room]'))) { p.dataset.view = 'room'; p.dataset.room = t.dataset.cwRoom; p.dataset.pane = 'talk'; if (p === panel) markRead(t.dataset.cwRoom); }
     else if (e.target.closest('[data-cw-back]')) p.dataset.view = 'list';
@@ -300,6 +320,31 @@
     render(p); if (p === panel) save();
     var qi = p.querySelector('.chat-panel__q'); if (qi) qi.focus();
   });
+
+  var ctxPanel = null;
+  function closeMenus() {
+    document.querySelectorAll('.cw-menu--ctx').forEach(function (m) { m.remove(); });
+    document.querySelectorAll('.chat-panel .cw-menu').forEach(function (m) { m.hidden = true; });
+    document.querySelectorAll('[data-cw-more]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+  }
+  document.addEventListener('contextmenu', function (e) {
+    var row = e.target.closest('.chat-panel [data-cw-room]'); if (!row) return;
+    e.preventDefault(); closeMenus();
+    ctxPanel = row.closest('.chat-panel');
+    var id = row.dataset.cwRoom, r = ROOMS[ctxPanel.dataset.role][id];
+    var m = document.createElement('div');
+    m.className = 'cw-menu cw-menu--ctx'; m.setAttribute('role', 'menu'); m.setAttribute('aria-label', r.name + ' 메뉴');
+    m.innerHTML = pinMenu(r, id) + '<button class="cw-menu__item" type="button" role="menuitem" data-cw-read="' + id + '">' + I('check') + '읽음으로 표시</button>';
+    body.appendChild(m);
+    m.style.left = Math.min(e.clientX, innerWidth - m.offsetWidth - 8) + 'px';
+    m.style.top = Math.min(e.clientY, innerHeight - m.offsetHeight - 8) + 'px';
+    m.querySelector('button').focus();
+  });
+  /* Esc: 메뉴가 열려 있으면 메뉴만 닫는다 (창은 그대로) */
+  window.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !document.querySelector('.cw-menu--ctx, .chat-panel .cw-menu:not([hidden])')) return;
+    e.stopPropagation(); closeMenus();
+  }, true);
 
   /* 검색칸: 입력할 때마다 목록만 다시 그린다 (칸의 포커스·커서 유지) */
   document.addEventListener('input', function (e) {
