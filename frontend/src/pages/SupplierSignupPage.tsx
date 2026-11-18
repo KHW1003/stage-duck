@@ -12,6 +12,7 @@ import { Field, Input } from "../shared/ui/Field";
 import { useSupplierSignup } from "../features/supplier/api";
 import { Steps } from "../features/supplier/Steps";
 import styles from "../features/supplier/Supplier.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 /** 입력 중인 값 (화면 상태). 서버 데이터가 아니라 useState 로 둔다 */
 const EMPTY = {
@@ -24,6 +25,7 @@ type Change = ChangeEvent<HTMLInputElement>;
 
 export function SupplierSignupPage() {
   const navigate = useNavigate();
+  usePageMeta("업체 회원가입");
   const signup = useSupplierSignup();
   const [form, setForm] = useState(EMPTY);
   const [checked, setChecked] = useState(false);

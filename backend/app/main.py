@@ -21,6 +21,7 @@ from app.request.router import stage_router
 from app.board.router import router as board_router
 from app.quote.router import postings_router, router as quote_router, stage_quote_router
 from app.chat.router import router as chat_router
+from app.seo.router import router as seo_router
 
 
 def create_app() -> FastAPI:
@@ -54,6 +55,9 @@ def create_app() -> FastAPI:
     # 공개 사진 (uploads.md 3장). 비공개 파일은 /media 로 나가지 않는다 — GET /api/v1/files/{id}
     app.mount("/media", StaticFiles(directory=Path(get_settings().upload_dir) / "public", check_dir=False), name="media")
     setup_admin(app)
+    # 화면: 빌드된 JS·CSS, 그리고 나머지 주소는 head 를 채운 index.html (specs/seo.md 1장). 반드시 맨 마지막
+    app.mount("/assets", StaticFiles(directory=Path(get_settings().frontend_dist) / "assets", check_dir=False), name="assets")
+    app.include_router(seo_router)
     return app
 
 

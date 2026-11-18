@@ -84,6 +84,14 @@ def get_post(db: Session, post_id: int) -> PrPostOut:
     return _out(db, post)
 
 
+def public_post_stamps(db: Session) -> list[tuple[int, datetime]]:
+    """sitemap.xml 용 (id, 수정 시각). 방문자에게 보이는 글만 (specs/seo.md 5장)."""
+    return [tuple(r) for r in db.execute(
+        select(PrPost.id, PrPost.updated_at).join(Supplier, PrPost.supplier_id == Supplier.id).where(*_visible())
+        .order_by(PrPost.id)
+    ).all()]
+
+
 def _raise_if_blocked(db: Session, supplier_id: int, category: str) -> None:
     """AC-F4-02·10: 그 부문에 활성 글이 있으면 ACTIVE_POST_EXISTS, 가린 글이 있으면 BLINDED_POST_EXISTS."""
     existing = db.scalar(
