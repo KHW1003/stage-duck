@@ -118,7 +118,8 @@
 .msg__photo { width: 220px; aspect-ratio: 4 / 3; border-radius: 8px; background: var(--sd-photo) var(--img) center / cover no-repeat; }
 .msg__file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--sd-line); border-radius: 8px; background: var(--sd-bg); font-size: var(--sd-text-desc); }
 .msg__file small { display: block; color: var(--sd-muted); font-size: var(--sd-text-meta); }
-.room__warn { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-left: 3px solid var(--sd-warn-text); background: var(--sd-bg); color: var(--sd-warn-text); font-size: var(--sd-text-small); }
+.room__warn { align-self: center; display: flex; gap: 6px; align-items: flex-start; max-width: 92%; padding: 2px 0; font-size: var(--sd-text-meta); line-height: 1.55; color: var(--sd-muted); text-align: left; }   /* 말풍선 아님: 가운데 얇은 안내 줄 */
+.room__warn .icon { flex: none; margin-top: 2px; color: var(--sd-warn-text); }
 .room__sys { align-self: center; padding: 4px 12px; border-radius: 12px; background: rgba(32,46,61,.06); font-size: var(--sd-text-small); color: var(--sd-muted); }
 .composer { display: flex; align-items: center; gap: 4px; padding: 10px 12px; border-top: 1px solid var(--sd-line); }
 .composer textarea { flex: 1; height: 40px; padding: 9px 12px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); resize: none; font-size: var(--sd-text-desc); }
@@ -128,22 +129,25 @@
 .chat-side__title { margin-bottom: 8px; font-size: var(--sd-text-small); font-weight: 700; color: var(--sd-muted); }
 
 /* ChatCard: 대화 사이 견적서 · 견적 내역 확인 · 컨펌 완료 카드 */
-.c-card { align-self: center; width: min(100%, 400px); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); overflow: hidden; font-size: var(--sd-text-desc); }
-.c-card__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 40px; padding: 0 14px; background: var(--sd-th); border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); font-weight: 700; }
-.c-card__body { padding: 14px; }
-.c-card__total { font-size: 22px; font-weight: 800; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+.c-card { align-self: center; width: min(100%, 400px); border: 1px solid var(--sd-line); border-radius: 16px; background: var(--sd-bg); overflow: hidden; font-size: var(--sd-text-desc); }   /* 말풍선과 같은 옅은 선·둥글기 */
+.c-card__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 16px 0; font-size: var(--sd-text-small); font-weight: 600; color: var(--sd-muted); }
+.c-card__body { padding: 6px 16px 14px; }
+.c-card__total { font-size: 20px; font-weight: 800; letter-spacing: -.5px; font-variant-numeric: tabular-nums; color: var(--sd-ink); }
 .c-card__total small { font-size: var(--sd-text-desc); font-weight: 600; }
 .c-card__meta { font-size: var(--sd-text-small); color: var(--sd-muted); }
 .c-card__diff { margin-top: 6px; font-size: var(--sd-text-small); color: var(--sd-blue); font-weight: 600; }
 .c-card__foot { display: flex; border-top: 1px solid var(--sd-line); }
-.c-card__foot > * { flex: 1; height: 44px; border: 0; border-radius: 0; background: var(--sd-bg); font-size: var(--sd-text-desc); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.c-card__foot > * { flex: 1; height: 42px; border: 0; border-radius: 0; background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.c-card__foot > :hover:not(:disabled) { background: var(--sd-th); }
 .c-card__foot > * + * { border-left: 1px solid var(--sd-line); }
-.c-card__foot > .is-primary { background: var(--sd-blue-button); color: #fff; }
-.c-card__foot > :disabled { color: var(--sd-photo-text); background: var(--sd-th); cursor: not-allowed; }
-.c-card__why { padding: 8px 14px; border-top: 1px solid var(--sd-line); background: var(--sd-th); font-size: var(--sd-text-small); color: var(--sd-muted); }
-.c-card--confirm { border-color: var(--sd-ink); }
-.c-card--confirm .c-card__head { background: var(--sd-ink); color: #fff; border-bottom-color: var(--sd-ink); }
-.c-card--done { border-color: var(--sd-ink); }
+.c-card__foot > .is-primary { background: var(--sd-bg); color: var(--sd-blue); font-weight: 700; }   /* 채우지 않고 포인트 색 글씨만 */
+.c-card__foot > :disabled { color: var(--sd-photo-text); background: var(--sd-bg); cursor: not-allowed; }
+.c-card__why { padding: 2px 16px 12px; font-size: var(--sd-text-meta); color: var(--sd-muted); text-align: center; }
+.c-card--confirm { border-color: var(--sd-line-strong); }
+.c-card--confirm .c-card__head { color: var(--sd-ink); }
+.c-card .timer { font-size: var(--sd-text-small); font-weight: 600; }
+.c-card .discount { color: var(--sd-ink); }
+.c-card--done { border-color: var(--sd-line-strong); }
 
 .c-card--off { opacity: .65; }
 .c-card--off .c-card__total { text-decoration: line-through; }

@@ -98,13 +98,8 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .msg--me .msg__b { border-radius: 16px 4px 16px 16px; }
 .chat-panel .msg__photo { width: 200px; border-radius: 12px; }
 .chat-panel .msg__file { border-radius: 12px; }
-.chat-panel .room__warn { border-radius: 0 8px 8px 0; }
-.chat-panel .c-card { width: 100%; border-radius: 12px; }
-.chat-panel .c-card__total { font-size: 20px; }
-/* 견적 내역 확인 카드: 1.5px 진한 테두리, 흰 머리줄에 제목 + 남은 시간(포인트 색), 아래 세 칸 + 회색 안내 줄(domain.css) */
-.chat-panel .c-card--confirm { border: 1.5px solid var(--sd-ink); }
-.chat-panel .c-card--confirm .c-card__head { background: var(--sd-bg); color: var(--sd-ink); border-bottom-color: var(--sd-line); }
-.chat-panel .c-card--confirm .timer { color: var(--sd-blue); }
+.chat-panel .c-card { width: 100%; }
+.chat-panel .c-card .timer { color: var(--sd-blue); }   /* 남은 시간만 포인트 색 */
 .chat-panel .composer { gap: 2px; padding: 10px 10px 12px; background: var(--sd-bg); }
 .chat-panel .composer textarea { height: 42px; padding: 10px 14px; border-color: transparent; border-radius: 12px; background: var(--sd-th); }
 .chat-panel .composer textarea:focus { border-color: var(--sd-ink); background: var(--sd-bg); }
