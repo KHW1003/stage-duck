@@ -5,11 +5,14 @@ API·서비스 검사(AC-F2-06·08·10)는 요청서 API PR에서 테스트한�
 from datetime import date, time
 
 import pytest
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.models.request import Performance, PerformanceVersion, Stage
 from tests.conftest import make_user
+
+# DB가 거부함: UNIQUE 위반은 IntegrityError, MariaDB 의 CHECK 위반은 OperationalError(4025) 로 온다 (SQLite 는 둘 다 IntegrityError)
+REJECTED = (IntegrityError, OperationalError)
 
 # 대표 시연 요청 (AC-F2-07): 토요일 19~21시, 80명, 리허설 17시, 광주
 NEEDS = {
@@ -41,7 +44,7 @@ def _perf(db: Session, **kw) -> Performance:
 def _rejected(db: Session, **kw) -> None:
     user_id = make_user(db).id
     db.commit()
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         _perf(db, user_id=user_id, **kw)
     db.rollback()
 
@@ -92,7 +95,7 @@ def test_performance_version_unique_per_performance(db):
     db.add(PerformanceVersion(performance_id=perf.id, version=1, snapshot={}, changed_fields=[]))
     db.commit()
     db.add(PerformanceVersion(performance_id=perf.id, version=1, snapshot={}, changed_fields=[]))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -102,7 +105,7 @@ def test_stage_type_unique_per_performance(db):
     db.add(Stage(performance_id=perf.id, stage_type="VENUE", seq=1, status="WAITING"))
     db.commit()
     db.add(Stage(performance_id=perf.id, stage_type="VENUE", seq=1, status="WAITING"))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -113,7 +116,7 @@ def test_stage_type_and_status_check(db, field, value):
     db.commit()
     kw = {"stage_type": "VENUE", "status": "WAITING", field: value}
     db.add(Stage(performance_id=perf.id, seq=1, **kw))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -130,6 +133,6 @@ def test_open_guard_only_one_open_stage_per_performance(db):
     db.commit()
 
     db.add(Stage(performance_id=perf.id, stage_type="EQUIPMENT", seq=2, status="OPEN"))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()

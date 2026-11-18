@@ -5,11 +5,14 @@ API·서비스 검사는 견적서 API PR에서 테스트한다. 여기서는 DB
 import os
 
 import pytest
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Stage
+
+# DB가 거부함: UNIQUE 위반은 IntegrityError, MariaDB 의 CHECK 위반은 OperationalError(4025) (SQLite 는 둘 다 IntegrityError)
+REJECTED = (IntegrityError, OperationalError)
 from tests.conftest import make_supplier
 from tests.f2.test_performance_model import _perf
 
@@ -57,7 +60,7 @@ def test_ac_f2_17_total_equals_sum_minus_discount_saved(db, discount, total):
 def test_ac_f2_17_total_check_rejected(db, discount, total):
     quote = _quote(db)
     db.add(_version(quote, discount_amount=discount, total_amount=total))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -67,7 +70,7 @@ def test_ac_f2_20_quote_version_unique_per_quote(db):
     db.add(_version(quote))
     db.commit()
     db.add(_version(quote))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -75,7 +78,7 @@ def test_ac_f2_20_quote_version_unique_per_quote(db):
 def test_quote_status_check(db):
     quote = _quote(db)
     quote.status = "DONE"
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
 
@@ -97,6 +100,6 @@ def test_stage_confirmed_quote_version_fk(db):
     stage.confirmed_quote_version_id = version.id
     db.commit()
     stage.confirmed_quote_version_id = version.id + 999
-    with pytest.raises(IntegrityError):
+    with pytest.raises(REJECTED):
         db.commit()
     db.rollback()
