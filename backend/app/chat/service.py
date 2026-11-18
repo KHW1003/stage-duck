@@ -122,12 +122,17 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
     return rows
 
 
+def _ms(now: datetime) -> datetime:
+    """DateTime3 은 밀리초까지만 저장한다 — 첫 응답과 다시 읽은 값이 같도록 저장 전에 맞춘다 (MariaDB)."""
+    return now.replace(microsecond=now.microsecond // 1000 * 1000)
+
+
 def pin_room(db: Session, user: User, room_id: int, *, now: datetime) -> ChatRead:
     """AC-F3-27: 나에게만 상단 고정. 이미 고정했으면 처음 고정 시각 그대로."""
     _room_for(db, user, room_id)
     read = _my_read(db, room_id, user.id, lock=True)
     if read.pinned_at is None:
-        read.pinned_at = now
+        read.pinned_at = _ms(now)
     db.commit()
     return read
 
@@ -152,7 +157,7 @@ def start_chat(db: Session, user: User, room_id: int, *, now: datetime) -> ChatR
     if room is None or user.role != "USER" or room.user_id != user.id:
         raise not_found()
     if room.started_at is None:
-        room.started_at = now
+        room.started_at = _ms(now)
     db.commit()
     return room
 

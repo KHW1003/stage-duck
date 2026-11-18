@@ -206,6 +206,54 @@ export interface AdvanceResult {
   next: { stageId: number; stageType: StageType; status: StageStatus };
 }
 
+// ---- 공고 목록·상세 (#41, backend quote/schemas.py PostingOut·PostingDetailOut) ----
+/** GET /postings 한 줄. 사용자는 닉네임과 반려·이용 횟수만 (AC-F4-07). 연락처·실명은 없다 (AC-F5-12) */
+export interface PostingSummary {
+  stageId: number;
+  performanceId: number;
+  stageType: StageType;
+  status: StageStatus;
+  performanceVersion: number;
+  title: string;
+  showDate: string;
+  sido: string;
+  sigungu: string;
+  nickname: string | null;
+  rejectionCount: number;
+  usageCount: number;
+}
+
+/** 앞 단계 확정 정보 (AC-F3-03). 확정된 견적서 버전에서 읽는다. 전원은 techNote 에 있다 */
+export interface PreviousStage {
+  stageType: StageType;
+  /** 공연장 단계만. 키는 supplier VenueSnapshot 의 camelCase (venueType, checkinTime, conditions, equipment …) */
+  venueSnapshot: {
+    name: string;
+    venueType: string;
+    maxCapacity: number;
+    checkinTime: string;
+    checkoutTime: string;
+    hasResidentEngineer: boolean;
+    conditions: Record<string, boolean | null>;
+    equipment: { category: string; name: string; quantity: number }[];
+  } | null;
+  checkinTime: string | null;
+  setupAvailableTime: string | null;
+  items: { name: string; category: string; qty: number; unitPrice: number; amount: number }[];
+  techNote: string | null;
+}
+
+/** GET /postings/{stageId} */
+export interface PostingDetail extends PostingSummary {
+  form: PerformanceForm;
+  rehearsalStart: string;
+  showStart: string;
+  showEnd: string;
+  audience: number;
+  needs: PerformanceNeeds;
+  previousStages: PreviousStage[];
+}
+
 // ---- 커뮤니티 (#100, api-contract.md 7장) ----
 export type FreePostCategory = "FREE" | "QUESTION" | "INFO" | "NEWS";
 

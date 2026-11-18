@@ -10,6 +10,8 @@ import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { PostPage } from "./pages/PostPage";
+import { PostingPage } from "./pages/PostingPage";
+import { PostingsPage } from "./pages/PostingsPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
@@ -42,6 +44,8 @@ export function AppRoutes() {
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} approvedOnly />}>
           <Route path="/supplier/posts" element={<MyPostPage />} />
+          <Route path="/supplier/postings" element={<PostingsPage />} />
+          <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />
