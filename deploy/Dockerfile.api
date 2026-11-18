@@ -1,4 +1,15 @@
 # FastAPI 서버 이미지 (시연 서버용). 빌드: 저장소 맨 위에서 docker compose -f deploy/docker-compose.prod.yml build
+# 화면 빌드(index.html)도 함께 넣는다: 화면 주소는 FastAPI 가 head(제목·공유 미리보기)를 채워 보낸다 (specs/seo.md D-50)
+
+# 1단계: React 빌드 (Dockerfile.web 과 같은 방법)
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# 2단계: FastAPI
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -12,6 +23,9 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./
+COPY --from=web /web/dist /app/web
+# app/core/config.py frontend_dist — index.html·robots.txt 옆 파일을 여기서 읽는다
+ENV FRONTEND_DIST=/app/web
 
 # root가 아닌 사용자로 실행. 업로드 폴더는 볼륨으로 붙는다 (specs/uploads.md)
 RUN useradd --create-home --uid 1000 app && mkdir -p /uploads/public /uploads/private && chown -R app:app /app /uploads

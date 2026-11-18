@@ -28,13 +28,13 @@ flowchart LR
 
 | 컨테이너 | 이미지 | 하는 일 | 바깥 포트 |
 |---|---|---|---|
-| `web` | `deploy/Dockerfile.web` (node 빌드 → caddy) | HTTPS, React 빌드 보내기, 공개 사진 `/media`, `/api`·`/ws`·`/admin`을 api로 | 80, 443 |
-| `api` | `deploy/Dockerfile.api` (python 3.12) | 시작할 때 `alembic upgrade head` 후 uvicorn **워커 1개** (WebSocket·스케줄러가 한 프로세스에 있어야 함) | 없음 |
+| `web` | `deploy/Dockerfile.web` (node 빌드 → caddy) | HTTPS, 빌드 파일(`/assets`·사진·글꼴)·공개 사진 `/media` 보내기, 그 밖은 모두 api로 | 80, 443 |
+| `api` | `deploy/Dockerfile.api` (node 빌드 → python 3.12) | 시작할 때 `alembic upgrade head` 후 uvicorn **워커 1개** (WebSocket·스케줄러가 한 프로세스에 있어야 함). 화면 주소의 head 채우기·robots.txt·sitemap.xml | 없음 |
 | `db` | `mariadb:11.4` | utf8mb4, KST | 없음 (서버 밖에서 접속 불가) |
 
 - **주소**: 도메인이 없으면 `13-125-1-2.sslip.io`처럼 고정 IP를 넣은 무료 주소를 쓴다. Caddy가 Let's Encrypt 인증서를 자동으로 받는다. 도메인을 사면 `SITE_ADDRESS`만 바꾼다.
 - **환경**: 시연 서버는 `APP_ENV=test` (시연 계정 전환·데이터 초기화가 필요). `SEO_INDEXING=false`가 기본 (seo.md).
-- **SEO(D-50) 구현 뒤**: Caddyfile 마지막 `handle`을 `reverse_proxy api:8000`으로 바꿔 FastAPI가 화면 head를 채우게 한다 (Caddyfile 주석).
+- **화면 주소(SEO, D-50)**: Caddy 는 `/assets`·사진·글꼴처럼 파일이 있는 주소만 바로 보내고, 그 밖의 화면 주소·`robots.txt`·`sitemap.xml`은 FastAPI 로 넘긴다. FastAPI 가 `index.html`의 head(제목·설명·공유 미리보기)를 채워 보낸다. 그래서 `api` 이미지에도 화면 빌드(`/app/web`, `FRONTEND_DIST`)가 들어 있다 (Dockerfile.api 1단계).
 
 ## 2. 비용 (서울 리전, 2026-11 기준 대략 — 가입할 때 요금 페이지로 확인)
 
