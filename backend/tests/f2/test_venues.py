@@ -3,7 +3,7 @@ from dataclasses import asdict
 from datetime import time
 
 import pytest
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.core.errors import AppError
 from app.models import Venue
@@ -41,7 +41,7 @@ def test_ac_f2_01_db_check_blocks_501_even_without_api(db):
     supplier = make_supplier(db, review_status="APPROVED", categories=("VENUE",))
     db.add(Venue(supplier_id=supplier.id, name="x", sido="광주광역시", sigungu="동구", address="x", venue_type="ETC",
                  max_capacity=501, checkin_time=time(15), checkout_time=time(23), rental_fee=1))
-    with pytest.raises(IntegrityError):
+    with pytest.raises((IntegrityError, OperationalError)):  # MariaDB 의 CHECK 위반은 OperationalError(4025)
         db.commit()
     db.rollback()
 
