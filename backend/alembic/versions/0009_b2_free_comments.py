@@ -57,5 +57,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("free_bookmarks")
     op.drop_table("free_helpfuls")
-    op.drop_index("ix_free_comments_post_created", table_name="free_comments")
-    op.drop_table("free_comments")
+    op.drop_table("free_comments")  # 인덱스도 함께 지워진다 (MariaDB 는 FK 가 쓰는 인덱스를 따로 못 지운다)
