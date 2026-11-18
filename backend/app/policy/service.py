@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
+from app.models.board import PrPost
 from app.models.policy import REPORT_TARGET_TYPES, WARNINGS_BEFORE_SUSPENSION, Report, Sanction
 from app.models.user import User
 from app.supplier.service import _require_reason
@@ -129,6 +130,28 @@ def blind_post(db: Session, post_id: int, *, actor_id: int, reason: str | None) 
     - 사유 필수. 상태 이력을 남긴다. 경고는 위 warn() 을 같은 트랜잭션에서 부른다 (3회면 정지).
     - 블라인드된 글이 있는 부문에는 새 글을 쓸 수 없다 — 이는 pr_posts.active_guard 가 막는다 (1번).
     쓰는 곳: SQLAdmin [블라인드] 액션.
-    구현: 4번 목산 — T4-09 (#54). 블라인드 해제는 같은 이슈에서 unblind_post() 로 더한다.
     """
-    raise NotImplementedError("4번 묶음 T4-09(#54)에서 구현한다")
+    reason = _require_reason(reason)
+    post = db.get(PrPost, post_id, with_for_update=True)
+    if post is None:
+        raise not_found()
+    if post.status != "ACTIVE":
+        raise invalid_state("활성 글만 블라인드할 수 있어요.")
+    record_transition(db, entity_type="pr_post", entity_id=post.id, from_status="ACTIVE", to_status="BLINDED",
+                      actor_user_id=actor_id, reason=reason)
+    post.status, post.blind_reason = "BLINDED", reason
+    _warn(db, post.supplier.user_id, actor_id=actor_id, reason=f"업체 찾기 소개 글 블라인드: {reason}", report_id=None)
+    db.commit()
+
+
+def unblind_post(db: Session, post_id: int, *, actor_id: int) -> None:
+    """AC-F4-10: 블라인드를 풀면 그 글이 다시 활성이 돼서 업체가 수정·재게시할 수 있다. 준 경고는 그대로 둔다."""
+    post = db.get(PrPost, post_id, with_for_update=True)
+    if post is None:
+        raise not_found()
+    if post.status != "BLINDED":
+        raise invalid_state("블라인드된 글만 해제할 수 있어요.")
+    record_transition(db, entity_type="pr_post", entity_id=post.id, from_status="BLINDED", to_status="ACTIVE",
+                      actor_user_id=actor_id, reason="블라인드 해제")
+    post.status, post.blind_reason = "ACTIVE", None
+    db.commit()

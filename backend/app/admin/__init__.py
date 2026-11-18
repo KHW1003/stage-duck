@@ -15,6 +15,9 @@ from app.admin.views import (
     DemoToolView,
     FreeCommentAdmin,
     FreePostAdmin,
+    PerformanceAdmin,
+    PerformanceHistoryView,
+    PrPostAdmin,
     ReasonView,
     ReportAdmin,
     SanctionAdmin,
@@ -46,8 +49,9 @@ def setup_admin(app: FastAPI) -> Admin:
         authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret),
         templates_dir=TEMPLATES_DIR,
     )
-    for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, FreePostAdmin, FreeCommentAdmin):
+    for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, FreePostAdmin, FreeCommentAdmin, PrPostAdmin, PerformanceAdmin):
         admin.add_view(view)
     admin.add_base_view(ReasonView)
+    admin.add_base_view(PerformanceHistoryView)
     admin.add_base_view(DemoToolView)
     return admin
