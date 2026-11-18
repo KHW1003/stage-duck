@@ -101,3 +101,58 @@ def test_ac_f2_17_sum_over_column_max_rejected():
     assert err.value.status == 400
     assert err.value.code == "TOTAL_TOO_LARGE"
     assert err.value.field_errors[0]["field"] == "totalAmount"
+
+
+# ---- 업체할인 (D-44): 최종 합계 = 항목 합 − 업체할인 ----
+
+def test_ac_f2_17_discount_passes():
+    """예시 값: 항목 합 1,250,000원 − 할인 50,000원 = 1,200,000원."""
+    amounts = QuoteAmounts.model_validate(EXAMPLE)
+    verify_total(amounts, 1_200_000, 50_000)
+
+
+def test_ac_f2_17_discount_equal_to_sum_rejected_by_min():
+    """경계 값: 할인 = 항목 합이면 합계 0원 → 할인 검사는 통과, 최소 금액에서 거부."""
+    amounts = QuoteAmounts.model_validate(EXAMPLE)
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, 0, EXAMPLE_TOTAL)
+    _assert_below_min(err.value)
+
+
+@pytest.mark.parametrize("discount", [EXAMPLE_TOTAL + 1, MAX_AMOUNT])
+def test_ac_f2_17_discount_over_sum_rejected(discount):
+    """할인이 항목 합보다 크면 합계를 맞춰 보내도 discountAmount 오류로 거부한다."""
+    amounts = QuoteAmounts.model_validate(EXAMPLE)
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, 0, discount)
+    assert err.value.status == 400
+    assert err.value.code == "VALIDATION_FAILED"
+    assert [e["field"] for e in err.value.field_errors] == ["discountAmount"]
+
+
+@pytest.mark.parametrize("total", [EXAMPLE_TOTAL, 1_200_001, 1_199_999])
+def test_ac_f2_17_total_not_sum_minus_discount_rejected(total):
+    """할인 50,000원인데 합계가 항목 합 − 할인과 다르면 TOTAL_MISMATCH (할인 안 뺀 합계 포함)."""
+    amounts = QuoteAmounts.model_validate(EXAMPLE)
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, total, 50_000)
+    assert err.value.status == 400
+    assert err.value.code == "TOTAL_MISMATCH"
+    assert [e["field"] for e in err.value.field_errors] == ["totalAmount"]
+
+
+def test_ac_f2_17_below_min_after_discount_rejected():
+    """경계 값: 항목 합 20,000원 − 할인 10,001원 = 9,999원은 거부, 할인 10,000원이면 10,000원으로 통과."""
+    amounts = QuoteAmounts.model_validate({**ZERO, "items": 20_000})
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, 9_999, 10_001)
+    _assert_below_min(err.value)
+    verify_total(amounts, 10_000, 10_000)
+
+
+def test_ac_f2_17_too_large_checked_before_discount():
+    """검사 순서: 합이 너무 크면 할인·합계 오류보다 TOTAL_TOO_LARGE가 먼저."""
+    amounts = QuoteAmounts.model_validate({**ZERO, "items": MAX_AMOUNT, "transport": 1})
+    with pytest.raises(AppError) as err:
+        verify_total(amounts, 0, MAX_AMOUNT + 2)
+    assert err.value.code == "TOTAL_TOO_LARGE"
