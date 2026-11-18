@@ -14,6 +14,7 @@ from app.dev.router import router as dev_router
 from app.supplier.router import router as supplier_router
 from app.policy.router import router as reports_router
 from app.files.router import router as files_router
+from app.community.router import router as community_router
 from app.request.router import router as request_router
 from app.request.router import stage_router
 
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     api.include_router(reports_router)
     api.include_router(files_router)
     api.include_router(request_router)
+    api.include_router(community_router)
     api.include_router(stage_router)
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)

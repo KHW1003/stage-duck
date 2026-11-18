@@ -1,5 +1,6 @@
 """모든 모델을 여기서 불러와야 Alembic·테스트가 테이블을 안다."""
 from app.core.db import Base
+from app.models.community import FreePost
 from app.models.file import StoredFile
 from app.models.history import StatusHistory
 from app.models.policy import Report, Sanction
@@ -9,4 +10,4 @@ from app.models.supplier import Supplier, SupplierCategory
 from app.models.terms import TermsAgreement
 from app.models.user import User
 
-__all__ = ["Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion"]
+__all__ = ["FreePost", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion"]
