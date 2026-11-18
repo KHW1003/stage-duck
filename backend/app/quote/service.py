@@ -4,7 +4,7 @@
 속하는지 알기 위해 **읽기 전용으로 참조**만 한다 (Quote.stage → Stage.performance 관계).
 """
 from dataclasses import asdict
-from datetime import time
+from datetime import datetime, time
 from typing import Any
 
 from pydantic.alias_generators import to_camel
@@ -20,6 +20,7 @@ from app.models.supplier import Supplier
 from app.models.user import User
 from app.quote import calc
 from app.quote.schemas import QuoteBody, QuoteIn, QuoteUpdateIn
+from app.request import rejection
 from app.request import service as request_service
 from app.supplier import service as supplier_service
 
@@ -230,14 +231,12 @@ def quote_counts(db: Session, stage_ids: list[int]) -> dict[int, int]:
 
 
 def _user_counts(db: Session, user_ids: set[int]) -> dict[int, dict[str, Any]]:
-    """사용자별 닉네임·반려 횟수·이용 횟수 (AC-F4-07).
-
-    반려·이용 횟수는 아직 주는 함수가 없어 0 이다. 2번 #39(반려)·이용 횟수 함수 생기면 연결.
-    """
+    """사용자별 닉네임·반려 횟수·이용 횟수 (AC-F4-07). 반려·이용 횟수는 2번 약속 함수 request.rejection.user_counts (#39)."""
     if not user_ids:
         return {}
     rows = db.execute(select(User.id, User.nickname).where(User.id.in_(user_ids))).all()  # 읽기 전용 참조 (1번 users)
-    return {uid: {"nickname": nickname, "rejection_count": 0, "usage_count": 0} for uid, nickname in rows}
+    counts = rejection.user_counts(db, user_ids, now=datetime.now())
+    return {uid: {"nickname": nickname, **counts[uid]} for uid, nickname in rows}
 
 
 def list_postings(db: Session, user: User, *, sido: str | None) -> list[dict[str, Any]]:

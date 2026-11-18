@@ -18,7 +18,7 @@ from app.core.history import record_transition
 from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
-from app.request import calc
+from app.request import calc, rejection
 from app.request.schemas import PerformanceIn
 from app.chat.service import invalidate_pending_cards
 from app.quote.service import quote_counts
@@ -271,11 +271,12 @@ def create_performance(db: Session, user: User, body: PerformanceIn, *, today: d
 def publish(db: Session, user: User, performance_id: int, *, now: datetime) -> Performance:
     """AC-F2-08: 게시하면 필요한 단계만 만들고 첫 단계를 연다. 장비 "이미 있어요"면 장비 단계가 없다.
 
-    남의 요청서는 404, DRAFT 가 아니면 409 INVALID_STATE. 반려 제한 검사(F4-05)는 T2-03 에서 더한다.
+    남의 요청서는 404, DRAFT 가 아니면 409 INVALID_STATE. 반려 제한 중이면 403 POSTING_RATE_LIMITED (AC-F4-05).
     """
     perf = _mine(db, user, performance_id)
     if (perf.status, "PUBLISHED") not in _ALLOWED:
         raise invalid_state("이미 게시한 요청서예요.")
+    rejection.check_can_publish(db, user.id, now)
     plan = calc.stage_plan(perf.needs)
     if not plan:
         raise AppError(
@@ -351,11 +352,12 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
     return perf
 
 
-def withdraw(db: Session, user: User, performance_id: int) -> Performance:
-    """공고 내림 (api-contract.md 3.2). 게시·배정 중일 때만. 반려 이벤트 기록(AC-F4-05)은 T2-05(#39)에서 더한다."""
+def withdraw(db: Session, user: User, performance_id: int, *, now: datetime) -> Performance:
+    """공고 내림 (api-contract.md 3.2). 게시·배정 중일 때만. 견적서를 받은 공고였으면 반려 1회 (FR-POL-02, #39)."""
     perf = _mine(db, user, performance_id)
     if (perf.status, "WITHDRAWN") not in _ALLOWED:
         raise invalid_state("게시 중인 공고만 내릴 수 있어요.")
+    rejection.record_rejection(db, perf.id, now=now)
     record_transition(
         db, entity_type="performance", entity_id=perf.id, from_status=perf.status, to_status="WITHDRAWN",
         actor_user_id=user.id,

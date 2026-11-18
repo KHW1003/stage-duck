@@ -1,5 +1,6 @@
 """요청서 규칙 (DB를 모르는 순수 함수). 오늘 날짜는 인자로 받아 테스트에서 고정한다."""
-from datetime import date, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 
 from app.models.request import AUDIENCE_MAX, AUDIENCE_MIN, PERFORMANCE_FORMS
 from app.request.schemas import PerformanceIn
@@ -114,3 +115,45 @@ def performance_group(perf_status: str, show_date: date, today: date) -> str:
     if perf_status in ("WITHDRAWN", "CANCELLED", "COMPLETED") or show_date < today:
         return "past"
     return "active"
+
+
+# ---------------------------------------------------------------------------
+# 반려 카운트·게시 제한 (FR-POL-02 · AC-F4-05·06, #39)
+# ---------------------------------------------------------------------------
+
+REJECTION_RESET = timedelta(days=180)  # 마지막 반려 후 이만큼 지나면 0
+REJECTION_WAIT = timedelta(hours=24)  # 제한에 걸리면 마지막 반려 + 24시간 뒤에 게시
+AFTER_CHAT_LIMIT = 5
+NO_CHAT_LIMIT = 10
+
+
+@dataclass(frozen=True)
+class PostingLimit:
+    after_chat: int
+    no_chat: int
+    limited: bool  # 지금 게시가 막혀 있는가
+    available_at: datetime | None  # 제한에 걸린 경우 게시할 수 있는 시각
+
+
+def posting_limit(events: list[tuple[str, datetime]], now: datetime) -> PostingLimit:
+    """반려 기록 [(kind, 시각)] → 지금 카운트와 제한.
+
+    카운트는 "마지막 반려 후 180일" 규칙으로 끊는다: 가장 최근부터 거슬러 올라가며 앞 반려와 180일 이상 벌어지면 거기서 멈춘다.
+    지금이 마지막 반려 + 180일 이후면 0 (AC-F4-06). 채팅 반려 5회 또는 미응답 반려 10회부터,
+    마지막 반려 + 24시간 전에는 게시할 수 없다 (AC-F4-05).
+    """
+    ordered = sorted(events, key=lambda e: e[1])
+    if not ordered or now - ordered[-1][1] >= REJECTION_RESET:
+        return PostingLimit(0, 0, False, None)
+    run = [ordered[-1]]
+    for event in reversed(ordered[:-1]):
+        if run[-1][1] - event[1] >= REJECTION_RESET:
+            break
+        run.append(event)
+    after_chat = sum(1 for kind, _ in run if kind == "AFTER_CHAT")
+    no_chat = sum(1 for kind, _ in run if kind == "NO_CHAT")
+    if after_chat < AFTER_CHAT_LIMIT and no_chat < NO_CHAT_LIMIT:
+        return PostingLimit(after_chat, no_chat, False, None)
+    available_at = ordered[-1][1] + REJECTION_WAIT
+    return PostingLimit(after_chat, no_chat, now < available_at, available_at)
+

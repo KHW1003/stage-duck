@@ -18,7 +18,7 @@ from app.files.router import router as files_router
 from app.community.router import extra_router as community_extra_router
 from app.community.router import router as community_router
 from app.request.router import router as request_router
-from app.request.router import stage_router
+from app.request.router import me_router as request_me_router, stage_router
 from app.board.router import router as board_router
 from app.quote.router import postings_router, router as quote_router, stage_quote_router
 from app.chat.router import router as chat_router
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     api.include_router(community_router)
     api.include_router(community_extra_router)
     api.include_router(stage_router)
+    api.include_router(request_me_router)  # #39 GET /me/posting-limit
     api.include_router(board_router)  # #30 업체 찾기
     api.include_router(quote_router)
     api.include_router(stage_quote_router)

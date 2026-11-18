@@ -6,11 +6,32 @@ import type { PerformanceSummary } from "../shared/api/types";
 import { PageTop } from "../shared/layout/PageTop";
 import { ButtonLink } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
-import { useMyPerformances } from "../features/performance/api";
+import { usePostingLimit, useMyPerformances, type PostingLimit } from "../features/performance/api";
+import { Ico } from "../shared/ui/Ico";
 import { dateLabel, hm, nextActionText } from "../features/performance/labels";
 import { StageTrack } from "../features/performance/StageTrack";
 import styles from "../features/performance/Performance.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
+
+/** "11월 13일 14:00" */
+function at(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** AC-F4-05: 공고를 여러 번 내려 게시가 막혀 있으면 언제부터 되는지 알려 준다 (FR-POL-02) */
+export function PostingLimitNotice({ limit }: { limit: PostingLimit }) {
+  if (!limit.limited || !limit.availableAt) return null;
+  return (
+    <div className="notice notice--warn" role="status">
+      <Ico name="clock" />
+      <div>
+        공고를 여러 번 내려서 <b>{at(limit.availableAt)}</b> 이후에 새 공고를 게시할 수 있어요. (채팅 후 내림 {limit.afterChat}회 · 견적서만 받고 내림{" "}
+        {limit.noChat}회, 마지막으로 내린 뒤 180일이 지나면 0회가 돼요)
+      </div>
+    </div>
+  );
+}
 
 function Item({ p }: { p: PerformanceSummary }) {
   const stage = p.stages.find((s) => s.id === p.nextStageId);
@@ -53,6 +74,7 @@ function Group({ title, desc, items }: { title: string; desc?: string; items: Pe
 
 export function MyPerformancesPage() {
   const mine = useMyPerformances();
+  const limit = usePostingLimit();
   usePageMeta("내 공연");
   const empty = mine.data && mine.data.active.length + mine.data.draft.length + mine.data.past.length === 0;
 
@@ -70,6 +92,7 @@ export function MyPerformancesPage() {
       <div className={`sd-container ${styles.wrap}`}>
         {mine.isPending && <p className="sd-sr-only">불러오는 중이에요</p>}
         <ErrorNotice error={mine.error} />
+        {limit.data && <PostingLimitNotice limit={limit.data} />}
         {empty && (
           <div className={styles.notice} role="status">
             <b>아직 준비 중인 공연이 없어요</b>

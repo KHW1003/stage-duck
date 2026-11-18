@@ -125,7 +125,7 @@
 | GET | `/performances/{id}/versions` | U | 버전 이력·변경 항목 | F2-13 |
 | POST | `/performances/{id}/publish` | U | 게시: STEP2로 단계 생성, 첫 단계 OPEN. 반려 제한 검사 | F2-08, F2-11, F4-05 |
 | POST | `/performances/{id}/withdraw` | U | 공고 내림 → 반려 이벤트 기록 | F4-05 |
-| GET | `/me/posting-limit` | U | 게시 제한 여부·가능 시각, 반려 카운트 | F4-05, F4-06 |
+| GET | `/me/posting-limit` | U | 게시 제한 여부·가능 시각, 반려 카운트 `{ afterChat, noChat, limited, availableAt }` — 채팅 후 5회·미응답 10회부터 마지막 반려 + 24시간, 마지막 반려 후 180일이면 0 | F4-05, F4-06 |
 
 **POST /performances**
 ```json
