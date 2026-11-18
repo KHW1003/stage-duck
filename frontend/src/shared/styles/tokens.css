@@ -68,6 +68,7 @@
   /* 폭·간격 */
   --sd-page-width: 1200px;
   --sd-page-pad: 42px;
+  --sd-doc-width: 880px;   /* 글·문서 화면 폭: 제목·경로·본문을 가운데 한 칸에 (DESIGN.md 5장) */
   --sd-gnb-height: 72px;
   --sd-gap-space: 20px;
   --sd-gap-quote: 13px;

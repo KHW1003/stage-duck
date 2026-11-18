@@ -279,3 +279,44 @@ export interface UploadedFile {
   url: string;
   thumbUrl: string;
 }
+
+/* ---- 업체 찾기 소개 글 (api-contract.md 5장 /pr-posts, #30) ---- */
+
+export type PrCategory = "VENUE" | "EQUIPMENT" | "ENGINEER";
+
+/** GET /pr-posts 목록 카드 (연락처 없음, CLAUDE.md 20) */
+export interface PrPostItem {
+  id: number;
+  category: PrCategory;
+  title: string;
+  supplierId: number;
+  companyName: string;
+  sido: string;
+  priceRange: string | null;
+  thumbUrl: string | null;
+  bumpedAt: string;
+}
+
+export interface PrPostPage {
+  items: PrPostItem[];
+  page: number;
+  size: number;
+  total: number;
+}
+
+/** GET /pr-posts/{id}, POST /pr-posts 응답 */
+export interface PrPost extends Omit<PrPostItem, "thumbUrl"> {
+  body: string;
+  photos: UploadedFile[];
+  createdAt: string;
+}
+
+/** POST /pr-posts (FR-BOARD-02). 사진은 먼저 POST /files (purpose PR_POST, 최대 10장) */
+export interface PrPostRequest {
+  category: PrCategory | "";
+  title: string;
+  body: string;
+  sido: string;
+  priceRange: string | null;
+  fileIds: number[];
+}
