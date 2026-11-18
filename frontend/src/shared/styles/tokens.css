@@ -36,6 +36,7 @@
   --sd-accent: #f4f6f8;
   --sd-featured: #202e3d;
   --sd-focus: #677583;
+  --sd-focus-ring: rgba(32, 46, 61, .08);   /* 입력칸·고르기 칸 포커스의 옅은 바깥 띠 (DESIGN.md 5장 포커스) */
   --sd-on-blue: #ffffff;
 
   /* 상태: 자동 검사 결과 4종 (아이콘 + 글자를 함께 쓴다) */
@@ -80,6 +81,7 @@
   --sd-r-box: 6px;
   --sd-r-btn: 6px;
   --sd-r-field: 4px;
+  --sd-r-menu: 10px;    /* 펼친 고르기 목록 (DESIGN.md 5장 고르기 칸) */
   --sd-r-tag: 3px;
 
   /* 크기 */
