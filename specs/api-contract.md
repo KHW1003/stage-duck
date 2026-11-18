@@ -198,7 +198,8 @@
 ### 4.2 채팅
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수) | |
+| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순 | F3-26, F3-27 |
+| PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
 | POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true` | F3-06, F3-08, F3-15 |

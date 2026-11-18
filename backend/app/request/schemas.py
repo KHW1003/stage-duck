@@ -2,7 +2,7 @@
 
 형식(날짜·시각·숫자)만 여기서 보고, 범위·순서·14일 같은 규칙은 calc.performance_field_errors 가 칸마다 이유를 돌려준다.
 """
-from datetime import date, time
+from datetime import date, datetime, time
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -161,3 +161,60 @@ class AdvanceOut(BaseModel):
     status: str
     performance_status: str
     next: StageRefOut
+
+
+class StageSummaryOut(BaseModel):
+    model_config = _OUT
+
+    id: int
+    stage_type: str
+    seq: int
+    status: str
+    quote_count: int | None = None  # 받은 견적서 수 — 3번 quote_counts 를 연결하기 전까지 null
+
+
+class PerformanceSummaryOut(BaseModel):
+    """내 공연 한 건 (AC-F5-02). 연락처는 넣지 않는다 (CLAUDE.md 20)."""
+
+    model_config = _OUT
+
+    id: int
+    title: str
+    form: str
+    status: str
+    show_date: date
+    rehearsal_start: time
+    show_start: time
+    show_end: time
+    audience: int
+    sido: str
+    sigungu: str
+    current_version: int
+    stages: list[StageSummaryOut]
+    next_action: str  # PUBLISH · WAIT_QUOTES · NEGOTIATE · RECHECK · OPEN_NEXT · PAY · DONE · NONE
+    next_stage_id: int | None
+
+
+class MyPerformancesOut(BaseModel):
+    model_config = _OUT
+
+    active: list[PerformanceSummaryOut]
+    draft: list[PerformanceSummaryOut]
+    past: list[PerformanceSummaryOut]
+
+
+class PerformanceDetailOut(PerformanceSummaryOut):
+    """내 공연 상세 = 현재 버전 전체 (요청서 수정 화면이 채워 쓴다). 전화번호는 있다/없다만."""
+
+    lineup: list[dict]
+    needs: dict
+    has_contact_phone: bool
+    published_at: datetime | None
+
+
+class VersionOut(BaseModel):
+    model_config = _OUT
+
+    version: int
+    changed_fields: list[str]
+    created_at: datetime

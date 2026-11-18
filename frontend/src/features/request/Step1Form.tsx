@@ -14,11 +14,13 @@ interface Props {
   errors: Errors;
   minDate: string;
   onNext: () => void;
+  /** 수정에서 저장된 번호가 있을 때 도움말 */
+  phoneHint?: string;
 }
 
 type TextKey = "title" | "showDate" | "rehearsalStart" | "showStart" | "showEnd" | "audience" | "sigungu" | "contactPhone";
 
-export function Step1Form({ value, onChange, errors, minDate, onNext }: Props) {
+export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint }: Props) {
   const text = (key: TextKey) => ({
     value: value[key],
     onChange: (e: ChangeEvent<HTMLInputElement>) => onChange({ ...value, [key]: e.target.value }),
@@ -143,7 +145,7 @@ export function Step1Form({ value, onChange, errors, minDate, onNext }: Props) {
         <Field
           label="대표 전화번호"
           optional
-          hint="안 남기시면 채팅으로 연락이 가요. 결제 전에는 업체에게 보이지 않아요."
+          hint={phoneHint ?? "안 남기시면 채팅으로 연락이 가요. 결제 전에는 업체에게 보이지 않아요."}
           error={errors.contactPhone}
         >
           {(c) => <Input {...c} inputMode="tel" {...text("contactPhone")} />}
