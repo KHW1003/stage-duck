@@ -3,8 +3,8 @@
 | 항목 | 내용 |
 |---|---|
 | 버전 | 0.3 (초안) |
-| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07, AC 104개) |
-| 목적 | spec.md의 **모든 수용 기준(104개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
+| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07·FR-AUTH-09, AC 107개) |
+| 목적 | spec.md의 **모든 수용 기준(107개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
 | 입력 | [spec.md](spec.md) · [plan.md](plan.md) · [data-model.md](data-model.md) · [api-contract.md](api-contract.md) · [user-flow.md](user-flow.md) |
 
 표기: 테스트 `BE` = pytest (`backend/tests/`), `FE` = Vitest (`frontend/tests/`), `E2E` = Playwright. 테스트 이름에 AC ID를 넣는다 (예: `test_ac_f1_01_...`).
@@ -36,6 +36,9 @@ API 경로의 `/api/v1`은 생략했다.
 | F1-18 | 체크섬 틀린 사업자번호 거부 | SUP-02 | POST /supplier/application (`INVALID_BUSINESS_NO`) | suppliers.business_reg_no | /supplier/onboarding | BE (단위), FE |
 | F1-19 | 승인 → 3단계·공고 목록 열림 | SUP-03 | SQLAdmin [승인] → `approve()`, GET /postings | suppliers, status_histories | SQLAdmin 업체 심사, /supplier/postings | BE |
 | F1-20 | 반려 사유 보이고 재신청 | SUP-03 | SQLAdmin [반려] → `reject()`, GET·PUT /supplier/application | suppliers.reject_reason | /supplier/onboarding | BE |
+| F1-21 | 비밀번호 찾기 요청, 가입 여부 숨김, 10분 3회 | AUTH-09 | POST /auth/password-reset | password_reset_tokens | /password/forgot | BE |
+| F1-22 | 링크로 새 비밀번호, Refresh 폐기, 만료 처리 | AUTH-09 | POST /auth/password-reset/confirm | password_reset_tokens, users.password_hash | /password/reset | BE |
+| F1-23 | 소셜 전용 계정은 링크 안 만듦 | AUTH-09 | POST /auth/password-reset | users.password_hash NULL | /password/forgot | BE |
 
 ## F2 기본 자원
 
@@ -148,9 +151,9 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 104개 중 API가 연결된 것 | 103개 (F2-09는 화면 동작 — FE 테스트로 확인) |
-| 테이블이 연결된 것 | 93개 (나머지 11개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **104개 전부** (BE 99 · FE 34 · E2E 4, 한 기준에 여러 종류 가능) |
+| 수용 기준 107개 중 API가 연결된 것 | 106개 (F2-09는 화면 동작 — FE 테스트로 확인) |
+| 테이블이 연결된 것 | 96개 (나머지 11개는 권한·화면 동작) |
+| 테스트가 정해진 것 | **107개 전부** (BE 102 · FE 34 · E2E 4, 한 기준에 여러 종류 가능) |
 | 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 

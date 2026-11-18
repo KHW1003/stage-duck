@@ -383,6 +383,7 @@ erDiagram
 | files | id, owner_user_id, purpose, visibility (PUBLIC·PRIVATE), status (TEMP·ATTACHED·DELETED), storage_key UNIQUE, thumb_key, original_name, mime_type, size_bytes, width, height, created_at, attached_at | 업로드 파일 메타 (D-51). 인덱스 (status, created_at). 다른 테이블의 사진·서류 칸은 `file_id`를 가리킨다 — 상세는 [uploads.md](uploads.md) 5장 |
 | venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신 |
 | idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
+| password_reset_tokens | id, user_id FK, token_hash CHAR(64) UNIQUE, expires_at, used_at NULL, created_at | 비밀번호 찾기 링크 (D-55). 원문 토큰은 저장하지 않고 SHA-256만. 30분, 1회용 |
 
 ---
 
