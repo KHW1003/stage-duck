@@ -19,10 +19,12 @@ ol, ul { list-style: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 img { display: block; max-width: 100%; }
 table { border-collapse: collapse; width: 100%; }
-:focus-visible { outline: 3px solid var(--sd-focus); outline-offset: 2px; }
+/* 버튼·링크 키보드 포커스: 진한 2px 선, 2px 띄움 (DESIGN.md 5장 포커스). 입력칸·고르기 칸은 각 부품에서 옅은 바깥 띠 */
+:focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 /* 화면들이 함께 쓰는 아주 작은 도우미 */
-.sd-container { max-width: calc(var(--sd-page-width) + var(--sd-page-pad) * 2); margin: 0 auto; padding: 0 var(--sd-page-pad); }
+/* 좌우만 정한다. base.css 는 화면 CSS 보다 늦게 불려서, 줄임 표기(padding: 0 …)를 쓰면 화면의 위아래 여백을 0으로 덮는다 */
+.sd-container { max-width: calc(var(--sd-page-width) + var(--sd-page-pad) * 2); margin-inline: auto; padding-inline: var(--sd-page-pad); }
 .sd-num { font-variant-numeric: tabular-nums; }
 .sd-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
