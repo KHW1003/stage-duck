@@ -17,12 +17,14 @@ interface Props {
   crumbs?: Crumb[];
   actions?: ReactNode;
   tbd?: boolean;
+  /** 글·문서 화면: 본문과 같은 가운데 880px 칸에 맞춘다 (DESIGN.md 5장 "글·문서 화면 폭") */
+  narrow?: boolean;
 }
 
-export function PageTop({ title, desc, crumbs, actions, tbd = false }: Props) {
+export function PageTop({ title, desc, crumbs, actions, tbd = false, narrow = false }: Props) {
   return (
     <div className={styles.pageTop}>
-      <div className={`sd-container ${styles.inner}`}>
+      <div className={`sd-container ${styles.inner} ${narrow ? styles.narrow : ""}`}>
         <div>
           {crumbs && crumbs.length > 0 && (
             <ol className={styles.crumb} aria-label="현재 위치">
