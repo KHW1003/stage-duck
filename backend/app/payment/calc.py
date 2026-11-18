@@ -4,7 +4,7 @@
 """
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import ROUND_FLOOR, Decimal
 
 
@@ -31,11 +31,14 @@ def invoice_amounts(line_amounts: Sequence[int], fee_rate: Decimal) -> InvoiceAm
     return InvoiceAmounts(items_total, platform_fee, items_total + platform_fee)
 
 
-# 취소 시점별 비율 (FR-PAY-03, D-53, data-model.md cancellations.phase · rate_percent)
+# 취소 시점별 비율 (FR-PAY-03, D-57, data-model.md cancellations.phase · rate_percent)
 PHASE_RATE = {
-    "BEFORE_PAYMENT": 0, "UNTIL_D6": 0, "D5_D4": 10, "D3": 30, "D2": 50, "D1": 70, "D0": 100, "SUPPLIER_FAULT": 0,
+    "BEFORE_PAYMENT": 0, "GRACE_12H": 0, "D30_PLUS": 0, "D29_D15": 10, "D14_D8": 30, "D7_D2": 50, "D1": 70, "D0": 100,
+    "SUPPLIER_FAULT": 0,
 }
-_DAY_PHASE = {0: "D0", 1: "D1", 2: "D2", 3: "D3", 4: "D5_D4", 5: "D5_D4"}
+# 위약금이 없는 결제 후 구간은 이용료도 돌려준다 (D-57). 업체 사정 취소는 언제나 전액 (D-39)
+FEE_REFUND_PHASES = ("GRACE_12H", "D30_PLUS", "SUPPLIER_FAULT")
+GRACE = timedelta(hours=12)
 
 
 @dataclass(frozen=True)
@@ -52,14 +55,28 @@ class CancelAmounts:
     refund_total: int  # 환불 예정액
 
 
-def cancel_phase(performance_date: date, now: datetime, *, paid: bool) -> str:
-    """AC-F5-08·09: 취소 시점(KST)을 정한다. D-day 는 공연 날짜 자정 기준 (NFR-RULE-03)."""
+def cancel_phase(performance_date: date, now: datetime, *, paid_at: datetime | None) -> str:
+    """AC-F5-08·09: 취소 시점(KST)을 정한다. D-day 는 공연 날짜 자정 기준 (NFR-RULE-03, D-57).
+
+    결제 후 12시간 안이면 날짜와 상관없이 GRACE_12H. "공연 12시간 전부터는 제외"는 결제 마감이 공연 5일 전 0시라
+    결제 후 12시간이 공연 12시간 전에 닿을 수 없어서 따로 검사하지 않는다.
+    """
     days_left = (performance_date - now.date()).days
     if days_left < 0:
         raise ValueError("공연 날짜가 지난 뒤에는 취소 금액을 계산하지 않는다")
-    if not paid:
+    if paid_at is None:
         return "BEFORE_PAYMENT"
-    return _DAY_PHASE.get(days_left, "UNTIL_D6")
+    if now - paid_at < GRACE:
+        return "GRACE_12H"
+    if days_left >= 30:
+        return "D30_PLUS"
+    if days_left >= 15:
+        return "D29_D15"
+    if days_left >= 8:
+        return "D14_D8"
+    if days_left >= 2:
+        return "D7_D2"
+    return "D1" if days_left == 1 else "D0"
 
 
 def split_by_amount(total: int, amounts: Sequence[int]) -> tuple[int, ...]:
@@ -83,7 +100,7 @@ def cancel_amounts(line_amounts: Sequence[int], platform_fee: int, phase: str) -
 
     위약금은 업체 금액 합 × 비율(원 미만 버림). 사용자 사정이면 이용료는 돌려주지 않고,
     SUPPLIER_FAULT(결제한 공연의 업체 사정 취소)면 위약금 없이 이용료까지 전액 돌려준다 (D-39).
-    결제 전 취소는 낸 돈도 위약금도 없다 (D-53, 반려 카운트는 서비스에서 기록).
+    결제 후 12시간 안·30일 전 이전(GRACE_12H·D30_PLUS)도 이용료까지 돌려준다. 결제 전 취소는 낸 돈도 위약금도 없다 (D-57, 반려 카운트는 서비스에서 기록).
     """
     if phase not in PHASE_RATE:
         raise ValueError(f"모르는 phase: {phase}")
@@ -98,6 +115,6 @@ def cancel_amounts(line_amounts: Sequence[int], platform_fee: int, phase: str) -
     if phase == "BEFORE_PAYMENT":
         return CancelAmounts(phase, rate, 0, base, penalty, by_line, 0, 0)
     paid = base + platform_fee
-    fee_refunded = platform_fee if phase == "SUPPLIER_FAULT" else 0
+    fee_refunded = platform_fee if phase in FEE_REFUND_PHASES else 0
     refund = paid - penalty - platform_fee + fee_refunded
     return CancelAmounts(phase, rate, paid, base, penalty, by_line, fee_refunded, refund)
