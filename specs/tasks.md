@@ -2,12 +2,12 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | 0.2 (2026-11-17: 커뮤니티·고객지원 작업 T2-07~T2-10 추가) |
+| 버전 | 0.3 (2026-11-18: T1-14 비밀번호 찾기·T2-11 SEO·T2-12 배포 추가, 담당 변경, AC 107개) |
 | 작성일 | 2026-11-13 |
-| 입력 | [spec.md](spec.md) 103개 AC, [traceability.md](traceability.md), [roles.md](roles.md) |
+| 입력 | [spec.md](spec.md) 107개 AC, [traceability.md](traceability.md), [roles.md](roles.md) |
 | 원칙 | 이슈 하나 = 하루~이틀 작업. 이슈 본문에 그 AC의 추적표 행(API·테이블·화면·테스트)이 들어 있다 |
 
-> AC 103개 = 작업에 배정 100개 + 이미 구현 3개(AC-F1-19, F1-20, F4-08 — PR #9). AC-F3-20은 검사 엔진(T4-02)과 비교 화면(T4-03)이 나눠 맡는다.
+> AC 107개 = 작업에 배정 104개 + 이미 구현 3개(AC-F1-19, F1-20, F4-08 — PR #9). AC-F3-20은 검사 엔진(T4-02)과 비교 화면(T4-03)이 나눠 맡는다.
 > Claude에게 시킬 때: "이슈 #번호 해 줘"로 시작한다 ([클로드_사용법](../docs/guides/클로드_사용법.md)).
 
 ## 첫날 할 일 (priority:high)
@@ -91,6 +91,9 @@
 | T2-08 | [#101](https://github.com/KHW1003/stage-duck/issues/101) | 커뮤니티 댓글·답글·도움 돼요·저장·링크 공유·신고·블라인드 | F4-14, F4-15, F4-17 | T2-07 ([#100](https://github.com/KHW1003/stage-duck/issues/100)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)), T4-09 ([#54](https://github.com/KHW1003/stage-duck/issues/54)) |
 | T2-09 | [#102](https://github.com/KHW1003/stage-duck/issues/102) | 1:1 문의 (쓰기·목록·보기, 사진 첨부) + SQLAdmin 답변 | F5-18, F5-19, F5-20 | T1-08 ([#29](https://github.com/KHW1003/stage-duck/issues/29)), T3-05 ([#45](https://github.com/KHW1003/stage-duck/issues/45)) |
 | T2-10 | [#103](https://github.com/KHW1003/stage-duck/issues/103) | 공지사항(SQLAdmin 작성·고정)·FAQ·업체 이용 가이드·약관 화면 | F5-21 | T1-02 ([#23](https://github.com/KHW1003/stage-duck/issues/23)) |
+| T1-14 | [#122](https://github.com/KHW1003/stage-duck/issues/122) | 비밀번호 찾기 (이메일 재설정 링크, 시연은 console, D-55) — 묶음 1 영역이지만 해원 | F1-21, F1-22, F1-23 | T1-03 ([#24](https://github.com/KHW1003/stage-duck/issues/24)) |
+| T2-11 | [#123](https://github.com/KHW1003/stage-duck/issues/123) | SEO 구현 (서버 head·robots·sitemap·usePageMeta, [seo.md](seo.md)) | NFR-UX-07 | T1-07·T1-09·T2-07·T2-10 상세 API |
+| T2-12 | [#124](https://github.com/KHW1003/stage-duck/issues/124) | 시연 서버 배포 (EC2 + Docker Compose + Caddy, [deploy.md](deploy.md)) | — | — |
 
 ### 묶음 3 — 채은
 
@@ -110,6 +113,19 @@
 | T4-07 | [#52](https://github.com/KHW1003/stage-duck/issues/52) | 취소·위약금·업체 사정 취소 | F5-08, F5-09, F5-10 | T4-06 ([#51](https://github.com/KHW1003/stage-duck/issues/51)) |
 | T4-08 | [#53](https://github.com/KHW1003/stage-duck/issues/53) | 최종 담당표 (결제 후 연락처 공개) | F5-11 | T4-06 ([#51](https://github.com/KHW1003/stage-duck/issues/51)) |
 | T4-09 | [#54](https://github.com/KHW1003/stage-duck/issues/54) | 신고·블라인드 서비스 + 관리자 뷰(신고·공연 이력) | F5-13 | T2-04 ([#38](https://github.com/KHW1003/stage-duck/issues/38)) |
+
+## 담당 변경 (실제 담당은 GitHub 이슈가 기준)
+
+| 작업 | 이슈 | 원래 | 지금 | 날짜 |
+|---|---|---|---|---|
+| T1-06·T1-07 공간 | #27·#28 | 세환 | 목산 | 11/17 |
+| T2-09 1:1 문의 | #102 | 해원 | 목산 | 11/17 |
+| T2-10 공지·FAQ | #103 | 해원 → 채은 | **해원** | 11/18 |
+| T4-04 기술 확인 | #49 | 목산 | **해원** | 11/18 |
+| T3-02 채팅 | #42 | 채은 | 채은 (AC-F3-26 채팅 목록 찾기 추가) | 11/18 |
+| T4-07 취소 | #52 | 목산 | 목산 (AC-F5-22 결제 기한 추가, D-53) | 11/18 |
+
+날짜별 배분은 [docs/분업_계획.md](../docs/분업_계획.md).
 
 ## 묶음별 집계
 
