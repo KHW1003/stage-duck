@@ -1,16 +1,16 @@
 """공연 요청서·순차 배정 서비스 (2번 묶음 — 해원).
 
-지금은 다른 묶음이 부를 **약속 함수의 모양만** 있다 (roles.md 3장, 이슈 #35).
-본문은 T2-04(#38)에서 채운다. 그 전까지 다른 묶음은 테스트에서 이 함수를 목업으로 바꿔 쓴다:
+다른 묶음이 부르는 약속 함수(roles.md 3장)는 이 파일 위쪽에 있다. 본문이 아직 없는 것(`NotImplementedError`)은
+다른 묶음이 테스트에서 목업으로 바꿔 쓴다:
 
-    monkeypatch.setattr("app.request.service.get_open_stage", lambda db, pid: OpenStage(...))
+    monkeypatch.setattr("app.request.service.confirmed_lines", lambda db, pid: [ConfirmedLine(...)])
 
-이름·인자·돌려주는 모양을 바꾸려면 쓰는 쪽과 먼저 합의한다.
+이름·인자·돌려주는 모양을 바꾸려면 쓰는 쪽과 먼저 합의한다 (tests/test_contracts.py).
 """
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, invalid_state, not_found
@@ -62,14 +62,33 @@ class OpenPosting:
     sigungu: str
 
 
+@dataclass(frozen=True)
+class AfterConfirm:
+    """컨펌 직후 [다음 단계로] 화면에 필요한 것 (3번 accept 응답의 next·checkoutAvailable, AC-F3-05·14)."""
+
+    next_stage_type: str | None  # 다음 대기 단계. 없으면 None
+    suggest_skip: bool  # 풀스펙 공연장을 확정했으면 장비·엔지니어 건너뛰기 제안
+    checkout_available: bool  # 남은 단계가 없고 모두 확정·건너뜀이면 [통합 결제하기]
+
+
 def get_open_stage(db: Session, performance_id: int) -> OpenStage | None:
     """[약속 2 → 1·3] 공연에서 지금 열린 단계. 열린 단계가 없으면(모집 전·모두 확정·취소) None.
 
     쓰는 곳: 1번 직접 오퍼(그 부문 업체에게만, AC-F3-16), 3번 공고 목록·견적서 전송(AC-F2-11, F3-01).
-    권한 검사는 하지 않는다 — 부르는 쪽이 이미 검사했다고 본다.
-    구현: 2번 해원 — T2-04 (#38).
+    권한 검사는 하지 않는다 — 부르는 쪽이 이미 검사했다고 본다. 내린 공고·초안이면 None.
     """
-    raise NotImplementedError("2번 묶음 T2-04(#38)에서 구현한다")
+    row = db.execute(
+        select(Stage, Performance)
+        .join(Performance, Performance.id == Stage.performance_id)
+        .where(Stage.performance_id == performance_id, Stage.status.in_(OPEN_STATUSES), Performance.status.in_(POSTED))
+    ).first()
+    if row is None:
+        return None
+    stage, perf = row
+    return OpenStage(
+        stage_id=stage.id, performance_id=perf.id, stage_type=stage.stage_type, status=stage.status,
+        performance_version=perf.current_version,
+    )
 
 
 def stage_confirmed(db: Session, stage_id: int, quote_version_id: int, *, actor_id: int) -> None:
@@ -77,11 +96,48 @@ def stage_confirmed(db: Session, stage_id: int, quote_version_id: int, *, actor_
 
     - 3번이 연 트랜잭션 안에서 실행되고 **커밋하지 않는다** (커밋은 3번이 한 번에).
     - 단계 행은 부르는 쪽이 이미 `SELECT … FOR UPDATE` 로 잠갔다고 본다 (plan.md 5.3).
-    - 상태 이력(status_histories)은 이 함수가 남긴다.
+    - 상태 이력(status_histories)은 이 함수가 남긴다. 재확인(RECHECK) 단계도 다시 확정할 수 있다.
     - 다음 단계는 열지 않는다 — 사용자가 [다음 단계로]를 눌러야 열린다 (D-1, AC-F3-02).
-    구현: 2번 해원 — T2-04 (#38).
+    - 이미 확정된 단계면 409 STAGE_ALREADY_CONFIRMED, 대기·건너뜀이면 409 INVALID_STATE.
     """
-    raise NotImplementedError("2번 묶음 T2-04(#38)에서 구현한다")
+    stage = db.get(Stage, stage_id)
+    if stage is None:
+        raise not_found()
+    if stage.status == "CONFIRMED":
+        raise AppError(409, "STAGE_ALREADY_CONFIRMED", "이 단계는 이미 다른 견적서로 정해졌어요.")
+    _move_stage(db, stage, "CONFIRMED", actor_id)
+    stage.confirmed_quote_version_id = quote_version_id
+    stage.confirmed_at = func.now()
+    perf = db.get(Performance, stage.performance_id)
+    if perf.status == "PUBLISHED":
+        _move_performance(db, perf, "ASSIGNING", actor_id)
+    db.flush()
+    _sync_performance(db, perf, actor_id)
+    db.flush()
+
+
+def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfirm:
+    """[약속 2 → 3] 컨펌 직후 다음 할 일 (AC-F3-05 풀스펙 건너뛰기 제안, AC-F3-14 [통합 결제하기]).
+
+    full_spec: 확정한 견적서가 풀스펙(장비·엔지니어 포함)인지 — 견적서는 3번 것이라 부르는 쪽이 넘긴다.
+    """
+    stage = db.get(Stage, stage_id)
+    stages = _stages_of(db, stage.performance_id)
+    remaining = [s for s in stages if s.seq > stage.seq and s.status == "WAITING"]
+    done = all(s.status in DONE_STATUSES for s in stages)
+    return AfterConfirm(
+        next_stage_type=remaining[0].stage_type if remaining else None,
+        suggest_skip=full_spec and stage.stage_type == "VENUE" and bool(remaining),
+        checkout_available=not remaining and done,
+    )
+
+
+def is_related(db: Session, user_id: int, supplier_id: int) -> bool:
+    """[약속 2 → 1] 이 사용자의 공연에 이 업체가 견적서·오퍼·채팅으로 엮여 있는가 (1번 개인 프로필 열람, AC-F5-17).
+
+    견적서(3번)·오퍼(1번)·채팅(3번) 테이블이 생긴 뒤 그 묶음의 서비스 함수로 채운다. 그 전엔 1번이 목업으로 쓴다.
+    """
+    raise NotImplementedError("견적서 #41·채팅 #42·오퍼 #32 머지 뒤 2번 묶음에서 구현한다")
 
 
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
@@ -102,7 +158,20 @@ _ALLOWED = {
     ("DRAFT", "PUBLISHED"),
     ("PUBLISHED", "WITHDRAWN"),  # 공고 내림 (#37)
     ("ASSIGNING", "WITHDRAWN"),
-}  # 배정 중 전이(ASSIGNING·AWAITING_PAYMENT)는 T2-04 에서 더한다
+    ("PUBLISHED", "ASSIGNING"),  # 첫 단계 확정 (#38)
+    ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
+}
+_STAGE_ALLOWED = {  # data-model.md 11장 stages.status
+    ("WAITING", "OPEN"),
+    ("OPEN", "NEGOTIATING"),
+    ("OPEN", "CONFIRMED"),
+    ("NEGOTIATING", "CONFIRMED"),
+    ("CONFIRMED", "RECHECK"),
+    ("RECHECK", "CONFIRMED"),
+    ("WAITING", "SKIPPED"),
+}
+DONE_STATUSES = ("CONFIRMED", "SKIPPED")
+SKIP_ACK = "STAGE_SKIP_OWNED"  # 건너뛰기 책임 고지 동의 값 (api-contract.md 4.3, FR-ASSIGN-03)
 EDITABLE = ("DRAFT", "PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT")  # 결제(CONFIRMED) 뒤·취소·내림은 수정 불가
 POSTED = ("PUBLISHED", "ASSIGNING")  # 업체에게 공고가 보이는 요청서 상태
 OPEN_STATUSES = ("OPEN", "NEGOTIATING")
@@ -123,6 +192,47 @@ def _fill(perf: Performance, body: PerformanceIn, data: dict) -> None:
     perf.sigungu = body.sigungu
     perf.contact_phone = body.contact_phone or None
     perf.needs = data["needs"]
+
+
+def _move_performance(db: Session, perf: Performance, to: str, actor_id: int | None) -> None:
+    if (perf.status, to) not in _ALLOWED:
+        raise invalid_state()
+    record_transition(
+        db, entity_type="performance", entity_id=perf.id, from_status=perf.status, to_status=to, actor_user_id=actor_id
+    )
+    perf.status = to
+
+
+def _move_stage(db: Session, stage: Stage, to: str, actor_id: int | None, reason: str | None = None) -> None:
+    if (stage.status, to) not in _STAGE_ALLOWED:
+        raise invalid_state()
+    record_transition(
+        db, entity_type="stage", entity_id=stage.id, from_status=stage.status, to_status=to,
+        actor_user_id=actor_id, reason=reason,
+    )
+    stage.status = to
+
+
+def _stages_of(db: Session, performance_id: int, *, lock: bool = False) -> list[Stage]:
+    stmt = select(Stage).where(Stage.performance_id == performance_id).order_by(Stage.seq)
+    return list(db.scalars(stmt.with_for_update() if lock else stmt))
+
+
+def _sync_performance(db: Session, perf: Performance, actor_id: int | None) -> None:
+    """필요한 단계가 모두 확정·건너뜀이면 결제 대기 (AWAITING_PAYMENT)."""
+    stages = _stages_of(db, perf.id)
+    if perf.status == "ASSIGNING" and stages and all(s.status in DONE_STATUSES for s in stages):
+        _move_performance(db, perf, "AWAITING_PAYMENT", actor_id)
+
+
+def _require_ack(acknowledgement: str | None, notice_version: str | None) -> str:
+    """건너뛰기 책임 고지 동의 (FR-ASSIGN-03). 없으면 VALIDATION_FAILED. 돌려주는 값은 저장할 문구 버전."""
+    if acknowledgement != SKIP_ACK or not notice_version:
+        raise AppError(
+            400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.",
+            [{"field": "acknowledgement", "reason": "건너뛰면 그 부분의 일정·장비 책임이 사용자에게 있다는 안내에 동의해 주세요."}],
+        )
+    return notice_version
 
 
 def _mine(db: Session, user: User, performance_id: int) -> Performance:
@@ -298,3 +408,82 @@ def open_postings_for(db: Session, supplier: Supplier, *, sido: str | None = Non
         )
         for stage, perf in db.execute(stmt).all()
     ]
+
+
+# ---------------------------------------------------------------------------
+# 순차 배정 (T2-04 #38, AC-F3-01~05) — 사용자 본인
+# ---------------------------------------------------------------------------
+
+
+def advance(
+    db: Session, user: User, stage_id: int, *, action: str, acknowledgement: str | None, notice_version: str | None,
+    now: datetime,
+) -> tuple[Stage, Stage]:
+    """AC-F3-02: [다음 단계로]. 지금 단계가 확정·건너뜀일 때 다음 대기 단계를 연다(OPEN_NEXT) 또는 건너뛴다(SKIP_NEXT).
+
+    - 요청서·단계 행을 잠그고 바꾼다. 같은 요청이 다시 오면(다음 단계가 이미 그렇게 됐으면) 바꾸지 않고 지금 상태를 돌려준다.
+    - 건너뛰기는 책임 고지 동의가 필요하다 (skip_ack_at·skip_ack_text_version 저장).
+    - 남의 단계는 404, 다음 단계가 없거나 지금 단계가 확정 전이면 409 INVALID_STATE.
+    돌려주는 값: (지금 단계, 다음 단계)
+    """
+    performance_id = db.scalar(select(Stage.performance_id).where(Stage.id == stage_id))
+    if performance_id is None:
+        raise not_found()
+    perf = _mine(db, user, performance_id)
+    stages = _stages_of(db, perf.id, lock=True)
+    stage = next(s for s in stages if s.id == stage_id)
+    following = [s for s in stages if s.seq > stage.seq]
+    if not following:
+        raise invalid_state("마지막 단계예요. 통합 결제로 넘어가 주세요.")
+    nxt = following[0]
+
+    if action == "OPEN_NEXT" and nxt.status not in ("WAITING", "SKIPPED"):
+        return stage, nxt  # 이미 열림 — 같은 요청 반복
+    if action == "SKIP_NEXT" and nxt.status == "SKIPPED":
+        return stage, nxt
+    if stage.status not in DONE_STATUSES:
+        raise invalid_state("이 단계를 먼저 확정해 주세요.")
+    if perf.status not in POSTED or nxt.status != "WAITING":
+        raise invalid_state()
+
+    if action == "SKIP_NEXT":
+        version = _require_ack(acknowledgement, notice_version)
+        _move_stage(db, nxt, "SKIPPED", user.id, reason="사용자가 건너뜀 (책임 고지 동의)")
+        nxt.skip_ack_at = now
+        nxt.skip_ack_text_version = version
+    else:
+        _move_stage(db, nxt, "OPEN", user.id)
+        nxt.opened_at = now
+    db.flush()
+    _sync_performance(db, perf, user.id)
+    db.commit()
+    return stage, nxt
+
+
+def declare_all_secured(
+    db: Session, user: User, performance_id: int, *, acknowledgement: str | None, notice_version: str | None,
+    now: datetime,
+) -> Performance:
+    """AC-F3-04: "전부 구했어요". 재확인(책임 고지) 동의 뒤 남은 대기 단계를 모두 건너뜀으로 바꾸고 동의를 기록한다.
+
+    모집 중(OPEN·NEGOTIATING)인 단계가 있으면 409 — 모집 중 → 건너뜀 전이는 없다 (data-model.md 11장).
+    """
+    perf = _mine(db, user, performance_id)
+    if perf.status not in POSTED:
+        raise invalid_state()
+    stages = _stages_of(db, perf.id, lock=True)
+    if any(s.status in OPEN_STATUSES for s in stages):
+        raise invalid_state("지금 모집 중인 단계를 먼저 확정해 주세요.")
+    waiting = [s for s in stages if s.status == "WAITING"]
+    if not waiting:
+        raise invalid_state("건너뛸 단계가 없어요.")
+    version = _require_ack(acknowledgement, notice_version)
+    for stage in waiting:
+        _move_stage(db, stage, "SKIPPED", user.id, reason="전부 구했어요 (책임 고지 동의)")
+        stage.skip_ack_at = now
+        stage.skip_ack_text_version = version
+    db.flush()
+    _sync_performance(db, perf, user.id)
+    db.commit()
+    db.refresh(perf)
+    return perf
