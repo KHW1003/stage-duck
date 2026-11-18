@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
+import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
 import { SupplierSignupPage } from "./pages/SupplierSignupPage";
 import { RequireAuth } from "./shared/auth/RequireAuth";
@@ -19,6 +20,9 @@ export function AppRoutes() {
         <Route path="/signup/supplier" element={<SupplierSignupPage />} />
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
+        </Route>
+        <Route element={<RequireAuth roles={["USER"]} />}>
+          <Route path="/performances/new" element={<RequestPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
