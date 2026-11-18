@@ -4,6 +4,9 @@ import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
 import { CommunityWritePage } from "./pages/CommunityWritePage";
 import { HomePage } from "./pages/HomePage";
+import { MyPerformancesPage } from "./pages/MyPerformancesPage";
+import { PerformancePage } from "./pages/PerformancePage";
+import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
 import { SupplierSignupPage } from "./pages/SupplierSignupPage";
@@ -32,6 +35,9 @@ export function AppRoutes() {
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />
+          <Route path="/me/performances" element={<MyPerformancesPage />} />
+          <Route path="/performances/:id" element={<PerformancePage />} />
+          <Route path="/performances/:id/edit" element={<RequestEditPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

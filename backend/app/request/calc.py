@@ -78,3 +78,39 @@ def changed_fields(old: dict, new: dict) -> list[str]:
     old_needs, new_needs = old.get("needs", {}), new.get("needs", {})
     changed += [f"needs.{key}" for key in new_needs if old_needs.get(key) != new_needs[key]]
     return changed
+
+
+OPEN_STAGE = ("OPEN", "NEGOTIATING")
+DONE_STAGE = ("CONFIRMED", "SKIPPED")
+
+
+def next_action(perf_status: str, stage_statuses: list[str]) -> tuple[str, int | None]:
+    """AC-F5-02·NFR-UX-06: 내 공연의 "다음 할 일" 코드와 그 일이 걸린 단계 위치(배정 순서의 몇 번째, 없으면 None).
+
+    PUBLISH 게시하기 · WAIT_QUOTES 견적서 기다리는 중 · NEGOTIATE 채팅으로 조율 중 · RECHECK 업체 재확인 대기 ·
+    OPEN_NEXT [다음 단계로] · PAY [통합 결제하기] · DONE 끝 · NONE 할 일 없음(내림·취소). 화면 문구는 화면이 코드로 고른다.
+    """
+    if perf_status == "DRAFT":
+        return "PUBLISH", None
+    if perf_status in ("WITHDRAWN", "CANCELLED"):
+        return "NONE", None
+    if perf_status in ("CONFIRMED", "COMPLETED"):
+        return "DONE", None
+    if "RECHECK" in stage_statuses:
+        return "RECHECK", stage_statuses.index("RECHECK")
+    for i, status in enumerate(stage_statuses):
+        if status in OPEN_STAGE:
+            return ("WAIT_QUOTES" if status == "OPEN" else "NEGOTIATE"), i
+    for i in range(len(stage_statuses) - 1, -1, -1):
+        if stage_statuses[i] in DONE_STAGE and i + 1 < len(stage_statuses) and stage_statuses[i + 1] == "WAITING":
+            return "OPEN_NEXT", i
+    return "PAY", None
+
+
+def performance_group(perf_status: str, show_date: date, today: date) -> str:
+    """내 공연 묶음: draft 작성 중 · past 지난 공연(공연일이 지났거나 내림·취소·끝) · active 진행 중."""
+    if perf_status == "DRAFT":
+        return "draft"
+    if perf_status in ("WITHDRAWN", "CANCELLED", "COMPLETED") or show_date < today:
+        return "past"
+    return "active"

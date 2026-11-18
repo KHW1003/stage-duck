@@ -237,3 +237,20 @@ def test_withdraw_other_users_performance_not_found(client, db):
 
     assert other.post(f"/api/v1/performances/{perf_id}/withdraw").status_code == 404
     assert db.get(Performance, perf_id).status == "PUBLISHED"
+
+
+def test_edit_without_contact_phone_keeps_saved_number(client, db):
+    user = login_as(client, make_user(db))
+    perf_id = user.post("/api/v1/performances", json=_body(contactPhone="01000000000")).json()["id"]
+    body = _body(rehearsalStart="16:00")
+    body.pop("contactPhone")
+
+    assert user.put(f"/api/v1/performances/{perf_id}", json=body).status_code == 200
+
+    db.expire_all()
+    assert db.get(Performance, perf_id).contact_phone == "01000000000"
+    v2 = db.scalar(select(PerformanceVersion).where(PerformanceVersion.performance_id == perf_id, PerformanceVersion.version == 2))
+    assert v2.changed_fields == ["rehearsalStart"]
+    assert user.put(f"/api/v1/performances/{perf_id}", json=_body(rehearsalStart="16:00", contactPhone=None)).status_code == 200
+    db.expire_all()
+    assert db.get(Performance, perf_id).contact_phone is None  # 보내서 지우면 지워진다

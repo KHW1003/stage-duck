@@ -305,7 +305,7 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
     """AC-F2-13: 고칠 때마다 새 버전(v2…)을 만들고 이전 버전은 그대로 둔다. 확정된 단계는 RECHECK (plan.md 5.3).
 
     - 공연 날짜를 바꿀 때만 14일 규칙을 본다. 게시 뒤에는 필요해요/이미 있어요를 바꿀 수 없다.
-    - 바뀐 것이 없으면 새 버전을 만들지 않는다.
+    - 바뀐 것이 없으면 새 버전을 만들지 않는다. contactPhone 을 안 보내면 저장된 번호를 그대로 둔다 (응답에 번호가 없어서).
     - 진행 중인 최종 견적 카드 무효화(CLAUDE.md 3장 6)는 3번 `invalidate_pending_cards` 가 생기면 여기서 부른다.
     """
     perf = _mine(db, user, performance_id)
@@ -323,12 +323,18 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
             PerformanceVersion.performance_id == perf.id, PerformanceVersion.version == perf.current_version
         )
     )
+    keep_phone = "contact_phone" not in body.model_fields_set  # 수정 화면은 번호를 모르니, 안 보내면 그대로 둔다
+    if keep_phone:
+        data["contactPhone"] = previous.snapshot.get("contactPhone")
     changed = calc.changed_fields(previous.snapshot, data)
     if not changed:
         return perf
 
     perf.current_version += 1
+    phone = perf.contact_phone
     _fill(perf, body, data)
+    if keep_phone:
+        perf.contact_phone = phone
     db.add(PerformanceVersion(performance_id=perf.id, version=perf.current_version, snapshot=data, changed_fields=changed))
     for stage in db.scalars(select(Stage).where(Stage.performance_id == perf.id, Stage.status == "CONFIRMED")):
         record_transition(
@@ -487,3 +493,67 @@ def declare_all_secured(
     db.commit()
     db.refresh(perf)
     return perf
+
+
+# ---------------------------------------------------------------------------
+# 내 공연 현황 (T2-06 #40, AC-F5-02) — 사용자 본인, 읽기만
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PerformanceView:
+    """내 공연 한 건: 요청서 + 단계(배정 순서) + 다음 할 일."""
+
+    performance: Performance
+    stages: list[Stage]
+    next_action: str
+    next_stage_id: int | None
+
+
+def _view(perf: Performance, stages: list[Stage]) -> PerformanceView:
+    action, index = calc.next_action(perf.status, [s.status for s in stages])
+    return PerformanceView(perf, stages, action, stages[index].id if index is not None else None)
+
+
+def _owned(db: Session, user: User, performance_id: int) -> Performance:
+    """읽기용 (잠그지 않음). 없거나 남의 것이면 404."""
+    perf = db.scalar(select(Performance).where(Performance.id == performance_id, Performance.user_id == user.id))
+    if perf is None:
+        raise not_found()
+    return perf
+
+
+def list_mine(db: Session, user: User, *, today: date) -> dict[str, list[PerformanceView]]:
+    """AC-F5-02: 내 공연을 진행 중·작성 중·지난 공연으로 나눠 공연일 순으로. 단계와 다음 할 일 포함."""
+    perfs = list(db.scalars(select(Performance).where(Performance.user_id == user.id).order_by(Performance.show_date, Performance.id)))
+    stages: dict[int, list[Stage]] = {p.id: [] for p in perfs}
+    if perfs:
+        for stage in db.scalars(select(Stage).where(Stage.performance_id.in_(stages)).order_by(Stage.seq)):
+            stages[stage.performance_id].append(stage)
+    groups: dict[str, list[PerformanceView]] = {"active": [], "draft": [], "past": []}
+    for perf in perfs:
+        groups[calc.performance_group(perf.status, perf.show_date, today)].append(_view(perf, stages[perf.id]))
+    return groups
+
+
+def get_mine(db: Session, user: User, performance_id: int) -> tuple[PerformanceView, dict]:
+    """내 공연 상세: (현재 상태, 현재 버전 스냅샷). 스냅샷에서 편성(lineup)을 읽는다."""
+    perf = _owned(db, user, performance_id)
+    snapshot = db.scalar(
+        select(PerformanceVersion.snapshot).where(
+            PerformanceVersion.performance_id == perf.id, PerformanceVersion.version == perf.current_version
+        )
+    )
+    return _view(perf, _stages_of(db, perf.id)), snapshot or {}
+
+
+def list_versions(db: Session, user: User, performance_id: int) -> list[PerformanceVersion]:
+    """AC-F2-13: 버전 이력 (최신 먼저)."""
+    perf = _owned(db, user, performance_id)
+    return list(
+        db.scalars(
+            select(PerformanceVersion)
+            .where(PerformanceVersion.performance_id == perf.id)
+            .order_by(PerformanceVersion.version.desc())
+        )
+    )

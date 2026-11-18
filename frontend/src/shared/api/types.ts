@@ -137,7 +137,8 @@ export interface PerformanceRequest {
   audience: number;
   sido: string;
   sigungu: string;
-  contactPhone: string | null;
+  /** 수정할 때 빼면 저장된 번호를 그대로 둔다 */
+  contactPhone?: string | null;
   needs: PerformanceNeeds;
 }
 
@@ -151,6 +152,58 @@ export interface PerformancePublished {
   id: number;
   status: PerformanceStatus;
   stages: { id: number; stageType: StageType; seq: number; status: StageStatus }[];
+}
+
+// ---- 내 공연 현황 (#40) ----
+/** 서버가 정한 다음 할 일 (backend request/calc.py next_action) */
+export type NextAction = "PUBLISH" | "WAIT_QUOTES" | "NEGOTIATE" | "RECHECK" | "OPEN_NEXT" | "PAY" | "DONE" | "NONE";
+
+export interface StageSummary {
+  id: number;
+  stageType: StageType;
+  seq: number;
+  status: StageStatus;
+  /** 받은 견적서 수. 아직 연결 전이면 null */
+  quoteCount: number | null;
+}
+
+export interface PerformanceSummary {
+  id: number;
+  title: string;
+  form: PerformanceForm;
+  status: PerformanceStatus;
+  showDate: string;
+  rehearsalStart: string;
+  showStart: string;
+  showEnd: string;
+  audience: number;
+  sido: string;
+  sigungu: string;
+  currentVersion: number;
+  stages: StageSummary[];
+  nextAction: NextAction;
+  nextStageId: number | null;
+}
+
+export interface MyPerformances {
+  active: PerformanceSummary[];
+  draft: PerformanceSummary[];
+  past: PerformanceSummary[];
+}
+
+export interface PerformanceDetail extends PerformanceSummary {
+  lineup: { part: string; count: number }[];
+  needs: PerformanceNeeds;
+  hasContactPhone: boolean;
+  publishedAt: string | null;
+}
+
+export interface AdvanceResult {
+  stageId: number;
+  stageType: StageType;
+  status: StageStatus;
+  performanceStatus: PerformanceStatus;
+  next: { stageId: number; stageType: StageType; status: StageStatus };
 }
 
 // ---- 커뮤니티 (#100, api-contract.md 7장) ----

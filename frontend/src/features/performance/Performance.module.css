@@ -1,0 +1,49 @@
+/* 내 공연 목록·상세 (#40). 출처: docs/design/mockup-v4/pages/my.html, performance.html, next.html. 색·크기는 토큰만 쓴다 */
+.wrap { padding-top: 32px; padding-bottom: var(--sd-inner-section); }
+.group + .group { margin-top: 40px; }
+.groupTitle { display: flex; align-items: baseline; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--sd-rule); font-size: var(--sd-text-sub); font-weight: 700; }
+.groupTitle small { color: var(--sd-muted); font-size: var(--sd-text-small); font-weight: 400; }
+
+/* 공연 한 덩어리: 선과 여백으로만 나눔 (카드 상자 없음) */
+.item { display: flex; flex-direction: column; gap: 14px; padding: 20px 4px; border-bottom: 1px solid var(--sd-line); }
+.itemHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.itemTitle { font-size: var(--sd-text-lg); font-weight: 700; }
+.meta { color: var(--sd-muted); font-size: var(--sd-text-desc); }
+
+/* 섭외 진행: 작은 원 + 선 (DESIGN.md 5장 "단계 진행 표시") */
+.track { display: flex; flex-wrap: wrap; gap: 0; margin: 0; padding: 0; list-style: none; }
+.step { position: relative; display: flex; align-items: center; gap: 8px; padding-right: 28px; font-size: var(--sd-text-desc); }
+.step + .step::before { content: ""; position: absolute; left: -22px; top: 50%; width: 16px; border-top: 1px solid var(--sd-line-strong); }
+.step + .step { margin-left: 22px; }
+.dot { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1.5px solid var(--sd-line-strong); border-radius: 50%; color: var(--sd-bg); font-size: var(--sd-text-tiny); }
+.confirmed .dot { border-color: var(--sd-pass-text); background: var(--sd-pass-text); }
+.confirmed .dot::after { content: "✓"; }
+.active .dot { border-color: var(--sd-blue); background: var(--sd-blue); }
+.active { color: var(--sd-blue); font-weight: 700; }
+.skipped .dot { border-style: dashed; }
+.skipped { color: var(--sd-muted); }
+.recheck .dot { border-color: var(--sd-warn-text); background: var(--sd-warn-text); }
+
+.notice { padding: 14px 16px; border-left: 3px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
+.trackNotice { margin-top: 16px; }
+.noticeActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.section { display: flex; flex-direction: column; gap: 14px; padding-top: 24px; margin-top: 24px; border-top: 1px solid var(--sd-line); }
+.sectionTitle { font-size: var(--sd-text-sub); font-weight: 700; }
+.info { display: grid; grid-template-columns: 120px 1fr; margin: 0; }
+.info dt, .info dd { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+.info dt { color: var(--sd-muted); }
+.tbd { color: var(--sd-muted); font-size: var(--sd-text-small); }
+
+/* 확인 창 */
+.backdrop { position: fixed; inset: 0; z-index: var(--sd-z-modal); display: grid; place-items: center; padding: var(--sd-page-pad); background: rgba(0, 0, 0, 0.4); }
+.dialog { width: 100%; max-width: 480px; padding: 24px; border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.dialog h2 { font-size: var(--sd-text-sub); font-weight: 700; }
+.dialog p { margin-top: 8px; color: var(--sd-muted); font-size: var(--sd-text-desc); line-height: 1.7; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+@media (max-width: 760px) {
+  .itemHead { flex-direction: column; }
+  .info { grid-template-columns: 1fr; }
+  .info dt { padding-bottom: 0; border-bottom: 0; }
+}

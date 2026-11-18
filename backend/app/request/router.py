@@ -1,7 +1,7 @@
 """공연 요청서 API (api-contract.md 3.2). 사용자(USER) 역할만, 남의 요청서는 404."""
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
@@ -13,6 +13,11 @@ from app.request import service
 from app.request.schemas import (
     AdvanceIn,
     AdvanceOut,
+    MyPerformancesOut,
+    PerformanceDetailOut,
+    PerformanceSummaryOut,
+    StageSummaryOut,
+    VersionOut,
     PerformanceCreatedOut,
     PerformanceIn,
     PublishOut,
@@ -108,3 +113,51 @@ def advance(
         performance_status=db.get(Performance, stage.performance_id).status,
         next=StageRefOut(stage_id=nxt.id, stage_type=nxt.stage_type, status=nxt.status),
     )
+
+
+def _summary_fields(view: service.PerformanceView) -> dict:
+    perf = view.performance
+    return dict(
+        id=perf.id, title=perf.title, form=perf.form, status=perf.status, show_date=perf.show_date,
+        rehearsal_start=perf.rehearsal_start, show_start=perf.show_start, show_end=perf.show_end,
+        audience=perf.audience, sido=perf.sido, sigungu=perf.sigungu, current_version=perf.current_version,
+        stages=[StageSummaryOut.model_validate(s) for s in view.stages],
+        next_action=view.next_action, next_stage_id=view.next_stage_id,
+    )
+
+
+@router.get("", response_model=MyPerformancesOut)
+def list_my_performances(
+    mine: bool = Query(False),
+    user: User = Depends(require_role("USER")),
+    db: Session = Depends(get_db),
+    today: date = Depends(get_today),
+) -> MyPerformancesOut:
+    """AC-F5-02: 내 공연 (진행 중·작성 중·지난 공연) + 단계 현황 + 다음 할 일. 지금은 `mine=true`만 있다."""
+    if not mine:
+        raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": "mine", "reason": "mine=true 로 내 공연만 볼 수 있어요."}])
+    groups = service.list_mine(db, user, today=today)
+    return MyPerformancesOut(
+        **{name: [PerformanceSummaryOut(**_summary_fields(v)) for v in views] for name, views in groups.items()}
+    )
+
+
+@router.get("/{performance_id}", response_model=PerformanceDetailOut)
+def get_my_performance(
+    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)
+) -> PerformanceDetailOut:
+    """AC-F5-02: 내 공연 상세 — 현재 버전 + 단계 목록. 남의 공연은 404."""
+    view, snapshot = service.get_mine(db, user, performance_id)
+    perf = view.performance
+    return PerformanceDetailOut(
+        **_summary_fields(view), lineup=snapshot.get("lineup", []), needs=perf.needs,
+        has_contact_phone=bool(perf.contact_phone), published_at=perf.published_at,
+    )
+
+
+@router.get("/{performance_id}/versions", response_model=list[VersionOut])
+def list_performance_versions(
+    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)
+) -> list[VersionOut]:
+    """AC-F2-13: 버전 이력·변경 항목 (최신 먼저)."""
+    return [VersionOut.model_validate(v) for v in service.list_versions(db, user, performance_id)]

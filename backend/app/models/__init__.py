@@ -1,5 +1,6 @@
 """모든 모델을 여기서 불러와야 Alembic·테스트가 테이블을 안다."""
 from app.core.db import Base
+from app.models.board import PrPost  # noqa: F401  #30 업체 찾기
 from app.models.community import FreePost
 from app.models.file import StoredFile
 from app.models.history import StatusHistory
