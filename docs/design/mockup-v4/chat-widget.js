@@ -286,7 +286,7 @@
     if (o && panel) { e.preventDefault(); document.querySelectorAll('.noti-panel, .dropdown, .layer').forEach(function (m) { if (!m.closest('.frame')) m.hidden = true; }); openChat(o.dataset.chat); return; }
     var p = e.target.closest('.chat-panel');
     /* 창 밖(화면)을 누르면 닫힌다. 둥근 버튼·확정 모달 안은 제외 */
-    if (!p) { if (panel && !panel.hidden && !e.target.closest('.chat-fab, #cw-confirm')) setOpen(false); return; }
+    if (!p) { if (panel && !panel.hidden && !e.target.closest('.chat-fab, #cw-confirm, .sel-list')) setOpen(false); return; }
     var t;
     if (e.target.closest('[data-cw-close]')) { setOpen(false); return; }
     if ((t = e.target.closest('[data-cw-room]'))) { p.dataset.view = 'room'; p.dataset.room = t.dataset.cwRoom; p.dataset.pane = 'talk'; if (p === panel) markRead(t.dataset.cwRoom); }

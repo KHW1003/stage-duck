@@ -204,6 +204,8 @@
 
   /* 채팅 위젯 (같은 폴더의 chat-widget.js) */
   if (SRC) { var cw = document.createElement('script'); cw.src = SRC.replace(/layout\.js(\?.*)?$/, 'chat-widget.js'); body.appendChild(cw); }
+  /* 펼친 고르기 목록 (select.js) */
+  if (SRC) { var sj = document.createElement('script'); sj.src = SRC.replace(/layout\.js(\?.*)?$/, 'select.js'); body.appendChild(sj); }
   /* 이야기 따라가기 띠 (목업 전용, story.js) */
   if (SRC) { var st = document.createElement('script'); st.src = SRC.replace(/layout\.js(\?.*)?$/, 'story.js'); body.appendChild(st); }
 })();
