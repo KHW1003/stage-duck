@@ -28,14 +28,14 @@ export function earliestShowDate(today: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** AC-F2-04·05·06 */
-export function step1Errors(f: Step1Form, today: Date): Errors {
+/** AC-F2-04·05·06. originalShowDate: 수정에서 날짜를 그대로 두면 14일 규칙을 보지 않는다 (서버와 같음, #37) */
+export function step1Errors(f: Step1Form, today: Date, originalShowDate?: string): Errors {
   const e: Errors = {};
   if (!f.title.trim()) e.title = "공연명을 적어 주세요.";
   if (!f.form) e.form = "공연 형태를 골라 주세요.";
   const first = earliestShowDate(today);
   if (!f.showDate) e.showDate = "공연 날짜를 골라 주세요.";
-  else if (f.showDate < first) {
+  else if (f.showDate !== originalShowDate && f.showDate < first) {
     const [, m, d] = first.split("-").map(Number);
     e.showDate = `공연 ${MIN_LEAD_DAYS}일 전까지만 요청할 수 있어요. ${m}월 ${d}일 이후 날짜를 골라 주세요.`;
   }

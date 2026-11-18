@@ -1,7 +1,7 @@
 """커뮤니티 글 (T2-07 #100, data-model.md 9장 free_posts)
 
-Revision ID: 0007
-Revises: 0006
+Revision ID: 0008
+Revises: 0007
 Create Date: 2026-11-18
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from sqlalchemy.dialects import mysql
 
 from app.core.db import BigID, DateTime3
 
-revision = "0007"
-down_revision = "0006"
+revision = "0008"
+down_revision = "0007"
 branch_labels = None
 depends_on = None
 
