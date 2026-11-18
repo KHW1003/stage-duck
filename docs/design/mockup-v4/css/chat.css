@@ -16,9 +16,11 @@
 body.has-chat .toasts { bottom: 100px; }   /* 알림 토스트는 버튼 위로 */
 
 /* ── 창 ── */
-.chat-panel { position: fixed; right: 24px; bottom: 24px; z-index: var(--sd-z-float); display: flex; flex-direction: column; width: 440px; height: min(780px, calc(100vh - 48px));   /* 버튼과 같은 자리(바닥 24px)에 뜬다 */ border: 1px solid var(--sd-rule); border-radius: 16px; overflow: hidden; background: var(--sd-bg); transform-origin: right bottom; }
+.chat-panel { position: fixed; right: 24px; bottom: 24px; z-index: var(--sd-z-float); display: flex; flex-direction: column; width: 440px; height: min(780px, calc(100vh - 48px));   /* 버튼과 같은 자리(바닥 24px)에 뜬다 */ border: 1px solid var(--sd-line-strong); border-radius: 16px; overflow: hidden; background: var(--sd-bg); transform-origin: right bottom; }   /* 테두리는 연한 회색 */
 .chat-panel.is-pop { animation: cw-in .18s ease-out; }   /* 버튼으로 열 때만. 화면을 옮겨 이어 열 때는 움직이지 않는다 */
 .chat-panel[hidden] { display: none; }
+html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열려 있으면 뒤 화면 스크롤 잠금 (스크롤바 자리는 남겨 화면이 흔들리지 않게) */
+.chat-panel__scroll, .chat-panel .room__msgs { overscroll-behavior: contain; }
 @keyframes cw-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
 
 /* 머리줄: 흰 바탕 + 아래 1px 선. 목록이면 제목, 대화면 [뒤로] + 상대, 검색 중이면 [뒤로] + 검색칸 + [취소] */

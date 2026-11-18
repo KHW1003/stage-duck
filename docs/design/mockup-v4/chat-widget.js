@@ -235,6 +235,7 @@
   }
   function setOpen(on, pop) {
     panel.hidden = !on; panel.classList.toggle('is-pop', !!pop); fab.setAttribute('aria-expanded', on); badge();
+    document.documentElement.classList.toggle('chat-open', on);   /* 창이 열려 있는 동안 뒤 화면은 스크롤되지 않는다 */
     if (on) { if (panel.dataset.view === 'room') markRead(panel.dataset.room); render(panel); }
     save();
   }
@@ -283,7 +284,9 @@
   document.addEventListener('click', function (e) {
     var o = e.target.closest('[data-chat]');
     if (o && panel) { e.preventDefault(); document.querySelectorAll('.noti-panel, .dropdown, .layer').forEach(function (m) { if (!m.closest('.frame')) m.hidden = true; }); openChat(o.dataset.chat); return; }
-    var p = e.target.closest('.chat-panel'); if (!p) return;
+    var p = e.target.closest('.chat-panel');
+    /* 창 밖(화면)을 누르면 닫힌다. 둥근 버튼·확정 모달 안은 제외 */
+    if (!p) { if (panel && !panel.hidden && !e.target.closest('.chat-fab, #cw-confirm')) setOpen(false); return; }
     var t;
     if (e.target.closest('[data-cw-close]')) { setOpen(false); return; }
     if ((t = e.target.closest('[data-cw-room]'))) { p.dataset.view = 'room'; p.dataset.room = t.dataset.cwRoom; p.dataset.pane = 'talk'; if (p === panel) markRead(t.dataset.cwRoom); }
