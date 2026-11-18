@@ -279,7 +279,7 @@ erDiagram
 | contact_warning | BOOLEAN | DEFAULT FALSE — 연락처·계좌 패턴 감지 (AC-F3-15) |
 
 ### chat_reads
-`room_id, user_id, last_read_message_id` — PK (room_id, user_id). 읽음 표시 (AC-F3-08).
+`room_id, user_id, last_read_message_id, pinned_at DATETIME(3) NULL` — PK (room_id, user_id). 읽음 표시 (AC-F3-08). `pinned_at`이 있으면 그 사람의 채팅 목록 맨 위에 고정 (사람마다 따로, AC-F3-27, D-56).
 
 ### confirm_requests (견적 내역 확인 카드)
 | 컬럼 | 타입 | 제약 | 설명 |
