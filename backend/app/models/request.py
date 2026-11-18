@@ -112,8 +112,10 @@ class Stage(Base):
     stage_type: Mapped[str] = mapped_column(String(20), nullable=False)
     seq: Mapped[int] = mapped_column(UTinyInt, nullable=False)  # 1·2·3
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="WAITING")
-    # FK → quote_versions 는 3번 묶음이 quote_versions 를 만들 때 그 마이그레이션에서 건다
-    confirmed_quote_version_id: Mapped[int | None] = mapped_column(BigID)
+    # FK → quote_versions 는 3번 묶음 마이그레이션 0006 에서 건다. quotes → stages 와 서로 가리켜 use_alter
+    confirmed_quote_version_id: Mapped[int | None] = mapped_column(
+        BigID, ForeignKey("quote_versions.id", use_alter=True, name="fk_stages_confirmed_quote_version_id")
+    )
     skip_ack_at: Mapped[datetime | None] = mapped_column(DateTime3)
     skip_ack_text_version: Mapped[str | None] = mapped_column(String(10))
     opened_at: Mapped[datetime | None] = mapped_column(DateTime3)
