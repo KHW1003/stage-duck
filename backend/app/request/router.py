@@ -121,7 +121,10 @@ def _summary_fields(view: service.PerformanceView) -> dict:
         id=perf.id, title=perf.title, form=perf.form, status=perf.status, show_date=perf.show_date,
         rehearsal_start=perf.rehearsal_start, show_start=perf.show_start, show_end=perf.show_end,
         audience=perf.audience, sido=perf.sido, sigungu=perf.sigungu, current_version=perf.current_version,
-        stages=[StageSummaryOut.model_validate(s) for s in view.stages],
+        stages=[
+            StageSummaryOut(id=s.id, stage_type=s.stage_type, seq=s.seq, status=s.status, quote_count=view.quote_counts.get(s.id, 0))
+            for s in view.stages
+        ],
         next_action=view.next_action, next_stage_id=view.next_stage_id,
     )
 

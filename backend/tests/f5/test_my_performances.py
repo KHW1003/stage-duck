@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy import select
 
 from app.main import app
+from app.models.quote import Quote
 from app.models.request import Stage
 from app.request import calc
 from app.request.router import get_today
@@ -49,6 +50,15 @@ def _set_stages(db, perf_id, **statuses):
     db.commit()
 
 
+def _quotes(db, perf_id, stage_type, statuses):
+    """그 단계에 견적서를 여러 장 (상태별). 받은 견적서 수 확인용."""
+    stage_id = db.scalar(select(Stage.id).where(Stage.performance_id == perf_id, Stage.stage_type == stage_type))
+    for status in statuses:
+        supplier = make_supplier(db, review_status="APPROVED", categories=("EQUIPMENT",))
+        db.add(Quote(stage_id=stage_id, supplier_id=supplier.id, label="기본형", current_version=1, status=status))
+    db.commit()
+
+
 def _mine(user) -> dict:
     res = user.get("/api/v1/performances?mine=true")
     assert res.status_code == 200, res.text
@@ -59,12 +69,14 @@ def test_ac_f5_02_my_performance_shows_stages_and_next_action(client, db):
     user = login_as(client, make_user(db))
     perf_id = _create(user)
     _set_stages(db, perf_id, VENUE="CONFIRMED", EQUIPMENT="NEGOTIATING")
+    _quotes(db, perf_id, "EQUIPMENT", ["SENT", "SENT", "WITHDRAWN"])  # 철회는 세지 않는다
 
     item = next(p for p in _mine(user)["active"] if p["id"] == perf_id)
 
     assert [(s["stageType"], s["status"]) for s in item["stages"]] == [
         ("VENUE", "CONFIRMED"), ("EQUIPMENT", "NEGOTIATING"), ("ENGINEER", "WAITING"),
     ]
+    assert [s["quoteCount"] for s in item["stages"]] == [0, 2, 0]  # "장비 조율 중 (견적 2건)"
     assert item["nextAction"] == "NEGOTIATE"
     assert item["nextStageId"] == next(s["id"] for s in item["stages"] if s["stageType"] == "EQUIPMENT")
     assert (item["title"], item["showDate"], item["sido"], item["sigungu"], item["audience"]) == (
