@@ -249,9 +249,9 @@
 ### 4.5 기술 확인
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/performances/{id}/tech-checks` | P | 항목 목록 | |
-| POST | `/performances/{id}/tech-checks` | S(엔지니어 역할) | 항목 추가 `{ "item", "ownerSupplierId" }` | F3-25 |
-| PUT | `/tech-checks/{id}` | S(담당) | 답변 `{ "answer": "OK", "memo" }` — 담당 아니면 404 | F3-25 |
+| GET | `/performances/{id}/tech-checks` | P | 항목 목록 `{ performance{id,title,showDate,statusLabel}, creator{supplierId,name} 또는 null, canAdd, owners[{supplierId,label}], items[{id,item,detail,ownerSupplierId,ownerLabel,mine,answer,memo,answeredAt}] }` — 공연 주인·확정 업체만, 그 밖 404 | |
+| POST | `/performances/{id}/tech-checks` | S(엔지니어 역할) | 항목 추가 `{ "item", "detail", "ownerSupplierId" }` — 엔지니어 단계 업체, 없으면 엔지니어 포함 장비 업체만(아니면 404). 담당은 이 공연 확정 업체. 사용자는 403 | F3-25 |
+| PUT | `/tech-checks/{id}` | S(담당) | 답변 `{ "answer": "OK", "memo" }` (answer: OK·CONDITIONAL·IMPOSSIBLE·RECHECK) — 담당 아니면 404, 사용자는 403 | F3-25 |
 
 ---
 

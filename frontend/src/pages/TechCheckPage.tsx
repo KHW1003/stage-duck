@@ -4,7 +4,7 @@
  * - 항목은 엔지니어(또는 엔지니어 포함 업체)가 정하고, 각 업체는 자기 담당 항목에만 답한다 (서버가 mine 으로 알려 준다)
  * - 내 항목: 답변 전이면 바로 입력칸(작성 중), 답변했으면 [고치기]로 다시 연다. 남의 항목은 "업체 C만 답할 수 있어요"
  * - 자동 판정 없음 — 답변은 참고용
- * /supplier/tech (공연 번호 없음)는 공고 목록에서 들어오라는 안내.
+ * /supplier/tech (공연 번호 없음)는 공고 목록에서 들어오라는 안내. 서버: backend/app/tech (#49)
  */
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -160,7 +160,7 @@ export function TechCheckView({ data }: { data: TechCheckList }) {
       <KitPageTop
         title="기술 확인"
         crumbs={[{ label: "기술 확인" }]}
-        meta={[data.performance.title, dateLabel(data.performance.showDate), data.performance.statusLabel, `항목 담당: ${data.creator.name}`]}
+        meta={[data.performance.title, dateLabel(data.performance.showDate), data.performance.statusLabel, `항목 담당: ${data.creator?.name ?? "엔지니어 확정 전"}`]}
         actions={
           data.canAdd && (
             <button className="btn btn--sm btn--primary" type="button" onClick={() => setAdding(true)}>
@@ -205,7 +205,13 @@ export function TechCheckView({ data }: { data: TechCheckList }) {
             <div className="empty">
               <Ico name="list" />
               <b>아직 확인 항목이 없어요</b>
-              <p>{data.canAdd ? "[항목 추가]로 공연 전에 확인할 것을 정해 주세요." : `${data.creator.name}가 항목을 정하면 여기에 보여요.`}</p>
+              <p>
+                {data.canAdd
+                  ? "[항목 추가]로 공연 전에 확인할 것을 정해 주세요."
+                  : data.creator
+                    ? `${data.creator.name}가 항목을 정하면 여기에 보여요.`
+                    : "엔지니어(또는 엔지니어를 포함한 장비 업체)가 확정되면 항목을 정할 수 있어요."}
+              </p>
             </div>
           ) : (
             <div className="table-box">

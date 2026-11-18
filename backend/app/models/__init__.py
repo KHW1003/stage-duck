@@ -9,8 +9,9 @@ from app.models.policy import Report, Sanction
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier, SupplierCategory
+from app.models.tech import TechCheck  # noqa: F401  #49 기술 확인
 from app.models.terms import TermsAgreement
 from app.models.user import User
 from app.models.venue import Venue, VenueEquipment
 
-__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment"]
+__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck"]
