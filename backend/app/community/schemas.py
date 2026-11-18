@@ -55,8 +55,50 @@ class FreePostPageOut(BaseModel):
     page_size: int
 
 
+class CommentOut(BaseModel):
+    """댓글·답글. 삭제·블라인드면 body 는 null (블라인드는 작성자에게만 본문·사유). 업체 회원은 상호로."""
+
+    model_config = _OUT
+
+    id: int
+    author: AuthorOut
+    body: str | None
+    status: str
+    blind_reason: str | None
+    is_post_author: bool  # "글쓴이" 표시
+    is_mine: bool
+    helpful_count: int
+    my_helpful: bool
+    created_at: datetime
+    replies: list["CommentOut"] = []
+
+
+class CommentSavedOut(CommentOut):
+    contact_warning: bool
+
+
+class CommentIn(BaseModel):
+    model_config = _IN
+
+    body: str = ""
+    parent_id: int | None = None
+
+
+class HelpfulIn(BaseModel):
+    model_config = _IN
+
+    target_type: Literal["POST", "COMMENT"]
+    target_id: int
+
+
+class HelpfulOut(BaseModel):
+    model_config = _OUT
+
+    helpful_count: int
+
+
 class FreePostOut(FreePostSummaryOut):
-    """글 보기. 사진은 지금 파일 id만 (주소는 1번 files 함수가 생기면 붙인다). 댓글·내 도움 돼요·저장은 #101."""
+    """글 보기. 사진은 지금 파일 id만 (주소는 1번 files 함수가 생기면 붙인다). 방문자면 my* 는 false."""
 
     body: str
     photo_ids: list[int]
@@ -66,6 +108,9 @@ class FreePostOut(FreePostSummaryOut):
     next_id: int | None
     is_mine: bool
     updated_at: datetime
+    comments: list[CommentOut] = []
+    my_helpful: bool = False
+    bookmarked: bool = False
 
 
 class FreePostSavedOut(FreePostOut):

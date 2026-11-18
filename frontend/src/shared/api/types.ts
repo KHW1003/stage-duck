@@ -239,6 +239,28 @@ export interface FreePost extends FreePostSummary {
   nextId: number | null;
   isMine: boolean;
   updatedAt: string;
+  comments: FreeComment[];
+  myHelpful: boolean;
+  bookmarked: boolean;
+}
+
+/** 댓글·답글 (#101). 삭제·블라인드면 body=null (블라인드는 작성자에게만 본문·사유) */
+export interface FreeComment {
+  id: number;
+  author: FreePostSummary["author"];
+  body: string | null;
+  status: "ACTIVE" | "BLINDED" | "DELETED";
+  blindReason: string | null;
+  isPostAuthor: boolean;
+  isMine: boolean;
+  helpfulCount: number;
+  myHelpful: boolean;
+  createdAt: string;
+  replies: FreeComment[];
+}
+
+export interface FreeCommentSaved extends FreeComment {
+  contactWarning: boolean;
 }
 
 export interface FreePostSaved extends FreePost {

@@ -18,8 +18,9 @@ from app.admin.auth import current_admin_id
 from app.core.config import get_settings
 from app.core.db import SessionLocal
 from app.core.errors import AppError
+from app.community import service as community_service
 from app.demo import service as demo_service
-from app.models import Report, Sanction, StatusHistory, Supplier, User
+from app.models import FreeComment, FreePost, Report, Sanction, StatusHistory, Supplier, User
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
 
@@ -168,6 +169,44 @@ class StatusHistoryAdmin(ModelView, model=StatusHistory):
     column_default_sort = [(StatusHistory.created_at, True)]
 
 
+class FreePostAdmin(ModelView, model=FreePost):
+    """커뮤니티 글 — 신고된 글은 [블라인드]로 숨기고 작성자에게 경고 1회 (FR-COMM-04). 2번 묶음."""
+
+    name = "커뮤니티 글"
+    name_plural = "커뮤니티 글"
+    icon = "fa-solid fa-comments"
+    can_create = can_edit = can_delete = False
+    column_list = [FreePost.id, FreePost.category, FreePost.title, FreePost.author_user_id, FreePost.status,
+                   FreePost.blind_reason, FreePost.created_at]
+    column_searchable_list = [FreePost.title]
+    column_default_sort = [(FreePost.created_at, True)]
+    column_labels = {FreePost.category: "말머리", FreePost.title: "제목", FreePost.author_user_id: "작성자",
+                     FreePost.status: "상태", FreePost.blind_reason: "블라인드 사유", FreePost.created_at: "작성일"}
+
+    @action(name="blind", label="블라인드 (사유 입력)")
+    async def blind(self, request: Request) -> Response:
+        return _to_reason_form(request, "free_post_blind", self.identity)
+
+
+class FreeCommentAdmin(ModelView, model=FreeComment):
+    """커뮤니티 댓글 — [블라인드]하면 다른 사람에게 안 보이고 작성자 경고 1회 (AC-F4-15). 2번 묶음."""
+
+    name = "커뮤니티 댓글"
+    name_plural = "커뮤니티 댓글"
+    icon = "fa-solid fa-comment"
+    can_create = can_edit = can_delete = False
+    column_list = [FreeComment.id, FreeComment.post_id, FreeComment.parent_id, FreeComment.body,
+                   FreeComment.author_user_id, FreeComment.status, FreeComment.blind_reason, FreeComment.created_at]
+    column_default_sort = [(FreeComment.created_at, True)]
+    column_labels = {FreeComment.post_id: "글", FreeComment.parent_id: "답글 대상", FreeComment.body: "내용",
+                     FreeComment.author_user_id: "작성자", FreeComment.status: "상태",
+                     FreeComment.blind_reason: "블라인드 사유", FreeComment.created_at: "작성일"}
+
+    @action(name="blind", label="블라인드 (사유 입력)")
+    async def blind(self, request: Request) -> Response:
+        return _to_reason_form(request, "free_comment_blind", self.identity)
+
+
 # 사유가 필요한 액션: 액션 이름 → (화면 제목, 서비스 함수)
 REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "supplier_reject": ("업체 반려", supplier_service.reject),
@@ -175,6 +214,8 @@ REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "user_warn": ("회원 경고 (3회면 정지)", policy_service.warn),
     "report_warn": ("신고 경고 (3회면 정지)", policy_service.warn_report),
     "report_dismiss": ("신고 기각", policy_service.dismiss_report),
+    "free_post_blind": ("커뮤니티 글 블라인드 (작성자 경고 1회)", community_service.blind_post),
+    "free_comment_blind": ("커뮤니티 댓글 블라인드 (작성자 경고 1회)", community_service.blind_comment),
 }
 
 

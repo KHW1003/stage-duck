@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
+import { CommunitySavedPage } from "./pages/CommunitySavedPage";
 import { CommunityWritePage } from "./pages/CommunityWritePage";
 import { HomePage } from "./pages/HomePage";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
@@ -27,6 +28,7 @@ export function AppRoutes() {
         <Route path="/community" element={<CommunityPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
           <Route path="/community/write" element={<CommunityWritePage />} />
+          <Route path="/community/saved" element={<CommunitySavedPage />} />
           <Route path="/community/:id/edit" element={<CommunityWritePage />} />
         </Route>
         <Route path="/community/:id" element={<CommunityPostPage />} />

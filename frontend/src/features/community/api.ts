@@ -1,7 +1,7 @@
 /** 커뮤니티 API (api-contract.md 7장 /free-posts). 서버 데이터는 TanStack Query 로만 다룬다 (CLAUDE.md 6.2). */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { FreePost, FreePostPage, FreePostRequest, FreePostSaved, UploadedFile } from "../../shared/api/types";
+import type { FreeCommentSaved, FreePost, FreePostPage, FreePostRequest, FreePostSaved, UploadedFile } from "../../shared/api/types";
 
 export const FREE_POSTS_KEY = ["free-posts"] as const;
 
@@ -67,5 +67,59 @@ export function useUploadPhoto() {
       form.append("purpose", "COMMUNITY");
       return api<UploadedFile>("/files", { method: "POST", body: form });
     },
+  });
+}
+
+// ---- 댓글·도움 돼요·저장·신고 (#101) ----
+
+function useRefresh() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: FREE_POSTS_KEY });
+}
+
+export function useAddComment(postId: number) {
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (v: { body: string; parentId: number | null }) =>
+      api<FreeCommentSaved>(`/free-posts/${postId}/comments`, { method: "POST", body: JSON.stringify(v) }),
+    onSuccess: refresh,
+  });
+}
+
+export function useDeleteComment() {
+  const refresh = useRefresh();
+  return useMutation({ mutationFn: (id: number) => api<void>(`/free-comments/${id}`, { method: "DELETE" }), onSuccess: refresh });
+}
+
+/** 도움 돼요: 누르기(PUT) / 취소(DELETE) — 한 사람 한 번 (AC-F4-17) */
+export function useHelpful() {
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (v: { targetType: "POST" | "COMMENT"; targetId: number; on: boolean }) =>
+      api<{ helpfulCount: number }>("/free-helpfuls", {
+        method: v.on ? "PUT" : "DELETE",
+        body: JSON.stringify({ targetType: v.targetType, targetId: v.targetId }),
+      }),
+    onSuccess: refresh,
+  });
+}
+
+export function useBookmark(postId: number) {
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (on: boolean) => api<void>(`/free-posts/${postId}/bookmark`, { method: on ? "PUT" : "DELETE" }),
+    onSuccess: refresh,
+  });
+}
+
+export function useMyBookmarks() {
+  return useQuery({ queryKey: [...FREE_POSTS_KEY, "bookmarks"], queryFn: () => api<FreePostPage>("/me/free-bookmarks") });
+}
+
+/** 신고 (4번 POST /reports). 처리는 관리자가 한다 */
+export function useReport() {
+  return useMutation({
+    mutationFn: (v: { targetType: "FREE_POST" | "FREE_COMMENT"; targetId: number; reason: string }) =>
+      api<unknown>("/reports", { method: "POST", body: JSON.stringify(v) }),
   });
 }

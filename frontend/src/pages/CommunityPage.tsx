@@ -39,9 +39,16 @@ export function CommunityPage() {
         title="커뮤니티"
         desc="공연을 준비하는 사용자끼리 묻고 나누는 곳이에요. 전화번호·계좌번호는 적지 말아 주세요."
         actions={
-          <ButtonLink to={writeTo} variant="primary">
-            글쓰기
-          </ButtonLink>
+          <>
+            {me.data && (
+              <ButtonLink to="/community/saved" variant="ghost">
+                저장한 글
+              </ButtonLink>
+            )}
+            <ButtonLink to={writeTo} variant="primary">
+              글쓰기
+            </ButtonLink>
+          </>
         }
       />
       <div className={`sd-container ${styles.wrap}`}>
