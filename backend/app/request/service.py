@@ -487,3 +487,67 @@ def declare_all_secured(
     db.commit()
     db.refresh(perf)
     return perf
+
+
+# ---------------------------------------------------------------------------
+# 내 공연 현황 (T2-06 #40, AC-F5-02) — 사용자 본인, 읽기만
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PerformanceView:
+    """내 공연 한 건: 요청서 + 단계(배정 순서) + 다음 할 일."""
+
+    performance: Performance
+    stages: list[Stage]
+    next_action: str
+    next_stage_id: int | None
+
+
+def _view(perf: Performance, stages: list[Stage]) -> PerformanceView:
+    action, index = calc.next_action(perf.status, [s.status for s in stages])
+    return PerformanceView(perf, stages, action, stages[index].id if index is not None else None)
+
+
+def _owned(db: Session, user: User, performance_id: int) -> Performance:
+    """읽기용 (잠그지 않음). 없거나 남의 것이면 404."""
+    perf = db.scalar(select(Performance).where(Performance.id == performance_id, Performance.user_id == user.id))
+    if perf is None:
+        raise not_found()
+    return perf
+
+
+def list_mine(db: Session, user: User, *, today: date) -> dict[str, list[PerformanceView]]:
+    """AC-F5-02: 내 공연을 진행 중·작성 중·지난 공연으로 나눠 공연일 순으로. 단계와 다음 할 일 포함."""
+    perfs = list(db.scalars(select(Performance).where(Performance.user_id == user.id).order_by(Performance.show_date, Performance.id)))
+    stages: dict[int, list[Stage]] = {p.id: [] for p in perfs}
+    if perfs:
+        for stage in db.scalars(select(Stage).where(Stage.performance_id.in_(stages)).order_by(Stage.seq)):
+            stages[stage.performance_id].append(stage)
+    groups: dict[str, list[PerformanceView]] = {"active": [], "draft": [], "past": []}
+    for perf in perfs:
+        groups[calc.performance_group(perf.status, perf.show_date, today)].append(_view(perf, stages[perf.id]))
+    return groups
+
+
+def get_mine(db: Session, user: User, performance_id: int) -> tuple[PerformanceView, dict]:
+    """내 공연 상세: (현재 상태, 현재 버전 스냅샷). 스냅샷에서 편성(lineup)을 읽는다."""
+    perf = _owned(db, user, performance_id)
+    snapshot = db.scalar(
+        select(PerformanceVersion.snapshot).where(
+            PerformanceVersion.performance_id == perf.id, PerformanceVersion.version == perf.current_version
+        )
+    )
+    return _view(perf, _stages_of(db, perf.id)), snapshot or {}
+
+
+def list_versions(db: Session, user: User, performance_id: int) -> list[PerformanceVersion]:
+    """AC-F2-13: 버전 이력 (최신 먼저)."""
+    perf = _owned(db, user, performance_id)
+    return list(
+        db.scalars(
+            select(PerformanceVersion)
+            .where(PerformanceVersion.performance_id == perf.id)
+            .order_by(PerformanceVersion.version.desc())
+        )
+    )
