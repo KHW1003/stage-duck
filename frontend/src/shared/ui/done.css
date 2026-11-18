@@ -1,0 +1,14 @@
+/* 완료 안내 (mockup-v4/pages/done.html <style> 그대로) */
+.done { max-width: 560px; margin: 24px auto 80px; }
+.done .result { padding-bottom: 8px; }
+.done .result__icon { border-color: var(--sd-pass-text); color: var(--sd-pass-text); }
+.done .result__icon--plain { border-color: var(--sd-ink); color: var(--sd-ink); }
+.done .info-table { margin-top: 28px; }
+.done .info-table th { width: 140px; }
+.done__next { margin-top: 20px; font-size: var(--sd-text-desc); color: var(--sd-muted); text-align: center; line-height: 1.7; }
+
+@media (max-width: 560px) {
+  .done { margin: 8px auto 56px; }
+  .done .info-table th { width: 104px; }
+  .done .btns--center { flex-direction: column-reverse; align-items: stretch; }
+}

@@ -2,14 +2,17 @@
  * 보호 라우트 (FR-AUTH-07). 화면에서 막는 것은 보조이고, 진짜 검사는 서버가 한다 (CLAUDE.md 9).
  * - 로그인 안 함 → /login?next=지금 주소 (로그인 뒤 돌아온다)
  * - 역할이 다름 → "찾을 수 없어요" (서버의 404 처럼 있는지조차 알리지 않는다, CLAUDE.md 10)
+ * - 이용 정지 계정 → 오류 화면 "이용이 정지된 계정이에요" (mockup-v4 error.html suspended)
+ * - 내 정보를 못 불러오면 → 오류 화면 500 (점검 중이면 503)
  * - approvedOnly: 승인된 업체만 (공고 목록 등). 심사 중이면 입점·심사 화면으로 보낸다
  *
  * 사용: <Route element={<RequireAuth roles={["USER"]} />}> ...자식 라우트... </Route>
  */
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import type { Role } from "../api/types";
+import { ApiError } from "../api/client";
+import { ErrorView } from "../layout/ErrorView";
 import { NotFound } from "../layout/NotFound";
-import { ErrorNotice } from "../ui/ErrorText";
 import { useMe } from "./useMe";
 
 export const ONBOARDING_PATH = "/supplier/onboarding";
@@ -24,10 +27,24 @@ export function RequireAuth({ roles, approvedOnly = false }: Props) {
   const location = useLocation();
 
   if (me.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
-  if (me.isError) return <ErrorNotice error={me.error} />;
+  if (me.isError) {
+    const e = me.error;
+    return (
+      <div className="container main">
+        <ErrorView kind={e instanceof ApiError && e.status === 503 ? "503" : "500"} traceId={e instanceof ApiError ? e.body.traceId : null} />
+      </div>
+    );
+  }
   if (!me.data) {
     const next = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?next=${next}`} replace />;
+  }
+  if (me.data.status === "SUSPENDED") {
+    return (
+      <div className="container main">
+        <ErrorView kind="suspended" rows={[["계정", me.data.email]]} />
+      </div>
+    );
   }
   if (roles && !roles.includes(me.data.role)) return <NotFound />;
   if (approvedOnly && me.data.role === "SUPPLIER" && me.data.supplierReviewStatus !== "APPROVED") {
