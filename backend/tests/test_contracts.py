@@ -43,6 +43,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.open_postings_for, [("db", POS), ("supplier", POS), ("sido", KW)]),
         (request.after_confirm, [("db", POS), ("stage_id", POS), ("full_spec", KW)]),
         (request.is_related, [("db", POS), ("user_id", POS), ("supplier_id", POS)]),
+        (request.performance_input, [("db", POS), ("performance_id", POS)]),  # → 3·4 자동 검사
         # 3 → 2
         (chat.invalidate_pending_cards, [("db", POS), ("stage_id", POS)]),
         (chat.chat_started, [("db", POS), ("performance_id", POS), ("supplier_id", POS)]),

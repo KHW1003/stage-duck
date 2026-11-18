@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.chat import service as chat_service
+from app.check import calc as check_calc
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.models.quote import Quote, QuoteVersion
@@ -102,13 +103,61 @@ def _version_row(quote: Quote, version: int, perf_version: int, body: QuoteBody,
     )
 
 
-def _checks(quote: Quote, row: QuoteVersion) -> list[dict]:
-    """자동 검사 결과 (api-contract.md 4.1 checks[]).
+def _hm(value: Any) -> time | None:
+    """"14:00" 또는 time → time (견적서 버전·공간 스냅샷에 문자열로 저장돼 있다)."""
+    if value is None or isinstance(value, time):
+        return value
+    return time.fromisoformat(value)
 
-    check.calc.run_checks 는 있지만 요청서 값(PerformanceInput: 관객 수·리허설·공연 시각·예산)을 주는
-    2번 묶음 함수가 아직 없어 지금은 빈 배열이다. 그 함수가 생기면 여기서 run_checks 를 부른다.
+
+def _venue_input(snap: dict | None) -> check_calc.VenueSnapshot | None:
+    if not snap:
+        return None
+    return check_calc.VenueSnapshot(
+        venue_id=snap["venueId"], name=snap["name"], sido=snap["sido"], sigungu=snap["sigungu"],
+        venue_type=snap["venueType"], max_capacity=snap["maxCapacity"],
+        checkin_time=_hm(snap["checkinTime"]), checkout_time=_hm(snap["checkoutTime"]),
+        has_resident_engineer=snap.get("hasResidentEngineer", False),
+        conditions=snap.get("conditions") or {}, equipment=tuple(snap.get("equipment") or ()),
+    )
+
+
+def _quote_input(stage_type: str, row: QuoteVersion) -> check_calc.QuoteInput:
+    """견적서 버전 → 검사 입력 (4번 run_checks)."""
+    return check_calc.QuoteInput(
+        stage_type=stage_type,
+        based_on_perf_version=row.based_on_perf_version,
+        total_amount=row.total_amount,
+        venue=_venue_input(row.venue_snapshot),
+        checkin_time=_hm(row.checkin_time),
+        setup_available_time=_hm(row.setup_available_time),
+        setup_start=_hm(row.setup_start),
+        setup_minutes=row.setup_minutes,
+        teardown_minutes=row.teardown_minutes,
+        staff=tuple(
+            check_calc.StaffShift(role=s["role"], count=s["count"], start=_hm(s["start"]), end=_hm(s["end"])) for s in row.staff
+        ),
+        includes_equipment=row.includes_equipment,
+        includes_engineer=row.includes_engineer,
+    )
+
+
+def _checks(db: Session, quote: Quote, row: QuoteVersion) -> list[dict]:
+    """자동 검사 결과 (api-contract.md 4.1 checks[]). 4번 check.calc.run_checks 를 부른다.
+
+    요청서 값은 2번 약속 함수 performance_input, 앞 단계는 이 공연에서 이미 확정된(CONFIRMED) 앞 단계의 견적서 버전.
     """
-    return []
+    stage = quote.stage
+    perf_input = request_service.performance_input(db, stage.performance_id)
+    confirmed_rows = db.execute(
+        select(Stage.stage_type, QuoteVersion)
+        .join(QuoteVersion, QuoteVersion.id == Stage.confirmed_quote_version_id)
+        .where(Stage.performance_id == stage.performance_id, Stage.status == "CONFIRMED", Stage.seq < stage.seq)
+        .order_by(Stage.seq)
+    ).all()
+    confirmed = [_quote_input(st, qv) for st, qv in confirmed_rows]
+    results = check_calc.run_checks(perf_input, _quote_input(stage.stage_type, row), confirmed)
+    return [asdict(r) for r in results]
 
 
 def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
@@ -141,7 +190,7 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
         db, entity_type="quote", entity_id=quote.id, from_status=None, to_status="SENT", actor_user_id=user.id
     )
     db.flush()
-    checks = _checks(quote, row)
+    checks = _checks(db, quote, row)
     room_id = chat_service.post_quote_message(
         db, stage_id=stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
@@ -173,7 +222,7 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     row = _version_row(quote, quote.current_version, stage.performance.current_version, body, stage.stage_type, db)
     db.add(row)
     db.flush()
-    checks = _checks(quote, row)
+    checks = _checks(db, quote, row)
     room_id = chat_service.post_quote_message(
         db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )

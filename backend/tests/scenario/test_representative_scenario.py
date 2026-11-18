@@ -98,10 +98,10 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     user.post(f"/performances/{perf_id}/publish")
 
     # AC-F3-01: 공연장 단계일 때 장비 업체에게는 공고가 보이지 않는다
-    assert all(p["performanceId"] != perf_id for p in d.get("/postings")["items"])
+    assert all(p["performanceId"] != perf_id for p in d.get("/postings"))
 
     # ---- 3·4. 공연장 C 견적서 → 비교 화면의 검사 결과 (3번 T3-01, 4번 T4-02) -------------------------
-    venue_posting = next(p for p in c.get("/postings")["items"] if p["performanceId"] == perf_id)
+    venue_posting = next(p for p in c.get("/postings") if p["performanceId"] == perf_id)
     venue_stage = venue_posting["stageId"]
     q_c = c.post(f"/stages/{venue_stage}/quotes", {
         "label": "기본형", "venueId": venue["id"], "checkinTime": "15:00", "setupAvailableTime": "15:00",
@@ -110,8 +110,7 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
         "amounts": {"items": 500000, "transport": 0, "install": 0, "labor": 0, "etc": 0},
         "totalAmount": 500000, "extraCostNote": "", "validUntil": show_date, "techNote": "",
     }, expect=201)
-    compare = user.get(f"/stages/{venue_stage}/quotes")
-    checks_c = {ch["id"]: ch["result"] for ch in next(q for q in compare["items"] if q["quoteId"] == q_c["quoteId"])["checks"]}
+    checks_c = {ch["id"]: ch["result"] for ch in q_c["checks"]}  # 보낼 때 자동 검사 (단계별 비교 화면 #48 도 같은 값)
     assert checks_c["CHK-02"] == "PASS"  # 설치 가능 15:00 ~ 리허설 17:00 = 120분 (AC-F3-20)
 
     # ---- 5. 채팅 시작 → 견적 내역 확인 → 컨펌 → [다음 단계로] (3번 T3-02·03, 2번 T2-04) -----------------
@@ -125,7 +124,7 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     user.post(f"/stages/{venue_stage}/advance", {"action": "OPEN_NEXT"}, idem=True)  # D-1: 눌러야 열린다
 
     # ---- 6. 장비 단계: D가 공연장 정보를 보고 견적 (AC-F3-03) ---------------------------------------
-    eq_posting = next(p for p in d.get("/postings")["items"] if p["performanceId"] == perf_id)
+    eq_posting = next(p for p in d.get("/postings") if p["performanceId"] == perf_id)
     eq_stage = eq_posting["stageId"]
     detail = d.get(f"/postings/{eq_stage}")
     assert detail  # 앞 단계 확정 정보(공연장 입실 15:00 등) — 응답 모양은 계약 예시 없음
