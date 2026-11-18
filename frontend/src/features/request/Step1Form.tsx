@@ -108,7 +108,7 @@ export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint 
           {(c) => <Input {...c} type="date" min={minDate} {...text("showDate")} />}
         </Field>
         <div className={styles.row3}>
-          <Field label="리허설 시작" required error={errors.rehearsalStart}>
+          <Field label="리허설 시작" required hint="리허설 시작 전에 장비 설치가 끝나야 해요. 철수는 공연이 끝난 뒤에 해요." error={errors.rehearsalStart}>
             {(c) => <Input {...c} type="time" step={60} {...text("rehearsalStart")} />}
           </Field>
           <Field label="공연 시작" required error={errors.showStart}>

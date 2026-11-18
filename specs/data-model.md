@@ -193,7 +193,7 @@ erDiagram
 {
   "venue":    { "needed": true,  "proposalWanted": false, "types": ["CULTURE_SPACE"], "capacity": 80,
                 "budget": 600000, "checkinWish": "15:00", "checkoutWish": "22:00",
-                "mustHave": ["BAND_ALLOWED","EXTERNAL_EQUIPMENT","WAITING_ROOM"], "note": "" },
+                "mustHave": ["BAND_ALLOWED","EXTERNAL_EQUIPMENT_ALLOWED","HAS_WAITING_ROOM"], "note": "" },
   "equipment":{ "needed": true,  "proposalWanted": true, "items": [{"name":"보컬 마이크","qty":4}],
                 "services": ["TRANSPORT","INSTALL"], "budget": 1500000,
                 "owned": [{"name":"드럼 세트","detail":"심벌 포함, 킥 페달 1"}], "note": "" },

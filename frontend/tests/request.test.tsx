@@ -144,6 +144,35 @@ describe("요청서 쓰기 (/performances/new)", () => {
     expect(calls.map((c) => `${c.method} ${c.url}`)).toContain("POST /api/v1/performances/41/publish");
   });
 
+  it("#65 리허설 시작 칸에 설치·철수 순서 안내가 있다", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderPage();
+
+    const rehearsal = await screen.findByLabelText(/^리허설 시작/);
+    const hint = document.getElementById(rehearsal.getAttribute("aria-describedby")!.split(" ")[0])!;
+    expect(hint).toHaveTextContent("리허설 시작 전에 장비 설치가 끝나야 해요. 철수는 공연이 끝난 뒤에 해요.");
+  });
+
+  it("#65 꼭 필요한 조건은 공간 조건과 같은 키로 보낸다 (CHK-03)", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: USER },
+      "POST /api/v1/performances": CREATED,
+      "POST /api/v1/performances/41/publish": PUBLISHED,
+    });
+    renderPage();
+    await goToStep2(user);
+
+    for (const name of ["외부 음향 장비 반입", "대기실", "무대 단상"]) await user.click(within(section("공연장")).getByRole("checkbox", { name }));
+    await user.click(within(section("엔지니어")).getByRole("checkbox", { name: /메인 음향/ }));
+    await user.click(screen.getByRole("button", { name: "확인하고 게시하기" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "게시하기" }));
+
+    await screen.findByText(/공고를 올렸어요/);
+    const sent = calls.find((c) => c.url === "/api/v1/performances")!.body as { needs: { venue: { mustHave: string[] } } };
+    expect(sent.needs.venue.mustHave).toEqual(["EXTERNAL_EQUIPMENT_ALLOWED", "HAS_WAITING_ROOM", "HAS_STAGE_PLATFORM"]);
+  });
+
   it("AC-F2-10 엔지니어가 필요한데 작업을 고르지 않으면 넘어가지 않고 이유가 보인다", async () => {
     const user = userEvent.setup();
     const calls = mockServer({ "GET /api/v1/me": { status: 200, body: USER } });

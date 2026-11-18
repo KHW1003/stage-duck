@@ -143,6 +143,14 @@
 ```
 - 규칙 위반: `audience` 0·501, `rehearsalStart >= showStart`, `showDate < 오늘+14일` (D-53), 엔지니어 필요인데 `tasks` 비어 있음 → `400 VALIDATION_FAILED`.
 - `needs`의 전체 구조는 data-model.md `performances.needs`.
+- 선택지 코드 (화면 `features/request/codes.ts`와 같음, #65):
+  | 칸 | 코드 |
+  |---|---|
+  | `venue.types` | `CONCERT_HALL` `CULTURE_SPACE` `ROOFTOP` `GARDEN` `WAREHOUSE` `ETC` (venues.venue_type) |
+  | `venue.mustHave` | `BAND_ALLOWED` `EXTERNAL_EQUIPMENT_ALLOWED` `EXTERNAL_ENGINEER_ALLOWED` `HAS_WAITING_ROOM` `HAS_STAGE_PLATFORM` `HAS_PARKING` — **공간 조건(VenueSnapshot.conditions) 키와 같은 이름** (CHK-03이 그대로 비교) |
+  | `equipment.services` | `TRANSPORT` `INSTALL` |
+  | `engineer.tasks` | `FOH` `INSTALL_ASSIST` `SOUNDCHECK` `MONITOR` `WIRELESS` `RECORDING` `TROUBLESHOOT` (+ 기타는 `etc` 글) |
+  | `engineer.conditions` | `BAND_EXPERIENCE` `REHEARSAL` `TEARDOWN` |
 
 ### 3.3 공고(업체)·견적서
 | 메서드 | 경로 | 권한 | 설명 | AC |
