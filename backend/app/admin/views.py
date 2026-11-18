@@ -8,6 +8,7 @@ from collections.abc import Callable
 from datetime import datetime
 from urllib.parse import urlencode
 
+from markupsafe import Markup
 from sqladmin import BaseView, ModelView, action, expose
 from sqladmin.flash import flash
 from starlette.concurrency import run_in_threadpool
@@ -202,7 +203,11 @@ class PerformanceAdmin(ModelView, model=Performance):
     name_plural = "공연"
     icon = "fa-solid fa-music"
     can_create = can_edit = can_delete = False
-    column_list = [Performance.id, Performance.title, Performance.user_id, Performance.status, Performance.show_date]
+    column_list = [Performance.id, Performance.title, Performance.user_id, Performance.status, Performance.show_date, "history"]
+    column_labels = {"history": "거래 이력"}
+    # 목록·상세에서 한 번 눌러 이력 화면으로 (체크박스 → 작업 메뉴를 안 거치게)
+    column_formatters = {"history": lambda m, a: Markup(f'<a href="/admin/performance-history?pk={m.id}">이력 보기</a>')}
+    column_formatters_detail = column_formatters
     column_searchable_list = [Performance.title]
     column_default_sort = [(Performance.id, True)]
 

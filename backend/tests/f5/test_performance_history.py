@@ -24,6 +24,8 @@ def test_ac_f5_13_history_in_time_order(client, db, admin_client):
     assert any(r.entity_type == "stage" and r.entity_id == stage.id for r in rows)
     assert not any(r.entity_type == "performance" and r.entity_id == other_id for r in rows)
 
+    # 공연 목록에서 한 번 눌러 이력 화면으로 간다
+    assert f"/admin/performance-history?pk={perf_id}" in admin_client.get("/admin/performance/list").text
     res = admin_client.get(f"/admin/performance-history?pk={perf_id}")
     assert res.status_code == 200 and f"공연 #{perf_id}" in res.text and "PUBLISHED" in res.text
 
