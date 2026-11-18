@@ -23,7 +23,7 @@
   .dev { margin-top: 40px; border-top: 1px solid var(--sd-line); padding-top: 20px; }
 </style>
 </head>
-<!-- 화면: 로그인 · FR-AUTH-02·06 · AC-F1-04·08·11·16 · 묶음 1
+<!-- 화면: 로그인 · FR-AUTH-02·06·09 · AC-F1-04·08·11·16·21 · 묶음 1
      React: pages/LoginPage.tsx = LoginForm + NaverLoginButton + DevAccountSwitch(APP_ENV=test만)
      카카오 버튼은 KAKAO_LOGIN_ENABLED=false면 그리지 않는다. 로그인 5회 실패 시 10분 제한. -->
 <body data-layout="guest">
@@ -53,7 +53,7 @@
       <input class="input" type="password" value="password1" aria-label="비밀번호" autocomplete="current-password" style="height:52px">
       <p class="field__error" data-when="err:wrong"><span data-icon="warn" class="icon--sm"></span>이메일이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.</p>
       <div class="notice notice--conflict" data-when="err:lock"><span data-icon="lock"></span><div>로그인에 5번 실패했어요. <b>10분 뒤</b>에 다시 시도해 주세요.</div></div>
-      <div class="login__opts"><label class="check"><input type="checkbox">이메일 저장</label><a class="link" href="#">비밀번호 찾기</a></div>
+      <div class="login__opts"><label class="check"><input type="checkbox">이메일 저장</label><a class="link" href="password.html">비밀번호 찾기</a></div>
       <button class="btn btn--primary btn--lg btn--block" type="submit">로그인</button>
     </form>
     <div class="login__or">간편 로그인</div>
