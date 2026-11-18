@@ -7,7 +7,7 @@ from app.core.db import get_db
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.supplier import service
-from app.supplier.schemas import ApplicationIn, ApplicationOut
+from app.supplier.schemas import ApplicationIn, ApplicationOut, VenueIn, VenueOut
 
 router = APIRouter(prefix="/supplier", tags=["supplier"])
 
@@ -46,3 +46,17 @@ def update_application(
 ) -> ApplicationOut:
     """AC-F1-20: 반려된 신청을 고쳐서 다시 신청."""
     return _out(service.update_application(db, user, body))
+
+
+@router.post("/venues", response_model=VenueOut, status_code=status.HTTP_201_CREATED)
+def create_venue(body: VenueIn, user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db)) -> VenueOut:
+    """AC-F2-01·02: 승인된 공연장 업체의 공간 등록."""
+    return VenueOut.model_validate(service.create_venue(db, user, body))
+
+
+@router.put("/venues/{venue_id}", response_model=VenueOut)
+def update_venue(
+    venue_id: int, body: VenueIn, user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db)
+) -> VenueOut:
+    """AC-F2-03: 공간 수정 (이미 보낸 견적서·확정 공연의 스냅샷은 그대로). 남의 공간은 404."""
+    return VenueOut.model_validate(service.update_venue(db, user, venue_id, body))
