@@ -303,6 +303,7 @@ erDiagram
 | id | BIGINT UNSIGNED | PK |
 | performance_id | BIGINT UNSIGNED | FK |
 | item | VARCHAR(200) | 엔지니어가 정한 항목 (재량) |
+| detail | VARCHAR(200) | NULL — 항목 설명 한 줄 (목업 p-tech.html 의 작은 글씨, #49) |
 | created_by_supplier_id | BIGINT UNSIGNED | FK — 엔지니어(또는 엔지니어 포함 장비 업체) |
 | owner_supplier_id | BIGINT UNSIGNED | FK — 답변 담당 (공연장 또는 장비) (AC-F3-25) |
 | answer | VARCHAR(20) | CHECK IN ('UNCONFIRMED','OK','CONDITIONAL','IMPOSSIBLE','RECHECK') |
