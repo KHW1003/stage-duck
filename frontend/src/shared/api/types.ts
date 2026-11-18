@@ -72,3 +72,83 @@ export interface SupplierApplication {
   rejectReason: string | null;
   appliedAt: string;
 }
+
+// ---- 공연 요청서 (api-contract.md 3.2, 묶음 2) ----
+export type PerformanceForm = "BAND" | "THEATER" | "TALK_EVENT" | "RELIGIOUS" | "ETC";
+export type PerformanceStatus =
+  | "DRAFT"
+  | "PUBLISHED"
+  | "ASSIGNING"
+  | "AWAITING_PAYMENT"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "WITHDRAWN";
+export type StageType = "VENUE" | "EQUIPMENT" | "ENGINEER";
+export type StageStatus = "WAITING" | "OPEN" | "NEGOTIATING" | "CONFIRMED" | "SKIPPED" | "RECHECK";
+
+export interface VenueNeed {
+  needed: boolean;
+  proposalWanted: boolean;
+  types: string[];
+  capacity: number | null;
+  budget: number | null;
+  checkinWish: string | null;
+  checkoutWish: string | null;
+  mustHave: string[];
+  note: string;
+}
+
+export interface EquipmentNeed {
+  needed: boolean;
+  proposalWanted: boolean;
+  items: { name: string; qty: number }[];
+  services: string[];
+  budget: number | null;
+  owned: { name: string; detail: string }[];
+  note: string;
+}
+
+export interface EngineerNeed {
+  needed: boolean;
+  tasks: string[];
+  conditions: string[];
+  etc: string;
+  note: string;
+}
+
+/** STEP2 (data-model.md performances.needs) */
+export interface PerformanceNeeds {
+  venue: VenueNeed;
+  equipment: EquipmentNeed;
+  engineer: EngineerNeed;
+  ownedVenue: null;
+}
+
+/** POST /performances 요청 (STEP1 + STEP2) */
+export interface PerformanceRequest {
+  title: string;
+  form: PerformanceForm;
+  lineup: { part: string; count: number }[];
+  showDate: string;
+  rehearsalStart: string;
+  showStart: string;
+  showEnd: string;
+  audience: number;
+  sido: string;
+  sigungu: string;
+  contactPhone: string | null;
+  needs: PerformanceNeeds;
+}
+
+export interface PerformanceCreated {
+  id: number;
+  status: PerformanceStatus;
+  currentVersion: number;
+}
+
+export interface PerformancePublished {
+  id: number;
+  status: PerformanceStatus;
+  stages: { id: number; stageType: StageType; seq: number; status: StageStatus }[];
+}

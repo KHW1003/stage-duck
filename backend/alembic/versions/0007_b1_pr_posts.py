@@ -2,8 +2,8 @@
 
 active_guard: 활성·가린 글이면 1, 아니면 NULL + UNIQUE(supplier_id, category, active_guard) → 부문당 1개 (AC-F4-02·10).
 
-Revision ID: 0006
-Revises: 0005
+Revision ID: 0007
+Revises: 0006
 Create Date: 2026-11-18
 """
 import sqlalchemy as sa
@@ -11,8 +11,8 @@ from alembic import op
 
 from app.core.db import BigID, DateTime3
 
-revision = "0006"
-down_revision = "0005"
+revision = "0007"
+down_revision = "0006"
 branch_labels = None
 depends_on = None
 
