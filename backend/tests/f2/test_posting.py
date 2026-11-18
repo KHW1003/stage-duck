@@ -254,3 +254,18 @@ def test_edit_without_contact_phone_keeps_saved_number(client, db):
     assert user.put(f"/api/v1/performances/{perf_id}", json=_body(rehearsalStart="16:00", contactPhone=None)).status_code == 200
     db.expire_all()
     assert db.get(Performance, perf_id).contact_phone is None  # 보내서 지우면 지워진다
+
+
+def test_new_version_invalidates_pending_cards_of_every_stage(client, db, monkeypatch):
+    """CLAUDE.md 3장 6: 요청서가 새 버전이 되면 그 공연 단계들의 대기 최종 견적 카드를 무효로 (3번 invalidate_pending_cards)."""
+    calls: list[int] = []
+    monkeypatch.setattr("app.request.service.invalidate_pending_cards", lambda db, stage_id: calls.append(stage_id))
+    user, perf_id = _published(client, db)
+
+    assert user.put(f"/api/v1/performances/{perf_id}", json=_body(rehearsalStart="16:00")).status_code == 200
+    stage_ids = sorted(db.scalars(select(Stage.id).where(Stage.performance_id == perf_id)))
+    assert sorted(calls) == stage_ids
+
+    calls.clear()
+    assert user.put(f"/api/v1/performances/{perf_id}", json=_body(rehearsalStart="16:00")).status_code == 200
+    assert calls == []  # 바뀐 게 없으면 새 버전도 무효화도 없음

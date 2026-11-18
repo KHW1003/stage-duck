@@ -170,7 +170,7 @@ class StageSummaryOut(BaseModel):
     stage_type: str
     seq: int
     status: str
-    quote_count: int | None = None  # 받은 견적서 수 — 3번 quote_counts 를 연결하기 전까지 null
+    quote_count: int  # 받은 견적서 수 (철회 제외)
 
 
 class PerformanceSummaryOut(BaseModel):

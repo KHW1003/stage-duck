@@ -20,6 +20,8 @@ from app.models.supplier import Supplier
 from app.models.user import User
 from app.request import calc
 from app.request.schemas import PerformanceIn
+from app.chat.service import invalidate_pending_cards
+from app.quote.service import quote_counts
 from app.supplier.service import can_send_quotes
 
 STAGE_TYPES = ("VENUE", "EQUIPMENT", "ENGINEER")  # 배정 순서 (constitution 3)
@@ -306,7 +308,7 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
 
     - 공연 날짜를 바꿀 때만 14일 규칙을 본다. 게시 뒤에는 필요해요/이미 있어요를 바꿀 수 없다.
     - 바뀐 것이 없으면 새 버전을 만들지 않는다. contactPhone 을 안 보내면 저장된 번호를 그대로 둔다 (응답에 번호가 없어서).
-    - 진행 중인 최종 견적 카드 무효화(CLAUDE.md 3장 6)는 3번 `invalidate_pending_cards` 가 생기면 여기서 부른다.
+    - 새 버전이 생기면 모든 단계의 대기(PENDING) 최종 견적 카드를 무효로 (CLAUDE.md 3장 6, 3번 `invalidate_pending_cards`).
     """
     perf = _mine(db, user, performance_id)
     if perf.status not in EDITABLE:
@@ -336,6 +338,8 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
     if keep_phone:
         perf.contact_phone = phone
     db.add(PerformanceVersion(performance_id=perf.id, version=perf.current_version, snapshot=data, changed_fields=changed))
+    for stage in _stages_of(db, perf.id):
+        invalidate_pending_cards(db, stage.id)  # 커밋하지 않는다 — 아래에서 한 번에
     for stage in db.scalars(select(Stage).where(Stage.performance_id == perf.id, Stage.status == "CONFIRMED")):
         record_transition(
             db, entity_type="stage", entity_id=stage.id, from_status="CONFIRMED", to_status="RECHECK",
@@ -508,11 +512,12 @@ class PerformanceView:
     stages: list[Stage]
     next_action: str
     next_stage_id: int | None
+    quote_counts: dict[int, int]  # 단계별 받은 견적서 수 (철회 제외, 3번 quote_counts)
 
 
-def _view(perf: Performance, stages: list[Stage]) -> PerformanceView:
+def _view(perf: Performance, stages: list[Stage], counts: dict[int, int]) -> PerformanceView:
     action, index = calc.next_action(perf.status, [s.status for s in stages])
-    return PerformanceView(perf, stages, action, stages[index].id if index is not None else None)
+    return PerformanceView(perf, stages, action, stages[index].id if index is not None else None, counts)
 
 
 def _owned(db: Session, user: User, performance_id: int) -> Performance:
@@ -530,9 +535,10 @@ def list_mine(db: Session, user: User, *, today: date) -> dict[str, list[Perform
     if perfs:
         for stage in db.scalars(select(Stage).where(Stage.performance_id.in_(stages)).order_by(Stage.seq)):
             stages[stage.performance_id].append(stage)
+    counts = quote_counts(db, [s.id for ss in stages.values() for s in ss])  # 쿼리 한 번
     groups: dict[str, list[PerformanceView]] = {"active": [], "draft": [], "past": []}
     for perf in perfs:
-        groups[calc.performance_group(perf.status, perf.show_date, today)].append(_view(perf, stages[perf.id]))
+        groups[calc.performance_group(perf.status, perf.show_date, today)].append(_view(perf, stages[perf.id], counts))
     return groups
 
 
@@ -544,7 +550,8 @@ def get_mine(db: Session, user: User, performance_id: int) -> tuple[PerformanceV
             PerformanceVersion.performance_id == perf.id, PerformanceVersion.version == perf.current_version
         )
     )
-    return _view(perf, _stages_of(db, perf.id)), snapshot or {}
+    stages = _stages_of(db, perf.id)
+    return _view(perf, stages, quote_counts(db, [s.id for s in stages])), snapshot or {}
 
 
 def list_versions(db: Session, user: User, performance_id: int) -> list[PerformanceVersion]:
