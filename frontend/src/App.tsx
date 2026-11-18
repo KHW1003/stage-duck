@@ -13,6 +13,7 @@ import { SignupPage } from "./pages/SignupPage";
 import { SpacesPage } from "./pages/SpacesPage";
 import { SpaceDetailPage } from "./pages/SpaceDetailPage";
 import { NextStagePage } from "./pages/NextStagePage";
+import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -60,6 +61,8 @@ export function AppRoutes() {
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} approvedOnly />}>
           <Route path="/supplier/posts" element={<MyPostPage />} />
+          <Route path="/supplier/tech" element={<TechCheckIndexPage />} />
+          <Route path="/supplier/tech/:performanceId" element={<TechCheckPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />

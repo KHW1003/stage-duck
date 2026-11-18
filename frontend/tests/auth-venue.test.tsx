@@ -312,3 +312,62 @@ describe("다음 단계로 (/performances/:id/next)", () => {
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/performances\/5$/));
   });
 });
+
+describe("기술 확인 (/supplier/tech/:performanceId)", () => {
+  const SUP = { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" };
+  const row = (id: number, item: string, mine: boolean, answer: string, memo: string | null) => ({
+    id, item, detail: null, ownerSupplierId: mine ? 7 : 3, ownerLabel: mine ? "업체 D" : "업체 C (공간)", mine, answer, memo, answeredAt: null,
+  });
+  const LIST = {
+    performance: { id: 5, title: "가을밤 밴드 공연", showDate: "2026-11-28", statusLabel: "결제 대기" },
+    creator: { supplierId: 7, name: "업체 D" },
+    canAdd: true,
+    owners: [{ supplierId: 3, label: "업체 C (공간)" }, { supplierId: 7, label: "업체 D (장비)" }],
+    items: [row(1, "무대 콘센트 위치", false, "OK", "무대 왼쪽 4구"), row(3, "음량 제한 시각", false, "UNCONFIRMED", null), row(4, "FOH 믹서 자리", true, "UNCONFIRMED", null), row(5, "드럼 마이킹 수", true, "OK", "총 4채널")],
+  };
+
+  it("AC-F3-25 내 항목에만 답할 수 있고, 남의 항목은 그 업체만 답한다고 보인다", async () => {
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
+      "PUT /api/v1/tech-checks/4": { status: 200, body: {} },
+    });
+    renderAt("/supplier/tech/5");
+    expect(await screen.findByRole("heading", { level: 1, name: "기술 확인" })).toBeInTheDocument();
+    expect(screen.getByText("업체 C만 답할 수 있어요")).toBeInTheDocument();
+    expect(screen.queryByLabelText("음량 제한 시각 답변")).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("FOH 믹서 자리 답변"), "객석 맨 뒤 중앙");
+    await userEvent.click(screen.getByRole("button", { name: "답변 저장" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "PUT")).toBe(true));
+    expect(calls.find((c) => c.method === "PUT")).toMatchObject({ url: "/api/v1/tech-checks/4", body: { answer: "OK", memo: "객석 맨 뒤 중앙" } });
+    // 답변한 내 항목은 [고치기]로 다시 연다
+    const drum = screen.getByText("드럼 마이킹 수").closest("tr")!;
+    await userEvent.click(within(drum).getByRole("button", { name: "고치기" }));
+    expect(screen.getByLabelText("드럼 마이킹 수 답변")).toHaveValue("총 4채널");
+  });
+
+  it("요약 칸은 전체·답변 완료·내가 답할 항목 수, 항목 추가는 담당 업체를 골라 보낸다", async () => {
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
+      "POST /api/v1/performances/5/tech-checks": { status: 201, body: {} },
+    });
+    renderAt("/supplier/tech/5");
+    await screen.findByRole("heading", { level: 1, name: "기술 확인" });
+    const nums = [...document.querySelectorAll(".summary b")].map((b) => b.textContent);
+    expect(nums).toEqual(["4개", "2개", "1개"]);
+    await userEvent.click(screen.getByRole("button", { name: "항목 추가" }));
+    const dialog = screen.getByRole("dialog", { name: "항목 추가" });
+    await userEvent.type(within(dialog).getByLabelText("항목"), "전원 용량");
+    await userEvent.selectOptions(within(dialog).getByLabelText("답할 업체"), "3");
+    await userEvent.click(within(dialog).getByRole("button", { name: "추가" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
+    expect(calls.find((c) => c.method === "POST")!.body).toEqual({ item: "전원 용량", detail: "", ownerSupplierId: 3 });
+  });
+
+  it("남의 공연(서버 404)은 찾을 수 없어요", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: SUP }, "GET /api/v1/performances/9/tech-checks": { status: 404, body: err("NOT_FOUND", "찾을 수 없어요.") } });
+    renderAt("/supplier/tech/9");
+    expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
+  });
+});
