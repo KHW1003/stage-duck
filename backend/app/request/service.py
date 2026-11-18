@@ -8,8 +8,17 @@
 이름·인자·돌려주는 모양을 바꾸려면 쓰는 쪽과 먼저 합의한다.
 """
 from dataclasses import dataclass
+from datetime import date, datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from app.core.errors import AppError, invalid_state, not_found
+from app.core.history import record_transition
+from app.models.request import Performance, PerformanceVersion, Stage
+from app.models.user import User
+from app.request import calc
+from app.request.schemas import PerformanceIn
 
 STAGE_TYPES = ("VENUE", "EQUIPMENT", "ENGINEER")  # 배정 순서 (constitution 3)
 
@@ -66,3 +75,74 @@ def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     구현: 2번 해원 — T2-04 (#38).
     """
     raise NotImplementedError("2번 묶음 T2-04(#38)에서 구현한다")
+
+
+# ---------------------------------------------------------------------------
+# 요청서 작성·게시 (T2-02 #36) — 사용자 본인
+# ---------------------------------------------------------------------------
+
+_ALLOWED = {("DRAFT", "PUBLISHED")}  # 게시 이후 전이는 T2-03·T2-04 에서 더한다
+
+
+def create_performance(db: Session, user: User, body: PerformanceIn, *, today: date) -> Performance:
+    """AC-F2-04~07·10: 규칙을 어기면 400 VALIDATION_FAILED, 맞으면 DRAFT 요청서와 v1 버전을 만든다."""
+    errors = calc.performance_field_errors(body, today)
+    if errors:
+        raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
+    data = body.model_dump(mode="json", by_alias=True)
+    perf = Performance(
+        user_id=user.id, status="DRAFT", current_version=1, title=body.title, form=body.form,
+        show_date=body.show_date, rehearsal_start=body.rehearsal_start, show_start=body.show_start,
+        show_end=body.show_end, audience=body.audience, sido=body.sido, sigungu=body.sigungu,
+        contact_phone=body.contact_phone or None, needs=data["needs"],
+    )
+    db.add(perf)
+    db.flush()
+    # lineup(편성)은 data-model 에 칸이 없어 버전 스냅샷에만 둔다
+    db.add(PerformanceVersion(performance_id=perf.id, version=1, snapshot=data, changed_fields=[]))
+    record_transition(
+        db, entity_type="performance", entity_id=perf.id, from_status=None, to_status="DRAFT", actor_user_id=user.id
+    )
+    db.commit()
+    return perf
+
+
+def publish(db: Session, user: User, performance_id: int, *, now: datetime) -> Performance:
+    """AC-F2-08: 게시하면 필요한 단계만 만들고 첫 단계를 연다. 장비 "이미 있어요"면 장비 단계가 없다.
+
+    남의 요청서는 404, DRAFT 가 아니면 409 INVALID_STATE. 반려 제한 검사(F4-05)는 T2-03 에서 더한다.
+    """
+    perf = db.scalar(
+        select(Performance)
+        .where(Performance.id == performance_id, Performance.user_id == user.id)
+        .with_for_update()
+    )
+    if perf is None:
+        raise not_found()
+    if (perf.status, "PUBLISHED") not in _ALLOWED:
+        raise invalid_state("이미 게시한 요청서예요.")
+    plan = calc.stage_plan(perf.needs)
+    if not plan:
+        raise AppError(
+            400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.",
+            [{"field": "needs", "reason": "섭외가 필요한 단계를 하나 이상 골라 주세요."}],
+        )
+
+    for i, (stage_type, seq) in enumerate(plan):
+        status = "OPEN" if i == 0 else "WAITING"
+        stage = Stage(performance_id=perf.id, stage_type=stage_type, seq=seq, status=status,
+                      opened_at=now if status == "OPEN" else None)
+        db.add(stage)
+        db.flush()
+        record_transition(
+            db, entity_type="stage", entity_id=stage.id, from_status=None, to_status=status, actor_user_id=user.id
+        )
+    record_transition(
+        db, entity_type="performance", entity_id=perf.id, from_status=perf.status, to_status="PUBLISHED",
+        actor_user_id=user.id,
+    )
+    perf.status = "PUBLISHED"
+    perf.published_at = now
+    db.commit()
+    db.refresh(perf)
+    return perf

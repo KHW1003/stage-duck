@@ -82,7 +82,7 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     }, expect=201)
 
     # ---- 2. 요청서 작성·게시 (2번 T2-02·03) ------------------------------------------------------
-    show_date = (date.today() + timedelta(days=10)).isoformat()  # 3일 전까지만 요청 가능 (D-16)
+    show_date = (date.today() + timedelta(days=20)).isoformat()  # 14일 전까지만 요청 가능 (D-53)
     perf = user.post("/performances", {
         "title": "가을밤 밴드 공연", "form": "BAND",
         "lineup": [{"part": "보컬", "count": 1}, {"part": "기타", "count": 2}, {"part": "베이스", "count": 1}, {"part": "드럼", "count": 1}],
