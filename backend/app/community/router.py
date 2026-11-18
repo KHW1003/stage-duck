@@ -7,12 +7,25 @@ from sqlalchemy.orm import Session
 from app.auth.deps import require_role
 from app.auth.tokens import read_access_token
 from app.community import service
-from app.community.schemas import AuthorOut, FreePostIn, FreePostOut, FreePostPageOut, FreePostSavedOut, FreePostSummaryOut
+from app.community.schemas import (
+    AuthorOut,
+    CommentIn,
+    CommentOut,
+    CommentSavedOut,
+    FreePostIn,
+    FreePostOut,
+    FreePostPageOut,
+    FreePostSavedOut,
+    FreePostSummaryOut,
+    HelpfulIn,
+    HelpfulOut,
+)
 from app.core.db import get_db
-from app.models.community import FreePost
+from app.models.community import FreeComment, FreePost
 from app.models.user import User
 
 router = APIRouter(prefix="/free-posts", tags=["community"])
+extra_router = APIRouter(tags=["community"])  # /free-comments · /free-helpfuls · /me/free-bookmarks
 writer = require_role("USER", "SUPPLIER")
 
 
@@ -45,6 +58,32 @@ def _full(db: Session, post: FreePost, me: User | None, prev_id: int | None, nex
     )
 
 
+def _comment(c: FreeComment, post: FreePost, me: User | None, names: dict, liked: set[int], replies: list | None = None) -> CommentOut:
+    mine = me is not None and me.id == c.author_user_id
+    show = c.status == "ACTIVE" or (c.status == "BLINDED" and mine)
+    author = names[c.author_user_id]
+    return CommentOut(
+        id=c.id, author=AuthorOut(name=author.name, kind=author.kind), body=c.body if show else None, status=c.status,
+        blind_reason=c.blind_reason if mine else None, is_post_author=c.author_user_id == post.author_user_id,
+        is_mine=mine, helpful_count=c.helpful_count, my_helpful=c.id in liked, created_at=c.created_at,
+        replies=replies or [],
+    )
+
+
+def _with_comments(db: Session, post: FreePost, me: User | None, out: dict) -> dict:
+    views = service.comments_for(db, post.id)
+    all_comments = [v.comment for v in views] + [r.comment for v in views for r in v.replies]
+    names = service.authors(db, all_comments) if all_comments else {}
+    liked = service.my_helpfuls(db, me, "COMMENT", [c.id for c in all_comments])
+    out["comments"] = [
+        _comment(v.comment, post, me, names, liked, [_comment(r.comment, post, me, names, liked) for r in v.replies])
+        for v in views
+    ]
+    out["my_helpful"] = post.id in service.my_helpfuls(db, me, "POST", [post.id])
+    out["bookmarked"] = service.is_bookmarked(db, me, post.id)
+    return out
+
+
 @router.get("", response_model=FreePostPageOut)
 def list_posts(
     category: str | None = Query(None),
@@ -67,7 +106,7 @@ def list_posts(
 def get_post(post_id: int, me: User | None = Depends(viewer), db: Session = Depends(get_db)) -> FreePostOut:
     """AC-F4-12: 글 보기 (조회수 +1, 이전·다음 글). 블라인드 글은 작성자만."""
     post, prev_id, next_id = service.get_post(db, me, post_id)
-    return FreePostOut(**_full(db, post, me, prev_id, next_id))
+    return FreePostOut(**_with_comments(db, post, me, _full(db, post, me, prev_id, next_id)))
 
 
 @router.post("", response_model=FreePostSavedOut, status_code=status.HTTP_201_CREATED)
@@ -94,3 +133,61 @@ def delete_post(post_id: int, user: User = Depends(writer), db: Session = Depend
     """본인 글 삭제 → DELETED (남의 글 404)."""
     service.delete_post(db, user, post_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ---- 댓글·도움 돼요·저장 (T2-08 #101) ----------------------------------------------------------
+
+
+@router.post("/{post_id}/comments", response_model=CommentSavedOut, status_code=status.HTTP_201_CREATED)
+def add_comment(
+    post_id: int, body: CommentIn, user: User = Depends(writer), db: Session = Depends(get_db), now: datetime = Depends(get_now)
+) -> CommentSavedOut:
+    """AC-F4-14: 댓글·답글 (답글의 답글 400). 10초에 1개, 연락처 모양은 경고만."""
+    comment, warn = service.add_comment(db, user, post_id, body.body, body.parent_id, now=now)
+    post = db.get(FreePost, post_id)
+    out = _comment(comment, post, user, service.authors(db, [comment]), set())
+    return CommentSavedOut(**out.model_dump(), contact_warning=warn)
+
+
+@router.put("/{post_id}/bookmark", status_code=status.HTTP_204_NO_CONTENT)
+def bookmark(post_id: int, user: User = Depends(writer), db: Session = Depends(get_db)) -> Response:
+    """AC-F4-17: 저장 (이미 저장했으면 그대로)."""
+    service.set_bookmark(db, user, post_id, on=True)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/{post_id}/bookmark", status_code=status.HTTP_204_NO_CONTENT)
+def unbookmark(post_id: int, user: User = Depends(writer), db: Session = Depends(get_db)) -> Response:
+    """AC-F4-17: 저장 취소."""
+    service.set_bookmark(db, user, post_id, on=False)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@extra_router.delete("/free-comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_comment(comment_id: int, user: User = Depends(writer), db: Session = Depends(get_db)) -> Response:
+    """본인 댓글 삭제 → "삭제된 댓글이에요" (남의 댓글 404)."""
+    service.delete_comment(db, user, comment_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@extra_router.put("/free-helpfuls", response_model=HelpfulOut)
+def helpful(body: HelpfulIn, user: User = Depends(writer), db: Session = Depends(get_db)) -> HelpfulOut:
+    """AC-F4-17: 도움 돼요 (한 사람 한 번)."""
+    return HelpfulOut(helpful_count=service.set_helpful(db, user, body.target_type, body.target_id, on=True))
+
+
+@extra_router.delete("/free-helpfuls", response_model=HelpfulOut)
+def unhelpful(body: HelpfulIn, user: User = Depends(writer), db: Session = Depends(get_db)) -> HelpfulOut:
+    """AC-F4-17: 도움 돼요 취소."""
+    return HelpfulOut(helpful_count=service.set_helpful(db, user, body.target_type, body.target_id, on=False))
+
+
+@extra_router.get("/me/free-bookmarks", response_model=FreePostPageOut)
+def my_bookmarks(user: User = Depends(writer), db: Session = Depends(get_db)) -> FreePostPageOut:
+    """AC-F4-17: 내 저장 글 (최근 저장 먼저)."""
+    posts = service.list_bookmarks(db, user)
+    names = service.authors(db, posts) if posts else {}
+    return FreePostPageOut(
+        items=[FreePostSummaryOut(**_summary(p, names[p.author_user_id])) for p in posts],
+        total=len(posts), page=1, page_size=max(len(posts), 1),
+    )
