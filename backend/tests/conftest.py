@@ -37,11 +37,20 @@ def _schema():
 
 @pytest.fixture(autouse=True)
 def _clean_tables():
-    """테스트마다 모든 테이블을 비운다 (FK 역순)."""
+    """테스트마다 모든 테이블을 비운다 (FK 역순).
+
+    stages ↔ quote_versions 처럼 서로를 가리키는 FK(#131)는 어떤 순서로도 지울 수 없어서,
+    MariaDB 에서는 비우는 동안만 FK 검사를 끈다 (같은 연결 안에서만, 끝나면 다시 켠다). SQLite 는 FK 를 검사하지 않는다.
+    """
     yield
     with engine.begin() as conn:
+        mysql = conn.dialect.name in ("mysql", "mariadb")
+        if mysql:
+            conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 0")
         for table in reversed(Base.metadata.sorted_tables):
             conn.execute(table.delete())
+        if mysql:
+            conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 1")
 
 
 @pytest.fixture
