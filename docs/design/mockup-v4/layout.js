@@ -85,10 +85,10 @@
   var nav = body.dataset.nav || '';
 
   var MENU = {
-    /* 머리 메뉴 통일 (2026-11-18): [내 일] + 공간 찾기 · 업체 찾기 · 커뮤니티. 채팅은 오른쪽 아래 버튼, 견적함·기술 확인은 계정 메뉴 */
+    /* 머리 메뉴 통일 (2026-11-18): [내 일] + 공간 찾기 · 업체 찾기 · 커뮤니티. 채팅은 메뉴와 오른쪽 아래 버튼 둘 다 같은 창을 연다, 견적함·기술 확인은 계정 메뉴 */
     guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
-    user: [['my', '내 공연', 'my.html'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
-    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
+    user: [['my', '내 공연', 'my.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
+    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
     'partner-review': [],
     admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['cs', '문의·공지', 'a-cs.html'], ['demo', '시연 도구', 'a-demo.html']]
   };
