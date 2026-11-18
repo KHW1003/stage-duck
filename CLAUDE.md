@@ -29,7 +29,7 @@
 |---|---|
 | 어기면 안 되는 원칙 11개 | `specs/constitution.md` |
 | 무엇을 만드는가 (기능·규칙·결정 D-1~D-55) | `docs/요구사항_명세서.md` |
-| 수용 기준 `AC-Fx-nn` (Given-When-Then, 107개) | `specs/spec.md` |
+| 수용 기준 `AC-Fx-nn` (Given-When-Then, 108개) | `specs/spec.md` |
 | 정해진 답 (모호했던 것) | `specs/clarifications.md` |
 | 화면 흐름, 화면 목록 | `specs/user-flow.md` |
 | 기술 구조, 핵심 흐름(컨펌·결제·검사·채팅) | `specs/plan.md` |

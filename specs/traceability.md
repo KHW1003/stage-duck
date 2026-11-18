@@ -3,8 +3,8 @@
 | 항목 | 내용 |
 |---|---|
 | 버전 | 0.3 (초안) |
-| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07·FR-AUTH-09, AC 107개) |
-| 목적 | spec.md의 **모든 수용 기준(107개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
+| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07·FR-AUTH-09, AC 107개; 0.5: 2026-11-18 — 채팅 상단 고정 D-56, AC 108개) |
+| 목적 | spec.md의 **모든 수용 기준(108개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
 | 입력 | [spec.md](spec.md) · [plan.md](plan.md) · [data-model.md](data-model.md) · [api-contract.md](api-contract.md) · [user-flow.md](user-flow.md) |
 
 표기: 테스트 `BE` = pytest (`backend/tests/`), `FE` = Vitest (`frontend/tests/`), `E2E` = Playwright. 테스트 이름에 AC ID를 넣는다 (예: `test_ac_f1_01_...`).
@@ -95,6 +95,7 @@ API 경로의 `/api/v1`은 생략했다.
 | F3-24 | 리허설 변경 → 충돌 → 수정 후 통과 | CHK, REQ-04 | PUT /performances/{id}, PUT /quotes/{id}, GET …/checks | performance_versions, quote_versions | 비교 화면 | BE, E2E |
 | F3-25 | 기술 확인 자기 담당만 답변 | TECH-01 | POST /performances/{id}/tech-checks, PUT /tech-checks/{id} | tech_checks.owner_supplier_id | 기술 확인 | BE |
 | F3-26 | 채팅 목록 검색·안 읽음만·정렬 | CHAT-07 | GET /chat-rooms (화면에서 거름) | — | 채팅 위젯 목록 | FE |
+| F3-27 | 채팅 상단 고정 (사람마다, 고정 먼저 정렬) | CHAT-07 | PUT·DELETE /chat-rooms/{roomId}/pin, GET /chat-rooms (`pinnedAt`) | chat_reads.pinned_at | 채팅 위젯 목록 (핀 배지·[⋯] 메뉴·오른쪽 클릭) | BE, FE |
 
 ## F4 콘텐츠·상호작용
 
@@ -151,9 +152,9 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 107개 중 API가 연결된 것 | 106개 (F2-09는 화면 동작 — FE 테스트로 확인) |
-| 테이블이 연결된 것 | 96개 (나머지 11개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **107개 전부** (BE 102 · FE 34 · E2E 4, 한 기준에 여러 종류 가능) |
+| 수용 기준 108개 중 API가 연결된 것 | 107개 (F2-09는 화면 동작 — FE 테스트로 확인) |
+| 테이블이 연결된 것 | 97개 (나머지 11개는 권한·화면 동작) |
+| 테스트가 정해진 것 | **108개 전부** (BE 103 · FE 35 · E2E 4, 한 기준에 여러 종류 가능) |
 | 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 
