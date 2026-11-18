@@ -1,5 +1,7 @@
 """입점 신청 2단계 API (api-contract.md 2장, FR-SUP-02, 이슈 #26). 업체 역할(심사 중 포함 S*)만."""
-from fastapi import APIRouter, Depends, status
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
@@ -7,7 +9,7 @@ from app.core.db import get_db
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.supplier import service
-from app.supplier.schemas import ApplicationIn, ApplicationOut, VenueIn, VenueOut
+from app.supplier.schemas import ApplicationIn, ApplicationOut, VenueIn, VenueListItem, VenueOut, VenuePage, VenuePublicOut
 
 router = APIRouter(prefix="/supplier", tags=["supplier"])
 
@@ -60,3 +62,37 @@ def update_venue(
 ) -> VenueOut:
     """AC-F2-03: 공간 수정 (이미 보낸 견적서·확정 공연의 스냅샷은 그대로). 남의 공간은 404."""
     return VenueOut.model_validate(service.update_venue(db, user, venue_id, body))
+
+
+# 공간 탐색 — 누구나 (api-contract.md GET /venues, FR-SPACE-03) ---------------------------------
+venue_router = APIRouter(prefix="/venues", tags=["supplier"])
+
+
+@venue_router.get("", response_model=VenuePage)
+def list_venues(
+    sido: str | None = None,
+    sigungu: str | None = None,
+    min_capacity: int | None = Query(None, alias="minCapacity", ge=1, le=500),
+    venue_type: Literal["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP", "GARDEN", "WAREHOUSE", "ETC"] | None = Query(None, alias="type"),
+    band_allowed: bool | None = Query(None, alias="bandAllowed"),
+    sort: Literal["fee", "capacity", "latest"] = "latest",
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=50),
+    db: Session = Depends(get_db),
+) -> VenuePage:
+    """AC-F5-01: 광주 / 80명 / 밴드 가능 → 공간 A·B·C. 예약 가능 여부는 업체 확인 전이에요."""
+    rows, total = service.list_venues(
+        db, sido=sido, sigungu=sigungu, min_capacity=min_capacity, venue_type=venue_type,
+        band_allowed=band_allowed, sort=sort, page=page, size=size,
+    )
+    fields = [f for f in VenueListItem.model_fields if f != "company_name"]
+    items = [VenueListItem(company_name=name, **{f: getattr(v, f) for f in fields}) for v, name in rows]
+    return VenuePage(items=items, page=page, size=size, total=total)
+
+
+@venue_router.get("/{venue_id}", response_model=VenuePublicOut)
+def get_venue(venue_id: int, db: Session = Depends(get_db)) -> VenuePublicOut:
+    """공간 상세 — 조건의 null 은 미확인. 업체 연락처는 없음 (결제 뒤 담당표에서만)."""
+    venue, name = service.get_public_venue(db, venue_id)
+    data = VenueOut.model_validate(venue).model_dump()
+    return VenuePublicOut(**data, supplier_id=venue.supplier_id, company_name=name)
