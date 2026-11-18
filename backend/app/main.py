@@ -19,7 +19,7 @@ from app.community.router import router as community_router
 from app.request.router import router as request_router
 from app.request.router import stage_router
 from app.board.router import router as board_router
-from app.quote.router import router as quote_router, stage_quote_router
+from app.quote.router import postings_router, router as quote_router, stage_quote_router
 
 
 def create_app() -> FastAPI:
@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
     api.include_router(board_router)  # #30 업체 찾기
     api.include_router(quote_router)
     api.include_router(stage_quote_router)
+    api.include_router(postings_router)
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)

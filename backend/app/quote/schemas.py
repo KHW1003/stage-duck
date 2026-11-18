@@ -158,3 +158,53 @@ class QuoteOut(BaseModel):
     current_version: int
     current: QuoteVersionOut
     versions: list[QuoteVersionOut]
+
+
+# ---------------------------------------------------------------------------
+# 공고 목록·상세 (T3-01 #41, AC-F2-11·12·14, AC-F3-01·03, AC-F4-07, AC-F5-12)
+# 사용자 연락처·실명·이메일, 다른 업체의 견적서는 넣지 않는다 (CLAUDE.md 20, AC-F2-14·F5-12).
+# ---------------------------------------------------------------------------
+
+
+class PostingOut(BaseModel):
+    """GET /postings 한 줄. 사용자는 닉네임과 반려·이용 횟수만 보인다 (AC-F4-07)."""
+
+    model_config = _OUT
+
+    stage_id: int
+    performance_id: int
+    stage_type: str
+    status: str
+    performance_version: int
+    title: str
+    show_date: date
+    sido: str
+    sigungu: str
+    nickname: str | None
+    rejection_count: int
+    usage_count: int
+
+
+class PreviousStageOut(BaseModel):
+    """앞 단계 확정 정보 (AC-F3-03). 확정 견적서 버전에서 읽는다. 전원은 전용 칸이 없어 tech_note 로 보여 준다."""
+
+    model_config = _OUT
+
+    stage_type: str
+    venue_snapshot: dict | None
+    checkin_time: HhMm | None
+    setup_available_time: HhMm | None
+    items: list[dict]
+    tech_note: str | None
+
+
+class PostingDetailOut(PostingOut):
+    """GET /postings/{stageId}: 공고 상세 + 앞 단계 확정 정보."""
+
+    form: str
+    rehearsal_start: HhMm
+    show_start: HhMm
+    show_end: HhMm
+    audience: int
+    needs: dict
+    previous_stages: list[PreviousStageOut]

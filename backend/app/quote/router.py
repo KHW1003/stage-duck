@@ -6,7 +6,7 @@ from app.auth.deps import require_role
 from app.core.db import get_db
 from app.models.user import User
 from app.quote import service
-from app.quote.schemas import QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn
+from app.quote.schemas import PostingDetailOut, PostingOut, QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn
 
 router = APIRouter(prefix="/quotes", tags=["quote"])
 stage_quote_router = APIRouter(prefix="/stages", tags=["quote"])
@@ -50,3 +50,26 @@ def get_quote(
         status=quote.status, is_full_spec=quote.is_full_spec, current_version=quote.current_version,
         current=current, versions=quote.versions,
     )
+
+
+postings_router = APIRouter(prefix="/postings", tags=["quote"])
+
+
+@postings_router.get("", response_model=list[PostingOut])
+def list_postings(
+    sido: str | None = None,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> list[PostingOut]:
+    """AC-F2-11·12, AC-F3-01, AC-F4-07: 공고 목록 (?sido= 필터, 공연일 임박 순)."""
+    return [PostingOut.model_validate(p) for p in service.list_postings(db, user, sido=sido)]
+
+
+@postings_router.get("/{stage_id}", response_model=PostingDetailOut)
+def get_posting(
+    stage_id: int,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> PostingDetailOut:
+    """AC-F3-03, AC-F2-14, AC-F5-12: 공고 상세 + 앞 단계 확정 정보. 안 보이면 404."""
+    return PostingDetailOut.model_validate(service.get_posting(db, user, stage_id))
