@@ -72,3 +72,16 @@ export function useUpdatePerformance() {
     onSuccess: refresh,
   });
 }
+
+/** GET /me/posting-limit (AC-F4-05·06, #39): 지금 반려 카운트와 게시 제한 */
+export interface PostingLimit {
+  afterChat: number;
+  noChat: number;
+  limited: boolean;
+  availableAt: string | null;
+}
+
+export function usePostingLimit() {
+  return useQuery({ queryKey: ["me", "posting-limit"], queryFn: () => api<PostingLimit>("/me/posting-limit") });
+}
+

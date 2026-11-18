@@ -244,3 +244,16 @@ describe("요청서 수정 (/performances/:id/edit)", () => {
     expect(await screen.findByTestId("where")).toHaveTextContent("/performances/5");
   });
 });
+
+describe("게시 제한 안내 (AC-F4-05, #39)", () => {
+  it("공고를 여러 번 내려 게시가 막혀 있으면 내 공연에 언제부터 되는지 보인다", async () => {
+    mockServer({
+      ...ME,
+      "GET /api/v1/performances?mine=true": { status: 200, body: { active: [], draft: [], past: [] } },
+      "GET /api/v1/me/posting-limit": { status: 200, body: { afterChat: 5, noChat: 0, limited: true, availableAt: "2026-11-13T14:00:00" } },
+    });
+    renderAt("/me/performances");
+    expect(await screen.findByText("11월 13일 14:00")).toBeInTheDocument();
+    expect(screen.getByText(/채팅 후 내림 5회/)).toBeInTheDocument();
+  });
+});

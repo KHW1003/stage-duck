@@ -9,13 +9,14 @@ from app.core.db import get_db
 from app.core.errors import AppError
 from app.models.request import Performance
 from app.models.user import User
-from app.request import service
+from app.request import rejection, service
 from app.request.schemas import (
     AdvanceIn,
     AdvanceOut,
     MyPerformancesOut,
     PerformanceDetailOut,
     PerformanceSummaryOut,
+    PostingLimitOut,
     StageSummaryOut,
     VersionOut,
     PerformanceCreatedOut,
@@ -27,6 +28,12 @@ from app.request.schemas import (
 
 router = APIRouter(prefix="/performances", tags=["request"])
 stage_router = APIRouter(prefix="/stages", tags=["request"])
+me_router = APIRouter(prefix="/me", tags=["request"])
+
+
+def get_now() -> datetime:
+    """지금 시각. 테스트에서 dependency_overrides 로 고정한다 (반려 제한 AC-F4-05·06)."""
+    return datetime.now()
 
 
 def get_today() -> date:
@@ -47,10 +54,13 @@ def create_performance(
 
 @router.post("/{performance_id}/publish", response_model=PublishOut)
 def publish(
-    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)
+    performance_id: int,
+    user: User = Depends(require_role("USER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
 ) -> PublishOut:
-    """AC-F2-08: 게시 → 필요한 단계만 만들고 첫 단계 OPEN."""
-    return PublishOut.model_validate(service.publish(db, user, performance_id, now=datetime.now()))
+    """AC-F2-08: 게시 → 필요한 단계만 만들고 첫 단계 OPEN. AC-F4-05: 반려 제한 중이면 403."""
+    return PublishOut.model_validate(service.publish(db, user, performance_id, now=now))
 
 
 @router.put("/{performance_id}", response_model=PerformanceCreatedOut)
@@ -67,10 +77,13 @@ def update_performance(
 
 @router.post("/{performance_id}/withdraw", response_model=PerformanceCreatedOut)
 def withdraw(
-    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)
+    performance_id: int,
+    user: User = Depends(require_role("USER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
 ) -> PerformanceCreatedOut:
-    """공고 내림 (게시·배정 중일 때만)."""
-    return PerformanceCreatedOut.model_validate(service.withdraw(db, user, performance_id))
+    """공고 내림 (게시·배정 중일 때만). 견적서를 받은 공고면 반려 1회 (FR-POL-02)."""
+    return PerformanceCreatedOut.model_validate(service.withdraw(db, user, performance_id, now=now))
 
 
 @router.post("/{performance_id}/declare-all-secured", response_model=PublishOut)
@@ -164,3 +177,15 @@ def list_performance_versions(
 ) -> list[VersionOut]:
     """AC-F2-13: 버전 이력·변경 항목 (최신 먼저)."""
     return [VersionOut.model_validate(v) for v in service.list_versions(db, user, performance_id)]
+
+
+@me_router.get("/posting-limit", response_model=PostingLimitOut)
+def posting_limit(
+    user: User = Depends(require_role("USER")), db: Session = Depends(get_db), now: datetime = Depends(get_now)
+) -> PostingLimitOut:
+    """AC-F4-05·06: 지금 반려 카운트(채팅 후·미응답)와 게시 제한 여부·가능 시각."""
+    limit = rejection.limit_for(db, user.id, now)
+    return PostingLimitOut(
+        after_chat=limit.after_chat, no_chat=limit.no_chat, limited=limit.limited, available_at=limit.available_at
+    )
+

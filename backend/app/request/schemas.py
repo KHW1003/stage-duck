@@ -218,3 +218,15 @@ class VersionOut(BaseModel):
     version: int
     changed_fields: list[str]
     created_at: datetime
+
+
+class PostingLimitOut(BaseModel):
+    """GET /me/posting-limit (AC-F4-05·06): 지금 반려 카운트와 게시 제한."""
+
+    model_config = _OUT
+
+    after_chat: int
+    no_chat: int
+    limited: bool
+    available_at: datetime | None
+
