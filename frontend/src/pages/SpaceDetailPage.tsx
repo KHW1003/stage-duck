@@ -5,14 +5,16 @@
  * - 탭을 누르면 그 구역으로 내려가고, 스크롤하면 지금 보이는 구역의 탭에 표시가 옮겨 간다
  * - 오퍼 상자: 로그인한 사용자의 공연 중 공연장 단계가 열린 공연만 고를 수 있다 (내 공연 API).
  *   오퍼 보내기·신고(공간)는 서버 API 가 아직 없어 창까지만 연다
- * 연락처는 보이지 않는다. 값은 features/venue/samples.ts.
+ * 연락처는 보이지 않는다. 서버 GET /venues/{id} — 조건의 null 은 "미확인". 사진은 공간 유형별 기본 사진 (features/venue/view).
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMyPerformances } from "../features/performance/api";
 import { dateLabel } from "../features/performance/labels";
 import { usePageMeta } from "../features/seo/usePageMeta";
-import { findVenue, won, type VenueSample } from "../features/venue/samples";
+import { useVenue, type VenueDetail } from "../features/venue/api";
+import { TYPE_LABEL, hm, shortSido, venuePhotos, won, yesNo } from "../features/venue/view";
+import { ApiError } from "../shared/api/client";
 import { layoutKindOf, useMe } from "../shared/auth/useMe";
 import { NotFound } from "../shared/layout/NotFound";
 import { Ico } from "../shared/ui/Ico";
@@ -26,17 +28,17 @@ const TABS = [
   { id: "notice", label: "이용 안내" },
 ];
 
-function Gallery({ v }: { v: VenueSample }) {
+function Gallery({ name, photos }: { name: string; photos: string[] }) {
   const [cur, setCur] = useState(0);
   return (
     <div className="gallery">
-      <div className="photo gallery__main" role="img" aria-label={`${v.name} 사진 ${cur + 1}`} style={{ "--img": `url('${v.photos[cur]}')` } as CSSProperties}>
+      <div className="photo gallery__main" role="img" aria-label={`${name} 사진 ${cur + 1}`} style={{ "--img": `url('${photos[cur]}')` } as CSSProperties}>
         <span className="gallery__count">
-          <b>{cur + 1}</b> / {v.photos.length}
+          <b>{cur + 1}</b> / {photos.length}
         </span>
       </div>
       <div className="gallery__thumbs" style={{ "--cols": 5 } as CSSProperties}>
-        {v.photos.map((p, i) => (
+        {photos.map((p, i) => (
           <button
             key={p}
             type="button"
@@ -72,7 +74,7 @@ function useActiveSection(ids: string[]): string {
   return active;
 }
 
-function OfferBox({ v, onOffer }: { v: VenueSample; onOffer: (title: string) => void }) {
+function OfferBox({ v, onOffer }: { v: VenueDetail; onOffer: (title: string) => void }) {
   const me = useMe();
   const user = layoutKindOf(me.data) === "user";
   const mine = useMyPerformances();
@@ -145,7 +147,7 @@ function OfferBox({ v, onOffer }: { v: VenueSample; onOffer: (title: string) => 
   );
 }
 
-function OfferModal({ v, title, onClose }: { v: VenueSample; title: string; onClose: () => void }) {
+function OfferModal({ v, title, onClose }: { v: VenueDetail; title: string; onClose: () => void }) {
   const [note, setNote] = useState("");
   const [tried, setTried] = useState(false);
   return (
@@ -163,7 +165,7 @@ function OfferModal({ v, title, onClose }: { v: VenueSample; title: string; onCl
         </>
       }
     >
-      <p className="modal__lead">{v.company}에 오퍼를 보낼까요?</p>
+      <p className="modal__lead">{v.companyName}에 오퍼를 보낼까요?</p>
       <p>{title} · 공연장 단계 · 응답 기한 48시간</p>
       <label className="field mt-16">
         <span className="field__label">
@@ -221,13 +223,27 @@ function ReportModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** 부대 시설 한 줄: "대기실 있음 · 무대 단상 있음 · 주차 미확인" */
+function facilities(v: VenueDetail): string {
+  return [
+    `대기실 ${yesNo(v.hasWaitingRoom, "있음", "없음")}`,
+    `무대 단상 ${yesNo(v.hasStagePlatform, "있음", "없음")}`,
+    `주차 ${yesNo(v.hasParking, "있음", "없음")}`,
+  ].join(" · ");
+}
+
 export function SpaceDetailPage() {
-  const v = findVenue(Number(useParams().id));
-  usePageMeta(v ? `${v.name} · ${v.sigungu} ${v.capacity}명 공연 공간` : null);
+  const id = Number(useParams().id);
+  const venue = useVenue(id);
+  const v = venue.data;
+  usePageMeta(v ? `${v.name} · ${v.sigungu} ${v.maxCapacity}명 공연 공간` : null);
   const active = useActiveSection(useMemo(() => TABS.map((t) => t.id), []));
   const [modal, setModal] = useState<{ kind: "offer"; title: string } | { kind: "report" } | null>(null);
   const [saved, setSaved] = useState(false);
-  if (!v) return <NotFound />;
+  if (!Number.isInteger(id) || (venue.error instanceof ApiError && venue.error.status === 404)) return <NotFound />;
+  if (!v) return <p className="sd-sr-only">불러오는 중이에요</p>;
+  const photos = venuePhotos(v);
+  const region = shortSido(v.sido);
 
   return (
     <div className="space-page">
@@ -238,7 +254,7 @@ export function SpaceDetailPage() {
               <Link to="/venues">공간 찾기</Link>
             </li>
             <li>
-              <Link to={`/venues?sido=${encodeURIComponent(v.sido)}`}>{v.sido}</Link>
+              <Link to={`/venues?sido=${encodeURIComponent(region)}`}>{region}</Link>
             </li>
             <li>{v.name}</li>
           </ol>
@@ -247,10 +263,10 @@ export function SpaceDetailPage() {
       <div className="space-wrap">
         <main className="container main">
           <div className="detail-top">
-            <Gallery v={v} />
+            <Gallery name={v.name} photos={photos} />
             <div>
               <p className="detail-top__meta">
-                {v.sido} {v.sigungu} · {v.type}
+                {region} {v.sigungu} · {TYPE_LABEL[v.venueType]}
               </p>
               <h1>{v.name}</h1>
               <div className="chips-ico mt-16">
@@ -260,7 +276,7 @@ export function SpaceDetailPage() {
                   </span>
                   <div>
                     <span>수용 인원</span>
-                    <b>{v.capacity}명</b>
+                    <b>{v.maxCapacity}명</b>
                   </div>
                 </div>
                 <div>
@@ -269,7 +285,7 @@ export function SpaceDetailPage() {
                   </span>
                   <div>
                     <span>입실</span>
-                    <b>{v.checkin}</b>
+                    <b>{hm(v.checkinTime)}</b>
                   </div>
                 </div>
                 <div>
@@ -278,7 +294,7 @@ export function SpaceDetailPage() {
                   </span>
                   <div>
                     <span>밴드 공연</span>
-                    <b>{v.conditions.includes("밴드 공연 가능") ? "가능" : "불가"}</b>
+                    <b>{yesNo(v.bandAllowed)}</b>
                   </div>
                 </div>
               </div>
@@ -287,21 +303,21 @@ export function SpaceDetailPage() {
                   <tr>
                     <th>업체</th>
                     <td>
-                      <span className="link link--point">{v.company}</span> <span className="muted small">· 거래 {v.companyDeals}건</span>
+                      <span className="link link--point">{v.companyName}</span>
                     </td>
                   </tr>
                   <tr>
                     <th>퇴실 마감</th>
-                    <td className="num">{v.checkout}</td>
+                    <td className="num">{hm(v.checkoutTime)}</td>
                   </tr>
                   <tr>
                     <th>장비 설치</th>
-                    <td className="num">{v.setupFrom}부터 가능</td>
+                    <td className="num">{hm(v.checkinTime)}부터 가능</td>
                   </tr>
                   <tr>
-                    <th>{v.fullSpec ? "이용료" : "대관료"}</th>
+                    <th>{v.hasResidentEngineer ? "이용료" : "대관료"}</th>
                     <td className="strong num">
-                      {won(v.price)} <span className="muted small space__vat">부가세 포함</span>
+                      {won(v.rentalFee)} <span className="muted small space__vat">부가세 포함</span>
                     </td>
                   </tr>
                 </tbody>
@@ -343,31 +359,29 @@ export function SpaceDetailPage() {
               <tbody>
                 <tr>
                   <th>수용 인원</th>
-                  <td>
-                    최대 {v.capacity}명 (좌석 배치 시 {v.capacitySeated}명)
-                  </td>
+                  <td>최대 {v.maxCapacity}명</td>
                   <th>공연장 등록</th>
                   <td>
-                    {v.registered ? "등록" : "미등록"} <span className="tag">업체 입력</span>
+                    {yesNo(v.hallRegistered, "등록", "미등록")} <span className="tag">업체 입력</span>
                   </td>
                 </tr>
                 <tr>
                   <th>입실</th>
-                  <td className="num">{v.checkin}</td>
+                  <td className="num">{hm(v.checkinTime)}</td>
                   <th>퇴실 마감</th>
-                  <td className="num">{v.checkout}</td>
+                  <td className="num">{hm(v.checkoutTime)}</td>
                 </tr>
                 <tr>
                   <th>외부 장비 반입</th>
-                  <td>{v.loadIn}</td>
+                  <td>{yesNo(v.externalEquipmentAllowed)}</td>
                   <th>외부 엔지니어</th>
-                  <td>{v.externalEngineer}</td>
+                  <td>{yesNo(v.externalEngineerAllowed, "허용", "불가")}</td>
                 </tr>
                 <tr>
-                  <th>전원</th>
-                  <td>{v.power}</td>
+                  <th>상주 엔지니어</th>
+                  <td>{v.hasResidentEngineer ? "있음 (장비·엔지니어 포함)" : "없음"}</td>
                   <th>부대 시설</th>
-                  <td>{v.facilities}</td>
+                  <td>{facilities(v)}</td>
                 </tr>
               </tbody>
             </table>
@@ -380,7 +394,7 @@ export function SpaceDetailPage() {
               </h2>
               <p>업체가 적은 내용이에요. 공연 가능 여부는 업체 확인 뒤에 정해져요.</p>
             </div>
-            {v.gear.length > 0 ? (
+            {v.equipment.length > 0 ? (
               <div className="table-box">
                 <table className="table table--fit">
                   <thead>
@@ -391,11 +405,11 @@ export function SpaceDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {v.gear.map((g) => (
-                      <tr key={g.desc}>
-                        <td>{g.kind}</td>
-                        <td className="l">{g.desc}</td>
-                        <td>{g.qty}</td>
+                    {v.equipment.map((g) => (
+                      <tr key={`${g.category}-${g.name}`}>
+                        <td>{g.category}</td>
+                        <td className="l">{g.name}</td>
+                        <td>{g.quantity}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -412,7 +426,10 @@ export function SpaceDetailPage() {
                 소개
               </h2>
             </div>
-            <p className="desc space__intro">{v.intro}</p>
+            <p className="desc space__intro">
+              {TYPE_LABEL[v.venueType]} · {region} {v.sigungu} · 최대 {v.maxCapacity}명. 입실 {hm(v.checkinTime)}, 퇴실 마감 {hm(v.checkoutTime)}.
+              {v.bandAllowed === null && " 밴드 공연 가능 여부는 업체에 확인이 필요해요."}
+            </p>
           </section>
           <section className="sec" id="notice">
             <div className="sec-head">

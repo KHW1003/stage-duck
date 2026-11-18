@@ -94,3 +94,13 @@ def test_hidden_or_missing_detail_is_not_found(client, db, seeded):
 def test_bad_query_is_rejected(client, params):
     res = client.get(URL, params=params)
     assert res.status_code == 400 and res.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_list_item_has_checkin_and_condition_fields(client, db, seeded):
+    """목업 spaces.html 카드의 "15:00 입실"과 조건 필터(외부 장비·외부 엔지니어·대기실·주차)에 쓰는 칸 (미확인은 null)."""
+    items = {i["name"]: i for i in client.get(URL, params={"sido": "광주광역시"}).json()["items"]}
+    c = items["공간 C"]
+    assert c["checkinTime"] == "15:00:00"
+    assert c["externalEquipmentAllowed"] is True
+    assert c["externalEngineerAllowed"] is None and c["hasParking"] is None
+    assert items["공간 A"]["hasWaitingRoom"] is True
