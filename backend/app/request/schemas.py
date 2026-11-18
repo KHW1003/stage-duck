@@ -3,6 +3,7 @@
 형식(날짜·시각·숫자)만 여기서 보고, 범위·순서·14일 같은 규칙은 calc.performance_field_errors 가 칸마다 이유를 돌려준다.
 """
 from datetime import date, time
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -125,3 +126,38 @@ class PublishOut(BaseModel):
     id: int
     status: str
     stages: list[StageOut]
+
+
+class SkipAckIn(BaseModel):
+    """건너뛰기 책임 고지 동의 (FR-ASSIGN-03). acknowledgement = "STAGE_SKIP_OWNED", noticeVersion = 안내 문구 버전."""
+
+    model_config = _IN
+
+    acknowledgement: str | None = None
+    notice_version: str | None = Field(default=None, max_length=10)
+
+
+class AdvanceIn(SkipAckIn):
+    """[다음 단계로] (api-contract.md 4.3). SKIP_NEXT 일 때만 동의가 필요하다."""
+
+    action: Literal["OPEN_NEXT", "SKIP_NEXT"]
+
+
+class StageRefOut(BaseModel):
+    model_config = _OUT
+
+    stage_id: int
+    stage_type: str
+    status: str
+
+
+class AdvanceOut(BaseModel):
+    """계약서에 예시가 없어 정한 모양: 지금 단계 + 다음 단계 + 요청서 상태."""
+
+    model_config = _OUT
+
+    stage_id: int
+    stage_type: str
+    status: str
+    performance_status: str
+    next: StageRefOut
