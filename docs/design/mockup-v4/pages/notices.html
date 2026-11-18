@@ -7,7 +7,7 @@
 <link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../css/app.css">
 <style>
-  .nt { max-width: 860px; }
+  .nt { max-width: none; }
   .nt-table td.l a { color: var(--sd-ink); }
   .nt-table td.l a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .nt-table tr.is-pin td { background: var(--sd-th); }
@@ -32,9 +32,9 @@
   <button type="button" data-value="detail">글 보기</button>
 </div>
 
-<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>고객지원</li><li data-when="view:detail"><a href="notices.html">공지사항</a></li></ol><h1 data-when="view:list">공지사항</h1></div></div></div>
+<div class="page-top"><div class="container container--narrow page-top__inner"><div><ol class="page-top__crumb"><li>고객지원</li><li data-when="view:detail"><a href="notices.html">공지사항</a></li></ol><h1 data-when="view:list">공지사항</h1></div></div></div>
 
-<main class="container main">
+<main class="container container--narrow main">
   <div class="nt" data-when="view:list">
     <div class="table-box"><table class="table nt-table">
       <thead><tr><th>분류</th><th>제목</th><th>게시일</th></tr></thead>

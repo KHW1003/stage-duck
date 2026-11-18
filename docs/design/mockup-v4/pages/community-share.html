@@ -12,7 +12,7 @@
   .post-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -.6px; line-height: 1.4; }
   .post-head .list__meta { margin-top: 10px; }
   .post-body { padding: 28px 0 8px; font-size: 15px; line-height: 1.85; white-space: pre-line; }
-  .post-photo { max-width: 640px; margin-top: 20px; aspect-ratio: 16/9; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
+  .post-photo { max-width: none; margin-top: 20px; aspect-ratio: 16/9; border-radius: var(--sd-r-box); background: var(--sd-photo) center/cover; background-image: var(--img); }
   /* 도움 돼요·저장·공유: 글(사진) 끝에서 50px, 버튼 아래 댓글 제목까지 30px, 작은 버튼 (2026-11-18) */
   .react { display: flex; justify-content: center; gap: 6px; margin-top: 50px; }
   .post-body + .react { margin-top: 42px; }   /* post-body 아래 여백 8px + 42px = 50px */
@@ -62,9 +62,9 @@
      댓글: PR 게시판에서는 후속 기능이라 뺀 것 — 커뮤니티에 넣을지 팀 결정 필요 -->
 <body data-layout="user" data-nav="community">
 
-<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li><a href="community.html">[질문]</a></li></ol></div></div>
+<div class="page-top"><div class="container container--narrow page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li><a href="community.html">[질문]</a></li></ol></div></div>
 
-<main class="container main">
+<main class="container container--narrow main">
 
   <!-- ───── A 게시판 표준: 머리 → 본문 → 공감·공유 → 댓글 → 이전·다음 글 ───── -->
   <article>

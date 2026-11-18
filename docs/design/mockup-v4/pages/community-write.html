@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="../css/app.css">
 <style>
   /* 시안 F 문서형: 글 보기(community-post-a)와 같은 자리·같은 글자 크기에 바로 쓴다. 칸 테두리 없이 선 하나로만 나눈다 */
-  .wf { max-width: 820px; }
+  .wf { max-width: none; }
   .wf__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-ink); }
   .wf__cat { display: flex; gap: 6px; }
   .wf__cat button { height: 32px; padding: 0 12px; border: 1px solid var(--sd-line-strong); border-radius: 6px; background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
@@ -44,9 +44,9 @@
   <button type="button" data-value="empty">빈 화면</button>
 </div>
 
-<div class="page-top"><div class="container page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li>글쓰기</li></ol></div></div>
+<div class="page-top"><div class="container container--narrow page-top__inner" style="padding-bottom:14px"><ol class="page-top__crumb"><li><a href="community.html">커뮤니티</a></li><li>글쓰기</li></ol></div></div>
 
-<main class="container main">
+<main class="container container--narrow main">
   <form class="wf" onsubmit="return false">
     <div class="wf__top"><div class="wf__cat" role="radiogroup" aria-label="말머리"><button type="button" aria-pressed="true">질문</button><button type="button" aria-pressed="false">자유</button><button type="button" aria-pressed="false">정보</button><button type="button" aria-pressed="false">공연 소식</button></div><small class="muted">말머리를 골라 주세요</small></div>
 
