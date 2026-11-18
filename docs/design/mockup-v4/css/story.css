@@ -1,0 +1,30 @@
+/* 이야기 따라가기 띠와 목록 (목업 전용, React로 옮기지 않는다) */
+.story-bar { position: fixed; left: 50%; bottom: 16px; z-index: 96; width: min(640px, calc(100vw - 32px)); transform: translateX(-50%); padding: 12px 14px 12px 16px; border-radius: 10px; background: #1f2227; color: #fff; font-size: 14px; }
+.story-bar__top { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255, 255, 255, .6); }
+.story-bar__chap { font-weight: 700; color: rgba(255, 255, 255, .85); }
+.story-bar__count { margin-right: auto; font-variant-numeric: tabular-nums; }
+.story-bar__top a, .story-bar__top button { padding: 0; border: 0; background: transparent; color: rgba(255, 255, 255, .6); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.story-bar__top a:hover, .story-bar__top button:hover { color: #fff; }
+.story-bar__say { margin-top: 8px; line-height: 1.6; }
+.story-bar__foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.story-bar__do { flex: 1; min-width: 0; font-size: 13px; color: rgba(255, 255, 255, .7); }
+.story-bar__btn { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 6px; color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.story-bar__btn:hover { border-color: #fff; }
+.story-bar__btn--next { border-color: #fff; background: #fff; color: #1f2227; }
+.story-who { display: inline-flex; align-items: center; height: 20px; margin-right: 8px; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, .16); font-size: 11px; font-weight: 700; vertical-align: 1px; white-space: nowrap; }
+.story-who[data-who="업체 D"] { background: #0368b6; color: #fff; }
+.story-who[data-who="관리자"] { background: #6f7680; color: #fff; }
+.story-who[data-who="사용자"] { background: #d62c2c; color: #fff; }
+body.has-story .mock-switch { bottom: 140px; }   /* 띠와 겹치지 않게 띠 위로 */
+body.has-story .footer { padding-bottom: 150px; }
+
+/* story.html */
+.story-chap + .story-chap { margin-top: 40px; }
+.story-chap h2 { padding-bottom: 12px; border-bottom: 1px solid var(--sd-rule); font-size: 18px; font-weight: 700; }
+.story-chap li a { display: grid; grid-template-columns: 32px 64px minmax(0, 1fr) 260px; gap: 14px; align-items: start; padding: 16px 8px; border-bottom: 1px solid var(--sd-line); font-size: 15px; }
+.story-chap li a:hover { background: var(--sd-hover); }
+.story-no { color: var(--sd-muted); font-variant-numeric: tabular-nums; }
+.story-chap .story-who { margin: 1px 0 0; justify-content: center; }
+.story-what { color: var(--sd-muted); line-height: 1.6; }
+.story-what b { display: block; color: var(--sd-ink); }
+.story-do { font-size: 13px; color: var(--sd-muted); line-height: 1.6; }
