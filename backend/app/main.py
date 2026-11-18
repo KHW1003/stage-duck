@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.dev.router import router as dev_router
 from app.supplier.router import router as supplier_router
+from app.supplier.router import venue_router
 from app.policy.router import router as reports_router
 from app.files.router import router as files_router
 from app.community.router import extra_router as community_extra_router
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     api.include_router(auth_router)
     api.include_router(me_router)
     api.include_router(supplier_router)
+    api.include_router(venue_router)
     api.include_router(reports_router)
     api.include_router(files_router)
     api.include_router(request_router)

@@ -85,6 +85,32 @@ class VenueEquipmentOut(BaseModel):
     quantity: int
 
 
+class VenueListItem(BaseModel):
+    """공간 탐색 목록 한 줄 (FR-SPACE-03). 예약 가능 여부는 업체 확인 전이라 보여 주지 않는다 (constitution 5)."""
+
+    model_config = _OUT
+
+    id: int
+    name: str
+    company_name: str
+    sido: str
+    sigungu: str
+    venue_type: str
+    max_capacity: int
+    rental_fee: int
+    has_resident_engineer: bool
+    band_allowed: bool | None
+
+
+class VenuePage(BaseModel):
+    model_config = _OUT
+
+    items: list[VenueListItem]
+    page: int
+    size: int
+    total: int
+
+
 class VenueOut(BaseModel):
     model_config = _OUT
 
@@ -108,3 +134,10 @@ class VenueOut(BaseModel):
     hall_registered: bool | None
     status: str
     equipment: list[VenueEquipmentOut]
+
+
+class VenuePublicOut(VenueOut):
+    """공간 상세 (GET /venues/{id}). 조건 칸의 null 은 '미확인'으로 보여 준다. 업체 연락처는 넣지 않는다 (CLAUDE.md 20)."""
+
+    supplier_id: int
+    company_name: str

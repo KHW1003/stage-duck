@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -255,6 +255,45 @@ def create_venue(db: Session, user: User, body: VenueIn) -> Venue:
     db.add(venue)
     db.commit()
     return venue
+
+
+def _public_venues():
+    """누구나 보는 공간: 숨김 아님 + 승인된 업체 (정지 업체 공간은 숨기고, 풀리면 다시 보인다 — D-34와 같은 방식)."""
+    return (
+        select(Venue, Supplier.company_name)
+        .join(Supplier, Supplier.id == Venue.supplier_id)
+        .where(Venue.status == "ACTIVE", Supplier.review_status == "APPROVED")
+    )
+
+
+def list_venues(
+    db: Session, *, sido: str | None, sigungu: str | None, min_capacity: int | None, venue_type: str | None,
+    band_allowed: bool | None, sort: str, page: int, size: int,
+) -> tuple[list[tuple[Venue, str]], int]:
+    """AC-F5-01: 지역·수용 인원·유형·밴드 가능으로 거른다. bandAllowed=true 는 '가능'만 (미확인 NULL 은 빠진다)."""
+    q = _public_venues()
+    if sido:
+        q = q.where(Venue.sido == sido)
+    if sigungu:
+        q = q.where(Venue.sigungu == sigungu)
+    if min_capacity:
+        q = q.where(Venue.max_capacity >= min_capacity)
+    if venue_type:
+        q = q.where(Venue.venue_type == venue_type)
+    if band_allowed is not None:
+        q = q.where(Venue.band_allowed.is_(band_allowed))
+    total = db.scalar(select(func.count()).select_from(q.subquery()))
+    order = {"fee": (Venue.rental_fee, Venue.id), "capacity": (Venue.max_capacity.desc(), Venue.id)}.get(sort, (Venue.id,))
+    rows = db.execute(q.order_by(*order).offset((page - 1) * size).limit(size)).all()
+    return [(v, name) for v, name in rows], total
+
+
+def get_public_venue(db: Session, venue_id: int) -> tuple[Venue, str]:
+    """공간 상세. 숨김·미승인·정지 업체 공간은 404."""
+    row = db.execute(_public_venues().where(Venue.id == venue_id)).first()
+    if row is None:
+        raise not_found()
+    return row[0], row[1]
 
 
 def update_venue(db: Session, user: User, venue_id: int, body: VenueIn) -> Venue:
