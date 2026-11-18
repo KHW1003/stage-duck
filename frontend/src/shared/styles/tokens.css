@@ -75,6 +75,13 @@
   --sd-inner-section: 48px;
   --sd-row: 52px;
 
+  /* 메인(/)·업체 메인 간격 (mockup/tokens.css) */
+  --sd-header-pad: 22px;
+  --sd-section-top: 41px;
+  --sd-section-bottom: 48px;
+  --sd-hero-top: 38px;
+  --sd-hero-bottom: 50px;
+
   /* 모서리 */
   --sd-r-card: 12px;
   --sd-r-sample: 16px;
@@ -84,6 +91,9 @@
   --sd-r-field: 4px;
   --sd-r-menu: 10px;    /* 펼친 고르기 목록 (DESIGN.md 5장 고르기 칸) */
   --sd-r-tag: 3px;
+  --sd-r-button: 9px;  /* 메인 버튼 (mockup/tokens.css) */
+  --sd-r-input: 8px;
+  --sd-r-label: 5px;
 
   /* 크기 */
   --sd-touch: 44px;
@@ -103,6 +113,12 @@
   --sd-th: #f7f9fb;
   --sd-hover: #fafbfc;
   --sd-rule: #5a6774;
+
+  /* 사진 위 글자 (메인 슬라이드) */
+  --sd-overlay: linear-gradient(90deg, rgba(12,22,33,.78) 0%, rgba(12,22,33,.45) 55%, rgba(12,22,33,.1) 100%);
+  --sd-on-photo: #ffffff;
+  --sd-on-photo-muted: rgba(255,255,255,.82);
+  --sd-dim: rgba(32, 46, 61, .5);
 
   /* 바닥글 */
   --sd-footer-bg: #d3d9df;

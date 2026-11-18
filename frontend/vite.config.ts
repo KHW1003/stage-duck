@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  // 목업 클래스 이름(.hero__grid)을 그대로 두고 styles.heroGrid 로 쓴다. 원래 이름도 남는다 (camelCase)
+  css: { modules: { localsConvention: "camelCase" } },
   server: {
     // 개발 중에는 API·관리자 화면을 FastAPI(8000)로 넘긴다
     proxy: {
