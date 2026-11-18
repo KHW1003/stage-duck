@@ -192,7 +192,7 @@ describe("소개 글 (/board/:id)", () => {
   it("없거나 내려간 글은 '찾을 수 없어요'를 보여 준다", async () => {
     mockServer({ ...GUEST, "GET /api/v1/pr-posts/99": err(404, "NOT_FOUND", "찾을 수 없어요.") });
     renderAt("/board/99");
-    expect(await screen.findByRole("heading", { name: "페이지를 찾을 수 없어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
   });
 });
 
@@ -264,7 +264,7 @@ describe("내 소개 글 쓰기 (/supplier/posts)", () => {
   it("사용자는 이 화면이 있는지조차 모른다 (CLAUDE.md 10)", async () => {
     mockServer(AS_USER);
     renderAt("/supplier/posts");
-    expect(await screen.findByRole("heading", { name: "페이지를 찾을 수 없어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
   });
 
   it("방문자는 로그인으로 보낸다", async () => {

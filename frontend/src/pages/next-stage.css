@@ -1,0 +1,10 @@
+/* [다음 단계로] (mockup-v4/pages/next.html 인라인 style 을 클래스로). 모바일 공통 배치는 kit-mobile.css */
+.next__sub { min-width: 160px; }
+.next__main { min-width: 240px; }
+.next__fee { font-weight: 400; font-size: var(--sd-text-small); }
+
+@media (max-width: 560px) {
+  .track { --steps: 1 !important; }
+  .track li + li { border-left: 0; border-top: 1px solid var(--sd-line); }
+  .invoice__row { grid-template-columns: 96px minmax(0, 1fr) auto; gap: 10px; }
+}

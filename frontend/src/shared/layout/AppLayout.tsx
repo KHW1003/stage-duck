@@ -5,22 +5,38 @@
  * - 본문은 data-sd-area="content" 로 목업 v3 다듬은 값(글자 15px, 모서리 8px)을 쓴다
  * - 화면 맨 위 시뮬레이션 안내 띠는 두지 않는다 (CLAUDE.md 26, D-41)
  * - 채팅 위젯(3번 묶음)은 만들어지면 여기에 한 번만 둔다 (목업 README "채팅 위젯")
+ * - 오류 화면 (mockup-v4 error.html): 화면이 깨지면 500, 인터넷이 끊기면 "연결 끊김".
+ *   연결 끊김은 화면을 지우지 않고 가려 두기만 해서, 다시 연결되면 쓰던 내용이 그대로 남아 있다
  */
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { layoutKindOf, useMe } from "../auth/useMe";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Footer } from "./Footer";
 import { Gnb } from "./Gnb";
+import { useOnline } from "./useOnline";
+import { ErrorView } from "./ErrorView";
 import styles from "./AppLayout.module.css";
 
 export function AppLayout() {
   const me = useMe();
   const kind = layoutKindOf(me.data);
   const partner = kind === "partner" || kind === "partner-review";
+  const online = useOnline();
+  const { pathname } = useLocation();
   return (
     <div className={styles.app} data-theme={partner ? "partner" : undefined} data-layout={kind}>
       <Gnb kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />
       <main className={styles.main} data-sd-area="content">
-        <Outlet />
+        {!online && (
+          <div className="container main">
+            <ErrorView kind="offline" onRetry={() => navigator.onLine && window.location.reload()} />
+          </div>
+        )}
+        <div hidden={!online}>
+          <ErrorBoundary resetKey={pathname}>
+            <Outlet />
+          </ErrorBoundary>
+        </div>
       </main>
       <Footer partner={partner} />
     </div>

@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { act } from "react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import type { Me } from "../src/shared/api/types";
@@ -188,11 +189,11 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
   it("다른 역할의 화면은 '찾을 수 없어요'로 숨긴다 (CLAUDE.md 10)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     renderAt("/me/performances");
-    expect(await screen.findByRole("heading", { name: "페이지를 찾을 수 없어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
     expect(screen.queryByText("내 공연 화면")).not.toBeInTheDocument();
-    // 목업 notice.html 과 같은 버튼 두 개
+    // 목업 v4 error.html 404 와 같은 버튼 두 개 (홈은 계정 종류별 첫 화면)
     expect(screen.getByRole("button", { name: "이전 화면" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "처음으로" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/supplier/postings");
   });
 
   it("심사 중 업체가 공고 목록에 오면 입점·심사 화면으로 보낸다", async () => {
@@ -201,10 +202,33 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
     expect(await screen.findByTestId("where")).toHaveTextContent("/supplier/onboarding");
   });
 
-  it("서버 오류(500)는 로그인 화면으로 보내지 않고 서버 문구를 보여 준다", async () => {
-    mockServer({ "GET /api/v1/me": { status: 500, body: { code: "INTERNAL", message: "잠시 뒤 다시 시도해 주세요.", fieldErrors: [] } } });
+  it("서버 오류(500)는 로그인 화면으로 보내지 않고 오류 화면과 오류 번호를 보여 준다 (목업 v4 error.html)", async () => {
+    mockServer({ "GET /api/v1/me": { status: 500, body: { code: "INTERNAL", message: "잠시 뒤 다시 시도해 주세요.", fieldErrors: [], traceId: "req_7f3a2c" } } });
     renderAt("/me/performances");
-    expect(await screen.findByRole("alert")).toHaveTextContent("잠시 뒤 다시 시도해 주세요.");
+    expect(await screen.findByRole("heading", { name: "서버에 문제가 생겼어요" })).toBeInTheDocument();
+    expect(screen.getByText(/오류 번호 req_7f3a2c/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+  });
+
+  it("이용 정지 계정은 로그인 화면 대신 정지 안내를 본다", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED" } } });
+    renderAt("/me/performances");
+    expect(await screen.findByRole("heading", { name: "이용이 정지된 계정이에요" })).toBeInTheDocument();
+    expect(within(screen.getByRole("main")).getByRole("link", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries/new");
+  });
+
+  it("인터넷이 끊기면 연결 끊김 화면을 덮고, 다시 연결되면 쓰던 화면이 그대로 남아 있다", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderAt("/community");
+    await screen.findByRole("button", { name: /광주밴드/ });
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
+    expect(screen.getByRole("heading", { name: "인터넷 연결이 끊겼어요" })).toBeInTheDocument();
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(screen.queryByRole("heading", { name: "인터넷 연결이 끊겼어요" })).not.toBeInTheDocument();
   });
 });
 
