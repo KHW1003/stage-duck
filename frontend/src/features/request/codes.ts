@@ -26,13 +26,14 @@ export const VENUE_TYPES: Option[] = [
   { value: "ETC", label: "기타" },
 ];
 
+/** 공연장 꼭 필요한 조건 — 공간 조건(VenueSnapshot.conditions) 키와 같은 이름이어야 CHK-03 이 비교한다 (#65) */
 export const MUST_HAVE: Option[] = [
   { value: "BAND_ALLOWED", label: "밴드 공연 가능" },
-  { value: "EXTERNAL_EQUIPMENT", label: "외부 음향 장비 반입" },
-  { value: "EXTERNAL_ENGINEER", label: "외부 엔지니어 허용" },
-  { value: "WAITING_ROOM", label: "대기실" },
-  { value: "STAGE", label: "무대 단상" },
-  { value: "PARKING", label: "주차" },
+  { value: "EXTERNAL_EQUIPMENT_ALLOWED", label: "외부 음향 장비 반입" },
+  { value: "EXTERNAL_ENGINEER_ALLOWED", label: "외부 엔지니어 허용" },
+  { value: "HAS_WAITING_ROOM", label: "대기실" },
+  { value: "HAS_STAGE_PLATFORM", label: "무대 단상" },
+  { value: "HAS_PARKING", label: "주차" },
 ];
 
 export const SERVICES: Option[] = [
