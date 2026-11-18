@@ -100,6 +100,12 @@ class VenueListItem(BaseModel):
     rental_fee: int
     has_resident_engineer: bool
     band_allowed: bool | None
+    # 목록 카드의 "15:00 입실"과 조건 필터(외부 장비·외부 엔지니어·대기실·주차)에 쓴다 (목업 spaces.html)
+    checkin_time: time
+    external_equipment_allowed: bool | None
+    external_engineer_allowed: bool | None
+    has_waiting_room: bool | None
+    has_parking: bool | None
 
 
 class VenuePage(BaseModel):

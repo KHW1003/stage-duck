@@ -3,8 +3,8 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
-import { condFromQuery, filterVenues, DEFAULT_COND } from "../src/features/venue/filter";
-import { VENUES } from "../src/features/venue/samples";
+import type { VenueDetail, VenueListItem } from "../src/features/venue/api";
+import { DEFAULT_COND, condFromQuery, filterVenues, toQuery } from "../src/features/venue/filter";
 import { ageOn, localErrors } from "../src/pages/SignupPage";
 import type { Me } from "../src/shared/api/types";
 
@@ -187,54 +187,110 @@ describe("비밀번호 찾기", () => {
   });
 });
 
+// 시드 공간 A·B·C (backend/app/demo/seed.py)
+const item = (id: number, name: string, over: Partial<VenueListItem> = {}): VenueListItem => ({
+  id, name, companyName: `업체 ${name.slice(-1)}`, sido: "광주광역시", sigungu: "동구", venueType: "CULTURE_SPACE", maxCapacity: 120,
+  rentalFee: 500000, hasResidentEngineer: false, bandAllowed: true, checkinTime: "15:00:00", externalEquipmentAllowed: true,
+  externalEngineerAllowed: null, hasWaitingRoom: null, hasParking: null, ...over,
+});
+const A = item(1, "공간 A", { venueType: "CONCERT_HALL", maxCapacity: 200, rentalFee: 4000000, hasResidentEngineer: true, checkinTime: "14:00:00", hasWaitingRoom: true });
+const B = item(2, "공간 B", { sigungu: "서구", maxCapacity: 100, rentalFee: 400000, checkinTime: "17:00:00" });
+const C = item(3, "공간 C");
+const C_DETAIL: VenueDetail = {
+  ...C, supplierId: 30, address: "가상로 3", checkoutTime: "23:00:00", hasStagePlatform: true, hallRegistered: null, status: "ACTIVE",
+  equipment: [{ category: "마이크", name: "유선 보컬 마이크", quantity: 2 }],
+};
+
+/** GET /venues?… 는 쿼리가 바뀌므로 경로로 고른다. 받은 주소를 모아 둔다 */
+function mockVenues(extra: Record<string, { status: number; body?: unknown }> = {}) {
+  const urls: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      urls.push(url);
+      const key = `${(init?.method ?? "GET").toUpperCase()} ${url}`;
+      const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
+      if (extra[key]) return json(extra[key].status, extra[key].body ?? {});
+      if (url.startsWith("/api/v1/venues?")) {
+        const q = new URLSearchParams(url.split("?")[1]);
+        const min = Number(q.get("minCapacity") ?? 0);
+        const sorted = q.get("sort") === "fee" ? [B, C, A] : q.get("sort") === "capacity" ? [A, C, B] : [A, B, C];
+        const items = sorted.filter((v) => v.maxCapacity >= min);
+        return json(200, { items, page: 1, size: 50, total: items.length });
+      }
+      if (url === "/api/v1/venues/3") return json(200, C_DETAIL);
+      if (url.startsWith("/api/v1/venues/")) return json(404, { code: "NOT_FOUND", message: "찾을 수 없어요.", fieldErrors: [] });
+      return json(401, { code: "UNAUTHENTICATED", message: "", fieldErrors: [] });
+    }),
+  );
+  return urls;
+}
+
 describe("공간 찾기 (/venues)", () => {
-  it("기본은 광주·세 유형, 대관료 낮은 순 (목업: 공간 B → C → A)", () => {
-    expect(filterVenues(VENUES, DEFAULT_COND, null, "price").map((v) => v.name)).toEqual(["공간 B", "공간 C", "공간 A"]);
-    expect(filterVenues(VENUES, DEFAULT_COND, null, "capacity").map((v) => v.name)).toEqual(["공간 A", "공간 C", "공간 B"]);
+  it("서버에는 지역·관객 수·밴드·정렬을 보내고, 유형 여러 개·나머지 조건은 받은 목록에서 거른다", () => {
+    expect(toQuery({ ...DEFAULT_COND, audience: "80", conditions: ["밴드 공연 가능", "주차"] }, "price")).toEqual({
+      sido: "광주광역시", minCapacity: 80, bandAllowed: true, sort: "fee",
+    });
+    expect(toQuery({ ...DEFAULT_COND, region: "전체" }, "capacity")).toEqual({ sido: undefined, minCapacity: undefined, bandAllowed: undefined, sort: "capacity" });
+    expect(filterVenues([A, B, C], { ...DEFAULT_COND, types: ["CULTURE_SPACE"] }, null).map((v) => v.name)).toEqual(["공간 B", "공간 C"]);
+    expect(filterVenues([A, B, C], { ...DEFAULT_COND, conditions: ["대기실"] }, null).map((v) => v.name)).toEqual(["공간 A"]);
   });
 
   it("메인에서 고른 조건(?sido=&type=&audience=)을 받는다", () => {
     const c = condFromQuery(new URLSearchParams("sido=광주&type=야외·루프탑&audience=150명 이상"));
-    expect(c).toMatchObject({ region: "광주", types: ["루프탑"], audience: "150" });
+    expect(c).toMatchObject({ region: "광주", types: ["ROOFTOP"], audience: "150" });
+  });
+
+  it("AC-F5-01 처음엔 광주·대관료 낮은 순(B → C → A), 카드에 입실 시각과 업체가 보인다", async () => {
+    const urls = mockVenues();
+    renderAt("/venues");
+    const cards = await screen.findAllByRole("link", { name: /공간 [ABC]/ });
+    expect(cards.map((a) => a.getAttribute("href"))).toEqual(["/venues/2", "/venues/3", "/venues/1"]);
+    expect(within(cards[0]).getByText("17:00 입실")).toBeInTheDocument();
+    expect(within(cards[2]).getByText("풀스펙")).toBeInTheDocument();
+    expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).toContain("sido=%EA%B4%91%EC%A3%BC%EA%B4%91%EC%97%AD%EC%8B%9C");
   });
 
   it("조건은 [공간 찾기]를 눌러야 바뀌고, 결과가 없으면 [조건 초기화]로 돌아간다", async () => {
-    mockServer({});
+    mockVenues();
     renderAt("/venues");
     expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
     await userEvent.type(screen.getByLabelText("관객 수"), "300");
     expect(screen.getAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
     await userEvent.click(screen.getByRole("button", { name: "공간 찾기" }));
-    expect(screen.getByText("조건에 맞는 공간이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("조건에 맞는 공간이 없어요")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "조건 초기화" }));
-    expect(screen.getAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
   });
 
   it("유형 타일을 누르면 바로 그 유형만 보인다", async () => {
-    mockServer({});
+    mockVenues();
     renderAt("/venues");
     const tiles = await screen.findByRole("group", { name: "공간 유형" });
-    await userEvent.click(within(tiles).getByRole("button", { name: /루프탑/ }));
-    expect(screen.getAllByRole("link", { name: /공간 [ABC]/ }).map((a) => a.getAttribute("href"))).toEqual(["/venues/2"]);
+    await screen.findAllByRole("link", { name: /공간 [ABC]/ });
+    await userEvent.click(within(tiles).getByRole("button", { name: /전문 공연장/ }));
+    expect(screen.getAllByRole("link", { name: /공간 [ABC]/ }).map((a) => a.getAttribute("href"))).toEqual(["/venues/1"]);
   });
 });
 
 describe("공간 상세 (/venues/:id)", () => {
-  it("작은 사진을 누르면 큰 사진이 바뀌고, 없는 공간은 찾을 수 없어요", async () => {
-    mockServer({});
+  it("작은 사진을 누르면 큰 사진이 바뀌고, 미확인 조건은 '미확인', 없는 공간은 찾을 수 없어요", async () => {
+    mockVenues();
     const a = renderAt("/venues/3");
     expect(await screen.findByRole("heading", { level: 1, name: "공간 C" })).toBeInTheDocument();
     expect(screen.getByText("1", { selector: ".gallery__count b" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "사진 3" }));
     expect(screen.getByRole("button", { name: "사진 3" })).toHaveAttribute("aria-current", "true");
     expect(screen.getByText("3", { selector: ".gallery__count b" })).toBeInTheDocument();
+    expect(screen.getByText("유선 보컬 마이크")).toBeInTheDocument();
+    expect(screen.getByText("대기실 미확인 · 무대 단상 있음 · 주차 미확인")).toBeInTheDocument();
     a.unmount();
     renderAt("/venues/999");
     expect(await screen.findByText(/찾을 수 없/)).toBeInTheDocument();
   });
 
   it("방문자에게 오퍼 상자는 로그인으로 안내한다 (돌아올 주소 포함)", async () => {
-    mockServer({});
+    mockVenues();
     renderAt("/venues/3");
     const box = await screen.findByRole("complementary", { name: "오퍼 보내기" });
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
@@ -246,7 +302,7 @@ describe("공간 상세 (/venues/:id)", () => {
       audience: 80, sido: "광주", sigungu: "동구", currentVersion: 1, nextAction: "WAIT_QUOTES", nextStageId: 1,
       stages: [{ id: id * 10, stageType: "VENUE", seq: 1, status, quoteCount: 0 }],
     });
-    mockServer({
+    mockVenues({
       "GET /api/v1/me": { status: 200, body: USER },
       "GET /api/v1/performances?mine=true": { status: 200, body: { active: [perf(1, "가을밤 밴드 공연", "OPEN"), perf(2, "끝난 공연장", "CONFIRMED")], draft: [], past: [] } },
     });

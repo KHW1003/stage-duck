@@ -1,9 +1,12 @@
 /**
  * 메인 공간 둘러보기 (mockup/home.html 3번 구역): 지역·유형·관객 수 고르기 → 공간 찾기(/venues?...), 예시 공간 3곳.
  * 고른 값은 화면 안 상태로 들고 있다가 [공간 찾기]에서 쿼리로 넘긴다 (공간 찾기 화면이 같은 이름으로 읽는다).
+ * 예시 공간은 GET /venues 의 처음 3곳. 불러오지 못하면 목업 예시(content.ts SPACES)를 그대로 보여 준다.
  */
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useVenues, type VenueListItem } from "../venue/api";
+import { TYPE_LABEL, cardSpecs, shortSido, venuePhotos, won } from "../venue/view";
 import { SEARCH_OPTIONS, SPACES, type SpaceSample } from "./content";
 import { cx } from "./cx";
 import s from "./home.module.css";
@@ -44,9 +47,9 @@ export function SpaceSearch() {
   );
 }
 
-export function SpaceCard({ space }: { space: SpaceSample }) {
+export function SpaceCard({ space }: { space: SpaceSample & { id?: number } }) {
   return (
-    <Link className={s.spaceCard} to="/venues">
+    <Link className={s.spaceCard} to={space.id ? `/venues/${space.id}` : "/venues"}>
       <div className={s.photo} style={{ "--img": `url('${space.photo}')` } as CSSProperties}>
         <span className={cx(s.chip, s.chipPhoto)}>{space.capacity}</span>
       </div>
@@ -60,7 +63,25 @@ export function SpaceCard({ space }: { space: SpaceSample }) {
   );
 }
 
+/** 공간 탐색 응답 → 메인 카드 모양 */
+export function toSample(v: VenueListItem): SpaceSample & { id: number } {
+  const [, checkin, third] = cardSpecs(v);
+  return {
+    id: v.id,
+    name: v.name,
+    meta: `${shortSido(v.sido)} ${v.sigungu} · ${TYPE_LABEL[v.venueType]} · ${v.companyName}`,
+    desc: `${third} · ${checkin}`,
+    price: won(v.rentalFee),
+    priceUnit: v.hasResidentEngineer ? "풀스펙" : "대관료",
+    capacity: `최대 ${v.maxCapacity}명`,
+    photo: venuePhotos(v)[0],
+  };
+}
+
 export function SpacesSection() {
+  const venues = useVenues({ sort: "latest", size: 3 });
+  const live = venues.data?.items.length ? venues.data.items.slice(0, 3).map(toSample) : null;
+  const spaces: (SpaceSample & { id?: number })[] = live ?? SPACES;
   return (
     <section className={s.spaces} id="spaces">
       <div className={s.wrap}>
@@ -75,11 +96,11 @@ export function SpacesSection() {
         </div>
         <SpaceSearch />
         <div className={s.listHead}>
-          <span>공간 예시 {SPACES.length}곳</span>
+          <span>공간 예시 {spaces.length}곳</span>
           <span className={s.muted}>시연용 공간 · 금액은 부가세 포함</span>
         </div>
         <div className={s.spaceGrid}>
-          {SPACES.map((sp) => (
+          {spaces.map((sp) => (
             <SpaceCard key={sp.name} space={sp} />
           ))}
         </div>
