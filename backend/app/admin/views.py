@@ -8,6 +8,7 @@ from collections.abc import Callable
 from datetime import datetime
 from urllib.parse import urlencode
 
+from markupsafe import Markup
 from sqladmin import BaseView, ModelView, action, expose
 from sqladmin.flash import flash
 from starlette.concurrency import run_in_threadpool
@@ -20,7 +21,8 @@ from app.core.db import SessionLocal
 from app.core.errors import AppError
 from app.community import service as community_service
 from app.demo import service as demo_service
-from app.models import FreeComment, FreePost, Report, Sanction, StatusHistory, Supplier, User
+from app.admin import service as admin_service
+from app.models import FreeComment, FreePost, Performance, PrPost, Report, Sanction, StatusHistory, Supplier, User
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
 
@@ -169,6 +171,86 @@ class StatusHistoryAdmin(ModelView, model=StatusHistory):
     column_default_sort = [(StatusHistory.created_at, True)]
 
 
+class PrPostAdmin(ModelView, model=PrPost):
+    """업체 찾기 소개 글 — [블라인드]하면 업체 경고 1회, [블라인드 해제]하면 다시 활성 (AC-F4-03·10). 4번 액션."""
+
+    name = "업체 소개 글"
+    name_plural = "업체 소개 글"
+    icon = "fa-solid fa-bullhorn"
+    can_create = can_edit = can_delete = False
+    column_list = [PrPost.id, PrPost.category, PrPost.title, PrPost.supplier_id, PrPost.status, PrPost.blind_reason,
+                   PrPost.created_at]
+    column_searchable_list = [PrPost.title]
+    column_default_sort = [(PrPost.created_at, True)]
+
+    @action(name="blind", label="블라인드 (사유 입력)")
+    async def blind(self, request: Request) -> Response:
+        return _to_reason_form(request, "pr_post_blind", self.identity)
+
+    @action(name="unblind", label="블라인드 해제", confirmation_message="선택한 글의 블라인드를 풀까요?")
+    async def unblind(self, request: Request) -> Response:
+        done, errors = await run_in_threadpool(
+            _run_for_each, _pks(request), policy_service.unblind_post, actor_id=current_admin_id(request)
+        )
+        _report(request, "블라인드 해제", done, errors)
+        return _back(request, self.identity)
+
+
+class PerformanceAdmin(ModelView, model=Performance):
+    """공연 — 읽기 전용. [거래 이력]으로 모든 상태 변경을 시간순으로 본다 (AC-F5-13)."""
+
+    name = "공연"
+    name_plural = "공연"
+    icon = "fa-solid fa-music"
+    can_create = can_edit = can_delete = False
+    column_list = [Performance.id, Performance.title, Performance.user_id, Performance.status, Performance.show_date, "history"]
+    column_labels = {"history": "거래 이력"}
+    # 목록·상세에서 한 번 눌러 이력 화면으로 (체크박스 → 작업 메뉴를 안 거치게)
+    column_formatters = {"history": lambda m, a: Markup(f'<a href="/admin/performance-history?pk={m.id}">이력 보기</a>')}
+    column_formatters_detail = column_formatters
+    column_searchable_list = [Performance.title]
+    column_default_sort = [(Performance.id, True)]
+
+    @action(name="history", label="거래 이력 보기", add_in_detail=True, add_in_list=True)
+    async def history(self, request: Request) -> Response:
+        pks = _pks(request)
+        return RedirectResponse(f"{request.url_for('admin:view-performance-history')}?pk={pks[0] if pks else ''}", status_code=302)
+
+
+class PerformanceHistoryView(BaseView):
+    """공연 한 건의 거래 이력 화면. 메뉴에는 보이지 않는다."""
+
+    name = "거래 이력"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
+
+    @expose("/performance-history", methods=["GET"], identity="performance-history")
+    async def performance_history(self, request: Request) -> Response:
+        pk = request.query_params.get("pk", "")
+        if not pk.isdigit():
+            flash(request, "공연을 하나 골라 주세요.", "danger")
+            return _back(request, "performance")
+
+        def _load() -> list[dict]:
+            with SessionLocal() as db:
+                return [
+                    {"created_at": r.created_at, "entity_type": r.entity_type, "entity_id": r.entity_id,
+                     "from_status": r.from_status, "to_status": r.to_status, "actor_user_id": r.actor_user_id,
+                     "reason": r.reason}
+                    for r in admin_service.performance_history(db, int(pk))
+                ]
+
+        try:
+            rows = await run_in_threadpool(_load)
+        except AppError as exc:
+            flash(request, exc.message, "danger")
+            return _back(request, "performance")
+        return await self.templates.TemplateResponse(
+            request, "performance_history.html", {"performance_id": int(pk), "rows": rows}
+        )
+
+
 class FreePostAdmin(ModelView, model=FreePost):
     """커뮤니티 글 — 신고된 글은 [블라인드]로 숨기고 작성자에게 경고 1회 (FR-COMM-04). 2번 묶음."""
 
@@ -214,6 +296,7 @@ REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "user_warn": ("회원 경고 (3회면 정지)", policy_service.warn),
     "report_warn": ("신고 경고 (3회면 정지)", policy_service.warn_report),
     "report_dismiss": ("신고 기각", policy_service.dismiss_report),
+    "pr_post_blind": ("업체 소개 글 블라인드 (업체 경고 1회)", policy_service.blind_post),
     "free_post_blind": ("커뮤니티 글 블라인드 (작성자 경고 1회)", community_service.blind_post),
     "free_comment_blind": ("커뮤니티 댓글 블라인드 (작성자 경고 1회)", community_service.blind_comment),
 }

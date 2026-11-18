@@ -16,11 +16,13 @@ import { ConfirmDelete } from "../features/community/ConfirmDelete";
 import { ReportModal } from "../features/community/ReportModal";
 import { CATEGORY_LABEL, authorLabel, loginPath, longDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 export function CommunityPostPage() {
   const id = Number(useParams().id);
   const me = useMe();
   const post = useFreePost(id);
+  usePageMeta(post.data && `[${CATEGORY_LABEL[post.data.category]}] ${post.data.title} · STAGE DUCK 커뮤니티`);
   const remove = useDeleteFreePost();
   const navigate = useNavigate();
   const warned = (useLocation().state as { contactWarning?: boolean } | null)?.contactWarning;

@@ -10,6 +10,7 @@ import { useMyPerformances } from "../features/performance/api";
 import { dateLabel, hm, nextActionText } from "../features/performance/labels";
 import { StageTrack } from "../features/performance/StageTrack";
 import styles from "../features/performance/Performance.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 function Item({ p }: { p: PerformanceSummary }) {
   const stage = p.stages.find((s) => s.id === p.nextStageId);
@@ -52,6 +53,7 @@ function Group({ title, desc, items }: { title: string; desc?: string; items: Pe
 
 export function MyPerformancesPage() {
   const mine = useMyPerformances();
+  usePageMeta("내 공연");
   const empty = mine.data && mine.data.active.length + mine.data.draft.length + mine.data.past.length === 0;
 
   return (

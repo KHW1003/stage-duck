@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.db import Base
 from app.core.errors import not_found
-from app.demo.seed import DEMO_PHONE, HOST, SUPPLIERS
-from app.models import Supplier, SupplierCategory, User
+from app.demo.seed import DEMO_PHONE, HOST, SUPPLIERS, VENUES
+from app.models import Supplier, SupplierCategory, User, Venue, VenueEquipment
 
 
 def is_seeded(db: Session) -> bool:
@@ -35,10 +35,17 @@ def _seed(db: Session, now: datetime) -> None:
         )
         supplier.categories = [SupplierCategory(category=c) for c in categories]
         db.add(supplier)
+        if key in VENUES:
+            db.flush()
+            spec = dict(VENUES[key])
+            gear = spec.pop("equipment")
+            venue = Venue(supplier_id=supplier.id, **spec)
+            venue.equipment = [VenueEquipment(category=c, name=n, quantity=q) for c, n, q in gear]
+            db.add(venue)
 
 
 def seed_demo(db: Session, now: datetime) -> None:
-    """FR-DEMO-01: 사용자·업체 A~G 시드를 넣는다. 이미 있으면 그대로 둔다."""
+    """FR-DEMO-01: 사용자·업체 A~G·공간 A~C 시드를 넣는다. 이미 있으면 그대로 둔다."""
     if is_seeded(db):
         return
     _seed(db, now)

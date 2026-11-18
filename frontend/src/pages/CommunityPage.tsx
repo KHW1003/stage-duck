@@ -12,6 +12,7 @@ import { ErrorNotice } from "../shared/ui/ErrorText";
 import { DEFAULT_PARAMS, useFreePosts, type ListParams } from "../features/community/api";
 import { CATEGORIES, CATEGORY_LABEL, authorLabel, loginPath, shortDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const SORTS: { value: ListParams["sort"]; label: string }[] = [
   { value: "latest", label: "최신순" },
@@ -24,6 +25,7 @@ export function CommunityPage() {
   const [params, setParams] = useState<ListParams>(DEFAULT_PARAMS);
   const [draft, setDraft] = useState({ field: DEFAULT_PARAMS.field, q: "" });
   const posts = useFreePosts(params);
+  usePageMeta("커뮤니티");
   const today = new Date();
   const writeTo = me.data ? "/community/write" : loginPath("/community/write");
   const pages = posts.data ? Math.max(1, Math.ceil(posts.data.total / posts.data.pageSize)) : 1;

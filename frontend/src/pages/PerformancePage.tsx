@@ -14,6 +14,7 @@ import { dateLabel, hm, nextActionText } from "../features/performance/labels";
 import { NextStagePanel } from "../features/performance/NextStagePanel";
 import { StageTrack } from "../features/performance/StageTrack";
 import styles from "../features/performance/Performance.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const EDITABLE = ["DRAFT", "PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT"];
 const POSTED = ["PUBLISHED", "ASSIGNING"];
@@ -21,6 +22,7 @@ const POSTED = ["PUBLISHED", "ASSIGNING"];
 export function PerformancePage() {
   const id = Number(useParams().id);
   const perf = usePerformance(id);
+  usePageMeta(perf.data?.title);
   const withdraw = useWithdraw();
   const [askWithdraw, setAskWithdraw] = useState(false);
 
