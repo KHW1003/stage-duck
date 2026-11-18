@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, invalid_state, not_found
+from app.check.calc import PerformanceInput
 from app.core.history import record_transition
 from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier
@@ -140,6 +141,30 @@ def is_related(db: Session, user_id: int, supplier_id: int) -> bool:
     견적서(3번)·오퍼(1번)·채팅(3번) 테이블이 생긴 뒤 그 묶음의 서비스 함수로 채운다. 그 전엔 1번이 목업으로 쓴다.
     """
     raise NotImplementedError("견적서 #41·채팅 #42·오퍼 #32 머지 뒤 2번 묶음에서 구현한다")
+
+
+def performance_input(db: Session, performance_id: int) -> PerformanceInput:
+    """[약속 2 → 3·4] 자동 검사(run_checks)에 넘길 요청서 값 (지금 버전). 없는 공연은 404.
+
+    must_have: STEP2 공연장 "꼭 필요한 조건" 키 (BAND_ALLOWED 등, CHK-03)
+    budgets: 단계별 예산 {"VENUE": 600000, "EQUIPMENT": ...} — 적지 않은 단계는 빠진다 (CHK-10)
+    """
+    perf = db.get(Performance, performance_id)
+    if perf is None:
+        raise not_found()
+    needs = perf.needs or {}
+    venue = needs.get("venue") or {}
+    equipment = needs.get("equipment") or {}
+    budgets = {k: v for k, v in (("VENUE", venue.get("budget")), ("EQUIPMENT", equipment.get("budget"))) if v}
+    return PerformanceInput(
+        version=perf.current_version,
+        audience=perf.audience,
+        rehearsal_start=perf.rehearsal_start,
+        show_start=perf.show_start,
+        show_end=perf.show_end,
+        must_have=frozenset(venue.get("mustHave") or []),
+        budgets=budgets,
+    )
 
 
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:

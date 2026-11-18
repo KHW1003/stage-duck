@@ -93,7 +93,10 @@ def test_ac_f2_15_equipment_quote_sent(client, db):
     data = res.json()
     assert data["version"] == 1
     assert data["chatRoomId"] is not None  # #42: 견적서를 보내면 채팅방이 생긴다
-    assert data["checks"] == []
+    # 자동 검사 (4번 run_checks, 요청서 값은 2번 performance_input): 설치 90분이 리허설 17:00 전에 끝난다
+    checks = {c["id"]: c["result"] for c in data["checks"]}
+    assert checks["CHK-05"] == "PASS"
+    assert all(c["message"] for c in data["checks"])
     quote = db.get(Quote, data["quoteId"])
     assert (quote.stage_id, quote.status, quote.current_version, quote.label) == (stage_id, "SENT", 1, "기본형")
     v1 = quote.versions[0]
