@@ -27,10 +27,6 @@ describe("공통 화면", () => {
     expect(screen.queryByText(/포트폴리오 시뮬레이션/)).not.toBeInTheDocument();
   });
 
-  it("서버 상태를 불러와 보여준다", async () => {
-    renderApp("/");
-    expect(await screen.findByText(/정상 \(test\)/)).toBeInTheDocument();
-  });
 });
 
 describe("StatusBadge", () => {

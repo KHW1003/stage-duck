@@ -6,6 +6,8 @@ import { CommunitySavedPage } from "./pages/CommunitySavedPage";
 import { CommunityWritePage } from "./pages/CommunityWritePage";
 import { BoardPage } from "./pages/BoardPage";
 import { HomePage } from "./pages/HomePage";
+import { PartnerPage } from "./pages/PartnerPage";
+import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
 import { PerformancePage } from "./pages/PerformancePage";
@@ -22,13 +24,17 @@ import { NotFound } from "./shared/layout/NotFound";
 
 /**
  * 라우트 목록은 specs/plan.md 6장. 관리자 화면(/admin)은 React가 아니라 서버의 SQLAdmin이다.
- * 모든 화면은 AppLayout 안에 둔다. 로그인이 필요한 화면은 <Route element={<RequireAuth roles={[...]} />}> 로 감싼다.
+ * 메인(/)·업체 메인(/partner)은 HomeLayout, 나머지 화면은 AppLayout 안에 둔다. 로그인이 필요한 화면은 <Route element={<RequireAuth roles={[...]} />}> 로 감싼다.
  */
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      {/* 메인·업체 메인은 머리·바닥글 모양이 달라 HomeLayout (mockup/home.html · partner.html) */}
+      <Route element={<HomeLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/partner" element={<PartnerPage />} />
+      </Route>
+      <Route element={<AppLayout />}>
         <Route path="/signup/supplier" element={<SupplierSignupPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>

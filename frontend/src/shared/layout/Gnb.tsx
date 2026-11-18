@@ -76,7 +76,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
             <MenuLink key={m.label} item={m} />
           ))}
           {!me && (
-            <Link className={styles.mobileOnly} to="/signup/supplier">
+            <Link className={styles.mobileOnly} to="/partner">
               업체신가요?
             </Link>
           )}
@@ -90,7 +90,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
             </>
           ) : (
             <>
-              <Link className={`${styles.text} ${styles.desktopOnly}`} to="/signup/supplier">
+              <Link className={`${styles.text} ${styles.desktopOnly}`} to="/partner">
                 업체신가요?
               </Link>
               <span className={`${styles.sep} ${styles.desktopOnly}`} />
@@ -121,7 +121,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
 }
 
 /** 바깥을 누르거나 Esc 를 누르면 닫히는 팝업 */
-function Popover({ button, children }: { button: (p: { open: boolean; toggle: () => void }) => ReactNode; children: ReactNode }) {
+export function Popover({ button, children }: { button: (p: { open: boolean; toggle: () => void }) => ReactNode; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -144,14 +144,20 @@ function Popover({ button, children }: { button: (p: { open: boolean; toggle: ()
   );
 }
 
-function NotificationBell() {
+type Trigger = (p: { open: boolean; toggle: () => void }) => ReactNode;
+
+/** 알림 종 + 패널. 메인 머리(features/home)는 trigger 로 목업 모양 버튼만 바꿔 같은 패널을 쓴다 */
+export function NotificationBell({ trigger }: { trigger?: Trigger }) {
   return (
     <Popover
-      button={({ open, toggle }) => (
-        <button type="button" className={styles.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
-          <Icon name="bell" />
-        </button>
-      )}
+      button={
+        trigger ??
+        (({ open, toggle }) => (
+          <button type="button" className={styles.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
+            <Icon name="bell" />
+          </button>
+        ))
+      }
     >
       <div className={styles.notiPanel} role="dialog" aria-label="알림">
         <div className={styles.notiHead}>
@@ -166,12 +172,13 @@ function NotificationBell() {
   );
 }
 
-function AccountMenu({ me, kind }: { me: Me; kind: LayoutKind }) {
+/** 계정 메뉴. 메인 머리(features/home)는 trigger 로 목업의 동그란 아바타 버튼을 쓴다 */
+export function AccountMenu({ me, kind, trigger }: { me: Me; kind: LayoutKind; trigger?: Trigger }) {
   const logout = useLogout();
   const name = me.nickname ?? me.name;
   return (
     <Popover
-      button={({ open, toggle }) => (
+      button={trigger ?? (({ open, toggle }) => (
         <button type="button" className={styles.user} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
           <span className={styles.avatar} aria-hidden="true">
             {name.slice(0, 1)}
@@ -179,7 +186,7 @@ function AccountMenu({ me, kind }: { me: Me; kind: LayoutKind }) {
           <span className={styles.userName}>{name}</span>
           <Icon name="down" size="sm" />
         </button>
-      )}
+      ))}
     >
       <div className={styles.dropdown} role="menu">
         <div className={styles.dropdownHead}>

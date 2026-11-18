@@ -13,13 +13,13 @@ import { Field, Input } from "../../shared/ui/Field";
 import { useSubmitApplication } from "./api";
 import styles from "./Supplier.module.css";
 
-const TYPES: { value: BusinessType; label: string; desc: string }[] = [
+export const TYPES: { value: BusinessType; label: string; desc: string }[] = [
   { value: "SOLE_PROPRIETOR", label: "개인사업자", desc: "사업자등록번호가 있어요" },
   { value: "CORPORATION", label: "법인사업자", desc: "법인 등록이 있어요" },
   { value: "INDIVIDUAL", label: "개인 (프리랜서)", desc: "등록번호·등록증 칸이 사라져요" },
 ];
 
-const CATEGORIES: { value: SupplierCategory; label: string }[] = [
+export const CATEGORIES: { value: SupplierCategory; label: string }[] = [
   { value: "VENUE", label: "공연장" },
   { value: "EQUIPMENT", label: "음향 장비" },
   { value: "INSTALL", label: "설치·철수" },
