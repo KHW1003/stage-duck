@@ -7,6 +7,11 @@ import { CommunityWritePage } from "./pages/CommunityWritePage";
 import { BoardPage } from "./pages/BoardPage";
 import { HomePage } from "./pages/HomePage";
 import { PartnerPage } from "./pages/PartnerPage";
+import { LoginPage } from "./pages/LoginPage";
+import { PasswordForgotPage, PasswordResetPage } from "./pages/PasswordPage";
+import { SignupPage } from "./pages/SignupPage";
+import { SpacesPage } from "./pages/SpacesPage";
+import { SpaceDetailPage } from "./pages/SpaceDetailPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -33,6 +38,10 @@ export function AppRoutes() {
         <Route path="/partner" element={<PartnerPage />} />
       </Route>
       <Route element={<AppLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/password/forgot" element={<PasswordForgotPage />} />
+        <Route path="/password/reset" element={<PasswordResetPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup/supplier" element={<SupplierSignupPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
@@ -41,6 +50,8 @@ export function AppRoutes() {
           <Route path="/community/:id/edit" element={<CommunityWritePage />} />
         </Route>
         <Route path="/community/:id" element={<CommunityPostPage />} />
+        <Route path="/venues" element={<SpacesPage />} />
+        <Route path="/venues/:id" element={<SpaceDetailPage />} />
         <Route path="/board" element={<BoardPage />} />
         <Route path="/board/:id" element={<PostPage />} />
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
