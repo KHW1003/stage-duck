@@ -85,9 +85,10 @@
   var nav = body.dataset.nav || '';
 
   var MENU = {
-    guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community.html'], ['how', '이용 방법', '../../mockup/home.html#flow']],
-    user: [['my', '내 공연', 'my.html'], ['inbox', '견적함', 'inbox-list.html'], ['chat', '채팅', '#chat'], ['spaces', '공간 찾기', 'spaces.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community.html']],
-    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['chat', '채팅', '#chat'], ['tech', '기술 확인', 'p-tech.html'], ['board', 'PR 게시판', 'board.html'], ['community', '커뮤니티', 'community.html']],
+    /* 머리 메뉴 통일 (2026-11-18): [내 일] + 공간 찾기 · 업체 찾기 · 커뮤니티. 채팅은 오른쪽 아래 버튼, 견적함·기술 확인은 계정 메뉴 */
+    guest: [['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
+    user: [['my', '내 공연', 'my.html'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
+    partner: [['jobs', '공고 목록', 'p-jobs.html'], ['spaces', '공간 찾기', 'spaces.html'], ['board', '업체 찾기', 'board.html'], ['community', '커뮤니티', 'community.html']],
     'partner-review': [],
     admin: [['review', '업체 심사', 'a-review.html'], ['reports', '신고·제재', 'a-reports.html'], ['posts', '게시글·공간', 'a-posts.html'], ['orders', '거래 이력', 'a-orders.html'], ['cs', '문의·공지', 'a-cs.html'], ['demo', '시연 도구', 'a-demo.html']]
   };
@@ -125,8 +126,8 @@
   } else {
     var who = partner ? ['D', '업체 D', '업체 계정 · ' + (layout === 'partner-review' ? '심사 중' : '승인')] : ['가', '가을밤밴드', '사용자 계정'];
     var links = partner
-      ? (layout === 'partner-review' ? '' : '<a href="supplier.html">' + icon('venue') + '업체 프로필</a><a href="p-post.html">' + icon('edit') + '내 PR 게시글</a><a href="sheet.html?as=partner">' + icon('receipt') + '최종 담당표</a><a href="inquiry-list.html?as=partner">' + icon('chat') + '1:1 문의</a>')
-      : '<a href="mypage.html">' + icon('user') + '마이페이지</a><a href="favorites.html">' + icon('heart') + '관심 업체</a><a href="sheet.html">' + icon('receipt') + '최종 담당표</a><a href="inquiry-list.html">' + icon('chat') + '1:1 문의</a>';
+      ? (layout === 'partner-review' ? '' : '<a href="supplier.html">' + icon('venue') + '업체 프로필</a><a href="p-post.html">' + icon('edit') + '내 소개 글</a><a href="sheet.html?as=partner">' + icon('receipt') + '최종 담당표</a><a href="p-tech.html?as=partner">' + icon('tool') + '기술 확인</a><a href="inquiry-list.html?as=partner">' + icon('chat') + '1:1 문의</a>')
+      : '<a href="mypage.html">' + icon('user') + '마이페이지</a><a href="inbox-list.html">' + icon('doc') + '견적함</a><a href="favorites.html">' + icon('heart') + '관심 업체</a><a href="sheet.html">' + icon('receipt') + '최종 담당표</a><a href="inquiry-list.html">' + icon('chat') + '1:1 문의</a>';
     right = (layout === 'partner-review' ? '' :
       '<div class="gnb__pop"><button class="icon-btn" type="button" aria-label="알림 2개" data-pop="pop-noti">' + icon('bell') + '<span class="icon-btn__badge">2</span></button>' +
       '<div class="noti-panel" id="pop-noti" hidden><div class="noti-panel__head"><b>알림</b><button class="link" type="button">모두 읽음</button></div><div class="noti-panel__list">' +

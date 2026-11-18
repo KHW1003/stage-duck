@@ -12,10 +12,10 @@
      공간 숨김은 공간 목록·상세와 요청서 공간 고르기에서 빠진다. 진행 중인 섭외에는 영향 없음. -->
 <body data-layout="admin" data-nav="posts">
 
-<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>게시글·공간</li></ol><h1>게시글·공간</h1><p class="page-top__desc">문제가 있는 PR 게시글을 가리고, 잘못된 공간 정보를 숨겨요.</p></div></div></div>
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>게시글·공간</li></ol><h1>게시글·공간</h1><p class="page-top__desc">문제가 있는 소개 글을 가리고, 잘못된 공간 정보를 숨겨요.</p></div></div></div>
 
 <main class="container main">
-  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="b1" type="button">PR 게시글</button><button role="tab" aria-selected="false" aria-controls="b3" type="button">커뮤니티</button><button role="tab" aria-selected="false" aria-controls="b2" type="button">공간 정보</button></div></div>
+  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="b1" type="button">소개 글</button><button role="tab" aria-selected="false" aria-controls="b3" type="button">커뮤니티</button><button role="tab" aria-selected="false" aria-controls="b2" type="button">공간 정보</button></div></div>
 
   <section id="b1" class="mt-24">
     <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">게시 중</button><button type="button" aria-pressed="false">블라인드</button></div><select class="select select--sm" aria-label="말머리"><option>말머리 전체</option><option>공연장</option><option>장비</option><option>엔지니어</option></select></div>
@@ -26,7 +26,7 @@
         <tr><td><span class="tag">공연장</span></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1514320291840-2e0a9bf2a9ae.jpg')"></span><div><b>공간 C 대관 — 80석 소극장</b><small>사진 8장</small></div></div></td><td>업체 C</td><td class="num">10월 30일</td><td>0</td><td><span class="state state--done">게시 중</span></td><td><button class="btn btn--xs" type="button" data-open="blind">블라인드</button></td></tr>
         <tr class="is-off"><td><span class="tag">공연장</span></td><td class="l"><div class="with-thumb"><span class="thumb" style="--img:url('../../mockup/assets/photos/photo-1563841930606-67e2bce48b78.jpg')"></span><div><b>야외 무대 대관</b><small>블라인드 사유: 다른 업체 사진 사용</small></div></div></td><td>업체 B</td><td class="num">10월 20일</td><td>2</td><td><span class="state state--warn">블라인드</span></td><td><button class="btn btn--xs" type="button" data-open="unblind">해제</button></td></tr>
       </tbody></table></div>
-    <ul class="bullets mt-16"><li>블라인드한 글은 PR 게시판에서 안 보이고, 업체의 내 PR 게시글에 사유가 보여요.</li><li>블라인드하면 업체에 경고 1회가 쌓여요. 해제해도 경고는 지워지지 않아요.</li></ul>
+    <ul class="bullets mt-16"><li>블라인드한 글은 업체 찾기에서 안 보이고, 업체의 내 소개 글에 사유가 보여요.</li><li>블라인드하면 업체에 경고 1회가 쌓여요. 해제해도 경고는 지워지지 않아요.</li></ul>
   </section>
 
   <section id="b3" class="mt-24" hidden>
