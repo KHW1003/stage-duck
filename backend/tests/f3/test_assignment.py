@@ -47,7 +47,7 @@ def _published(client, db):
 
 
 def _stage(db, perf_id, stage_type) -> Stage:
-    db.expire_all()
+    db.rollback()  # 읽기 트랜잭션을 끝내야 API가 바꾼 값이 보인다 (MariaDB REPEATABLE READ)
     return db.scalar(select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == stage_type))
 
 
@@ -81,12 +81,12 @@ def _advance(user, stage_id, action="OPEN_NEXT", headers=KEY, **extra):
 
 
 def _statuses(db, perf_id) -> dict[str, str]:
-    db.expire_all()
+    db.rollback()  # 읽기 트랜잭션을 끝내야 API가 바꾼 값이 보인다 (MariaDB REPEATABLE READ)
     return {s.stage_type: s.status for s in db.scalars(select(Stage).where(Stage.performance_id == perf_id))}
 
 
 def _perf_status(db, perf_id) -> str:
-    db.expire_all()
+    db.rollback()  # 읽기 트랜잭션을 끝내야 API가 바꾼 값이 보인다 (MariaDB REPEATABLE READ)
     return db.get(Performance, perf_id).status
 
 
