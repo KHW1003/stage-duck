@@ -36,6 +36,8 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.get_open_stage, [("db", POS), ("performance_id", POS)]),
         (request.stage_confirmed, [("db", POS), ("stage_id", POS), ("quote_version_id", POS), ("actor_id", KW)]),
         (request.confirmed_lines, [("db", POS), ("performance_id", POS)]),
+        (request.posting_visible, [("db", POS), ("stage_id", POS), ("supplier", POS)]),
+        (request.open_postings_for, [("db", POS), ("supplier", POS), ("sido", KW)]),
         # 4 → 3
         (calc.run_checks, [("performance", POS), ("quote", POS), ("confirmed", POS), ("setup_warning_minutes", KW)]),
         (calc.has_conflict, [("results", POS)]),
@@ -58,6 +60,8 @@ def test_contract_function_signatures(fn, expected):
                                   "checkin_time", "checkout_time", "has_resident_engineer", "conditions"]),
         (request.OpenStage, ["stage_id", "performance_id", "stage_type", "status", "performance_version"]),
         (request.ConfirmedLine, ["stage_id", "stage_type", "supplier_id", "quote_version_id", "amount"]),
+        (request.OpenPosting, ["stage_id", "performance_id", "stage_type", "status", "performance_version",
+                               "title", "show_date", "sido", "sigungu"]),
         (calc.CheckResult, ["id", "result", "message"]),
     ],
     ids=lambda v: getattr(v, "__name__", ""),

@@ -18,8 +18,11 @@ def earliest_show_date(today: date) -> date:
     return today + timedelta(days=MIN_LEAD_DAYS)
 
 
-def performance_field_errors(body: PerformanceIn, today: date) -> list[dict]:
-    """AC-F2-04·05·06·10: 저장하면 안 되는 입력을 칸마다 이유와 함께 돌려준다. 문제가 없으면 빈 목록."""
+def performance_field_errors(body: PerformanceIn, today: date, *, check_show_date: bool = True) -> list[dict]:
+    """AC-F2-04·05·06·10: 저장하면 안 되는 입력을 칸마다 이유와 함께 돌려준다. 문제가 없으면 빈 목록.
+
+    check_show_date=False: 수정에서 공연 날짜를 바꾸지 않았으면 14일 규칙을 보지 않는다 (#37).
+    """
     errors: list[dict] = []
     if not body.title:
         errors.append(_err("title", "공연명을 적어 주세요."))
@@ -27,7 +30,7 @@ def performance_field_errors(body: PerformanceIn, today: date) -> list[dict]:
         errors.append(_err("title", f"공연명은 {TITLE_MAX}자까지 적을 수 있어요."))
     if body.form not in PERFORMANCE_FORMS:
         errors.append(_err("form", "공연 형태를 골라 주세요."))
-    if body.show_date < earliest_show_date(today):
+    if check_show_date and body.show_date < earliest_show_date(today):
         first = earliest_show_date(today)
         errors.append(_err("showDate", f"공연 {MIN_LEAD_DAYS}일 전까지만 요청할 수 있어요. {first.month}월 {first.day}일 이후 날짜를 골라 주세요."))
     if not body.rehearsal_start < body.show_start:
@@ -58,3 +61,20 @@ def stage_plan(needs: dict) -> list[tuple[str, int]]:
     plan = [("VENUE", 1), ("EQUIPMENT", 2), ("ENGINEER", 3)]
     keys = {"VENUE": "venue", "EQUIPMENT": "equipment", "ENGINEER": "engineer"}
     return [(stage_type, seq) for stage_type, seq in plan if needs[keys[stage_type]]["needed"]]
+
+
+def needed_change_errors(old_needs: dict, body: PerformanceIn) -> list[dict]:
+    """#37: 게시 뒤에는 단계 구성(필요해요/이미 있어요)을 바꿀 수 없다 — 이미 만든 단계와 어긋나지 않게."""
+    return [
+        _err(f"needs.{part}.needed", "게시한 뒤에는 필요해요/이미 있어요를 바꿀 수 없어요. 바꾸려면 공고를 내리고 새로 써 주세요.")
+        for part in ("venue", "equipment", "engineer")
+        if old_needs[part]["needed"] != getattr(body.needs, part).needed
+    ]
+
+
+def changed_fields(old: dict, new: dict) -> list[str]:
+    """AC-F2-13: 이전 버전과 달라진 항목. STEP1 칸은 이름 그대로, STEP2 는 needs.<항목> 단위 (업체 화면 "v1 → v2")."""
+    changed = [key for key in new if key != "needs" and old.get(key) != new[key]]
+    old_needs, new_needs = old.get("needs", {}), new.get("needs", {})
+    changed += [f"needs.{key}" for key in new_needs if old_needs.get(key) != new_needs[key]]
+    return changed

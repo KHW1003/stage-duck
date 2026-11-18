@@ -35,3 +35,23 @@ def publish(
 ) -> PublishOut:
     """AC-F2-08: 게시 → 필요한 단계만 만들고 첫 단계 OPEN."""
     return PublishOut.model_validate(service.publish(db, user, performance_id, now=datetime.now()))
+
+
+@router.put("/{performance_id}", response_model=PerformanceCreatedOut)
+def update_performance(
+    performance_id: int,
+    body: PerformanceIn,
+    user: User = Depends(require_role("USER")),
+    db: Session = Depends(get_db),
+    today: date = Depends(get_today),
+) -> PerformanceCreatedOut:
+    """AC-F2-13: 요청서 수정 → 새 버전, 확정된 단계는 재확인 (RECHECK)."""
+    return PerformanceCreatedOut.model_validate(service.update_performance(db, user, performance_id, body, today=today))
+
+
+@router.post("/{performance_id}/withdraw", response_model=PerformanceCreatedOut)
+def withdraw(
+    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)
+) -> PerformanceCreatedOut:
+    """공고 내림 (게시·배정 중일 때만)."""
+    return PerformanceCreatedOut.model_validate(service.withdraw(db, user, performance_id))
