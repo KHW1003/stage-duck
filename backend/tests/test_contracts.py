@@ -44,6 +44,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.is_related, [("db", POS), ("user_id", POS), ("supplier_id", POS)]),
         # 3 → 2
         (chat.invalidate_pending_cards, [("db", POS), ("stage_id", POS)]),
+        (chat.chat_started, [("db", POS), ("performance_id", POS), ("supplier_id", POS)]),
         (quote.quote_counts, [("db", POS), ("stage_ids", POS)]),
         # 4 → 3
         (calc.run_checks, [("performance", POS), ("quote", POS), ("confirmed", POS), ("setup_warning_minutes", KW)]),

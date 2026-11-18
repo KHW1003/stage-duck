@@ -11,6 +11,7 @@ from pydantic.alias_generators import to_camel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.chat import service as chat_service
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.models.quote import Quote, QuoteVersion
@@ -109,11 +110,12 @@ def _checks(quote: Quote, row: QuoteVersion) -> list[dict]:
     return []
 
 
-def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict]]:
+def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-15·16·17·18·19: 열린 단계 공고에 견적서 v1을 보낸다. 같은 단계에 label 이 다른 견적서 여러 개 가능 (D-6).
 
     검사 순서: 업체 승인·정지(403) → 내 부문 × 열린 단계(409 STAGE_NOT_OPEN) → 공간 견적서 칸(409·400)
     → 합계(api-contract.md 3.3 순서, calc.verify_total).
+    채팅방(단계 × 업체)이 없으면 만들고 QUOTE 시스템 메시지를 남긴다 (#42). 방 번호를 함께 돌려준다.
     """
     supplier = _sender(db, user)
     if not request_service.posting_visible(db, stage_id, supplier):
@@ -139,13 +141,15 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     )
     db.flush()
     checks = _checks(quote, row)
-    # #42에서 채팅방 연결 (견적서를 보내면 채팅방이 생기고 응답 chatRoomId 를 채운다)
+    room_id = chat_service.post_quote_message(
+        db, stage_id=stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
+    )
     # #45에서 QUOTE_RECEIVED 알림 (사용자 견적함 도착 알림)
     db.commit()
-    return quote, row, checks
+    return quote, row, checks, room_id
 
 
-def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) -> tuple[Quote, QuoteVersion, list[dict]]:
+def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-20: 견적서를 고치면 새 버전을 더한다. 이전 버전은 그대로 남는다. label 은 바꾸지 않는다.
 
     본인 견적서가 아니면 404, 본문 version 이 지금 버전과 다르면 409 VERSION_CONFLICT (api-contract.md 1장),
@@ -169,10 +173,13 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     db.add(row)
     db.flush()
     checks = _checks(quote, row)
+    room_id = chat_service.post_quote_message(
+        db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
+    )
     # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
     db.commit()
     db.refresh(quote)
-    return quote, row, checks
+    return quote, row, checks, room_id
 
 
 def get_quote(db: Session, user: User, quote_id: int) -> Quote:

@@ -20,8 +20,8 @@ def send_quote(
     db: Session = Depends(get_db),
 ) -> QuoteSentOut:
     """AC-F2-15~19: 견적서 보내기 (v1)."""
-    quote, row, checks = service.send_quote(db, user, stage_id, body)
-    return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=None, checks=checks)
+    quote, row, checks, room_id = service.send_quote(db, user, stage_id, body)
+    return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 
 @router.put("/{quote_id}", response_model=QuoteSentOut)
@@ -32,8 +32,8 @@ def update_quote(
     db: Session = Depends(get_db),
 ) -> QuoteSentOut:
     """AC-F2-20: 견적서 고치기 → 새 버전."""
-    quote, row, checks = service.update_quote(db, user, quote_id, body)
-    return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=None, checks=checks)
+    quote, row, checks, room_id = service.update_quote(db, user, quote_id, body)
+    return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 
 @router.get("/{quote_id}", response_model=QuoteOut)

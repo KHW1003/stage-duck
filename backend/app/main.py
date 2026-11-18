@@ -20,6 +20,7 @@ from app.request.router import router as request_router
 from app.request.router import stage_router
 from app.board.router import router as board_router
 from app.quote.router import postings_router, router as quote_router, stage_quote_router
+from app.chat.router import router as chat_router
 
 
 def create_app() -> FastAPI:
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     api.include_router(quote_router)
     api.include_router(stage_quote_router)
     api.include_router(postings_router)
+    api.include_router(chat_router)  # #42 채팅
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
