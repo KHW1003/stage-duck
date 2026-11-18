@@ -38,10 +38,10 @@
 
   /* 업체 D 확인 카드 상태 (confirm_requests: PENDING → 내역서 열람 → CONFIRMED) */
   var cardState = q.get('card') || 'pending';
-  var timer = function (t) { return '<span class="timer" style="color:#fff">' + I('clock', 'icon--sm') + t + ' 남음</span>'; };
+  var timer = function (t) { return '<span class="timer">' + I('clock', 'icon--sm') + t + ' 남음</span>'; };   /* 색은 chat.css (포인트 색) */
   var D_CARD = {
     pending: card('최종 견적', timer('47:12'), meta('업체 D · 장비 · 견적서 v2 고정') + tot('1,350,000') + '<p class="mt-4">' + pass('자동 검사 통과') + '</p>', '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button type="button" disabled>확정하기</button></div><p class="c-card__why">내역서를 끝까지 보면 확정할 수 있어요.</p>', 'c-card--confirm'),
-    opened: card('최종 견적', timer('46:58'), meta('업체 D · 장비 · 견적서 v2 고정 · 내역서 확인함') + tot('1,350,000'), '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button class="is-primary" type="button" data-open="cw-confirm">확정하기</button></div>', 'c-card--confirm'),
+    opened: card('최종 견적', timer('46:58'), meta('업체 D · 장비 · 견적서 v2 고정 · 내역서 확인함') + tot('1,350,000'), '<div class="c-card__foot"><button type="button">다시 이야기하기</button><a href="' + B + 'quote.html">내역서 보기</a><button class="is-primary" type="button" data-open="cw-confirm">확정하기</button></div><p class="c-card__why">확정하면 같은 단계의 다른 견적서는 마감돼요.</p>', 'c-card--confirm'),
     done: me('내역서 확인했어요. 이대로 진행할게요.', '15:01', 1) + card('확정 완료', '<span class="muted">15:02</span>', meta('업체 D · 장비 · 견적서 v2') + tot('1,350,000'), '<div class="c-card__foot"><a class="is-primary" href="' + B + 'next.html">다음 단계로</a></div>', 'c-card--done')
   };
   if (!D_CARD[cardState]) cardState = 'pending';
@@ -169,28 +169,59 @@
             : '<div class="composer"><button class="icon-btn" type="button" aria-label="사진 보내기">' + I('image') + '</button><button class="icon-btn" type="button" aria-label="파일 보내기">' + I('clip') + '</button><textarea rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea><button class="btn btn--primary" type="button" aria-label="보내기">' + I('send', 'icon--sm') + '</button></div>')) + '</div>';
     } else {
       var f = s.filter || 'all', key = R.filterBy;
-      var items = R.list.filter(function (id) { return f === 'all' || R[id][key] === f; });
       var unread = R.list.reduce(function (n, id) { return n + (R[id].unread || 0); }, 0);
-      html = '<div class="chat-panel__bar"><p class="chat-panel__title">채팅<small>' + (unread ? '안 읽음 ' + unread : '모두 읽음') + '</small></p>' +
-        close + '</div>' +
-        tabs(R.tabs.map(function (t) { return [t[0], t[1], R.list.filter(function (id) { return t[0] === 'all' || R[id][key] === t[0]; }).length]; }), f, 'data-cw-filter') +
-        (R.ctx ? '<div class="chat-panel__ctx">' + I('calendar') + '<select class="select" aria-label="공연"><option>' + R.ctx + '</option></select></div>' : '') +
-        '<div class="chat-panel__body"><div class="chat-panel__scroll">' +
-        (items.length ? items.map(function (id) {
-          var r = R[id];
-          return '<button class="chat-item' + (r.unread ? ' is-unread' : '') + (r.closed ? ' is-closed' : '') + '" type="button" data-cw-room="' + id + '">' + avatar(r) +
-            '<span style="min-width:0"><span class="chat-item__name">' + r.name + ' ' + tag(r) + '</span><span class="chat-item__last" style="display:block">' + r.last + '</span></span>' +
-            '<span class="chat-item__side">' + r.time + (r.unread ? '<span class="count">' + r.unread + '</span>' : '') + '</span></button>';
-        }).join('') : '<div class="chat-panel__empty">' + I('chat') + '<b>' + R.tabs.filter(function (t) { return t[0] === f; })[0][1] + ' 채팅이 아직 없어요</b><p>' + (key === 'stage' ? '앞 단계를 확정하면 이 단계 업체의 견적서를 받을 수 있어요.' : '여기에 해당하는 대화가 없어요.') + '</p></div>') +
-        '<p class="chat-panel__note">' + I('info') + '<span>' + R.note + '</span></p></div></div>';
+      html = (s.search
+        ? '<div class="chat-panel__bar chat-panel__bar--search"><button class="icon-btn" type="button" data-cw-search-off aria-label="검색 닫기">' + I('left') + '</button>' +
+          '<input class="chat-panel__q" type="search" placeholder="이름이나 메시지로 찾기" aria-label="채팅 검색" value="' + esc(s.q || '') + '">' +
+          '<button class="chat-panel__cancel" type="button" data-cw-search-clear>취소</button></div>'
+        : '<div class="chat-panel__bar"><p class="chat-panel__title">채팅<small>' + (unread ? '안 읽음 ' + unread : '모두 읽음') + '</small></p>' +
+          '<button class="icon-btn" type="button" data-cw-search aria-label="채팅 검색">' + I('search') + '</button>' + close + '</div>') +
+        '<div class="chat-panel__ctx">' + (R.ctx ? '<select class="select" aria-label="공연"><option>' + R.ctx + '</option></select>' : '') +
+        '<div class="chat-panel__tools"><span>대화 <b class="chat-panel__count">' + listed(p).ids.length + '</b>개</span><span class="chat-panel__tools-r">' +
+        '<button class="chat-panel__tbtn" type="button" data-cw-unread aria-pressed="' + (s.unread === '1') + '"><span class="chat-panel__box" aria-hidden="true"></span>안 읽음만</button><span class="chat-panel__sep" aria-hidden="true"></span>' +
+        '<button class="chat-panel__tbtn" type="button" data-cw-sort aria-label="정렬 바꾸기, 지금 ' + (s.sort === 'old' ? '과거순' : '최신순') + '">⇅ ' + (s.sort === 'old' ? '과거순' : '최신순') + '</button></span></div></div>' +
+        '<div class="chat-panel__body"><div class="chat-panel__scroll">' + listBody(p) + '</div></div>';
     }
     p.innerHTML = html;
     var m = p.querySelector('.room__msgs'); if (m) m.scrollTop = m.scrollHeight;
   }
 
+  /* 목록 거르기: 탭 → 안 읽음만 → 검색어, 그다음 정렬 (목업의 list 배열 = 최신순) */
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function has(t, k) { return t.toLowerCase().indexOf(k.toLowerCase()) > -1; }
+  function hl(t, k) {   /* 찾은 글자를 포인트 색 굵은 글씨로 */
+    if (!k) return t;
+    var low = t.toLowerCase(), kk = k.toLowerCase(), out = '', i = 0, j;
+    while ((j = low.indexOf(kk, i)) > -1) { out += t.slice(i, j) + '<mark class="chat-panel__hit">' + t.slice(j, j + k.length) + '</mark>'; i = j + k.length; }
+    return out + t.slice(i);
+  }
+  function listed(p) {
+    var R = ROOMS[p.dataset.role], s = p.dataset, f = s.filter || 'all', k = s.search ? (s.q || '').trim() : '';
+    var ids = R.list.filter(function (id) {
+      var r = R[id];
+      return (f === 'all' || r[R.filterBy] === f) && (s.unread !== '1' || r.unread) && (!k || has(r.name, k) || has(r.last, k));
+    });
+    return { ids: s.sort === 'old' ? ids.reverse() : ids, k: k };
+  }
+  function listBody(p) {
+    var R = ROOMS[p.dataset.role], s = p.dataset, f = s.filter || 'all', L = listed(p), k = L.k;
+    if (!L.ids.length) {
+      var t = k ? ['‘' + esc(k) + '’에 맞는 대화가 없어요', '업체 이름이나 메시지에 있는 말로 찾아 보세요.']
+        : s.unread === '1' ? ['안 읽은 대화가 없어요', '새 메시지가 오면 여기에 보여요.']
+        : [R.tabs.filter(function (x) { return x[0] === f; })[0][1] + ' 채팅이 아직 없어요', R.filterBy === 'stage' ? '앞 단계를 확정하면 이 단계 업체의 견적서를 받을 수 있어요.' : '여기에 해당하는 대화가 없어요.'];
+      return '<div class="chat-panel__empty">' + I(k ? 'search' : 'chat') + '<b>' + t[0] + '</b><p>' + t[1] + '</p></div>' + (k ? '' : '<p class="chat-panel__note">' + I('info') + '<span>' + R.note + '</span></p>');
+    }
+    return L.ids.map(function (id) {
+      var r = R[id];
+      return '<button class="chat-item' + (r.unread ? ' is-unread' : '') + (r.closed ? ' is-closed' : '') + '" type="button" data-cw-room="' + id + '">' + avatar(r) +
+        '<span style="min-width:0"><span class="chat-item__name">' + hl(r.name, k) + ' ' + tag(r) + '</span><span class="chat-item__last" style="display:block">' + hl(r.last, k) + '</span></span>' +
+        '<span class="chat-item__side">' + r.time + (r.unread ? '<span class="count">' + r.unread + '</span>' : '') + '</span></button>';
+    }).join('') + (k ? '' : '<p class="chat-panel__note">' + I('info') + '<span>' + R.note + '</span></p>');
+  }
+
   /* ── 살아 있는 위젯 ── */
   var fab, panel, KEY = 'sd-chat-' + role;
-  function save() { if (!panel) return; try { sessionStorage.setItem(KEY, JSON.stringify({ open: !panel.hidden, view: panel.dataset.view, room: panel.dataset.room, pane: panel.dataset.pane, filter: panel.dataset.filter, read: readIds })); } catch (e) {} }
+  function save() { if (!panel) return; try { sessionStorage.setItem(KEY, JSON.stringify({ open: !panel.hidden, view: panel.dataset.view, room: panel.dataset.room, pane: panel.dataset.pane, filter: panel.dataset.filter, unread: panel.dataset.unread, sort: panel.dataset.sort, read: readIds })); } catch (e) {} }
   var readIds = [];
   function markRead(id) {
     var R = ROOMS[role]; if (!R[id] || !R[id].unread) return;
@@ -230,7 +261,7 @@
 
     var st = {}; try { st = JSON.parse(sessionStorage.getItem(KEY)) || {}; } catch (e) {}
     (st.read || []).forEach(markRead);
-    ['view', 'room', 'pane', 'filter'].forEach(function (k) { if (st[k]) panel.dataset[k] = st[k]; });
+    ['view', 'room', 'pane', 'filter', 'unread', 'sort'].forEach(function (k) { if (st[k]) panel.dataset[k] = st[k]; });
     var want = q.get('chat');
     if (want) { panel.dataset.view = want === 'list' ? 'list' : 'room'; if (want !== 'list') panel.dataset.room = want; panel.dataset.pane = q.get('pane') || 'talk'; }
     badge();
@@ -259,7 +290,21 @@
     else if (e.target.closest('[data-cw-back]')) p.dataset.view = 'list';
     else if ((t = e.target.closest('[data-cw-filter]'))) p.dataset.filter = t.dataset.cwFilter;
     else if ((t = e.target.closest('[data-cw-pane]'))) p.dataset.pane = t.dataset.cwPane;
+    else if (e.target.closest('[data-cw-search]')) { p.dataset.search = '1'; p.dataset.q = ''; }
+    else if (e.target.closest('[data-cw-search-off]')) { delete p.dataset.search; delete p.dataset.q; }
+    else if (e.target.closest('[data-cw-search-clear]')) p.dataset.q = '';
+    else if (e.target.closest('[data-cw-unread]')) p.dataset.unread = p.dataset.unread === '1' ? '' : '1';
+    else if (e.target.closest('[data-cw-sort]')) p.dataset.sort = p.dataset.sort === 'old' ? 'new' : 'old';
     else return;
     render(p); if (p === panel) save();
+    var qi = p.querySelector('.chat-panel__q'); if (qi) qi.focus();
+  });
+
+  /* 검색칸: 입력할 때마다 목록만 다시 그린다 (칸의 포커스·커서 유지) */
+  document.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('chat-panel__q')) return;
+    var p = e.target.closest('.chat-panel'); p.dataset.q = e.target.value;
+    p.querySelector('.chat-panel__scroll').innerHTML = listBody(p);
+    p.querySelector('.chat-panel__count').textContent = listed(p).ids.length;
   });
 })();
