@@ -166,7 +166,7 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> ISSUED: 모든 단계 확정 → 통합 청구서
     ISSUED --> PAID: 결제 성공 (장부 HOLD)
-    ISSUED --> CANCELLED: 결제 전 취소 · D-5 0시 미결제 자동 취소 (0원)
+    ISSUED --> CANCELLED: 결제 전 취소 · 결제 마감 지나 자동 취소 (0원)
     PAID --> SETTLEMENT_SCHEDULED: 공연 완료 (장부 SETTLE_SCHEDULED)
     PAID --> CANCELLED: 결제 후 취소 (위약금 PENALTY + REFUND)
 ```
@@ -174,7 +174,7 @@ stateDiagram-v2
 - **멱등**: 결제 요청은 `Idempotency-Key` 헤더 필수 → `payments.idempotency_key` 유니크. 같은 키로 다시 오면 처음 결과를 그대로 돌려준다. 결제 완료 콜백도 `provider_tx_id` 유니크로 한 번만 반영.
 - **금액**: 청구서 금액은 확정 견적서 스냅샷 합계 + 수수료로 서버가 계산. 요청 본문의 금액이 다르면 `400 AMOUNT_MISMATCH`.
 - **장부(ledger)**: 돈의 상태를 `ledger_entries`에 쌓는다 (HOLD, SETTLE_SCHEDULED, REFUND, PENALTY, CANCEL_FEE). 잔액은 장부 합으로 계산하고, 실제 돈은 움직이지 않는다.
-- **위약금 계산**: `cancel_quote(order, now)` 순수 함수 — 결제 전 0% / ~D-6 0% / D-5~D-4 10% / D-3 30% / D-2 50% / D-1 70% / D-0 100% (D-53), 업체별 금액 비율로 나누고 원 단위 나머지는 금액이 가장 큰 업체에 더한다 (제안). 업체 사정 취소는 전액 환불 + 경고.
+- **위약금 계산**: `cancel_quote(order, now)` 순수 함수 — 결제 전 0% / 결제 후 12시간·30일 전 이전 0%(이용료 환불) / 29~15일 전 10% / 14~8일 전 30% / 7~2일 전 50% / D-1 70% / D-0 100% (D-57), 업체별 금액 비율로 나누고 원 단위 나머지는 금액이 가장 큰 업체에 더한다 (제안). 업체 사정 취소는 전액 환불 + 경고.
 - 플랫폼 수수료율은 설정값 (`PLATFORM_FEE_RATE`, 요율 미정 — 시연용 기본 5% (제안)).
 
 ### 5.7 스케줄러
@@ -185,8 +185,8 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | 확인 카드 만료 | `expires_at`(보낸 뒤 48시간) 지나면 `EXPIRED` |
 | 오퍼 만료 | 48시간 지나면 `EXPIRED` |
 | 공연 완료 | 공연 종료 시각이 지나면 `COMPLETED` + 장부 `SETTLE_SCHEDULED` |
-| 결제 독촉 (D-53) | D-7·D-6에 `ISSUED`(미결제) 청구서가 있으면 하루 한 번 사용자 알림 + 채팅방 안내 카드 (보내기 함수는 3번) |
-| 미결제 자동 취소 (D-53) | D-5 0시가 지난 `ISSUED` 청구서 → `CANCELLED`(취소자 `SYSTEM`, 0원) + 채팅 반려 +1 + 확정 업체 알림 |
+| 결제 리마인드 (D-57) | 처음 컨펌으로 정한 결제 마감 기준: 일반 24h·3h 전, 임박 12h·3h 전에 `PAYMENT_REMINDER` (보내기 직전 상태 확인, 회차당 1번, 보내기는 3번 `notify()`) |
+| 결제 기한 만료 (D-57) | 결제 마감이 지난 미결제 공연 → 컨펌 단계 해제 + `CANCELLED`(취소자 `SYSTEM`, 0원) + 채팅 반려 +1 + `HOLD_EXPIRED`. 결제와 겹치면 청구서 행 잠금으로 결제 우선 |
 | 반려 카운트 | 조회 시 계산 (마지막 반려 후 180일 지나면 0) — 스케줄 불필요 |
 | 알림 | 확인 카드 만료 6시간 전 `CONFIRM_EXPIRING`, 오퍼·카드 만료·정산 예정 알림, 90일 지난 알림 삭제 (notifications.md) |
 | 임시 파일 정리 | 1시간마다 `files.status=TEMP`이고 24시간 지난 파일 삭제 (uploads.md) |
