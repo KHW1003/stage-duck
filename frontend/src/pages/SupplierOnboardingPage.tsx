@@ -15,6 +15,7 @@ import { ApplicationForm } from "../features/supplier/ApplicationForm";
 import { useApplication } from "../features/supplier/api";
 import { Steps } from "../features/supplier/Steps";
 import styles from "../features/supplier/Supplier.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const TYPE_LABEL = { SOLE_PROPRIETOR: "개인사업자", CORPORATION: "법인사업자", INDIVIDUAL: "개인 (프리랜서)" } as const;
 
@@ -51,6 +52,7 @@ function Pending({ app }: { app: SupplierApplication }) {
 
 export function SupplierOnboardingPage() {
   const app = useApplication();
+  usePageMeta("입점 신청");
 
   if (app.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
 

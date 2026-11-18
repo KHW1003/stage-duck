@@ -94,6 +94,19 @@ def get_post(db: Session, viewer: User | None, post_id: int) -> tuple[FreePost, 
     return post, prev_id, next_id
 
 
+def get_public_post(db: Session, post_id: int) -> FreePost | None:
+    """SEO(specs/seo.md)용 읽기 전용: 방문자에게 보이는 글만. 조회수는 올리지 않는다."""
+    return db.scalar(_base().where(FreePost.id == post_id, *_visible()))
+
+
+def public_post_stamps(db: Session) -> list[tuple[int, datetime]]:
+    """sitemap.xml 용 (id, 수정 시각)."""
+    return [tuple(r) for r in db.execute(
+        select(FreePost.id, FreePost.updated_at).join(User, User.id == FreePost.author_user_id).where(*_visible())
+        .order_by(FreePost.id)
+    ).all()]
+
+
 def _checked(body: FreePostIn) -> None:
     errors = calc.post_field_errors(body.category, body.title, body.body)
     if errors:

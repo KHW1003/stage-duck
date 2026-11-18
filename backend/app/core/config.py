@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     login_lock_minutes: int = 10  # FR-AUTH-06 잠금 시간
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
+    # 검색·공유 노출 (specs/seo.md 8장)
+    frontend_dist: str = "../frontend/dist"  # 빌드된 화면 폴더 (Docker 에서는 /app/frontend/dist)
+    public_base_url: str = "http://localhost:8000"  # canonical·og:url·sitemap 절대 주소
+    seo_indexing: bool = False  # 시연 데이터가 검색에 남지 않게 기본은 끔
+    site_verification_naver: str = ""
+    site_verification_google: str = ""
+
     @property
     def is_test_env(self) -> bool:
         """시연 계정 전환·데이터 초기화는 test 환경에서만 (NFR-OPS-01)."""
