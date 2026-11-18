@@ -16,6 +16,7 @@ from app.policy.router import router as reports_router
 from app.files.router import router as files_router
 from app.request.router import router as request_router
 from app.request.router import stage_router
+from app.board.router import router as board_router
 
 
 def create_app() -> FastAPI:
@@ -36,6 +37,7 @@ def create_app() -> FastAPI:
     api.include_router(files_router)
     api.include_router(request_router)
     api.include_router(stage_router)
+    api.include_router(board_router)  # #30 업체 찾기
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
