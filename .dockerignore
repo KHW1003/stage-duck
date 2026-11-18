@@ -1,0 +1,12 @@
+# docker build 때 이미지에 넣지 않는 것 (deploy/Dockerfile.*). 빌드가 빨라지고 비밀·로컬 파일이 이미지에 들어가지 않는다
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.vite
+frontend/dist
+backend/uploads
+**/.env
+.git
+docs
+exports
