@@ -305,7 +305,7 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
     """AC-F2-13: 고칠 때마다 새 버전(v2…)을 만들고 이전 버전은 그대로 둔다. 확정된 단계는 RECHECK (plan.md 5.3).
 
     - 공연 날짜를 바꿀 때만 14일 규칙을 본다. 게시 뒤에는 필요해요/이미 있어요를 바꿀 수 없다.
-    - 바뀐 것이 없으면 새 버전을 만들지 않는다.
+    - 바뀐 것이 없으면 새 버전을 만들지 않는다. contactPhone 을 안 보내면 저장된 번호를 그대로 둔다 (응답에 번호가 없어서).
     - 진행 중인 최종 견적 카드 무효화(CLAUDE.md 3장 6)는 3번 `invalidate_pending_cards` 가 생기면 여기서 부른다.
     """
     perf = _mine(db, user, performance_id)
@@ -323,12 +323,18 @@ def update_performance(db: Session, user: User, performance_id: int, body: Perfo
             PerformanceVersion.performance_id == perf.id, PerformanceVersion.version == perf.current_version
         )
     )
+    keep_phone = "contact_phone" not in body.model_fields_set  # 수정 화면은 번호를 모르니, 안 보내면 그대로 둔다
+    if keep_phone:
+        data["contactPhone"] = previous.snapshot.get("contactPhone")
     changed = calc.changed_fields(previous.snapshot, data)
     if not changed:
         return perf
 
     perf.current_version += 1
+    phone = perf.contact_phone
     _fill(perf, body, data)
+    if keep_phone:
+        perf.contact_phone = phone
     db.add(PerformanceVersion(performance_id=perf.id, version=perf.current_version, snapshot=data, changed_fields=changed))
     for stage in db.scalars(select(Stage).where(Stage.performance_id == perf.id, Stage.status == "CONFIRMED")):
         record_transition(

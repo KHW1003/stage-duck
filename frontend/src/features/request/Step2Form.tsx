@@ -19,12 +19,16 @@ interface Props {
   errors: Errors;
   onBack: () => void;
   onNext: () => void;
+  /** 게시한 뒤 수정: 필요해요/이미 있어요를 바꿀 수 없다 (#37) */
+  lockNeeded?: boolean;
+  submitLabel?: string;
+  submitting?: boolean;
 }
 
 /** 숫자 칸: 비우면 null */
 const num = (v: string): number | null => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Number(v));
 
-export function Step2Form({ value, onChange, errors, onBack, onNext }: Props) {
+export function Step2Form({ value, onChange, errors, onBack, onNext, lockNeeded = false, submitLabel = "확인하고 게시하기", submitting = false }: Props) {
   const venue = (patch: Partial<VenueNeed>) => onChange({ ...value, venue: { ...value.venue, ...patch } });
   const equipment = (patch: Partial<EquipmentNeed>) => onChange({ ...value, equipment: { ...value.equipment, ...patch } });
   const engineer = (patch: Partial<EngineerNeed>) => onChange({ ...value, engineer: { ...value.engineer, ...patch } });
@@ -48,7 +52,7 @@ export function Step2Form({ value, onChange, errors, onBack, onNext }: Props) {
         </p>
       )}
 
-      <NeedSection no="01" title="공연장" desc="먼저 공연장을 정하고, 그다음 장비·엔지니어를 구해요." needed={value.venue.needed} onNeeded={(needed) => venue({ needed })}>
+      <NeedSection no="01" title="공연장" desc="먼저 공연장을 정하고, 그다음 장비·엔지니어를 구해요." needed={value.venue.needed} locked={lockNeeded} onNeeded={(needed) => venue({ needed })}>
         <Choices legend="공간 유형" options={VENUE_TYPES} value={value.venue.types} onChange={(types) => venue({ types })} hint="고르지 않으면 상관없음으로 보여요." />
         <div className={styles.row2}>
           <Field label="필요 수용 인원 (명)">
@@ -74,7 +78,7 @@ export function Step2Form({ value, onChange, errors, onBack, onNext }: Props) {
         <Note value={value.venue.note} onChange={(note) => venue({ note })} error={errors["needs.venue.note"]} />
       </NeedSection>
 
-      <NeedSection no="02" title="장비" desc={'장비를 잘 모르면 "업체 제안 받기"로 두세요.'} needed={value.equipment.needed} onNeeded={(needed) => equipment({ needed })}>
+      <NeedSection no="02" title="장비" desc={'장비를 잘 모르면 "업체 제안 받기"로 두세요.'} needed={value.equipment.needed} locked={lockNeeded} onNeeded={(needed) => equipment({ needed })}>
         <div>
           <p className={styles.legend}>원하는 장비</p>
           <label className={styles.chip}>
@@ -131,7 +135,7 @@ export function Step2Form({ value, onChange, errors, onBack, onNext }: Props) {
         <Note value={value.equipment.note} onChange={(note) => equipment({ note })} error={errors["needs.equipment.note"]} />
       </NeedSection>
 
-      <NeedSection no="03" title="엔지니어" desc="해 줘야 할 작업을 하나 이상 골라 주세요." needed={value.engineer.needed} onNeeded={(needed) => engineer({ needed })}>
+      <NeedSection no="03" title="엔지니어" desc="해 줘야 할 작업을 하나 이상 골라 주세요." needed={value.engineer.needed} locked={lockNeeded} onNeeded={(needed) => engineer({ needed })}>
         <Choices legend="작업" required options={TASKS} value={value.engineer.tasks} onChange={(tasks) => engineer({ tasks })} error={errors["needs.engineer.tasks"]} />
         <Field label="기타 작업 (직접 입력)" optional>
           {(c) => <Input {...c} value={value.engineer.etc} onChange={(e) => engineer({ etc: e.target.value })} />}
@@ -145,8 +149,8 @@ export function Step2Form({ value, onChange, errors, onBack, onNext }: Props) {
         <Button variant="ghost" size="lg" onClick={onBack}>
           이전
         </Button>
-        <Button type="submit" variant="primary" size="lg">
-          확인하고 게시하기
+        <Button type="submit" variant="primary" size="lg" loading={submitting}>
+          {submitLabel}
         </Button>
       </div>
     </form>
@@ -158,12 +162,13 @@ interface NeedProps {
   title: string;
   desc: string;
   needed: boolean;
+  locked: boolean;
   onNeeded: (needed: boolean) => void;
   children: ReactNode;
 }
 
 /** 항목 하나: 머리줄 [필요해요 / 이미 있어요] + 필요할 때만 입력 칸 */
-function NeedSection({ no, title, desc, needed, onNeeded, children }: NeedProps) {
+function NeedSection({ no, title, desc, needed, locked, onNeeded, children }: NeedProps) {
   const id = useId();
   return (
     <section className={styles.need} aria-labelledby={`${id}-title`}>
@@ -173,7 +178,7 @@ function NeedSection({ no, title, desc, needed, onNeeded, children }: NeedProps)
           <b id={`${id}-title`}>{title}</b>
           <small>{desc}</small>
         </div>
-        <fieldset className={styles.toggle}>
+        <fieldset className={styles.toggle} disabled={locked}>
           <legend className="sd-sr-only">{title} 필요 여부</legend>
           <label>
             <input type="radio" name={`${id}-needed`} checked={needed} onChange={() => onNeeded(true)} />
