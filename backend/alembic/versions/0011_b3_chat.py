@@ -2,8 +2,8 @@
 
 confirm_requests(견적 내역 확인 카드)는 #43 에서 따로 만든다.
 
-Revision ID: 0010
-Revises: 0009
+Revision ID: 0011
+Revises: 0010 (공간 0010_b1_venues 와 번호가 겹쳐 0011로 옮김)
 Create Date: 2026-11-18
 """
 import sqlalchemy as sa
@@ -14,8 +14,8 @@ from app.core.db import BigID, DateTime3
 # 모델이 나중에 바뀌어도 이 파일의 결과가 바뀌지 않도록 모델을 import 하지 않고 여기 적는다
 FALSE = sa.text("0")
 
-revision = "0010"
-down_revision = "0009"
+revision = "0011"
+down_revision = "0010"
 branch_labels = None
 depends_on = None
 
