@@ -1,6 +1,7 @@
 /**
  * 커뮤니티 글 보기 (/community/:id, #100). 방문자도 본다 (AC-F4-12). 목업 community-post.html 시안 A.
- * - 방문자가 [도움 돼요]·[저장]을 누르면 로그인 화면으로 간다. 회원용 동작과 댓글·신고·공유는 #101 에서 붙인다
+ * - 방문자가 [도움 돼요]·[저장]을 누르면 로그인 화면으로 간다. 회원은 누르고 다시 누르면 취소 (AC-F4-17)
+ * - 댓글·답글·신고는 #101 (Comments). 공유는 후속
  * - 내 글이면 [수정]·[삭제], 블라인드된 내 글이면 사유를 보여 준다
  * - 사진은 지금 서버가 id만 줘서 장수만 보여 준다 (주소는 1번 files 함수가 생기면)
  */
@@ -9,8 +10,10 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useMe } from "../shared/auth/useMe";
 import { Button, ButtonLink } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
-import { useDeleteFreePost, useFreePost } from "../features/community/api";
+import { useBookmark, useDeleteFreePost, useFreePost, useHelpful } from "../features/community/api";
+import { Comments } from "../features/community/Comments";
 import { ConfirmDelete } from "../features/community/ConfirmDelete";
+import { ReportModal } from "../features/community/ReportModal";
 import { CATEGORY_LABEL, authorLabel, loginPath, longDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -24,6 +27,9 @@ export function CommunityPostPage() {
   const navigate = useNavigate();
   const warned = (useLocation().state as { contactWarning?: boolean } | null)?.contactWarning;
   const [asking, setAsking] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const helpful = useHelpful();
+  const bookmark = useBookmark(id);
 
   if (post.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
   if (!post.data) return <ErrorNotice error={post.error} />;
@@ -62,7 +68,25 @@ export function CommunityPostPage() {
 
         <div className={styles.reacts}>
           {me.data ? (
-            <span className={styles.count}>도움 돼요 {p.helpfulCount}</span>
+            <>
+              <Button
+                size="sm"
+                variant="line"
+                aria-pressed={p.myHelpful}
+                loading={helpful.isPending}
+                onClick={() => helpful.mutate({ targetType: "POST", targetId: p.id, on: !p.myHelpful })}
+              >
+                도움 돼요 {p.helpfulCount}
+              </Button>
+              <Button size="sm" variant="line" aria-pressed={p.bookmarked} loading={bookmark.isPending} onClick={() => bookmark.mutate(!p.bookmarked)}>
+                {p.bookmarked ? "저장됨" : "저장"}
+              </Button>
+              {!p.isMine && (
+                <Button size="sm" variant="ghost" onClick={() => setReporting(true)}>
+                  신고
+                </Button>
+              )}
+            </>
           ) : (
             <>
               <ButtonLink to={loginPath(back)} size="sm" variant="line">
@@ -85,7 +109,9 @@ export function CommunityPostPage() {
           )}
         </div>
 
-        <p className={styles.tbd}>댓글은 곧 열려요 (#101).</p>
+        <ErrorNotice error={helpful.error ?? bookmark.error} />
+
+        <Comments post={p} member={!!me.data} />
 
         <ul className={styles.near}>
           {p.nextId && (
@@ -108,6 +134,7 @@ export function CommunityPostPage() {
         </div>
       </article>
 
+      {reporting && <ReportModal targetType="FREE_POST" targetId={p.id} onClose={() => setReporting(false)} />}
       {asking && (
         <ConfirmDelete
           loading={remove.isPending}

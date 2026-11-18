@@ -36,8 +36,6 @@ function roleText(kind: LayoutKind, me: Me): string {
 
 function MenuLink({ item }: { item: MenuItem }) {
   if (item.external) return <a href={item.to}>{item.label}</a>;
-  // 홈(/)으로 가는 메뉴(이용 방법)는 홈 안의 한 구역이라, 홈에 있다고 선택 표시를 하지 않는다
-  if (item.to === "/") return <Link to={item.to}>{item.label}</Link>;
   return <NavLink to={item.to}>{item.label}</NavLink>;
 }
 

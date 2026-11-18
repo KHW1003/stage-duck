@@ -11,6 +11,7 @@ import pytest
 
 from app.chat import service as chat
 from app.check import calc
+from app.payment import service as payment
 from app.policy import service as policy
 from app.quote import service as quote
 from app.request import service as request
@@ -44,6 +45,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.is_related, [("db", POS), ("user_id", POS), ("supplier_id", POS)]),
         # 3 → 2
         (chat.invalidate_pending_cards, [("db", POS), ("stage_id", POS)]),
+        (chat.chat_started, [("db", POS), ("performance_id", POS), ("supplier_id", POS)]),
         (quote.quote_counts, [("db", POS), ("stage_ids", POS)]),
         # 4 → 3
         (calc.run_checks, [("performance", POS), ("quote", POS), ("confirmed", POS), ("setup_warning_minutes", KW)]),
@@ -53,6 +55,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (policy.report, [("db", POS), ("reporter_id", KW), ("target_type", KW), ("target_id", KW), ("reason", KW)]),
         (policy.blind_post, [("db", POS), ("post_id", POS), ("actor_id", KW), ("reason", KW)]),
         (policy.suspension_reason, [("db", POS), ("user_id", POS)]),
+        (payment.payment_deadline, [("db", POS), ("performance_id", POS)]),
     ],
     ids=lambda v: getattr(v, "__qualname__", ""),
 )
@@ -64,7 +67,7 @@ def test_contract_function_signatures(fn, expected):
     ("cls", "expected"),
     [
         (supplier.VenueSnapshot, ["venue_id", "name", "sido", "sigungu", "venue_type", "max_capacity",
-                                  "checkin_time", "checkout_time", "has_resident_engineer", "conditions"]),
+                                  "checkin_time", "checkout_time", "has_resident_engineer", "conditions", "equipment"]),
         (request.OpenStage, ["stage_id", "performance_id", "stage_type", "status", "performance_version"]),
         (request.ConfirmedLine, ["stage_id", "stage_type", "supplier_id", "quote_version_id", "amount"]),
         (request.OpenPosting, ["stage_id", "performance_id", "stage_type", "status", "performance_version",

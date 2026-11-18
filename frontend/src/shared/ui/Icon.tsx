@@ -1,5 +1,5 @@
 /**
- * 아이콘 (24 격자, 선 1.5). 출처: docs/design/mockup-v3/layout.js 의 아이콘 모양 — 새 라이브러리 없이 SVG 를 직접 그린다.
+ * 아이콘 (24 격자, 선 1.5). 출처: docs/design/mockup-v3·v4/layout.js 의 아이콘 모양 — 새 라이브러리 없이 SVG 를 직접 그린다.
  * 꾸미기만 하는 아이콘은 쓰지 않는다 (DESIGN.md 8장). 필요한 모양이 없으면 목업에서 같은 이름으로 옮겨 더한다.
  */
 import type { ReactNode } from "react";
@@ -96,6 +96,19 @@ const SHAPES = {
       <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </>
   ),
+  doc: (
+    <>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6M8 13h8M8 17h5" />
+    </>
+  ),
+  tool: (
+    <>
+      <path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8-1.3-1.3a4 4 0 0 0-5-5L13 5Z" />
+      <path d="m3 21 4-4" />
+    </>
+  ),
+  check: <path d="m5 12 5 5 9-10" />,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof SHAPES;

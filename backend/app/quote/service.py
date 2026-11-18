@@ -11,10 +11,11 @@ from pydantic.alias_generators import to_camel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.chat import service as chat_service
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.models.quote import Quote, QuoteVersion
-from app.models.request import Stage
+from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.quote import calc
@@ -109,11 +110,12 @@ def _checks(quote: Quote, row: QuoteVersion) -> list[dict]:
     return []
 
 
-def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict]]:
+def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-15·16·17·18·19: 열린 단계 공고에 견적서 v1을 보낸다. 같은 단계에 label 이 다른 견적서 여러 개 가능 (D-6).
 
     검사 순서: 업체 승인·정지(403) → 내 부문 × 열린 단계(409 STAGE_NOT_OPEN) → 공간 견적서 칸(409·400)
     → 합계(api-contract.md 3.3 순서, calc.verify_total).
+    채팅방(단계 × 업체)이 없으면 만들고 QUOTE 시스템 메시지를 남긴다 (#42). 방 번호를 함께 돌려준다.
     """
     supplier = _sender(db, user)
     if not request_service.posting_visible(db, stage_id, supplier):
@@ -139,13 +141,15 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     )
     db.flush()
     checks = _checks(quote, row)
-    # #42에서 채팅방 연결 (견적서를 보내면 채팅방이 생기고 응답 chatRoomId 를 채운다)
+    room_id = chat_service.post_quote_message(
+        db, stage_id=stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
+    )
     # #45에서 QUOTE_RECEIVED 알림 (사용자 견적함 도착 알림)
     db.commit()
-    return quote, row, checks
+    return quote, row, checks, room_id
 
 
-def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) -> tuple[Quote, QuoteVersion, list[dict]]:
+def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-20: 견적서를 고치면 새 버전을 더한다. 이전 버전은 그대로 남는다. label 은 바꾸지 않는다.
 
     본인 견적서가 아니면 404, 본문 version 이 지금 버전과 다르면 409 VERSION_CONFLICT (api-contract.md 1장),
@@ -169,10 +173,13 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     db.add(row)
     db.flush()
     checks = _checks(quote, row)
+    room_id = chat_service.post_quote_message(
+        db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
+    )
     # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
     db.commit()
     db.refresh(quote)
-    return quote, row, checks
+    return quote, row, checks, room_id
 
 
 def get_quote(db: Session, user: User, quote_id: int) -> Quote:
@@ -212,3 +219,64 @@ def quote_counts(db: Session, stage_ids: list[int]) -> dict[int, int]:
     counts = dict.fromkeys(stage_ids, 0)
     counts.update({stage_id: n for stage_id, n in rows})
     return counts
+
+
+# ---------------------------------------------------------------------------
+# 공고 목록·상세 (T3-01 #41, AC-F2-11·12·14, AC-F3-01·03, AC-F4-07, AC-F5-12)
+# 보이는 조건은 2번 request.service(open_postings_for·posting_visible)가 정한다.
+# 요청서 내용은 견적서 API처럼 2번 stages·performances 를, 닉네임은 1번 users 를 **읽기 전용으로 참조**만 한다.
+# 연락처(contact_phone)·실명·이메일은 넣지 않는다 (CLAUDE.md 20).
+# ---------------------------------------------------------------------------
+
+
+def _user_counts(db: Session, user_ids: set[int]) -> dict[int, dict[str, Any]]:
+    """사용자별 닉네임·반려 횟수·이용 횟수 (AC-F4-07).
+
+    반려·이용 횟수는 아직 주는 함수가 없어 0 이다. 2번 #39(반려)·이용 횟수 함수 생기면 연결.
+    """
+    if not user_ids:
+        return {}
+    rows = db.execute(select(User.id, User.nickname).where(User.id.in_(user_ids))).all()  # 읽기 전용 참조 (1번 users)
+    return {uid: {"nickname": nickname, "rejection_count": 0, "usage_count": 0} for uid, nickname in rows}
+
+
+def list_postings(db: Session, user: User, *, sido: str | None) -> list[dict[str, Any]]:
+    """AC-F2-11·12, AC-F3-01, AC-F4-07: 내 승인 부문 × 지금 열린 단계 공고. 공연일 임박 순.
+
+    심사 중·정지 업체는 403 대신 빈 목록이다 (AC-F2-12 "보이지 않는다").
+    """
+    supplier = supplier_service.get_application(db, user)
+    postings = request_service.open_postings_for(db, supplier, sido=sido)
+    perf_ids = {p.performance_id for p in postings}
+    owners = dict(db.execute(select(Performance.id, Performance.user_id).where(Performance.id.in_(perf_ids))).all())
+    users = _user_counts(db, set(owners.values()))
+    return [asdict(p) | users[owners[p.performance_id]] for p in postings]
+
+
+def get_posting(db: Session, user: User, stage_id: int) -> dict[str, Any]:
+    """AC-F3-03, AC-F2-14, AC-F5-12: 공고 상세 + 앞 단계 확정 정보. 나에게 안 보이는 공고는 404."""
+    supplier = supplier_service.get_application(db, user)
+    if not request_service.posting_visible(db, stage_id, supplier):
+        raise not_found()
+    stage = db.get(Stage, stage_id)  # 읽기 전용 참조 (2번 stages·performances)
+    perf = stage.performance
+    previous = []
+    for s in perf.stages:
+        if s.seq >= stage.seq or s.status != "CONFIRMED" or s.confirmed_quote_version_id is None:
+            continue
+        version = db.get(QuoteVersion, s.confirmed_quote_version_id)
+        previous.append({
+            "stage_type": s.stage_type,
+            "venue_snapshot": version.venue_snapshot,
+            "checkin_time": version.checkin_time,
+            "setup_available_time": version.setup_available_time,
+            "items": version.items,  # 기본 장비
+            "tech_note": version.tech_note,  # 전원 (전용 칸 없음)
+        })
+    return {
+        "stage_id": stage.id, "performance_id": perf.id, "stage_type": stage.stage_type, "status": stage.status,
+        "performance_version": perf.current_version, "title": perf.title, "show_date": perf.show_date,
+        "sido": perf.sido, "sigungu": perf.sigungu, "form": perf.form, "rehearsal_start": perf.rehearsal_start,
+        "show_start": perf.show_start, "show_end": perf.show_end, "audience": perf.audience, "needs": perf.needs,
+        "previous_stages": previous,
+    } | _user_counts(db, {perf.user_id})[perf.user_id]

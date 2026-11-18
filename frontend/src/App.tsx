@@ -2,10 +2,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
+import { CommunitySavedPage } from "./pages/CommunitySavedPage";
 import { CommunityWritePage } from "./pages/CommunityWritePage";
+import { BoardPage } from "./pages/BoardPage";
 import { HomePage } from "./pages/HomePage";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
+import { MyPostPage } from "./pages/MyPostPage";
 import { PerformancePage } from "./pages/PerformancePage";
+import { PostPage } from "./pages/PostPage";
+import { PostingPage } from "./pages/PostingPage";
+import { PostingsPage } from "./pages/PostingsPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
@@ -27,11 +33,19 @@ export function AppRoutes() {
         <Route path="/community" element={<CommunityPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
           <Route path="/community/write" element={<CommunityWritePage />} />
+          <Route path="/community/saved" element={<CommunitySavedPage />} />
           <Route path="/community/:id/edit" element={<CommunityWritePage />} />
         </Route>
         <Route path="/community/:id" element={<CommunityPostPage />} />
+        <Route path="/board" element={<BoardPage />} />
+        <Route path="/board/:id" element={<PostPage />} />
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
+        </Route>
+        <Route element={<RequireAuth roles={["SUPPLIER"]} approvedOnly />}>
+          <Route path="/supplier/posts" element={<MyPostPage />} />
+          <Route path="/supplier/postings" element={<PostingsPage />} />
+          <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />

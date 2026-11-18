@@ -10,6 +10,7 @@ export default defineConfig({
       "/api": "http://localhost:8000",
       "/ws": { target: "ws://localhost:8000", ws: true },
       "/admin": "http://localhost:8000",
+      "/media": "http://localhost:8000", // 공개 사진 (uploads.md 3장, main.py 의 /media)
     },
   },
   test: {

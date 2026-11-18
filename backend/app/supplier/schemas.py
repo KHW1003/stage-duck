@@ -2,9 +2,10 @@
 
 칸은 모두 비어도 받는다 — 빈 칸·형식 검사는 calc.application_field_errors 가 칸마다 한국어 이유로 돌려준다.
 """
-from datetime import datetime
+from datetime import datetime, time
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 _IN = ConfigDict(populate_by_name=True, alias_generator=to_camel, str_strip_whitespace=True)
@@ -40,3 +41,70 @@ class ApplicationOut(BaseModel):
     review_status: str
     reject_reason: str | None
     applied_at: datetime
+
+
+# 공간 등록·수정 (api-contract.md POST·PUT /supplier/venues, FR-SPACE-01) -------------------------
+class VenueEquipmentIn(BaseModel):
+    model_config = _IN
+
+    category: str = Field(min_length=1, max_length=30)
+    name: str = Field(min_length=1, max_length=100)
+    quantity: int = Field(ge=1, le=999)
+
+
+class VenueIn(BaseModel):
+    """조건 칸(band_allowed 등)은 비우면 None = 미확인 (CHK-03 에서 확인 필요)."""
+
+    model_config = _IN
+
+    name: str = Field(min_length=1, max_length=100)
+    sido: str = Field(min_length=1, max_length=20)
+    sigungu: str = Field(min_length=1, max_length=30)
+    address: str = Field(min_length=1, max_length=255)
+    venue_type: Literal["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP", "GARDEN", "WAREHOUSE", "ETC"]
+    max_capacity: int = Field(ge=1, le=500)  # AC-F2-01
+    checkin_time: time
+    checkout_time: time
+    rental_fee: int = Field(ge=0, le=100_000_000)
+    has_resident_engineer: bool = False
+    band_allowed: bool | None = None
+    external_equipment_allowed: bool | None = None
+    external_engineer_allowed: bool | None = None
+    has_waiting_room: bool | None = None
+    has_stage_platform: bool | None = None
+    has_parking: bool | None = None
+    hall_registered: bool | None = None
+    equipment: list[VenueEquipmentIn] = Field(default_factory=list, max_length=50)
+
+
+class VenueEquipmentOut(BaseModel):
+    model_config = _OUT
+
+    category: str
+    name: str
+    quantity: int
+
+
+class VenueOut(BaseModel):
+    model_config = _OUT
+
+    id: int
+    name: str
+    sido: str
+    sigungu: str
+    address: str
+    venue_type: str
+    max_capacity: int
+    checkin_time: time
+    checkout_time: time
+    rental_fee: int
+    has_resident_engineer: bool
+    band_allowed: bool | None
+    external_equipment_allowed: bool | None
+    external_engineer_allowed: bool | None
+    has_waiting_room: bool | None
+    has_stage_platform: bool | None
+    has_parking: bool | None
+    hall_registered: bool | None
+    status: str
+    equipment: list[VenueEquipmentOut]

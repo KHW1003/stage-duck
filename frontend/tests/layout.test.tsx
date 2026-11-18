@@ -77,7 +77,7 @@ function renderAt(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("레이아웃 머리 메뉴 (역할별)", () => {
-  it("방문자는 공간 찾기·PR 게시판과 로그인·가입하기를 본다", async () => {
+  it("방문자는 공간 찾기·업체 찾기와 로그인·가입하기를 본다", async () => {
     mockServer({ "GET /api/v1/me": notLoggedIn });
     renderAt("/");
     const nav = await screen.findByRole("navigation", { name: "주 메뉴" });
@@ -86,11 +86,13 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.getByRole("link", { name: "가입하기" })).toHaveAttribute("href", "/signup");
   });
 
-  it("홈에 있을 때 '이용 방법' 메뉴에 선택 표시가 켜지지 않는다", async () => {
+  it("방문자 메뉴는 목업 v4와 같다 (공간 찾기·업체 찾기·커뮤니티, DESIGN.md 2026-11-18 머리 메뉴 통일)", async () => {
     mockServer({ "GET /api/v1/me": notLoggedIn });
     renderAt("/");
     const nav = await screen.findByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getByRole("link", { name: "이용 방법" })).not.toHaveAttribute("aria-current");
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공간 찾기", "업체 찾기", "커뮤니티"]);
+    expect(within(nav).getByRole("link", { name: "업체 찾기" })).toHaveAttribute("href", "/board");
+    expect(within(nav).getByRole("link", { name: "공간 찾기" })).not.toHaveAttribute("aria-current");
   });
 
   it("지금 화면의 메뉴에는 선택 표시가 켜진다", async () => {
@@ -107,24 +109,34 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
   });
 
-  it("사용자 메뉴·계정 메뉴는 목업(layout.js)과 같은 항목·순서다", async () => {
+  it("사용자 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (견적함은 계정 메뉴로)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/");
     await screen.findByRole("button", { name: /광주밴드/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["내 공연", "견적함", "채팅", "공간 찾기", "PR 게시판", "커뮤니티"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["내 공연", "채팅", "공간 찾기", "업체 찾기", "커뮤니티"]);
     expect(screen.getByRole("button", { name: "알림" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /광주밴드/ }));
-    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "관심 업체", "최종 담당표", "1:1 문의", "알림", "로그아웃"]);
+    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "견적함", "관심 업체", "최종 담당표", "1:1 문의", "알림", "로그아웃"]);
     expect(screen.getByText("사용자 계정")).toBeInTheDocument();
   });
 
-  it("승인 업체 메뉴는 목업과 같다 (공고 목록·채팅·기술 확인·PR 게시판·커뮤니티)", async () => {
+  it("승인 업체 메뉴·계정 메뉴는 목업 v4와 같다 (기술 확인은 계정 메뉴로)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     renderAt("/");
     await screen.findByRole("button", { name: /업체D담당/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "채팅", "기술 확인", "PR 게시판", "커뮤니티"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "채팅", "공간 찾기", "업체 찾기", "커뮤니티"]);
+    await userEvent.click(screen.getByRole("button", { name: /업체D담당/ }));
+    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual([
+      "업체 프로필",
+      "내 소개 글",
+      "최종 담당표",
+      "기술 확인",
+      "1:1 문의",
+      "알림",
+      "로그아웃",
+    ]);
   });
 
   it("심사 중 업체는 알림 종이 없고 계정 메뉴는 알림·로그아웃뿐이다 (목업)", async () => {

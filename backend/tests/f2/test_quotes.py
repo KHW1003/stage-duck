@@ -92,7 +92,7 @@ def test_ac_f2_15_equipment_quote_sent(client, db):
     assert res.status_code == 201, res.text
     data = res.json()
     assert data["version"] == 1
-    assert data["chatRoomId"] is None
+    assert data["chatRoomId"] is not None  # #42: 견적서를 보내면 채팅방이 생긴다
     assert data["checks"] == []
     quote = db.get(Quote, data["quoteId"])
     assert (quote.stage_id, quote.status, quote.current_version, quote.label) == (stage_id, "SENT", 1, "기본형")

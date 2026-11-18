@@ -11,7 +11,17 @@ from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 
 from app.admin.auth import AdminAuth
-from app.admin.views import DemoToolView, ReasonView, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, SupplierAdmin, UserAdmin
+from app.admin.views import (
+    DemoToolView,
+    FreeCommentAdmin,
+    FreePostAdmin,
+    ReasonView,
+    ReportAdmin,
+    SanctionAdmin,
+    StatusHistoryAdmin,
+    SupplierAdmin,
+    UserAdmin,
+)
 from app.core.config import get_settings
 from app.core.db import engine
 
@@ -36,7 +46,7 @@ def setup_admin(app: FastAPI) -> Admin:
         authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret),
         templates_dir=TEMPLATES_DIR,
     )
-    for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin):
+    for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, FreePostAdmin, FreeCommentAdmin):
         admin.add_view(view)
     admin.add_base_view(ReasonView)
     admin.add_base_view(DemoToolView)

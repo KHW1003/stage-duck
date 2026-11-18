@@ -1,5 +1,6 @@
 .pageTop { background: var(--sd-bg); }
 .inner { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding-top: 36px; padding-bottom: 4px; }
+.inner.narrow { max-width: calc(var(--sd-doc-width) + var(--sd-page-pad) * 2); } /* 두 클래스: 나중에 불리는 base.css 의 .sd-container 최대 폭보다 앞서게 */
 .crumb { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .crumb li + li::before { content: "›"; margin-right: 6px; color: var(--sd-line-strong); }
 .crumb a:hover { color: var(--sd-ink); text-decoration: underline; }

@@ -1,9 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { ApiError } from "../src/shared/api/client";
 import { Button } from "../src/shared/ui/Button";
 import { ErrorNotice, NETWORK_ERROR_MESSAGE, fieldErrorOf } from "../src/shared/ui/ErrorText";
 import { Field, Input } from "../src/shared/ui/Field";
 import { MoneyText, formatWon } from "../src/shared/ui/MoneyText";
+import { Select, type SelectOption } from "../src/shared/ui/Select";
 
 describe("MoneyText (CLAUDE.md 11: 원 단위 정수)", () => {
   it.each([
@@ -93,5 +96,146 @@ describe("Button", () => {
   it("type 을 적지 않으면 form 을 제출하지 않는 button 이다", () => {
     render(<Button>취소</Button>);
     expect(screen.getByRole("button", { name: "취소" })).toHaveAttribute("type", "button");
+  });
+});
+
+describe("Select (DESIGN.md 5장 고르기 칸, 목업 v4 select.js)", () => {
+  const SIDO: SelectOption[] = [
+    { value: "서울특별시", label: "서울특별시" },
+    { value: "광주광역시", label: "광주광역시" },
+    { value: "제주특별자치도", label: "제주특별자치도", disabled: true },
+    { value: "전라남도", label: "전라남도" },
+  ];
+
+  function Sido({ initial = "", onChange = () => {} }: { initial?: string; onChange?: (v: string) => void }) {
+    const [value, setValue] = useState(initial);
+    return (
+      <Field label="지역" required>
+        {(p) => (
+          <Select
+            {...p}
+            value={value}
+            options={SIDO}
+            placeholder="시·도를 골라 주세요"
+            onChange={(v) => {
+              setValue(v);
+              onChange(v);
+            }}
+          />
+        )}
+      </Field>
+    );
+  }
+
+  it("이름과 이어지고, 고른 값이 없으면 안내 문구를 보여 준다", () => {
+    render(<Sido />);
+    const box = screen.getByRole("combobox", { name: /지역/ });
+    expect(box).toHaveTextContent("시·도를 골라 주세요");
+    expect(box).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("누르면 목록이 열리고 고른 항목에 표시가 있다", async () => {
+    render(<Sido initial="광주광역시" />);
+    await userEvent.click(screen.getByRole("combobox", { name: /지역/ }));
+    expect(screen.getByRole("combobox", { name: /지역/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(SIDO.map((o) => o.label));
+    expect(screen.getByRole("option", { name: "광주광역시" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("option", { name: "서울특별시" })).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("항목을 누르면 고르고 닫힌다", async () => {
+    const onChange = vi.fn();
+    render(<Sido onChange={onChange} />);
+    await userEvent.click(screen.getByRole("combobox", { name: /지역/ }));
+    await userEvent.click(screen.getByRole("option", { name: "서울특별시" }));
+    expect(onChange).toHaveBeenCalledWith("서울특별시");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /지역/ })).toHaveTextContent("서울특별시");
+  });
+
+  it("키보드: ↓로 열고 ↑↓로 옮기고 Enter로 고른다. 고른 뒤 포커스는 칸에 남는다", async () => {
+    const onChange = vi.fn();
+    render(<Sido initial="서울특별시" onChange={onChange} />);
+    const box = screen.getByRole("combobox", { name: /지역/ });
+    box.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(box).toHaveAttribute("aria-expanded", "true");
+    expect(box).toHaveAttribute("aria-activedescendant", screen.getByRole("option", { name: "서울특별시" }).id);
+    await userEvent.keyboard("{ArrowDown}");
+    expect(box).toHaveAttribute("aria-activedescendant", screen.getByRole("option", { name: "광주광역시" }).id);
+    await userEvent.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("광주광역시");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(box).toHaveFocus();
+  });
+
+  it("키보드: 꺼진 항목은 건너뛰고, 끝에서 더 가지 않는다", async () => {
+    const onChange = vi.fn();
+    render(<Sido initial="광주광역시" onChange={onChange} />);
+    screen.getByRole("combobox", { name: /지역/ }).focus();
+    await userEvent.keyboard("{Enter}{ArrowDown}{ArrowDown}{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenCalledWith("전라남도");
+  });
+
+  it("꺼진 항목은 눌러도 고르지 않는다", async () => {
+    const onChange = vi.fn();
+    render(<Sido onChange={onChange} />);
+    await userEvent.click(screen.getByRole("combobox", { name: /지역/ }));
+    await userEvent.click(screen.getByRole("option", { name: "제주특별자치도" }));
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  it("Esc는 고르지 않고 닫으며, 바깥(창 닫기 등)으로 Esc를 넘기지 않는다", async () => {
+    const onChange = vi.fn();
+    const outer = vi.fn();
+    render(
+      <div onKeyDown={outer}>
+        <Sido onChange={onChange} />
+      </div>,
+    );
+    const box = screen.getByRole("combobox", { name: /지역/ });
+    box.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    outer.mockClear();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    expect(outer).not.toHaveBeenCalled();
+    expect(box).toHaveFocus();
+  });
+
+  it("목록 바깥을 누르면 닫힌다", async () => {
+    render(
+      <>
+        <Sido />
+        <button type="button">다른 곳</button>
+      </>,
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: /지역/ }));
+    fireEvent.mouseDown(screen.getByRole("button", { name: "다른 곳" }));
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("오류가 있으면 aria-invalid 를 달고, 꺼져 있으면 열리지 않는다", async () => {
+    const { rerender } = render(
+      <Field label="말머리" error="승인받지 않은 부문이에요.">
+        {(p) => <Select {...p} value="" options={SIDO} onChange={() => {}} />}
+      </Field>,
+    );
+    expect(screen.getByRole("combobox", { name: /말머리/ })).toHaveAttribute("aria-invalid", "true");
+    rerender(
+      <Field label="말머리">
+        {(p) => <Select {...p} value="" options={SIDO} onChange={() => {}} disabled />}
+      </Field>,
+    );
+    await userEvent.click(screen.getByRole("combobox", { name: /말머리/ }));
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("name 을 주면 form 에 값이 함께 실린다", () => {
+    const { container } = render(<Select name="sido" value="광주광역시" options={SIDO} onChange={() => {}} aria-label="지역" />);
+    expect(container.querySelector('input[type="hidden"][name="sido"]')).toHaveValue("광주광역시");
   });
 });

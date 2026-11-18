@@ -25,7 +25,7 @@ const PAGE: FreePostPage = {
 function post(over: Partial<FreePost> = {}): FreePost {
   return {
     ...ITEM, body: "입실 15시, 공연 19시예요.\n조언 부탁드려요.", photoIds: [], status: "ACTIVE", blindReason: null,
-    prevId: 8, nextId: null, isMine: false, updatedAt: "2026-11-16T14:20:00", ...over,
+    prevId: 8, nextId: null, isMine: false, updatedAt: "2026-11-16T14:20:00", comments: [], myHelpful: false, bookmarked: false, ...over,
   };
 }
 
