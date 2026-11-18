@@ -10,6 +10,7 @@ from sqlalchemy import select
 from app.core.errors import AppError
 from app.main import app
 from app.models.history import StatusHistory
+from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, Stage
 from app.request import service
 from app.request.router import get_today
@@ -50,14 +51,29 @@ def _stage(db, perf_id, stage_type) -> Stage:
     return db.scalar(select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == stage_type))
 
 
-def _confirm(db, perf_id, stage_type, quote_version_id=101):
-    """3번 accept 흉내: 단계 잠그고 stage_confirmed → 커밋."""
-    stage = db.scalar(
-        select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == stage_type).with_for_update()
+def _quote_version(db, stage_id) -> int:
+    """확정할 견적서 버전 (stages.confirmed_quote_version_id 는 quote_versions FK — MariaDB 에서 검사)."""
+    supplier = make_supplier(db, review_status="APPROVED", categories=("VENUE", "EQUIPMENT", "ENGINEER"))
+    quote = Quote(stage_id=stage_id, supplier_id=supplier.id, label="기본형", current_version=1, status="SENT")
+    db.add(quote)
+    db.flush()
+    version = QuoteVersion(
+        quote_id=quote.id, version=1, based_on_perf_version=1, staff=[], items=[],
+        amount_items=500000, amount_transport=0, amount_install=0, amount_labor=0, amount_etc=0, total_amount=500000,
     )
-    service.stage_confirmed(db, stage.id, quote_version_id, actor_id=1)
+    db.add(version)
     db.commit()
-    return stage.id
+    return version.id
+
+
+def _confirm(db, perf_id, stage_type) -> tuple[int, int]:
+    """3번 accept 흉내: 단계 잠그고 stage_confirmed → 커밋. (단계 id, 견적서 버전 id)"""
+    stage_id = db.scalar(select(Stage.id).where(Stage.performance_id == perf_id, Stage.stage_type == stage_type))
+    version_id = _quote_version(db, stage_id)
+    stage = db.scalar(select(Stage).where(Stage.id == stage_id).with_for_update())
+    service.stage_confirmed(db, stage.id, version_id, actor_id=1)
+    db.commit()
+    return stage.id, version_id
 
 
 def _advance(user, stage_id, action="OPEN_NEXT", headers=KEY, **extra):
@@ -88,7 +104,7 @@ def test_ac_f3_01_equipment_cannot_see_before_venue_confirmed(client, db):
 
 def test_ac_f3_02_advance_opens_equipment(client, db):
     user, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
     assert _perf_status(db, perf_id) == "ASSIGNING"
     assert service.get_open_stage(db, perf_id) is None  # 확정됐지만 아직 다음 단계는 안 열림 (D-1)
 
@@ -106,7 +122,7 @@ def test_ac_f3_02_advance_opens_equipment(client, db):
 
 def test_same_advance_twice_applies_once(client, db):
     user, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
     first = _advance(user, venue_id)
     second = _advance(user, venue_id)
@@ -118,7 +134,7 @@ def test_same_advance_twice_applies_once(client, db):
 
 def test_advance_requires_idempotency_key(client, db):
     user, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
     res = _advance(user, venue_id, headers={})
 
@@ -137,17 +153,17 @@ def test_advance_before_confirm_is_invalid_state(client, db):
 
 def test_advance_from_last_stage_is_invalid_state(client, db):
     user, perf_id = _published(client, db)
-    _advance(user, _confirm(db, perf_id, "VENUE"))
-    _advance(user, _confirm(db, perf_id, "EQUIPMENT"))
+    _advance(user, _confirm(db, perf_id, "VENUE")[0])
+    _advance(user, _confirm(db, perf_id, "EQUIPMENT")[0])
 
-    res = _advance(user, _confirm(db, perf_id, "ENGINEER"))
+    res = _advance(user, _confirm(db, perf_id, "ENGINEER")[0])
 
     assert (res.status_code, res.json()["code"]) == (409, "INVALID_STATE")
 
 
 def test_skip_next_needs_acknowledgement_then_opens_following(client, db):
     user, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
     no_ack = _advance(user, venue_id, action="SKIP_NEXT")
     assert no_ack.status_code == 400
@@ -164,7 +180,7 @@ def test_skip_next_needs_acknowledgement_then_opens_following(client, db):
 
 def test_advance_other_user_or_supplier_not_found(client, db):
     _, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
     assert _advance(login_as(client, make_user(db)), venue_id).status_code == 404
     supplier = make_supplier(db, review_status="APPROVED", categories=("VENUE",))
@@ -222,7 +238,7 @@ def test_declare_all_secured_other_user_not_found(client, db):
 @pytest.mark.parametrize("full_spec, suggest", [(True, True), (False, False)])
 def test_ac_f3_05_full_spec_venue_suggests_skip(client, db, full_spec, suggest):
     _, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
     step = service.after_confirm(db, venue_id, full_spec=full_spec)
 
@@ -231,9 +247,9 @@ def test_ac_f3_05_full_spec_venue_suggests_skip(client, db, full_spec, suggest):
 
 def test_ac_f3_14_last_stage_confirmed_offers_checkout(client, db):
     user, perf_id = _published(client, db)
-    _advance(user, _confirm(db, perf_id, "VENUE"))
-    _advance(user, _confirm(db, perf_id, "EQUIPMENT"))
-    engineer_id = _confirm(db, perf_id, "ENGINEER")
+    _advance(user, _confirm(db, perf_id, "VENUE")[0])
+    _advance(user, _confirm(db, perf_id, "EQUIPMENT")[0])
+    engineer_id, _ = _confirm(db, perf_id, "ENGINEER")
 
     step = service.after_confirm(db, engineer_id, full_spec=False)
 
@@ -246,10 +262,10 @@ def test_ac_f3_14_last_stage_confirmed_offers_checkout(client, db):
 
 def test_stage_confirmed_saves_quote_version_and_history(client, db):
     _, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE", quote_version_id=88)
+    venue_id, version_id = _confirm(db, perf_id, "VENUE")
 
     stage = _stage(db, perf_id, "VENUE")
-    assert (stage.status, stage.confirmed_quote_version_id) == ("CONFIRMED", 88)
+    assert (stage.status, stage.confirmed_quote_version_id) == ("CONFIRMED", version_id)
     assert stage.confirmed_at is not None
     history = db.scalars(select(StatusHistory).where(StatusHistory.entity_type == "stage", StatusHistory.entity_id == venue_id)).all()
     assert [(h.from_status, h.to_status) for h in history][-1] == ("OPEN", "CONFIRMED")
@@ -257,10 +273,11 @@ def test_stage_confirmed_saves_quote_version_and_history(client, db):
 
 def test_stage_confirmed_twice_is_already_confirmed(client, db):
     _, perf_id = _published(client, db)
-    venue_id = _confirm(db, perf_id, "VENUE")
+    venue_id, _ = _confirm(db, perf_id, "VENUE")
 
+    other_version = _quote_version(db, venue_id)
     with pytest.raises(AppError) as err:
-        service.stage_confirmed(db, venue_id, 102, actor_id=1)
+        service.stage_confirmed(db, venue_id, other_version, actor_id=1)
     db.rollback()
 
     assert (err.value.status, err.value.code) == (409, "STAGE_ALREADY_CONFIRMED")
@@ -273,9 +290,9 @@ def test_recheck_stage_can_be_confirmed_again(client, db):
     assert user.put(f"/api/v1/performances/{perf_id}", json=body).status_code == 200
     assert _statuses(db, perf_id)["VENUE"] == "RECHECK"
 
-    _confirm(db, perf_id, "VENUE", quote_version_id=103)
+    _, version_id = _confirm(db, perf_id, "VENUE")
 
-    assert (_stage(db, perf_id, "VENUE").status, _stage(db, perf_id, "VENUE").confirmed_quote_version_id) == ("CONFIRMED", 103)
+    assert (_stage(db, perf_id, "VENUE").status, _stage(db, perf_id, "VENUE").confirmed_quote_version_id) == ("CONFIRMED", version_id)
 
 
 def test_get_open_stage_none_after_withdraw(client, db):
