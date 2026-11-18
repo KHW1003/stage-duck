@@ -55,7 +55,14 @@ def _clean_tables():
 
 @pytest.fixture
 def db() -> Session:
-    with SessionLocal() as session:
+    """테스트가 직접 쓰는 세션. MariaDB 에서는 READ COMMITTED 로 읽는다.
+
+    MariaDB 기본값(REPEATABLE READ)이면 이 세션의 트랜잭션이 처음 읽은 순간의 스냅숏만 보여서,
+    테스트 중에 API(다른 연결)가 저장한 값이 안 보인다 (CI 에서만 실패하던 원인). SQLite 는 그대로.
+    """
+    mysql = engine.dialect.name in ("mysql", "mariadb")
+    bind = engine.execution_options(isolation_level="READ COMMITTED") if mysql else engine
+    with SessionLocal(bind=bind) as session:
         yield session
 
 
