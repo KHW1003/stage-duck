@@ -1,7 +1,6 @@
 """공연 요청서·순차 배정 서비스 (2번 묶음 — 해원).
 
-다른 묶음이 부르는 약속 함수(roles.md 3장)는 이 파일 위쪽에 있다. 본문이 아직 없는 것(`NotImplementedError`)은
-다른 묶음이 테스트에서 목업으로 바꿔 쓴다:
+다른 묶음이 부르는 약속 함수(roles.md 3장)는 이 파일 위쪽에 있다. 테스트에서 목업으로 바꿔 쓸 때:
 
     monkeypatch.setattr("app.request.service.confirmed_lines", lambda db, pid: [ConfirmedLine(...)])
 
@@ -15,12 +14,13 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
+from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.request import calc, rejection
 from app.request.schemas import PerformanceIn
-from app.chat.service import invalidate_pending_cards
+from app.chat.service import chat_started, invalidate_pending_cards
 from app.quote.service import quote_counts
 from app.supplier.service import can_send_quotes
 
@@ -135,21 +135,44 @@ def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfir
 
 
 def is_related(db: Session, user_id: int, supplier_id: int) -> bool:
-    """[약속 2 → 1] 이 사용자의 공연에 이 업체가 견적서·오퍼·채팅으로 엮여 있는가 (1번 개인 프로필 열람, AC-F5-17).
+    """[약속 2 → 1] 이 사용자의 공연에 이 업체가 견적서·채팅으로 엮여 있는가 (1번 개인 프로필 열람, AC-F5-17).
 
-    견적서(3번)·오퍼(1번)·채팅(3번) 테이블이 생긴 뒤 그 묶음의 서비스 함수로 채운다. 그 전엔 1번이 목업으로 쓴다.
+    - 견적서: 사용자 공연의 어느 단계에든 이 업체가 견적서를 보냈다 (상태 상관없이)
+    - 채팅: 사용자 공연의 어느 단계에서든 이 업체와 채팅이 시작됐다 (3번 chat_started)
+    오퍼(1번 #32)는 offers 표가 생기면 여기에 더한다. 커밋하지 않는다.
     """
-    raise NotImplementedError("견적서 #41·채팅 #42·오퍼 #32 머지 뒤 2번 묶음에서 구현한다")
+    perf_ids = list(db.scalars(select(Performance.id).where(Performance.user_id == user_id)))
+    if not perf_ids:
+        return False
+    quoted = db.scalar(
+        select(Quote.id)
+        .join(Stage, Stage.id == Quote.stage_id)
+        .where(Stage.performance_id.in_(perf_ids), Quote.supplier_id == supplier_id)
+        .limit(1)
+    )
+    if quoted is not None:
+        return True
+    return any(chat_started(db, pid, supplier_id) for pid in perf_ids)
 
 
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     """[약속 2·3 → 4] 확정된 단계마다 한 줄. 건너뛴 단계는 넣지 않는다. 순서는 배정 순서(공연장 → 장비 → 엔지니어).
 
     쓰는 곳: 4번 통합 청구서(AC-F5-03)·위약금 배분(AC-F5-08).
-    금액은 확정 견적서 버전의 total_amount (견적서 금액은 3번 quote 서비스로 읽는다).
-    구현: 2번 해원 — T2-04 (#38).
+    금액은 확정 견적서 버전(stages.confirmed_quote_version_id)의 total_amount.
+    재확인(RECHECK) 단계는 다시 확정하기 전까지 넣지 않는다 — 재확인 전에는 결제할 수 없다 (nextActionText RECHECK).
     """
-    raise NotImplementedError("2번 묶음 T2-04(#38)에서 구현한다")
+    rows = db.execute(
+        select(Stage.id, Stage.stage_type, Quote.supplier_id, QuoteVersion.id, QuoteVersion.total_amount)
+        .join(QuoteVersion, QuoteVersion.id == Stage.confirmed_quote_version_id)
+        .join(Quote, Quote.id == QuoteVersion.quote_id)
+        .where(Stage.performance_id == performance_id, Stage.status == "CONFIRMED")
+        .order_by(Stage.seq)
+    ).all()
+    return [
+        ConfirmedLine(stage_id=sid, stage_type=stype, supplier_id=sup, quote_version_id=qv, amount=amount)
+        for sid, stype, sup, qv, amount in rows
+    ]
 
 
 # ---------------------------------------------------------------------------
