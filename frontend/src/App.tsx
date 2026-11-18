@@ -12,6 +12,7 @@ import { PasswordForgotPage, PasswordResetPage } from "./pages/PasswordPage";
 import { SignupPage } from "./pages/SignupPage";
 import { SpacesPage } from "./pages/SpacesPage";
 import { SpaceDetailPage } from "./pages/SpaceDetailPage";
+import { NextStagePage } from "./pages/NextStagePage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -65,6 +66,7 @@ export function AppRoutes() {
           <Route path="/me/performances" element={<MyPerformancesPage />} />
           <Route path="/performances/:id" element={<PerformancePage />} />
           <Route path="/performances/:id/edit" element={<RequestEditPage />} />
+          <Route path="/performances/:id/next" element={<NextStagePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

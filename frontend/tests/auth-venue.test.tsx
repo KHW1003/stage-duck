@@ -259,3 +259,56 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
+
+describe("다음 단계로 (/performances/:id/next)", () => {
+  const ME = { "GET /api/v1/me": { status: 200, body: USER } };
+  const base = {
+    id: 5, title: "가을밤 밴드 공연", form: "BAND", status: "ASSIGNING", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00",
+    showEnd: "21:00:00", audience: 80, sido: "광주광역시", sigungu: "동구", currentVersion: 1, lineup: [], hasContactPhone: true, publishedAt: null,
+    needs: { venue: null, equipment: null, engineer: null, ownedVenue: null },
+  };
+  const afterVenue = {
+    ...base, nextAction: "OPEN_NEXT", nextStageId: 1,
+    stages: [
+      { id: 1, stageType: "VENUE", seq: 1, status: "CONFIRMED", quoteCount: 3 },
+      { id: 2, stageType: "EQUIPMENT", seq: 2, status: "WAITING", quoteCount: null },
+      { id: 3, stageType: "ENGINEER", seq: 3, status: "WAITING", quoteCount: null },
+    ],
+  };
+
+  it("AC-F3-02 공연장 확정 뒤: [장비 업체 모집 시작]은 Idempotency-Key 와 함께 보내고 공연 상세로 간다", async () => {
+    const calls = mockServer({ ...ME, "GET /api/v1/performances/5": { status: 200, body: afterVenue }, "POST /api/v1/stages/1/advance": { status: 200, body: {} } });
+    renderAt("/performances/5/next");
+    expect(await screen.findByRole("heading", { name: "공연장을 확정했어요" })).toBeInTheDocument();
+    expect(screen.getByText("다음 차례")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "장비 업체 모집 시작" }));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/performances/5"));
+    expect(calls.find((c) => c.method === "POST")!.body).toEqual({ action: "OPEN_NEXT" });
+  });
+
+  it("건너뛰기는 책임 고지에 동의해야 보내진다", async () => {
+    const calls = mockServer({ ...ME, "GET /api/v1/performances/5": { status: 200, body: afterVenue }, "POST /api/v1/stages/1/advance": { status: 200, body: {} } });
+    renderAt("/performances/5/next");
+    await userEvent.click(await screen.findByText("장비는 이미 있어요 · 건너뛰기"));
+    await userEvent.click(screen.getByRole("button", { name: "건너뛰기" }));
+    const dialog = screen.getByRole("dialog", { name: "건너뛰기 확인" });
+    expect(within(dialog).getByRole("button", { name: "건너뛰기" })).toBeDisabled();
+    await userEvent.click(within(dialog).getByLabelText(/동의해요/));
+    await userEvent.click(within(dialog).getByRole("button", { name: "건너뛰기" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
+    expect(calls.find((c) => c.method === "POST")!.body).toMatchObject({ action: "SKIP_NEXT", acknowledgement: "STAGE_SKIP_OWNED" });
+  });
+
+  it("모든 단계를 정했으면 정리와 [통합 결제하기], 다음 할 일이 아니면 공연 상세로", async () => {
+    const paid = { ...afterVenue, nextAction: "PAY", stages: afterVenue.stages.map((s) => ({ ...s, status: s.seq === 3 ? "SKIPPED" : "CONFIRMED" })) };
+    mockServer({ ...ME, "GET /api/v1/performances/5": { status: 200, body: paid } });
+    const a = renderAt("/performances/5/next");
+    expect(await screen.findByRole("heading", { name: "모든 단계를 정했어요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "통합 결제하기" })).toHaveAttribute("href", "/performances/5/order");
+    a.unmount();
+    vi.unstubAllGlobals();
+    mockServer({ ...ME, "GET /api/v1/performances/5": { status: 200, body: { ...afterVenue, nextAction: "WAIT_QUOTES" } } });
+    renderAt("/performances/5/next");
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/performances\/5$/));
+  });
+});
