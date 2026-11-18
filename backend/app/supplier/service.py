@@ -2,6 +2,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, time
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -11,8 +12,9 @@ from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.models.supplier import Supplier, SupplierCategory
 from app.models.user import User
+from app.models.venue import CONDITION_FIELDS, Venue, VenueEquipment
 from app.supplier import calc
-from app.supplier.schemas import ApplicationIn
+from app.supplier.schemas import ApplicationIn, VenueIn
 
 # 허용되는 심사 상태 전이 (data-model.md 11장)
 _ALLOWED = {
@@ -196,13 +198,72 @@ class VenueSnapshot:
     has_resident_engineer: bool
     # 키: BAND_ALLOWED · EXTERNAL_EQUIPMENT_ALLOWED · EXTERNAL_ENGINEER_ALLOWED · HAS_WAITING_ROOM · HAS_STAGE_PLATFORM · HAS_PARKING
     conditions: Mapping[str, bool | None] = field(default_factory=dict)
+    # 기본 제공 장비 [{"category", "name", "quantity"}] — AC-F2-03 (기본 마이크 2개가 확정 공연에 남는다)
+    equipment: tuple[Mapping[str, Any], ...] = ()
 
 
 def get_venue_snapshot(db: Session, venue_id: int) -> VenueSnapshot:
     """[약속 1 → 2] 공간의 지금 조건을 스냅샷으로 돌려준다. 없거나 숨김이면 not_found().
 
     쓰는 곳: 2번 요청서·배정, 3번 공연장 견적서(quote_versions.venue_snapshot), 4번 CHK-01·03·04·07.
-    구현: 1번 세환 — T1-06 (#27).
     """
-    raise NotImplementedError("1번 묶음 T1-06(#27)에서 구현한다")
+    venue = db.get(Venue, venue_id)
+    if venue is None or venue.status != "ACTIVE":
+        raise not_found()
+    return VenueSnapshot(
+        venue_id=venue.id,
+        name=venue.name,
+        sido=venue.sido,
+        sigungu=venue.sigungu,
+        venue_type=venue.venue_type,
+        max_capacity=venue.max_capacity,
+        checkin_time=venue.checkin_time,
+        checkout_time=venue.checkout_time,
+        has_resident_engineer=venue.has_resident_engineer,
+        conditions={f.upper(): getattr(venue, f) for f in CONDITION_FIELDS},
+        equipment=tuple({"category": e.category, "name": e.name, "quantity": e.quantity} for e in venue.equipment),
+    )
+
+
+# 공간 등록·수정 (FR-SPACE-01·02) ----------------------------------------------------------------
+def _venue_owner(db: Session, user: User) -> Supplier:
+    """승인된 공연장 부문 업체만 공간을 다룬다 (api-contract.md S(VENUE))."""
+    supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
+    if supplier is None or supplier.review_status in ("PENDING", "REJECTED"):
+        raise AppError(403, "SUPPLIER_NOT_APPROVED", "입점 심사가 끝난 뒤에 공간을 등록할 수 있어요.")
+    if supplier.review_status == "SUSPENDED":
+        raise AppError(403, "ACCOUNT_SUSPENDED", "정지된 계정은 공간을 등록할 수 없어요. 고객센터로 문의해 주세요.")
+    if "VENUE" not in {c.category for c in supplier.categories}:
+        raise AppError(403, "CATEGORY_NOT_APPROVED", "공연장 부문으로 승인받은 업체만 공간을 등록할 수 있어요.")
+    return supplier
+
+
+def _fill_venue(venue: Venue, body: VenueIn) -> None:
+    """AC-F2-02: 퇴실이 입실보다 늦어야 한다 (자정 넘김 미지원, data-model.md)."""
+    if body.checkout_time <= body.checkin_time:
+        raise AppError(400, "VALIDATION_FAILED", "퇴실 마감은 입실 시각보다 늦어야 해요.",
+                       [{"field": "checkoutTime", "reason": "입실 시각보다 늦게 넣어 주세요."}])
+    for key, value in body.model_dump(exclude={"equipment"}).items():
+        setattr(venue, key, value)
+    venue.equipment = [VenueEquipment(**e.model_dump()) for e in body.equipment]
+
+
+def create_venue(db: Session, user: User, body: VenueIn) -> Venue:
+    """AC-F2-01·02: 수용 인원 1~500, 퇴실 > 입실이어야 저장된다."""
+    venue = Venue(supplier_id=_venue_owner(db, user).id)
+    _fill_venue(venue, body)
+    db.add(venue)
+    db.commit()
+    return venue
+
+
+def update_venue(db: Session, user: User, venue_id: int, body: VenueIn) -> Venue:
+    """AC-F2-03: 원본을 고쳐도 이미 보낸 견적서·확정 공연은 venue_snapshot 을 그대로 쓴다. 남의 공간은 404."""
+    supplier = _venue_owner(db, user)
+    venue = db.get(Venue, venue_id, with_for_update=True)
+    if venue is None or venue.supplier_id != supplier.id:
+        raise not_found()
+    _fill_venue(venue, body)
+    db.commit()
+    return venue
 

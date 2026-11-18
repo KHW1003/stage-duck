@@ -64,7 +64,7 @@ def test_contract_function_signatures(fn, expected):
     ("cls", "expected"),
     [
         (supplier.VenueSnapshot, ["venue_id", "name", "sido", "sigungu", "venue_type", "max_capacity",
-                                  "checkin_time", "checkout_time", "has_resident_engineer", "conditions"]),
+                                  "checkin_time", "checkout_time", "has_resident_engineer", "conditions", "equipment"]),
         (request.OpenStage, ["stage_id", "performance_id", "stage_type", "status", "performance_version"]),
         (request.ConfirmedLine, ["stage_id", "stage_type", "supplier_id", "quote_version_id", "amount"]),
         (request.OpenPosting, ["stage_id", "performance_id", "stage_type", "status", "performance_version",
