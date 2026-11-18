@@ -385,6 +385,7 @@ erDiagram
 | venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신 |
 | idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
 | password_reset_tokens | id, user_id FK, token_hash CHAR(64) UNIQUE, expires_at, used_at NULL, created_at | 비밀번호 찾기 링크 (D-55). 원문 토큰은 저장하지 않고 SHA-256만. 30분, 1회용 |
+| password_reset_requests | id, email_hash CHAR(64), requested_at · INDEX(email_hash, requested_at) | 비밀번호 찾기 요청 기록 (같은 이메일 10분 3회). 가입 안 한 이메일도 같이 세야 429 로 가입 여부가 드러나지 않아 user_id 대신 이메일 SHA-256 |
 
 ---
 

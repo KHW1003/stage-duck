@@ -65,8 +65,8 @@
 | GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 / 처음 → `signupToken` 발급 후 추가 정보 화면으로 | F1-04, F1-10 |
 | GET | `/auth/kakao/start` · `/auth/kakao/callback` | 🌐 | `KAKAO_LOGIN_ENABLED=false`면 404 | F1-08, F1-09 |
 | POST | `/auth/social/complete` | signupToken | 추가 정보 + 약관 동의 → 가입 완료 | F1-05~07 |
-| POST | `/auth/password-reset` | 🌐 | 재설정 링크 요청 `{email}` → 항상 202. 10분 3회 넘으면 429 | F1-21, F1-23 |
-| POST | `/auth/password-reset/confirm` | 🌐 | `{token, password}` → 204 + 그 사용자 Refresh 전부 폐기. 만료·사용됨 → 400 `RESET_TOKEN_INVALID` | F1-22 |
+| POST | `/auth/password-reset` | 🌐 | 재설정 링크 요청 `{email}` → 항상 202 `{demoLink}` (시연 서버 `APP_ENV=test`·`MAIL_BACKEND=console`만 `/password/reset?token=…`, 그 밖은 null). 같은 이메일 10분 3회 넘으면 429 `PASSWORD_RESET_RATE_LIMITED` (가입 안 한 이메일도 같은 규칙). CSRF 검사 예외 | F1-21, F1-23 |
+| POST | `/auth/password-reset/confirm` | 🌐 | `{token, password}` → 204 + 그 사용자 Refresh 전부 폐기(바꾼 시각 전에 발급된 refresh 는 `/auth/refresh` 401) + 이 브라우저 로그인 쿠키 지움. 만료·사용됨 → 400 `RESET_TOKEN_INVALID`, 비밀번호 규칙 → 400 `VALIDATION_FAILED`. CSRF 검사 예외 | F1-22 |
 | GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태 | F1-11 |
 | POST | `/supplier/application` | S\* | 2단계 입점 신청 (사업자 정보, 등록증 파일 id) | F1-17, F1-18 |
 | GET | `/supplier/application` | S\* | 심사 상태·반려 사유 | F1-20 |

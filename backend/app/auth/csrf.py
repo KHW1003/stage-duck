@@ -1,7 +1,7 @@
 """CSRF 검사 미들웨어 (plan.md 4장 double submit, api-contract.md 1장).
 
 /api/v1 아래의 POST·PUT·PATCH·DELETE 는 X-CSRF-Token 헤더가 csrf_token 쿠키와 같아야 한다.
-- 예외: 쿠키가 아직 없는 요청(로그인·가입·소셜 가입 완료·시연 계정 전환).
+- 예외: 쿠키가 아직 없는 요청(로그인·가입·소셜 가입 완료·비밀번호 찾기·시연 계정 전환).
 - 관리자(/admin, SQLAdmin)는 /api/v1 밖이라 검사하지 않는다.
 - 프론트는 shared/api/client.ts 의 api() 를 쓰면 헤더가 자동으로 붙는다.
 """
@@ -22,6 +22,8 @@ EXEMPT_PATHS = frozenset(
         "/api/v1/auth/signup",
         "/api/v1/auth/signup/supplier",
         "/api/v1/auth/social/complete",
+        "/api/v1/auth/password-reset",
+        "/api/v1/auth/password-reset/confirm",
         "/api/v1/dev/switch-account",
     }
 )

@@ -30,6 +30,12 @@ def _encode(user_id: int, typ: str, lifetime: timedelta, now: datetime | None) -
 
 def _decode(token: str | None, typ: str) -> int | None:
     """서명이 맞고, 만료되지 않았고, 종류(typ)가 맞으면 사용자 id. 아니면 None."""
+    claims = _claims(token, typ)
+    return claims[0] if claims else None
+
+
+def _claims(token: str | None, typ: str) -> tuple[int, int] | None:
+    """(사용자 id, 발급 시각 iat 초). 검사는 _decode 와 같다."""
     if not token:
         return None
     try:
@@ -38,10 +44,10 @@ def _decode(token: str | None, typ: str) -> int | None:
         )
     except jwt.InvalidTokenError:
         return None
-    sub = data.get("sub")
-    if data.get("typ") != typ or not isinstance(sub, str) or not sub.isdigit():
+    sub, iat = data.get("sub"), data.get("iat")
+    if data.get("typ") != typ or not isinstance(sub, str) or not sub.isdigit() or not isinstance(iat, int):
         return None
-    return int(sub)
+    return int(sub), iat
 
 
 def issue_access_token(user_id: int, *, now: datetime | None = None) -> str:
@@ -58,6 +64,11 @@ def read_access_token(token: str | None) -> int | None:
 
 def read_refresh_token(token: str | None) -> int | None:
     return _decode(token, REFRESH)
+
+
+def read_refresh_claims(token: str | None) -> tuple[int, int] | None:
+    """(사용자 id, iat). 비밀번호를 바꾼 뒤 예전 Refresh 를 끊을 때 쓴다 (AC-F1-22)."""
+    return _claims(token, REFRESH)
 
 
 def set_login_cookies(response: Response, user_id: int) -> None:

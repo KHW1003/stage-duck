@@ -35,3 +35,21 @@ export function useSignup() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ME_KEY }),
   });
 }
+
+/** 비밀번호 찾기 (AC-F1-21·23). 가입 여부와 상관없이 항상 202. demoLink 는 시연 서버에서만 (D-55) */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (email: string) =>
+      api<{ demoLink: string | null }>("/auth/password-reset", { method: "POST", body: JSON.stringify({ email }) }),
+  });
+}
+
+/** 새 비밀번호 저장 (AC-F1-22). 만료·사용된 링크는 400 RESET_TOKEN_INVALID. 바뀌면 로그인 쿠키도 지워진다 */
+export function useConfirmPasswordReset() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { token: string; password: string }) =>
+      api<void>("/auth/password-reset/confirm", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => queryClient.setQueryData(ME_KEY, null),
+  });
+}
