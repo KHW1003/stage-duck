@@ -317,8 +317,8 @@
   "feeRefunded": 0, "refundTotal": 555000
 }
 ```
-- `phase`: `BEFORE_PAYMENT`·`UNTIL_D6`(0%) / `D5_D4` 10% / `D3` 30% / `D2` 50% / `D1` 70% / `D0` 100% / `SUPPLIER_FAULT` (D-53). D-5 0시가 지나 자동 취소된 공연에 결제를 요청하면 `409 INVALID_STATE`.
-- 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고, 업체 사정 취소 시 전액 환불한다 (D-39).
+- `phase`: `BEFORE_PAYMENT`·`GRACE_12H`·`D30_PLUS`(0%) / `D29_D15` 10% / `D14_D8` 30% / `D7_D2` 50% / `D1` 70% / `D0` 100% / `SUPPLIER_FAULT` (D-57). `GRACE_12H`·`D30_PLUS`는 `feeRefunded`=이용료 전액. 결제 마감이 지나 자동 취소된 공연에 결제를 요청하면 `409 INVALID_STATE`.
+- 위약금 기준 금액은 업체 금액 합(`itemsTotal`). 플랫폼 이용료는 사용자 사정 취소 시 환불하지 않고(위약금 0% 구간은 환불, D-57), 업체 사정 취소 시 전액 환불한다 (D-39).
 - 결제 요청의 `amount`가 서버 계산값과 다르면 `400 AMOUNT_MISMATCH`.
 
 ### 6.1.1 고객지원

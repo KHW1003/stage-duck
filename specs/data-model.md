@@ -353,9 +353,9 @@ erDiagram
 |---|---|---|
 | id | BIGINT UNSIGNED | PK |
 | performance_id · order_id | BIGINT UNSIGNED | order NULL = 결제 전 |
-| requested_by | VARCHAR(10) | CHECK IN ('USER','SUPPLIER','SYSTEM') — `SYSTEM` = 미결제 자동 취소 (D-53) |
+| requested_by | VARCHAR(10) | CHECK IN ('USER','SUPPLIER','SYSTEM') — `SYSTEM` = 결제 기한 만료 자동 취소 (D-57) |
 | fault_supplier_id | BIGINT UNSIGNED | NULL — 업체 사정 취소 |
-| phase | VARCHAR(20) | CHECK IN ('BEFORE_PAYMENT','UNTIL_D6','D5_D4','D3','D2','D1','D0','SUPPLIER_FAULT') (D-53) |
+| phase | VARCHAR(20) | CHECK IN ('BEFORE_PAYMENT','GRACE_12H','D30_PLUS','D29_D15','D14_D8','D7_D2','D1','D0','SUPPLIER_FAULT') (D-57) |
 | rate_percent | TINYINT UNSIGNED | 0·0·10·30·50·70·100·0 |
 | penalty_total · refund_total | INT UNSIGNED | |
 
