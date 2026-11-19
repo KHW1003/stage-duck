@@ -288,6 +288,11 @@ def list_venues(
     return [(v, name) for v, name in rows], total
 
 
+def supplier_public_venues(db: Session, supplier_id: int) -> list[Venue]:
+    """AC-F5-15: 업체 프로필의 등록 공간. 공간 탐색과 같은 기준(_public_venues)."""
+    return [v for v, _ in db.execute(_public_venues().where(Venue.supplier_id == supplier_id).order_by(Venue.id)).all()]
+
+
 def get_public_venue(db: Session, venue_id: int) -> tuple[Venue, str]:
     """공간 상세. 숨김·미승인·정지 업체 공간은 404."""
     row = db.execute(_public_venues().where(Venue.id == venue_id)).first()

@@ -1,5 +1,5 @@
 """통합 청구서 API (api-contract.md 6.1, T4-05 #50, AC-F5-03·04). 사용자 본인 공연만."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Response, status
@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import not_found
 from app.models.user import User
-from app.payment import cancel, service
+from app.payment import cancel, service, sheet
 from app.request.router import require_idempotency_key
 
 router = APIRouter(prefix="/performances", tags=["payment"])
@@ -151,6 +151,69 @@ def cancel_by_supplier(
     """AC-F5-10: 확정 업체의 사정으로 취소 → 사용자 전액 환불(이용료 포함) + 그 업체 경고 1회."""
     c, q = cancel.cancel_by_supplier(db, user, performance_id, reason=body.reason, now=now)
     return _cancel_out(q, c.id)
+
+
+# ---- 최종 담당표 (T4-08 #53, AC-F5-11·12) ----
+class ScheduleItemOut(BaseModel):
+    model_config = _OUT
+
+    time: str
+    title: str
+    who: str
+
+
+class ScopeLineOut(BaseModel):
+    model_config = _OUT
+
+    stage_type: str
+    status: str
+    company_name: str | None
+    scope: str
+    amount: int | None
+
+
+class ContactOut(BaseModel):
+    """결제 뒤에만 채워진다 (CLAUDE.md 20 — 연락처는 이 API와 GET /me 에서만)."""
+
+    model_config = _OUT
+
+    role: str
+    name: str
+    real_name: str | None
+    phone: str
+    email: str
+
+
+class SheetOut(BaseModel):
+    model_config = _OUT
+
+    performance_id: int
+    title: str
+    show_date: date
+    sido: str
+    sigungu: str
+    audience: int
+    paid: bool
+    paid_at: datetime | None
+    schedule: list[ScheduleItemOut]
+    lines: list[ScopeLineOut]
+    contacts: list[ContactOut]
+
+
+@router.get("/{performance_id}/sheet", response_model=SheetOut)
+def get_sheet(
+    performance_id: int, user: User = Depends(require_role("USER", "SUPPLIER")), db: Session = Depends(get_db)
+) -> SheetOut:
+    """AC-F5-11·12: 사용자와 확정 업체만 (그 밖은 404). 결제 전에는 연락처가 비어 있다."""
+    s = sheet.get_sheet(db, user, performance_id)
+    p = s.performance
+    return SheetOut(
+        performance_id=p.id, title=p.title, show_date=p.show_date, sido=p.sido, sigungu=p.sigungu, audience=p.audience,
+        paid=s.paid_at is not None, paid_at=s.paid_at,
+        schedule=[ScheduleItemOut.model_validate(i) for i in s.schedule],
+        lines=[ScopeLineOut.model_validate(i) for i in s.lines],
+        contacts=[ContactOut.model_validate(c) for c in s.contacts],
+    )
 
 
 # ---- 테스트 결제 (T4-06 #51, AC-F5-05·06) ----

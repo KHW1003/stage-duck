@@ -45,19 +45,9 @@ def _out(db: Session, post: PrPost) -> PrPostOut:
     )
 
 
-def list_posts(db: Session, *, category: str | None, sido: str | None, page: int, size: int) -> PrPostListOut:
-    """AC-F4-04·09: 로그인 없이 보는 목록. category 생략 = [전체]. 최신순(끌어올린 시각)."""
-    conds = [*_visible()]
-    if category:
-        conds.append(PrPost.category == category)
-    if sido:
-        conds.append(PrPost.sido == sido)
-    base = select(PrPost).join(Supplier, PrPost.supplier_id == Supplier.id).where(*conds)
-    total = db.scalar(select(func.count()).select_from(base.subquery()))
-    posts = db.scalars(base.order_by(PrPost.bumped_at.desc(), PrPost.id.desc()).offset((page - 1) * size).limit(size)).all()
-
+def _items(db: Session, posts) -> list[PrPostItemOut]:
     covers = {f.id: f for f in _photos(db, [p.photos[0] for p in posts if p.photos])}
-    items = [
+    return [
         PrPostItemOut(
             id=p.id,
             category=p.category,
@@ -71,7 +61,29 @@ def list_posts(db: Session, *, category: str | None, sido: str | None, page: int
         )
         for p in posts
     ]
-    return PrPostListOut(items=items, page=page, size=size, total=total)
+
+
+def list_posts(db: Session, *, category: str | None, sido: str | None, page: int, size: int) -> PrPostListOut:
+    """AC-F4-04·09: 로그인 없이 보는 목록. category 생략 = [전체]. 최신순(끌어올린 시각)."""
+    conds = [*_visible()]
+    if category:
+        conds.append(PrPost.category == category)
+    if sido:
+        conds.append(PrPost.sido == sido)
+    base = select(PrPost).join(Supplier, PrPost.supplier_id == Supplier.id).where(*conds)
+    total = db.scalar(select(func.count()).select_from(base.subquery()))
+    posts = db.scalars(base.order_by(PrPost.bumped_at.desc(), PrPost.id.desc()).offset((page - 1) * size).limit(size)).all()
+    return PrPostListOut(items=_items(db, posts), page=page, size=size, total=total)
+
+
+def supplier_posts(db: Session, supplier_id: int) -> list[PrPostItemOut]:
+    """AC-F5-15: 업체 프로필의 소개 글 목록. 방문자에게 보이는 글만, 최신순 (부문당 활성 1개라 많아야 3개)."""
+    posts = db.scalars(
+        select(PrPost).join(Supplier, PrPost.supplier_id == Supplier.id)
+        .where(PrPost.supplier_id == supplier_id, *_visible())
+        .order_by(PrPost.bumped_at.desc(), PrPost.id.desc())
+    ).all()
+    return _items(db, posts)
 
 
 def get_post(db: Session, post_id: int) -> PrPostOut:
