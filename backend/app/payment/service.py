@@ -1,13 +1,15 @@
 """통합 청구서·결제·취소 서비스 (FR-PAY, 4번 묶음). 계산식은 payment/calc.py 에만 둔다."""
+import uuid
 from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.errors import invalid_state, not_found
+from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
-from app.models.payment import Order, OrderLine
+from app.models.payment import LedgerEntry, Order, OrderLine, Payment
 from app.models.request import Performance
 from app.models.user import User
 from app.payment import calc
@@ -86,6 +88,14 @@ def issue_order(db: Session, user: User, performance_id: int, *, now: datetime) 
     return order, True
 
 
+def ledger_state(db: Session, order_id: int) -> dict[int | None, str]:
+    """AC-F5-07: 업체(·플랫폼 None)마다 돈의 지금 상태 = 마지막 장부 줄 종류. 결제 전이면 빈 dict."""
+    rows = db.execute(
+        select(LedgerEntry.supplier_id, LedgerEntry.entry_type).where(LedgerEntry.order_id == order_id).order_by(LedgerEntry.id)
+    ).all()
+    return {supplier_id: entry_type for supplier_id, entry_type in rows}
+
+
 def get_order(db: Session, user: User, performance_id: int) -> tuple[Order, dict[int, str]]:
     """AC-F5-03: 내 공연의 유효 청구서와 줄마다 단계 종류 {stage_id: stage_type}. 없으면 404."""
     perf = _my_performance(db, user, performance_id)
@@ -93,3 +103,102 @@ def get_order(db: Session, user: User, performance_id: int) -> tuple[Order, dict
     if order is None:
         raise not_found()
     return order, {s.id: s.stage_type for s in perf.stages}
+
+
+# ---------------------------------------------------------------------------
+# 에스크로형 모의 결제·장부 (T4-06 #51, FR-PAY-02, AC-F5-05~07). 실제 돈은 움직이지 않는다 (constitution 8)
+# ---------------------------------------------------------------------------
+_ORDER_ALLOWED = {"ISSUED": {"PAID", "CANCELLED"}, "PAID": {"SETTLEMENT_SCHEDULED", "CANCELLED"}}
+
+
+def _move_order(db: Session, order: Order, to: str, actor_id: int | None) -> None:
+    if to not in _ORDER_ALLOWED.get(order.status, set()):
+        raise invalid_state("지금 청구서 상태에서는 할 수 없는 일이에요.")
+    record_transition(db, entity_type="order", entity_id=order.id, from_status=order.status, to_status=to,
+                      actor_user_id=actor_id)
+    order.status = to
+
+
+def _payment_by_key(db: Session, key: str) -> Payment | None:
+    return db.scalar(select(Payment).where(Payment.idempotency_key == key))
+
+
+def _apply_result(db: Session, payment: Payment, result: str, *, now: datetime, actor_id: int | None) -> None:
+    """모의 결제 결과를 한 번만 반영한다. 이미 끝난 결제(SUCCEEDED·FAILED)면 아무것도 하지 않는다 (AC-F5-06)."""
+    if payment.status != "PENDING":
+        return
+    if result != "SUCCESS":
+        payment.status, payment.completed_at = "FAILED", now
+        return
+    order = db.get(Order, payment.order_id, with_for_update=True)
+    payment.status, payment.completed_at = "SUCCEEDED", now
+    _move_order(db, order, "PAID", actor_id)
+    order.paid_at = now
+    # 결제금은 플랫폼이 보관 (보관 중). 업체 몫은 업체별로, 이용료는 플랫폼 몫
+    db.add_all(LedgerEntry(order_id=order.id, supplier_id=line.supplier_id, entry_type="HOLD", amount=line.amount,
+                           memo="결제금 보관 (업체 몫)") for line in order.lines)
+    db.add(LedgerEntry(order_id=order.id, supplier_id=None, entry_type="PLATFORM_FEE", amount=order.platform_fee,
+                       memo="플랫폼 이용료"))
+
+
+def pay_order(
+    db: Session, user: User, order_id: int, *, amount: int, mock_result: str, idempotency_key: str, now: datetime
+) -> tuple[Payment, Order]:
+    """AC-F5-05·06: 테스트 결제. 금액은 서버 계산값과 같아야 하고(400 AMOUNT_MISMATCH),
+    같은 Idempotency-Key 로 다시 오면 처음 결과를 그대로 돌려준다. 다른 키로 두 번 눌러도 청구서 행 잠금으로 한 번만 결제된다.
+    """
+    order = db.get(Order, order_id, with_for_update=True)
+    if order is None or db.get(Performance, order.performance_id).user_id != user.id:
+        raise not_found()
+    existing = _payment_by_key(db, idempotency_key)
+    if existing is not None:
+        if existing.order_id != order.id:
+            raise not_found()
+        return existing, order
+    if order.status != "ISSUED":
+        raise invalid_state("이미 결제했거나 취소된 청구서예요. 청구서를 다시 확인해 주세요.")
+    if amount != order.total_amount:
+        raise AppError(400, "AMOUNT_MISMATCH", "결제 금액이 청구서 금액과 달라요. 화면을 새로 고친 뒤 다시 결제해 주세요.")
+    payment = Payment(order_id=order.id, idempotency_key=idempotency_key, provider_tx_id=f"mock-{uuid.uuid4().hex}",
+                      amount=order.total_amount, status="PENDING")
+    db.add(payment)
+    try:
+        db.flush()
+    except IntegrityError:  # 같은 키가 동시에 들어온 경우 — 먼저 들어온 결과를 돌려준다
+        db.rollback()
+        existing = _payment_by_key(db, idempotency_key)
+        if existing is None or existing.order_id != order_id:
+            raise
+        return existing, db.get(Order, order_id)
+    _apply_result(db, payment, mock_result, now=now, actor_id=user.id)
+    db.commit()
+    return payment, order
+
+
+def apply_mock_callback(db: Session, provider_tx_id: str, result: str, *, now: datetime) -> Payment:
+    """AC-F5-06: 모의 결제 결과 콜백. 같은 providerTxId 가 여러 번 와도 한 번만 반영한다. 모르는 번호는 404."""
+    payment = db.scalar(select(Payment).where(Payment.provider_tx_id == provider_tx_id).with_for_update())
+    if payment is None:
+        raise not_found()
+    _apply_result(db, payment, result, now=now, actor_id=None)
+    db.commit()
+    return payment
+
+
+def settle_completed_orders(db: Session, *, now: datetime) -> int:
+    """AC-F5-07: 공연이 끝난(공연 날짜·종료 시각이 지난) 결제 완료 청구서 → 정산 예정. 업체별 장부 SETTLE_SCHEDULED.
+
+    스케줄러가 부른다 (plan.md 5.7 "공연 완료"). 처리한 청구서 수를 돌려준다. 공연 상태 COMPLETED 전환은 2번 묶음 몫.
+    """
+    paid = db.scalars(select(Order).where(Order.status == "PAID").with_for_update()).all()
+    done = 0
+    for order in paid:
+        perf = db.get(Performance, order.performance_id)
+        if datetime.combine(perf.show_date, perf.show_end) > now:
+            continue
+        _move_order(db, order, "SETTLEMENT_SCHEDULED", None)
+        db.add_all(LedgerEntry(order_id=order.id, supplier_id=line.supplier_id, entry_type="SETTLE_SCHEDULED",
+                               amount=line.amount, memo="공연 완료 — 정산 예정") for line in order.lines)
+        done += 1
+    db.commit()
+    return done
