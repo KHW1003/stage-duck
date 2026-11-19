@@ -5,11 +5,12 @@
  * - AC-F2-17: 합계 = 항목 합 − 업체할인. 할인 > 항목 합, 합계 < 10,000원이면 보내기 전에 막는다
  * - AC-F2-18: 공연장 단계만 내 공간·입실·설치 가능 시각 칸이 있고 필수다
  * - AC-F2-19: 장비·엔지니어 포함을 둘 다 고르면 "풀스펙"
+ * - AC-F2-20: 고치기 모드(mode="edit")는 현재 버전 값으로 채우고, 이름(label)은 읽기 전용, 보내는 본문에 label 이 없다
  * 화면 합계는 입력 미리보기와 보내는 본문 값(totalAmount)으로만 쓴다. 최종 판정은 서버 검사(TOTAL_MISMATCH 등)를 따른다.
  */
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { ApiError } from "../../shared/api/client";
-import type { PostingDetail, QuoteIn } from "../../shared/api/types";
+import type { PostingDetail, QuoteIn, QuoteStaffIn, QuoteVersionOut } from "../../shared/api/types";
 import { Button } from "../../shared/ui/Button";
 import { Field, Input, type ControlProps } from "../../shared/ui/Field";
 import { ErrorNotice, fieldErrorOf } from "../../shared/ui/ErrorText";
@@ -37,6 +38,8 @@ interface Line {
 
 type Includes = QuoteIn["includes"];
 type Money = number | null;
+/** 고치기 본문의 내용 부분 (page 가 version 을 더해 PUT 한다) */
+export type QuoteBodyIn = Omit<QuoteIn, "label">;
 
 interface FormState {
   label: string;
@@ -55,6 +58,9 @@ interface FormState {
   discount: Money;
   extraCostNote: string;
   techNote: string;
+  /** 화면에 칸은 없지만 고칠 때 이전 값을 지우지 않게 그대로 다시 보낸다 */
+  staff: QuoteStaffIn[];
+  validUntil: string | null;
 }
 
 const EMPTY_LINE: Line = { name: "", category: "", qty: null, unitPrice: null };
@@ -77,6 +83,35 @@ function initial(stageType: PostingDetail["stageType"]): FormState {
     discount: null,
     extraCostNote: "",
     techNote: "",
+    staff: [],
+    validUntil: null,
+  };
+}
+
+/** 0원은 빈칸으로 보여 준다 (보낼 때 다시 0) */
+const blankZero = (n: number): Money => (n === 0 ? null : n);
+
+/** AC-F2-20: 고칠 때 현재 버전 값으로 양식을 채운다 */
+function fromVersion(v: QuoteVersionOut, label: string): FormState {
+  return {
+    label,
+    includes: { equipment: v.includesEquipment, engineer: v.includesEngineer, install: v.includesInstall, transport: v.includesTransport },
+    venueId: v.venueId === null ? "" : String(v.venueId),
+    checkinTime: v.checkinTime ?? "",
+    setupAvailableTime: v.setupAvailableTime ?? "",
+    setupStart: v.setupStart ?? "",
+    setupMinutes: v.setupMinutes,
+    teardownMinutes: v.teardownMinutes,
+    lines: v.items.length > 0 ? v.items.map((i) => ({ name: i.name, category: i.category, qty: i.qty, unitPrice: i.unitPrice })) : [{ ...EMPTY_LINE }],
+    transport: blankZero(v.amountTransport),
+    install: blankZero(v.amountInstall),
+    labor: blankZero(v.amountLabor),
+    etc: blankZero(v.amountEtc),
+    discount: blankZero(v.discountAmount),
+    extraCostNote: v.extraCostNote ?? "",
+    techNote: v.techNote ?? "",
+    staff: v.staff,
+    validUntil: v.validUntil,
   };
 }
 
@@ -160,7 +195,7 @@ function toBody(f: FormState, isVenue: boolean): QuoteIn {
       unitPrice: l.unitPrice ?? 0,
       amount: lineAmount(l),
     })),
-    staff: [],
+    staff: f.staff,
     setupStart: f.setupStart || null,
     setupMinutes: f.setupMinutes,
     teardownMinutes: f.teardownMinutes,
@@ -175,6 +210,7 @@ function toBody(f: FormState, isVenue: boolean): QuoteIn {
     body.checkinTime = f.checkinTime;
     body.setupAvailableTime = f.setupAvailableTime;
   }
+  if (f.validUntil) body.validUntil = f.validUntil;
   return body;
 }
 
@@ -192,18 +228,24 @@ const AMOUNT_FIELDS: { key: "transport" | "install" | "labor" | "etc"; label: st
   { key: "etc", label: "기타" },
 ];
 
-interface Props {
+interface CommonProps {
   posting: PostingDetail;
   /** 보내는 중이면 버튼을 끈다 (CLAUDE.md 6.2) */
   sending: boolean;
   /** 서버 오류 (fieldErrors 는 칸 아래, TOTAL_* 는 합계 아래, 그 밖은 위쪽 안내) */
   error: unknown;
-  onSubmit: (body: QuoteIn) => void;
 }
 
-export function QuoteForm({ posting, sending, error, onSubmit }: Props) {
+/** 보내기(기본): 빈 양식, 본문에 label 포함 / 고치기: 현재 버전 값, 본문에 label 없음 (AC-F2-20) */
+type Props =
+  | (CommonProps & { mode?: "send"; onSubmit: (body: QuoteIn) => void })
+  | (CommonProps & { mode: "edit"; label: string; current: QuoteVersionOut; onSubmit: (body: QuoteBodyIn) => void });
+
+export function QuoteForm(props: Props) {
+  const { posting, sending, error } = props;
+  const isEdit = props.mode === "edit";
   const isVenue = posting.stageType === "VENUE";
-  const [f, setF] = useState<FormState>(() => initial(posting.stageType));
+  const [f, setF] = useState<FormState>(() => (props.mode === "edit" ? fromVersion(props.current, props.label) : initial(posting.stageType)));
   const [errors, setErrors] = useState<Errors>({});
   const venues = useMyVenues(isVenue);
 
@@ -224,7 +266,12 @@ export function QuoteForm({ posting, sending, error, onSubmit }: Props) {
     e.preventDefault();
     const next = validate(f, isVenue);
     setErrors(next);
-    if (Object.keys(next).length === 0) onSubmit(toBody(f, isVenue));
+    if (Object.keys(next).length > 0) return;
+    const body = toBody(f, isVenue);
+    if (props.mode === "edit") {
+      const { label: _label, ...rest } = body;
+      props.onSubmit(rest);
+    } else props.onSubmit(body);
   }
 
   const venueOptions = (venues.data ?? []).map((v) => ({ value: String(v.id), label: `${v.name} (${v.sido} ${v.sigungu}, 최대 ${v.maxCapacity}명)` }));
@@ -239,9 +286,15 @@ export function QuoteForm({ posting, sending, error, onSubmit }: Props) {
             기본 정보
           </h2>
           <div className={styles.formRows}>
-            <Field label="견적서 이름" required hint="한 공고에 여러 개 보낼 수 있어요. 예: 기본형, 고급형" error={errorOf("label")}>
-              {(c) => <Input {...c} maxLength={30} value={f.label} onChange={(e) => set({ label: e.target.value })} />}
-            </Field>
+            {isEdit ? (
+              <Field label="견적서 이름" hint="견적서 이름은 고칠 수 없어요.">
+                {(c) => <Input {...c} readOnly value={f.label} />}
+              </Field>
+            ) : (
+              <Field label="견적서 이름" required hint="한 공고에 여러 개 보낼 수 있어요. 예: 기본형, 고급형" error={errorOf("label")}>
+                {(c) => <Input {...c} maxLength={30} value={f.label} onChange={(e) => set({ label: e.target.value })} />}
+              </Field>
+            )}
 
             <fieldset className={styles.checks}>
               <legend className={styles.legend}>
@@ -407,7 +460,7 @@ export function QuoteForm({ posting, sending, error, onSubmit }: Props) {
       <aside className={styles.sideBox} aria-label="보낼 견적서">
         <div className={styles.sideSec} data-testid="quote-total-box">
           <p className={styles.sideTitle}>
-            보낼 견적서
+            {isEdit ? "고친 견적서" : "보낼 견적서"}
             {fullSpec && <span className={styles.tag}>풀스펙</span>}
           </p>
           <div className={styles.sumTotal}>
@@ -437,7 +490,7 @@ export function QuoteForm({ posting, sending, error, onSubmit }: Props) {
         </div>
         <div className={styles.sideSec}>
           <Button type="submit" variant="primary" size="lg" block loading={sending}>
-            견적서 보내기
+            {isEdit ? "고친 견적서 보내기" : "견적서 보내기"}
           </Button>
         </div>
       </aside>

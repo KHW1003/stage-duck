@@ -1,7 +1,7 @@
 """소셜 연결 social_accounts (T1-04 #25, FR-AUTH-05, data-model.md 2장)
 
-Revision ID: 0020
-Revises: 0019
+Revision ID: 0021
+Revises: 0020
 Create Date: 2026-11-19
 """
 import sqlalchemy as sa
@@ -9,8 +9,8 @@ from alembic import op
 
 from app.core.db import BigID, DateTime3
 
-revision = "0020"
-down_revision = "0019"
+revision = "0021"
+down_revision = "0020"
 branch_labels = None
 depends_on = None
 
