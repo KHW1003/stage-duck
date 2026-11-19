@@ -60,3 +60,8 @@ desktop.ini
 
 # 목업 압축본 (공유용, 저장소에 넣지 않음)
 docs/design/*.zip
+
+# Playwright (frontend/e2e)
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/

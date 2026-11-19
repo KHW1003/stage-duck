@@ -43,11 +43,13 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => api<void>("/auth/logout", { method: "POST" }),
     onSettled: () => {
-      // 먼저 "로그인 안 함"으로 바꿔 지금 떠 있는 머리·화면이 바로 다시 그려지게 하고,
-      // 나머지 서버 데이터는 지운다. (clear() 만 쓰면 화면에 붙어 있던 이전 데이터가 남는다)
+      // 로그인 화면으로 먼저 옮긴다. "로그인 안 함"을 먼저 넣으면 지금 보던 보호 화면이 그 순간 다시 그려지며
+      // /login?next=(지금 화면) 으로 보내 버려, 다음 사람이 로그인하면 앞사람이 보던 화면으로 간다 (E2E 로 찾음).
+      navigate("/login", { replace: true });
+      // 그다음 "로그인 안 함"으로 바꿔 머리가 바로 다시 그려지게 하고, 나머지 서버 데이터는 지운다
+      // (clear() 만 쓰면 화면에 붙어 있던 이전 데이터가 남는다)
       queryClient.setQueryData(ME_KEY, null);
       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== ME_KEY[0] });
-      navigate("/login", { replace: true });
     },
   });
 }
