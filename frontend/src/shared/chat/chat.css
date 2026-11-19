@@ -129,3 +129,8 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
   .chat-panel { inset: 0; width: auto; height: auto; border: 0; border-radius: 0; }
   .chat-fab { right: 16px; bottom: 16px; }
 }
+/* 최종 견적 카드·확정 완료 카드 (#43) */
+.chat-panel .c-card__amount { margin: 4px 0 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+.chat-panel .c-card__amount b { font-weight: 800; }
+.chat-panel .c-card__note { margin: 6px 0 0; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.chat-panel .c-card[data-status="INVALIDATED"], .chat-panel .c-card[data-status="EXPIRED"], .chat-panel .c-card[data-status="RENEGOTIATE"] { opacity: .75; }

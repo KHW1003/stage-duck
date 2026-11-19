@@ -57,3 +57,4 @@
   .qs-table tr { break-inside: avoid; }
   a { text-decoration: none; color: inherit; }
 }
+.qs-done { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; font-weight: 600; }

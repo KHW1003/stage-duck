@@ -4,16 +4,18 @@
  * - 보는 사람: 그 공연의 사용자와 보낸 업체 (서버가 나머지는 404). 연락처·실명은 없다 (CLAUDE.md 20)
  * - 버전을 고르면 그 버전 내용을 보여 준다 (자동 검사는 지금 버전만)
  * - [인쇄하기]: 머리·바닥글·오른쪽 칸을 숨기고 종이만 A4 로 (quote-sheet.css @media print)
- * - [확정하기]·끝까지 읽기·남은 시간은 3번 #43 (최종 견적 카드)에서 붙인다
+ * - 업체: 보낸(SENT) 견적서면 [최종 견적 보내기] → 채팅방에 최종 견적 카드 (#43)
+ * - 사용자: 채팅 최종 견적 카드의 [내역서 보기](?confirm=카드 번호)로 열면 열람을 기록하고 [확정하기]·[다시 조율] (AC-F3-10)
  */
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import type { QuoteCheck, QuoteOut, QuoteVersionOut } from "../shared/api/types";
 import { ApiError } from "../shared/api/client";
 import { useMe } from "../shared/auth/useMe";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
 import { useQuote, useQuoteByVersion } from "../features/quote/api";
+import { leftText, useAcceptCard, useConfirmCard, useRenegotiate, useSendConfirmCard, useViewCard } from "../features/confirm/api";
 import { STAGE_LABEL } from "../features/request/codes";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import "../features/quote/quote-sheet.css";
@@ -227,12 +229,84 @@ function Doc({ q, v, isCurrent }: { q: QuoteOut; v: QuoteVersionOut; isCurrent: 
   );
 }
 
+/** 업체: [최종 견적 보내기] */
+function SendCardBox({ quoteId }: { quoteId: number }) {
+  const send = useSendConfirmCard(quoteId);
+  if (send.isSuccess) {
+    return (
+      <p className="qs-done" role="status">
+        <Ico name="pass" sm />
+        최종 견적을 보냈어요. 사용자가 확정하면 알려 드려요.
+      </p>
+    );
+  }
+  return (
+    <>
+      <button className="btn btn--primary btn--block mt-8" type="button" disabled={send.isPending} onClick={() => send.mutate()}>
+        최종 견적 보내기
+      </button>
+      <p className="field__hint mt-8">지금 버전으로 고정돼요. 사용자는 48시간 안에 확정할 수 있어요.</p>
+      {send.error && <ErrorNotice error={send.error} />}
+    </>
+  );
+}
+
+/** 사용자: 채팅 카드에서 열었을 때 열람 기록 + [확정하기] (AC-F3-10·14) */
+function ConfirmBox({ cardId }: { cardId: number }) {
+  const card = useConfirmCard(cardId);
+  const view = useViewCard(cardId);
+  const accept = useAcceptCard(cardId);
+  const renegotiate = useRenegotiate(cardId);
+  const sent = useRef(false);
+  useEffect(() => {
+    if (card.data?.status === "PENDING" && !card.data.viewedAt && !sent.current) {
+      sent.current = true;
+      view.mutate();
+    }
+  }, [card.data, view]);
+  const c = card.data;
+  if (!c) return null;
+  const done = accept.data ?? (c.status === "CONFIRMED" ? { performanceId: c.performanceId, checkoutAvailable: !!c.checkoutAvailable } : null);
+  return (
+    <div className="qs-side__box" role="group" aria-label="최종 견적 확정">
+      <b>최종 견적</b>
+      {done ? (
+        <>
+          <p className="qs-done" role="status">
+            <Ico name="pass" sm />
+            확정했어요
+          </p>
+          <Link className="btn btn--primary btn--block mt-8" to={done.checkoutAvailable ? `/performances/${done.performanceId}/order` : `/performances/${done.performanceId}/next`}>
+            {done.checkoutAvailable ? "통합 결제하기" : "다음 단계로"}
+          </Link>
+        </>
+      ) : c.status === "PENDING" ? (
+        <>
+          <p className="small muted">v{c.version} · {leftText(c.expiresAt)}</p>
+          <button className="btn btn--primary btn--block mt-8" type="button" disabled={!c.viewedAt || accept.isPending} onClick={() => accept.mutate()}>
+            확정하기
+          </button>
+          <button className="btn btn--block mt-8" type="button" disabled={renegotiate.isPending} onClick={() => renegotiate.mutate()}>
+            다시 조율
+          </button>
+        </>
+      ) : (
+        <p className="small muted">
+          {c.status === "INVALIDATED" ? "새 견적이 있어요. 업체에게 새 최종 견적을 요청해 주세요." : c.status === "EXPIRED" ? "기한이 지났어요." : "다시 조율하기로 했어요."}
+        </p>
+      )}
+      {(accept.error || renegotiate.error) && <ErrorNotice error={accept.error ?? renegotiate.error} />}
+    </div>
+  );
+}
+
 export function QuoteSheetPage() {
   const { quoteId, versionId } = useParams();
   const byId = useQuote(Number(quoteId), !!quoteId);
   const byVersion = useQuoteByVersion(Number(versionId), !!versionId);
   const query = quoteId ? byId : byVersion;
   const me = useMe();
+  const confirmId = Number(useSearchParams()[0].get("confirm")) || null;
   const [picked, setPicked] = useState<number | null>(null);
   usePageMeta(query.data ? `견적서 ${query.data.label}` : "견적서");
 
@@ -259,6 +333,7 @@ export function QuoteSheetPage() {
       <div className="qs-wrap">
         <Doc q={q} v={showing} isCurrent={showing.version === q.currentVersion} />
         <aside className="qs-side" aria-label="견적서 버전과 할 일">
+          {!supplier && confirmId && <ConfirmBox cardId={confirmId} />}
           <div className="qs-side__box">
             <b>버전</b>
             <div className="qs-ver">
@@ -280,9 +355,12 @@ export function QuoteSheetPage() {
             </button>
             {supplier ? (
               q.status === "SENT" && (
-                <Link className="btn btn--block mt-8" to={`/supplier/quotes/${q.quoteId}/edit`}>
-                  견적서 고치기
-                </Link>
+                <>
+                  <SendCardBox quoteId={q.quoteId} />
+                  <Link className="btn btn--block mt-8" to={`/supplier/quotes/${q.quoteId}/edit`}>
+                    견적서 고치기
+                  </Link>
+                </>
               )
             ) : (
               <Link className="btn btn--block mt-8" to={`/performances/${q.performanceId}/compare`}>
