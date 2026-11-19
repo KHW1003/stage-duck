@@ -140,8 +140,13 @@ def is_related(db: Session, user_id: int, supplier_id: int) -> bool:
 
     - 견적서: 사용자 공연의 어느 단계에든 이 업체가 견적서를 보냈다 (상태 상관없이)
     - 채팅: 사용자 공연의 어느 단계에서든 이 업체와 채팅이 시작됐다 (3번 chat_started)
-    오퍼(1번 #32)는 offers 표가 생기면 여기에 더한다. 커밋하지 않는다.
+    - 견적 요청(1번 #32): 이 사용자가 이 업체에 견적을 요청했다
+    커밋하지 않는다.
     """
+    from app.offer.service import has_offer  # 1번 → 2번 순환 import 를 피한다
+
+    if has_offer(db, user_id, supplier_id):
+        return True
     perf_ids = list(db.scalars(select(Performance.id).where(Performance.user_id == user_id)))
     if not perf_ids:
         return False

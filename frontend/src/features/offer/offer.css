@@ -1,0 +1,35 @@
+/* 견적 요청·관심 업체 (#32). fav-btn 은 공간 상세에서 옮겨 왔다 (소개 글·관심 업체 화면도 같이 쓴다) */
+/* 관심 업체 저장: 볼더 없음, 호버하면 하트가 빨갛게 차고, 저장하면 빨간 하트 방울이 떠오른다 (11/19 피드백) */
+.fav-btn { border-color: transparent !important; box-shadow: none !important; }
+.fav-btn__icon { position: relative; display: inline-flex; }
+.fav-btn svg { fill: transparent; transition: fill .2s, stroke .2s, transform .2s; }
+.fav-btn:hover svg, .fav-btn[aria-pressed="true"] svg { fill: #e5484d; stroke: #e5484d; }
+.fav-btn:hover svg { transform: scale(1.12); }
+.fav-btn__burst { position: absolute; inset: 0; pointer-events: none; }
+.fav-btn__burst i {
+  position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px;
+  background: #e5484d; opacity: 0;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  animation: fav-bubble .9s ease-out forwards;
+}
+.fav-btn__burst i:nth-child(1) { --x: -14px; --y: -30px; --s: 1; }
+.fav-btn__burst i:nth-child(2) { --x: 2px; --y: -40px; --s: 1.3; animation-delay: .05s; }
+.fav-btn__burst i:nth-child(3) { --x: 16px; --y: -28px; --s: .9; animation-delay: .1s; }
+.fav-btn__burst i:nth-child(4) { --x: -6px; --y: -52px; --s: .7; animation-delay: .15s; }
+.fav-btn__burst i:nth-child(5) { --x: 10px; --y: -58px; --s: .6; animation-delay: .2s; }
+@keyframes fav-bubble {
+  0% { opacity: 0; transform: translate(0, 0) scale(.4); }
+  20% { opacity: .95; }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(var(--s)); }
+}
+@media (prefers-reduced-motion: reduce) { .fav-btn__burst { display: none; } .fav-btn svg { transition: none; } }
+
+.offer-pick__done { display: flex; align-items: center; gap: 6px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--sd-th); font-size: 13px; font-weight: 600; }
+.offer-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.offer-list > li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--sd-line); border-radius: 10px; background: var(--sd-bg); }
+.offer-list .grow { flex: 1; min-width: 0; }
+.offer-list small { display: block; color: var(--sd-muted); font-size: 12px; }
+.offer-suggest { margin-top: 14px; padding: 14px 16px; border-radius: 10px; background: var(--sd-th); }
+.offer-suggest > b { display: block; margin-bottom: 8px; font-size: 14px; }
+.offer-reasons { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; }

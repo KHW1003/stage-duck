@@ -49,8 +49,8 @@ class Quote(Base):
     current_version: Mapped[int] = mapped_column(UInt, nullable=False, server_default="1")
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="SENT")
     is_full_spec: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))  # AC-F2-19
-    # FK → offers 는 offers 테이블을 만들 때 (#32) 그 마이그레이션에서 건다
-    offer_id: Mapped[int | None] = mapped_column(BigID)
+    # 견적 요청(#32)으로 온 견적서면 그 요청 (0022 에서 외래 키). "내가 요청한 업체" 표시 (AC-F3-18)
+    offer_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("offers.id", name="fk_quotes_offer_id"))
     created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime3, nullable=False, server_default=func.now(), onupdate=func.now()

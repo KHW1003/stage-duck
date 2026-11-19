@@ -251,7 +251,7 @@ erDiagram
 
 | 테이블 | 컬럼 | 제약 |
 |---|---|---|
-| offers | id PK, stage_id FK, user_id FK, supplier_id FK, status CHECK IN ('PENDING','QUOTED','DECLINED','EXPIRED'), decline_reason, expires_at | **UNIQUE (stage_id, supplier_id)**. 단계당 10개 제한은 서비스에서 `SELECT COUNT … FOR UPDATE` (AC-F3-17) |
+| offers | id PK, stage_id FK, user_id FK, supplier_id FK, status CHECK IN ('PENDING','QUOTED','DECLINED','EXPIRED'), message VARCHAR(300) NULL (사용자 한마디, 연락처 불가), decline_reason, expires_at, created_at | **UNIQUE (stage_id, supplier_id)**. 단계당 10개 제한은 서비스에서 `SELECT COUNT … FOR UPDATE` (AC-F3-17) |
 | favorite_suppliers | user_id, supplier_id | PK (user_id, supplier_id) |
 
 ## 6. 채팅·컨펌 (F3)
