@@ -290,15 +290,17 @@ describe("공간 찾기 (/venues)", () => {
   });
 
   it("조건은 [공간 찾기]를 눌러야 바뀌고, 결과가 없으면 [조건 초기화]로 돌아간다", async () => {
+    // 지역 버튼이 17개라 화면 전체를 역할로 찾으면 느리다 → 결과 칸(.grid)의 카드 링크만 센다
+    const cards = () => document.querySelectorAll('.grid a[href^="/venues/"]').length;
     mockVenues();
     renderAt("/venues");
-    expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    await waitFor(() => expect(cards()).toBe(3));
     await userEvent.type(screen.getByLabelText("관객 수"), "300");
-    expect(screen.getAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    expect(cards()).toBe(3);
     await userEvent.click(screen.getByRole("button", { name: "공간 찾기" }));
     expect(await screen.findByText("조건에 맞는 공간이 없어요")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "조건 초기화" }));
-    expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    await waitFor(() => expect(cards()).toBe(3));
   });
 
   it("유형 타일을 누르면 바로 그 유형만 보인다", async () => {
@@ -327,14 +329,14 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(await screen.findByText(/찾을 수 없/)).toBeInTheDocument();
   });
 
-  it("방문자에게 오퍼 상자는 로그인으로 안내한다 (돌아올 주소 포함)", async () => {
+  it("방문자에게 견적 요청 상자는 로그인으로 안내한다 (돌아올 주소 포함)", async () => {
     mockVenues();
     renderAt("/venues/3");
-    const box = await screen.findByRole("complementary", { name: "오퍼 보내기" });
+    const box = await screen.findByRole("complementary", { name: "견적 요청하기" });
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
   });
 
-  it("사용자는 공연장 단계가 열린 내 공연만 고르고, 오퍼 창을 열고 Esc 로 닫는다", async () => {
+  it("사용자는 공연장 단계가 열린 내 공연만 고르고, 견적 요청 창을 열고 Esc 로 닫는다", async () => {
     const perf = (id: number, title: string, status: string) => ({
       id, title, form: "BAND", status: "PUBLISHED", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00", showEnd: "21:00:00",
       audience: 80, sido: "광주", sigungu: "동구", currentVersion: 1, nextAction: "WAIT_QUOTES", nextStageId: 1,
@@ -347,8 +349,8 @@ describe("공간 상세 (/venues/:id)", () => {
     renderAt("/venues/3");
     const select = await screen.findByLabelText("내 공연");
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual(["가을밤 밴드 공연 · 공연장 단계"]);
-    await userEvent.click(screen.getByRole("button", { name: "오퍼 보내기" }));
-    expect(screen.getByRole("dialog", { name: "오퍼 보내기" })).toHaveTextContent("업체 C에 오퍼를 보낼까요?");
+    await userEvent.click(screen.getByRole("button", { name: "견적 요청하기" }));
+    expect(screen.getByRole("dialog", { name: "견적 요청하기" })).toHaveTextContent("업체 C에 견적을 요청할까요?");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

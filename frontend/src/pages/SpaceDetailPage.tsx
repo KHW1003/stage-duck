@@ -1,10 +1,10 @@
 /**
  * 공간 상세 (/venues/:id). 목업: mockup-v4/pages/space.html · FR-SPACE-01·03 · FR-OFFER-01 · AC-F3-16
- * 사진(큰 사진 + 작은 사진 줄) · 요약표 · 오른쪽 오퍼 상자(스크롤을 따라옴) · 탭(공간 조건 / 기본 장비·인력 / 소개 / 이용 안내).
+ * 사진(큰 사진 + 작은 사진 줄) · 요약표 · 오른쪽 견적 요청 상자(스크롤을 따라옴) · 탭(공간 조건 / 기본 장비·인력 / 소개 / 이용 안내).
  * - 작은 사진을 누르면 큰 사진이 바뀐다
  * - 탭을 누르면 그 구역으로 내려가고, 스크롤하면 지금 보이는 구역의 탭에 표시가 옮겨 간다
- * - 오퍼 상자: 로그인한 사용자의 공연 중 공연장 단계가 열린 공연만 고를 수 있다 (내 공연 API).
- *   오퍼 보내기·신고(공간)는 서버 API 가 아직 없어 창까지만 연다
+ * - 견적 요청 상자: 로그인한 사용자의 공연 중 공연장 단계가 열린 공연만 고를 수 있다 (내 공연 API).
+ *   견적 요청하기·신고(공간)는 서버 API 가 아직 없어 창까지만 연다
  * 연락처는 보이지 않는다. 서버 GET /venues/{id} — 조건의 null 은 "미확인". 사진은 공간 유형별 기본 사진 (features/venue/view).
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
@@ -86,14 +86,14 @@ function OfferBox({ v, onOffer }: { v: VenueDetail; onOffer: (title: string) => 
   const perf = open.find((p) => p.id === pick) ?? open[0];
 
   return (
-    <aside className="side-box offer-fixed" aria-label="오퍼 보내기">
+    <aside className="side-box offer-fixed" aria-label="견적 요청하기">
       <div className="side-box__sec">
-        <p className="side-box__title">이 업체에 오퍼 보내기</p>
+        <p className="side-box__title">이 업체에 견적 요청하기</p>
         <p className="small muted">내 공고를 먼저 보여 줘요. 업체는 48시간 안에 견적서를 보내거나 거절해요.</p>
       </div>
       {!user ? (
         <div className="side-box__sec">
-          <p className="small muted">공연을 준비하는 사용자로 로그인하면 오퍼를 보낼 수 있어요.</p>
+          <p className="small muted">공연을 준비하는 사용자로 로그인하면 견적을 요청할 수 있어요.</p>
           <Link className="btn btn--primary btn--lg btn--block mt-12" to={`/login?next=/venues/${v.id}`}>
             로그인
           </Link>
@@ -129,7 +129,7 @@ function OfferBox({ v, onOffer }: { v: VenueDetail; onOffer: (title: string) => 
                   <dd>{perf.audience}명</dd>
                 </div>
                 <div>
-                  <dt>이 단계 오퍼</dt>
+                  <dt>이 단계 견적 요청</dt>
                   <dd>0 / 10곳</dd>
                 </div>
               </dl>
@@ -137,7 +137,7 @@ function OfferBox({ v, onOffer }: { v: VenueDetail; onOffer: (title: string) => 
           </div>
           <div className="side-box__sec">
             <button className="btn btn--primary btn--lg btn--block" type="button" onClick={() => perf && onOffer(perf.title)}>
-              오퍼 보내기
+              견적 요청하기
             </button>
             <p className="field__hint mt-8">연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>
           </div>
@@ -152,7 +152,7 @@ function OfferModal({ v, title, onClose }: { v: VenueDetail; title: string; onCl
   const [tried, setTried] = useState(false);
   return (
     <KitModal
-      title="오퍼 보내기"
+      title="견적 요청하기"
       onClose={onClose}
       foot={
         <>
@@ -160,12 +160,12 @@ function OfferModal({ v, title, onClose }: { v: VenueDetail; title: string; onCl
             취소
           </button>
           <button className="btn btn--primary" type="button" onClick={() => setTried(true)}>
-            오퍼 보내기
+            견적 요청하기
           </button>
         </>
       }
     >
-      <p className="modal__lead">{v.companyName}에 오퍼를 보낼까요?</p>
+      <p className="modal__lead">{v.companyName}에 견적을 요청할까요?</p>
       <p>{title} · 공연장 단계 · 응답 기한 48시간</p>
       <label className="field mt-16">
         <span className="field__label">
@@ -177,7 +177,7 @@ function OfferModal({ v, title, onClose }: { v: VenueDetail; title: string; onCl
       {tried && (
         <div className="notice mt-12" role="status">
           <Ico name="info" />
-          <div>오퍼 보내기는 곧 열려요. 지금은 요청서를 올리면 업체가 공고를 보고 견적서를 보내요.</div>
+          <div>견적 요청하기는 곧 열려요. 지금은 요청서를 올리면 업체가 공고를 보고 견적서를 보내요.</div>
         </div>
       )}
     </KitModal>

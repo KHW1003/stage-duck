@@ -102,8 +102,9 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .c-card__foot > a { display: grid; place-items: center; text-decoration: none; }
 .chat-panel .composer { gap: 2px; padding: 10px 10px 12px; background: var(--sd-bg); }
 /* 입력창: 한 줄 높이(위아래 여백 10+10 + 테두리 1+1 + 글줄 20 = 42px)에 딱 맞춰 빈 칸에 스크롤 막대가 생기지 않게. 포커스는 옅은 테두리 + 흰 바탕만 (11/19 피드백) */
-.chat-panel .composer textarea { height: 42px; padding: 10px 14px; border: 1px solid transparent; border-radius: 12px; background: var(--sd-th); color: var(--sd-ink); font: inherit; line-height: 20px; resize: none; overflow-y: auto; }
-.chat-panel .composer textarea:focus, .chat-panel .composer textarea:focus-visible { outline: none; box-shadow: none; border-color: var(--sd-line-strong); background: var(--sd-bg); }
+.chat-panel .composer textarea { height: 42px; padding: 11px 14px; border: 0; border-radius: 12px; background: var(--sd-th); color: var(--sd-ink); font: inherit; line-height: 20px; resize: none; overflow-y: auto; scrollbar-width: none; }
+.chat-panel .composer textarea::-webkit-scrollbar { display: none; }   /* 입력창 안 스크롤 막대는 숨긴다 (길게 쓰면 스크롤은 된다) — 11/19 피드백 */
+.chat-panel .composer textarea:focus, .chat-panel .composer textarea:focus-visible { outline: none; box-shadow: none; }   /* 포커스해도 외곽선·테두리 없음 (11/19 피드백) */
 .chat-panel .composer .btn { width: 42px; height: 42px; min-width: 0; padding: 0; margin-left: 4px; border-radius: 12px; }
 .chat-panel .composer .btn--primary, .chat-panel .composer .btn--primary:hover { border-color: var(--sd-blue); background: var(--sd-blue); }   /* 보내기 = 포인트 색 */
 .chat-panel .composer .btn--primary:hover { opacity: .88; }

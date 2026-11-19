@@ -155,13 +155,13 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByText("11월 12일 14:20")).toBeInTheDocument();
   });
 
-  it("승인 업체는 첫 화면을 보고, 공고 필터를 누르면 받은 오퍼만 남는다", async () => {
+  it("승인 업체는 첫 화면을 보고, 공고 필터를 누르면 받은 견적 요청만 남는다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     renderAt("/partner");
     expect(await screen.findByRole("heading", { level: 1, name: /업체 D님, 오늘 확인할 일이/ })).toBeInTheDocument();
     const filter = screen.getByRole("tablist", { name: "공고 필터" });
     expect(screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"))).toHaveLength(3);
-    await userEvent.click(within(filter).getByRole("tab", { name: /받은 오퍼/ }));
+    await userEvent.click(within(filter).getByRole("tab", { name: /받은 견적 요청/ }));
     const titles = screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"));
     expect(titles.map((h) => h.textContent)).toEqual(["연말 합동 공연 · 광주 북구 · 관객 120명"]);
   });
