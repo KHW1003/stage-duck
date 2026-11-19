@@ -11,6 +11,7 @@ from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.models.payment import LedgerEntry, Order, OrderLine, Payment
 from app.models.request import Performance
+from app.models.supplier import Supplier
 from app.models.user import User
 from app.payment import calc
 from app.request import service as request_service
@@ -86,6 +87,12 @@ def issue_order(db: Session, user: User, performance_id: int, *, now: datetime) 
     db.commit()
     db.refresh(order)
     return order, True
+
+
+def supplier_names(db: Session, supplier_ids: list[int]) -> dict[int, str]:
+    """청구서 줄에 보일 상호 (읽기 전용 참조, 1번 suppliers). 연락처·사업자 정보는 꺼내지 않는다."""
+    rows = db.execute(select(Supplier.id, Supplier.company_name).where(Supplier.id.in_(supplier_ids))).all()
+    return dict(rows)
 
 
 def ledger_state(db: Session, order_id: int) -> dict[int | None, str]:

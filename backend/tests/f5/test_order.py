@@ -11,6 +11,7 @@ from app.main import app
 from app.models.payment import Order
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, Stage
+from app.models.supplier import Supplier
 from app.payment.router import get_now
 from tests.conftest import make_supplier, make_user
 from tests.f2.test_posting import _published
@@ -68,6 +69,7 @@ def test_ac_f5_03_invoice_is_items_plus_5_percent_fee(client, db):
     assert [(ln["stageType"], ln["supplierId"], ln["amount"]) for ln in o["lines"]] == [
         ("VENUE", c, 500000), ("EQUIPMENT", d, 1350000),
     ]
+    assert [ln["companyName"] for ln in o["lines"]] == [f"가상업체{db.get(Supplier, s).user_id}" for s in (c, d)]
     assert o["issuedAt"].startswith("2026-11-20T10:00")
     assert user.get(f"/api/v1/performances/{perf_id}/order").json() == o
 

@@ -30,6 +30,7 @@ class OrderLineOut(BaseModel):
     stage_id: int
     stage_type: str
     supplier_id: int
+    company_name: str
     quote_version_id: int
     amount: int  # 업체 금액 (원, 부가세 포함)
     ledger_state: str | None  # 결제 전 None · HOLD 보관 중 · SETTLE_SCHEDULED 정산 예정 (AC-F5-07)
@@ -54,10 +55,12 @@ class OrderOut(BaseModel):
 def _out(db: Session, user: User, performance_id: int) -> OrderOut:
     order, stage_types = service.get_order(db, user, performance_id)
     ledger = service.ledger_state(db, order.id)
+    names = service.supplier_names(db, [line.supplier_id for line in order.lines])
     return OrderOut(
         id=order.id, performance_id=order.performance_id, status=order.status, items_total=order.items_total,
         platform_fee=order.platform_fee, total_amount=order.total_amount, issued_at=order.issued_at, paid_at=order.paid_at,
         lines=[OrderLineOut(stage_id=line.stage_id, stage_type=stage_types[line.stage_id], supplier_id=line.supplier_id,
+                            company_name=names.get(line.supplier_id, ""),
                             quote_version_id=line.quote_version_id, amount=line.amount,
                             ledger_state=ledger.get(line.supplier_id)) for line in order.lines],
     )
