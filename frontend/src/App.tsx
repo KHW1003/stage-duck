@@ -56,6 +56,7 @@ export function AppRoutes() {
         <Route path="/password/forgot" element={<PasswordForgotPage />} />
         <Route path="/password/reset" element={<PasswordResetPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup/extra" element={<SignupPage mode="social" />} />
         <Route path="/signup/supplier" element={<SupplierSignupPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
