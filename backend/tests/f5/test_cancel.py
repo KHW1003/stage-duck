@@ -68,7 +68,7 @@ def test_cancel_rejects_stale_confirmation_without_changes(client, db):
     _at(datetime(2026, 11, 28, 0, 0))
     stale = user.post(f"{url}/cancel", json={key: preview[key] for key in fields})
     assert stale.status_code == 409, stale.text
-    assert "취소 금액이 바뀌었어요" in stale.json()["message"]
+    assert "취소 금액이 변경되었습니다" in stale.json()["message"]
     assert _ledger(db, order_id) == before
     assert db.get(Order, order_id).status == "PAID"
     assert db.scalar(select(Cancellation).where(Cancellation.performance_id == perf_id)) is None

@@ -43,7 +43,7 @@ export function TermsPage() {
         <div className="tm">
           <div className="notice notice--line mt-24">
             <Ico name="info" />
-            <div>포트폴리오 시연용 요약본이에요. 실제 서비스 약관이 아니며, STAGE DUCK은 실제 사업자가 아니에요.</div>
+            <div>포트폴리오 시연용 요약본입니다. 실제 서비스 약관이 아니며, STAGE DUCK은 실제 사업자가 아닙니다.</div>
           </div>
           <section aria-labelledby="tm-title">
             <div className="tm-head">
@@ -64,7 +64,7 @@ export function TermsPage() {
               <TermsDocumentBody doc={doc} />
             </div>
             <div className="tm-below">
-              <span>상자 안을 스크롤해서 끝까지 읽을 수 있어요.</span>
+              <span>상자 안을 스크롤해서 끝까지 읽을 수 있습니다.</span>
               <button type="button" className="btn btn--line btn--sm" onClick={() => window.print()}>
                 인쇄하기
               </button>
