@@ -84,14 +84,17 @@ describe("메인 (/)", () => {
     renderAt("/");
     const carousel = await screen.findByRole("region", { name: "STAGE DUCK 소개" }).catch(() => screen.getByLabelText("STAGE DUCK 소개"));
     const count = () => within(carousel).getByText((_, el) => el?.tagName === "SPAN" && /^\d \/ 5$/.test(el.textContent ?? "")).textContent;
-    expect(count()).toBe("1 / 5");
-    await userEvent.click(within(carousel).getByRole("button", { name: "다음 슬라이드" }));
-    expect(count()).toBe("2 / 5");
-    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
-    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
-    expect(count()).toBe("5 / 5");
+    expect(count()).toMatch(/^\d \/ 5$/); // 처음엔 1 / 5 — 그리는 데 5초가 넘으면 이미 넘어갔을 수 있다
+    // 자동 넘김(5초)을 먼저 멈춘다 — 느린 PC·CI 에서 테스트 중에 슬라이드가 저절로 넘어가지 않게
     await userEvent.click(within(carousel).getByRole("button", { name: "자동 넘김 멈추기" }));
     expect(within(carousel).getByRole("button", { name: "자동 넘김 시작" })).toBeInTheDocument();
+    const start = Number(count()!.split(" / ")[0]);
+    const at = (n: number) => `${((start - 1 + n + 5) % 5) + 1} / 5`;
+    await userEvent.click(within(carousel).getByRole("button", { name: "다음 슬라이드" }));
+    expect(count()).toBe(at(1));
+    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
+    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
+    expect(count()).toBe(at(-1));
   });
 
   it("이용 방법 단계를 누르면 그 단계 미리보기만 보인다", async () => {
