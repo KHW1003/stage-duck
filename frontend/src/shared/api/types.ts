@@ -254,6 +254,69 @@ export interface PostingDetail extends PostingSummary {
   previousStages: PreviousStage[];
 }
 
+// ---- 견적서 보내기 (#41, api-contract.md 3.3 POST /stages/{stageId}/quotes) ----
+/** 금액은 모두 원 단위 정수 (부가세 포함) */
+export interface QuoteItemIn {
+  name: string;
+  category: string;
+  qty: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface QuoteStaffIn {
+  role: string;
+  count: number;
+  start: string;
+  end: string;
+}
+
+export interface QuoteAmounts {
+  items: number;
+  transport: number;
+  install: number;
+  labor: number;
+  etc: number;
+}
+
+export interface QuoteIn {
+  label: string;
+  /** 공연장 단계만. 다른 단계는 null */
+  venueId: number | null;
+  /** 공연장 단계만 필수 ("15:00") */
+  checkinTime?: string;
+  setupAvailableTime?: string;
+  items: QuoteItemIn[];
+  staff: QuoteStaffIn[];
+  setupStart: string | null;
+  setupMinutes: number | null;
+  teardownMinutes: number | null;
+  /** equipment && engineer 면 서버가 풀스펙으로 표시 (AC-F2-19) */
+  includes: { equipment: boolean; engineer: boolean; install: boolean; transport: boolean };
+  amounts: QuoteAmounts;
+  discountAmount: number;
+  /** = amounts 합 − discountAmount. 서버가 다시 검사한다 (TOTAL_MISMATCH) */
+  totalAmount: number;
+  extraCostNote: string | null;
+  validUntil?: string;
+  techNote: string | null;
+}
+
+/** 자동 검사 한 줄 (api-contract.md 4.1 checks[]) */
+export interface QuoteCheck {
+  id: string;
+  result: "PASS" | "NEEDS_INFO" | "CONFLICT" | "WARNING";
+  message: string;
+}
+
+/** 201 응답 */
+export interface QuoteSentOut {
+  quoteId: number;
+  version: number;
+  chatRoomId: number | null;
+  checks: QuoteCheck[];
+}
+
 // ---- 커뮤니티 (#100, api-contract.md 7장) ----
 export type FreePostCategory = "FREE" | "QUESTION" | "INFO" | "NEWS";
 
