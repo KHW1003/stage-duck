@@ -22,5 +22,10 @@ export default defineConfig({
     // e2e/ 는 Playwright (npm run e2e) — Vitest 가 집지 않게
     exclude: ["node_modules", "dist", "e2e"],
     css: true,
+    // 화면 테스트는 jsdom 이 느려 PC·CI 부하에 따라 5초를 넘기곤 했다 (여러 묶음에서 들쭉날쭉 실패).
+    // 시간을 넉넉히 주고, 동시에 도는 파일 수를 줄인다 (채은님 제안: --maxWorkers=2 --minWorkers=1).
+    testTimeout: 20_000,
+    maxWorkers: 2,
+    minWorkers: 1,
   },
 });
