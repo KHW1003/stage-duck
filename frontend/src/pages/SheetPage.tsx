@@ -46,7 +46,7 @@ export function SheetPage() {
         {sheet.isError ? (
           <ErrorNotice error={sheet.error} />
         ) : !s ? (
-          <p className="muted">불러오는 중이에요.</p>
+          <p className="muted">불러오는 중입니다.</p>
         ) : (
           <>
             <div className="sec-head">
@@ -80,7 +80,7 @@ export function SheetPage() {
                 <section className="sec">
                   <div className="sec-head">
                     <h2><Ico name="list" />담당 범위</h2>
-                    <p>확정할 때의 조건을 그대로 보관했어요. 업체가 나중에 정보를 바꿔도 이 표는 바뀌지 않아요.</p>
+                    <p>확정 당시의 조건을 그대로 보관합니다. 업체가 이후에 정보를 바꿔도 이 표는 변경되지 않습니다.</p>
                   </div>
                   <div className="table-box">
                     <table className="table table--fit">
@@ -102,7 +102,7 @@ export function SheetPage() {
                   <section className="sec">
                     <div className="sec-head"><h2>공연팀 취소 시 위약금</h2></div>
                     <CancellationPenaltyTable />
-                    <p className="field__hint mt-8">공연팀 사정으로 취소하면 위약금은 확정 업체의 금액 비율에 따라 나눠 정산해요.</p>
+                    <p className="field__hint mt-8">공연팀 사정으로 취소하면 위약금은 확정 업체의 금액 비율에 따라 나누어 정산합니다.</p>
                   </section>
                 )}
               </div>
@@ -123,9 +123,9 @@ export function SheetPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="notice">결제가 끝나면 서로의 연락처가 여기에 보여요.</p>
+                  <p className="notice">결제가 완료되면 서로의 연락처가 여기에 표시됩니다.</p>
                 )}
-                <p className="field__hint mt-12">이 공연에서 확정된 업체와 사용자만 볼 수 있어요.</p>
+                <p className="field__hint mt-12">이 공연에서 확정된 업체와 사용자만 볼 수 있습니다.</p>
               </aside>
             </div>
           </>

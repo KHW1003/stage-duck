@@ -139,7 +139,7 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     expect(payment.getByRole("heading", { name: "제10조 (게시물)" })).toBeInTheDocument();
     expect(payment.getByRole("heading", { name: "제5조 (요청과 결제 기한)" })).toBeInTheDocument();
     expect(payment.getByRole("heading", { name: "제6조 (결제와 보관)" })).toBeInTheDocument();
-    expect(payment.getByText(/공연이 끝나면 업체별로 정산해요/)).toBeInTheDocument();
+    expect(payment.getByText(/공연이 끝나면 업체별로 정산합니다/)).toBeInTheDocument();
     expect(payment.queryByRole("table", { name: "취소 시점별 위약금" })).not.toBeInTheDocument();
     await userEvent.click(within(paymentDialog).getByRole("button", { name: "본문 닫기" }));
     expect(paymentConsent).toHaveFocus();

@@ -51,7 +51,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     expect(within(scale).getByText("D-1 · 지금")).toBeInTheDocument();
     expect(screen.getByText(/업체 C 350,000원 · 업체 D 945,000원/)).toBeInTheDocument();
     expect(screen.getByText("555,000원")).toBeInTheDocument();
-    expect(screen.getByText("환불하지 않아요")).toBeInTheDocument();
+    expect(screen.getByText("환불되지 않습니다")).toBeInTheDocument();
     expect(screen.getByText(/테스트 결제 — 실제 청구되지 않습니다/)).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     renderAt("/performances/5/cancel");
 
     expect(await screen.findByText("결제 전 · 지금")).toBeInTheDocument();
-    expect(screen.getByText(/반려 1회로 기록돼요/)).toBeInTheDocument();
+    expect(screen.getByText(/반려 1회로 기록됩니다/)).toBeInTheDocument();
   });
 
   it("AC-F5-08 두 번째 확인 창에서만 취소를 접수하고 결과를 보여 준다", async () => {
@@ -76,7 +76,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     await userEvent.click(within(review).getByRole("button", { name: "다음 · 금액 최종 확인" }));
     const final = await screen.findByRole("dialog", { name: "공연 취소 최종 확인" });
     expect(review).not.toBeInTheDocument();
-    expect(within(final).getByText(/위약금 1,295,000원이 발생해요/)).toBeInTheDocument();
+    expect(within(final).getByText(/위약금 1,295,000원이 발생합니다/)).toBeInTheDocument();
     expect(within(final).getByText("92,500원")).toBeInTheDocument();
     expect(within(final).getByText("555,000원")).toBeInTheDocument();
     expect(calls).not.toContain("POST /api/v1/performances/5/cancel");
@@ -89,7 +89,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     const secondFinal = await screen.findByRole("dialog", { name: "공연 취소 최종 확인" });
     await userEvent.click(within(secondFinal).getByRole("button", { name: "공연 취소 확정" }));
 
-    expect(await screen.findByText("취소했어요")).toBeInTheDocument();
+    expect(await screen.findByText("취소되었습니다")).toBeInTheDocument();
     expect(screen.getByText("환불 예정액 555,000원")).toBeInTheDocument();
     expect(calls.filter((c) => c === "POST /api/v1/performances/5/cancel")).toHaveLength(1);
   });

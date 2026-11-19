@@ -96,7 +96,7 @@ function Escrow({ order }: { order: Order }) {
   return (
     <ol className="escrow" aria-label="결제금 상태">
       <li className="is-done"><b>결제</b>{order.paidAt ? whenLabel(order.paidAt) : ""}</li>
-      <li className={settled ? "is-done" : "is-now"}><b>보관 중</b>{!settled && <small>공연이 끝날 때까지 STAGE DUCK이 보관해요</small>}</li>
+      <li className={settled ? "is-done" : "is-now"}><b>보관 중</b>{!settled && <small>공연이 끝날 때까지 STAGE DUCK이 보관합니다</small>}</li>
       <li className={settled ? "is-now" : undefined}>
         <b>정산 예정</b>
         {settled ? <small>{order.lines.map((l) => `${l.companyName} ${formatWon(l.amount)}원`).join(" · ")}</small> : "공연 뒤 업체별로"}
@@ -133,7 +133,7 @@ export function InvoicePage() {
         {order.isError ? (
           <ErrorNotice error={order.error} />
         ) : !o || !p ? (
-          <p className="muted">불러오는 중이에요.</p>
+          <p className="muted">불러오는 중입니다.</p>
         ) : (
           <>
             <StepBar paid={paid} />
@@ -142,7 +142,7 @@ export function InvoicePage() {
                 <section className="sec">
                   <div className="sec-head">
                     <h2><Ico name="receipt" />청구 내역</h2>
-                    {paid ? <p><span className="state state--done">결제 완료</span></p> : <p>확정한 업체 금액과 플랫폼 이용료예요.</p>}
+                    {paid ? <p><span className="state state--done">결제 완료</span></p> : <p>확정한 업체 금액과 플랫폼 이용료입니다.</p>}
                   </div>
                   <InvoiceTable order={o} stages={p.stages} />
                 </section>
@@ -153,16 +153,16 @@ export function InvoicePage() {
                   </section>
                 )}
                 <section className="sec">
-                  <div className="sec-head"><h2><Ico name="info" />꼭 확인하세요</h2></div>
+                  <div className="sec-head"><h2><Ico name="info" />꼭 확인해 주십시오</h2></div>
                   <ul className="bullets">
-                    <li>결제 금액은 공연이 끝날 때까지 STAGE DUCK이 보관하고, 공연 뒤 업체별로 정산 예정이 돼요.</li>
-                    <li>결제가 끝나면 업체 연락처가 최종 담당표에 공개돼요.</li>
-                    <li>결제 뒤에는 내용을 바꾸거나 추가 결제를 할 수 없어요.</li>
+                    <li>결제 금액은 공연이 끝날 때까지 STAGE DUCK이 보관하며, 공연 후 업체별로 정산됩니다.</li>
+                    <li>결제가 완료되면 업체 연락처가 최종 담당표에 공개됩니다.</li>
+                    <li>결제 후에는 내용을 변경하거나 추가 결제를 할 수 없습니다.</li>
                   </ul>
                   <div className="mt-24">
                     <h3>취소 시점별 위약금</h3>
                     <CancellationPenaltyTable />
-                    <p className="field__hint mt-8">공연팀 사정으로 취소할 때 적용해요. 위약금이 붙는 구간에는 플랫폼 이용료가 환불되지 않아요.</p>
+                    <p className="field__hint mt-8">공연팀 사정으로 취소할 때 적용됩니다. 위약금이 발생하는 구간에는 플랫폼 이용료가 환불되지 않습니다.</p>
                   </div>
                 </section>
               </div>
@@ -179,15 +179,15 @@ export function InvoicePage() {
                 </div>
                 {paid ? (
                   <div className="side-box__sec">
-                    <p className="strong">섭외가 확정됐어요</p>
-                    <p className="small muted mt-4">업체 연락처가 최종 담당표에 공개됐어요.</p>
+                    <p className="strong">섭외가 확정되었습니다</p>
+                    <p className="small muted mt-4">업체 연락처가 최종 담당표에 공개되었습니다.</p>
                     <Link className="btn btn--primary btn--block mt-16" to={`/performances/${id}/sheet`}>최종 담당표 보기</Link>
                   </div>
                 ) : (
                   <>
                     <div className="side-box__sec side-box__sec--gray">
                       <p className="small strong">결제 방법</p>
-                      <p className="desc mt-4">테스트 결제 <span className="muted">· 실제 카드·계좌를 쓰지 않아요</span></p>
+                      <p className="desc mt-4">테스트 결제 <span className="muted">· 실제 카드·계좌를 사용하지 않습니다</span></p>
                     </div>
                     <div className="side-box__sec">
                       <div className="stack" style={{ "--gap": "8px" } as CSSProperties}>
@@ -233,7 +233,7 @@ export function InvoicePage() {
                       )}
                       <DeadlineNotice deadline={o.paymentDeadline} what="결제" />
                       <p className="test-pay mt-8"><Ico name="info" sm />{TEST_PAY}</p>
-                      <p className="field__hint mt-8">버튼을 두 번 눌러도 한 번만 결제돼요.</p>
+                      <p className="field__hint mt-8">버튼을 두 번 눌러도 한 번만 결제됩니다.</p>
                     </div>
                   </>
                 )}

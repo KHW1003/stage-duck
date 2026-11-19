@@ -53,7 +53,7 @@ def test_quote_received_goes_to_user_not_supplier_and_text_chat_makes_none(clien
     assert _types(db, user_id) == ["QUOTE_RECEIVED"]
     assert _types(db, supplier.user_id) == []
     n = db.scalar(select(Notification).where(Notification.user_id == user_id))
-    assert n.title == f"{supplier.company_name}가 견적서를 보냈어요" and n.link == f"/performances/{perf_id}/compare"
+    assert n.title == f"{supplier.company_name}에서 견적서를 보냈습니다" and n.link == f"/performances/{perf_id}/compare"
 
     # 채팅 시작 → 업체에게 CHAT_STARTED 한 번 (두 번 눌러도 하나), 글 메시지는 알림 없음
     user.post(f"{API}/chat-rooms/{room_id}/start")
@@ -92,7 +92,7 @@ def test_third_warning_sends_warning_and_suspension(client, db):
         policy.warn(db, member.id, actor_id=None, reason="욕설")
     assert _types(db, member.id) == ["WARNING_ISSUED", "WARNING_ISSUED", "WARNING_ISSUED", "ACCOUNT_SUSPENDED"]
     titles = list(db.scalars(select(Notification.title).where(Notification.user_id == member.id).order_by(Notification.id)))
-    assert titles[:3] == ["경고를 받았어요 (1/3)", "경고를 받았어요 (2/3)", "경고를 받았어요 (3/3)"]
+    assert titles[:3] == ["경고가 부과되었습니다 (1/3)", "경고가 부과되었습니다 (2/3)", "경고가 부과되었습니다 (3/3)"]
 
 
 def test_read_ignores_other_peoples_ids_and_lists_with_unread_count(client, db):

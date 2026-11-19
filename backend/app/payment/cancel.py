@@ -66,7 +66,7 @@ def cancel_quote(db: Session, user: User, performance_id: int, *, now: datetime)
     try:
         phase = _user_phase(perf, order, now)
     except ValueError:
-        raise invalid_state("공연 날짜가 지나서 취소할 수 없어요.") from None
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
     return _quote(db, perf, order, phase)
 
 
@@ -103,15 +103,15 @@ def cancel_by_user(
     결제 후면 시점별 위약금을 업체 금액 비율로 나누고 나머지를 환불 예정으로 장부에 남긴다."""
     perf = _owned(db, user, performance_id, lock=True)
     if perf.status not in CANCELABLE_PERF or _user_cancelled(db, perf.id):
-        raise invalid_state("지금 상태에서는 취소할 수 없어요. 공연 상태를 다시 확인해 주세요.")
+        raise invalid_state("지금 상태에서는 취소할 수 없습니다. 공연 상태를 다시 확인해 주십시오.")
     order = _live_order(db, perf.id, lock=True)
     try:
         phase = _user_phase(perf, order, now)
     except ValueError:
-        raise invalid_state("공연 날짜가 지나서 취소할 수 없어요.") from None
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
     q = _quote(db, perf, order, phase)
     if expected is not None and any(getattr(q.amounts, field) != value for field, value in expected.items()):
-        raise invalid_state("취소 금액이 바뀌었어요. 새 위약금과 환불 예정액을 확인해 주세요.")
+        raise invalid_state("취소 금액이 변경되었습니다. 새 위약금과 환불 예정액을 확인해 주십시오.")
     if phase == "BEFORE_PAYMENT":
         rejection.record_rejection(db, perf.id, now=now)
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id)
@@ -130,7 +130,7 @@ def _notify_user_cancel(db: Session, perf: Performance, q: "CancelQuote") -> Non
         share = penalty[supplier_id]
         notification.notify(
             db, user_id, "CANCELLED_BY_USER", link="/supplier/reservations",
-            params={"title": perf.title, "penalty": f"위약금 {notification.won(share)}원 정산 예정" if share else "위약금은 없어요"},
+            params={"title": perf.title, "penalty": f"위약금 {notification.won(share)}원 정산 예정" if share else "위약금은 없습니다"},
             payload={"performanceId": perf.id},
         )
 
@@ -144,7 +144,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     if perf is None or supplier is None or order is None or supplier.id not in {ln.supplier_id for ln in order.lines}:
         raise not_found()
     if order.status not in PAID_STATUSES:
-        raise invalid_state("결제가 끝난 공연만 업체 사정으로 취소할 수 있어요.")
+        raise invalid_state("결제가 완료된 공연만 업체 사정으로 취소할 수 있습니다.")
     q = _quote(db, perf, order, "SUPPLIER_FAULT")
     policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
     c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)

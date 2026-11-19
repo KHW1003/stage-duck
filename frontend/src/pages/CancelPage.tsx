@@ -88,22 +88,22 @@ export function CancelPage() {
         meta={p ? [p.title, dateLabel(p.showDate)] : undefined}
       />
       <main className="container container--narrow main">
-        <p className="test-pay"><Ico name="info" sm />테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리돼요.</p>
+        <p className="test-pay"><Ico name="info" sm />테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리됩니다.</p>
         {done ? (
           <section className="result mt-40" role="status">
             <span className="result__icon"><Ico name="pass" /></span>
-            <h2>취소했어요</h2>
-            <p>{done.paid ? `환불 예정액 ${won(done.refundTotal)}` : "낸 돈이 없어 환불할 금액이 없어요."}</p>
+            <h2>취소되었습니다</h2>
+            <p>{done.paid ? `환불 예정액 ${won(done.refundTotal)}` : "결제한 금액이 없어 환불할 금액이 없습니다."}</p>
             <div className="btns btns--center mt-24"><Link className="btn btn--lg" to="/me/performances">내 공연으로</Link></div>
           </section>
         ) : quote.isError && !q ? (
           <div className="mt-24"><ErrorNotice error={quote.error} /></div>
         ) : !q ? (
-          <p className="muted mt-24">불러오는 중이에요.</p>
+          <p className="muted mt-24">불러오는 중입니다.</p>
         ) : (
           <>
             <section className="sec mt-40">
-              <div className="sec-head"><h2><Ico name="calendar" />취소 시점별 위약금</h2><p>업체 금액 기준이에요.</p></div>
+              <div className="sec-head"><h2><Ico name="calendar" />취소 시점별 위약금</h2><p>업체 금액 기준입니다.</p></div>
               <ol className="penalty" aria-label="취소 시점별 위약금">
                 {SCALE.map((s) => {
                   const now = s.phases.includes(q.phase);
@@ -120,9 +120,9 @@ export function CancelPage() {
               {q.phase === "BEFORE_PAYMENT" ? (
                 <>
                   <table className="info-table"><tbody>
-                    <tr><th>취소 수수료</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았어요</span></td></tr>
+                    <tr><th>취소 수수료</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았습니다</span></td></tr>
                   </tbody></table>
-                  <p className="field__hint mt-8">채팅을 시작한 공연을 취소하면 반려 1회로 기록돼요. 반려가 5회 쌓이면 새 공고는 24시간 뒤에 올릴 수 있어요.</p>
+                  <p className="field__hint mt-8">채팅을 시작한 공연을 취소하면 반려 1회로 기록됩니다. 반려가 5회 쌓이면 새 공고는 24시간 후에 올릴 수 있습니다.</p>
                 </>
               ) : (
                 <table className="info-table"><tbody>
@@ -139,7 +139,7 @@ export function CancelPage() {
                   </tr>
                   <tr>
                     <th>플랫폼 이용료</th>
-                    <td className="num">{q.feeRefunded ? `${won(q.feeRefunded)} · 돌려 드려요` : <>환불하지 않아요</>}</td>
+                    <td className="num">{q.feeRefunded ? `${won(q.feeRefunded)} · 환불됩니다` : <>환불되지 않습니다</>}</td>
                   </tr>
                   <tr><th>환불 예정액</th><td className="num"><b className="strong">{won(q.refundTotal)}</b></td></tr>
                 </tbody></table>
@@ -147,9 +147,9 @@ export function CancelPage() {
             </section>
             <section className="sec">
               <ul className="bullets">
-                <li>업체 사정으로 취소되면 플랫폼 이용료까지 전액 환불되고, 그 단계만 다시 모집할 수 있어요.</li>
-                <li>결제 후 12시간 안이나 공연 30일 전 이전에 취소하면 위약금이 없고 플랫폼 이용료도 돌려 드려요.</li>
-                <li>원 단위 나머지는 금액이 가장 큰 업체에 붙어요.</li>
+                <li>업체 사정으로 취소되면 플랫폼 이용료까지 전액 환불되며, 해당 단계만 다시 모집할 수 있습니다.</li>
+                <li>결제 후 12시간 이내 또는 공연 30일 전까지 취소하면 위약금이 없으며 플랫폼 이용료도 환불됩니다.</li>
+                <li>원 단위 나머지는 금액이 가장 큰 업체에 더해집니다.</li>
               </ul>
             </section>
             <div className="btns btns--center mt-40">
@@ -173,8 +173,8 @@ export function CancelPage() {
             </>
           }
         >
-          <p className="modal__lead">이 공연의 예약을 취소할까요?</p>
-          <p>{p ? `${p.title} · ${dateLabel(p.showDate)}` : "취소할 예약과 예상 환불 내역을 확인해 주세요."}</p>
+          <p className="modal__lead">이 공연의 예약을 취소하시겠습니까?</p>
+          <p>{p ? `${p.title} · ${dateLabel(p.showDate)}` : "취소할 예약과 예상 환불 내역을 확인해 주십시오."}</p>
           <dl className="sum-rows mt-16">
             <div><dt>위약금</dt><dd>{won(q.penaltyTotal)}</dd></div>
             <div><dt>환불 예정액</dt><dd className="strong">{won(q.refundTotal)}</dd></div>
@@ -197,7 +197,7 @@ export function CancelPage() {
           }
         >
           <p className="modal__lead">
-            {finalQuote.penaltyTotal ? `위약금 ${won(finalQuote.penaltyTotal)}이 발생해요.` : "위약금은 0원이에요."} 정말 취소할까요?
+            {finalQuote.penaltyTotal ? `위약금 ${won(finalQuote.penaltyTotal)}이 발생합니다.` : "위약금은 0원입니다."} 정말 취소하시겠습니까?
           </p>
           <dl className="sum-rows mt-16">
             <div><dt>결제한 금액</dt><dd>{won(finalQuote.paid)}</dd></div>
@@ -209,7 +209,7 @@ export function CancelPage() {
             <div className="cancel-final-total"><dt>환불 예정액</dt><dd>{won(finalQuote.refundTotal)}</dd></div>
           </dl>
           <p className="field__hint mt-16">
-            {finalQuote.paid ? "확정하면 취소가 접수돼요. 접수한 취소는 되돌릴 수 없어요." : "결제 전 예약이에요. 확정하면 예약이 취소되고 환불할 금액은 없어요."}
+            {finalQuote.paid ? "확정하면 취소가 접수됩니다. 접수된 취소는 되돌릴 수 없습니다." : "결제 전 예약입니다. 확정하면 예약이 취소되며 환불할 금액은 없습니다."}
           </p>
           {cancel.isError && <div className="mt-16"><ErrorNotice error={cancel.error} /></div>}
         </KitModal>

@@ -55,9 +55,9 @@ export function PaymentPage() {
         {order.isError ? (
           <ErrorNotice error={order.error} />
         ) : !o ? (
-          <p className="muted">불러오는 중이에요.</p>
+          <p className="muted">불러오는 중입니다.</p>
         ) : o.status !== "ISSUED" ? (
-          <p className="notice">이미 결제한 청구서예요. <Link className="link" to={`/performances/${id}/order`}>청구서 보기</Link></p>
+          <p className="notice">이미 결제한 청구서입니다. <Link className="link" to={`/performances/${id}/order`}>청구서 보기</Link></p>
         ) : (
           <>
             <StepBar paid={false} />
@@ -74,14 +74,14 @@ export function PaymentPage() {
               {pay.isPending ? (
                 <section className="result mt-40" aria-live="polite">
                   <div className="pay-wait"><span className="spin" role="img" aria-label="처리 중" /></div>
-                  <h2>결제를 확인하고 있어요</h2>
-                  <p>창을 닫거나 새로 고쳐도 결제는 한 번만 돼요.</p>
+                  <h2>결제를 확인하고 있습니다</h2>
+                  <p>창을 닫거나 새로 고쳐도 결제는 한 번만 진행됩니다.</p>
                 </section>
               ) : failed ? (
                 <section className="result mt-40" role="alert">
                   <span className="result__icon result__icon--bad"><Ico name="x" /></span>
-                  <h2>결제가 되지 않았어요</h2>
-                  <p>{pay.isError ? errorMessageOf(pay.error) : "테스트 결제 승인이 거절됐어요. 섭외는 확정되지 않았고, 돈은 나가지 않았어요."}</p>
+                  <h2>결제가 완료되지 않았습니다</h2>
+                  <p>{pay.isError ? errorMessageOf(pay.error) : "테스트 결제 승인이 거절되었습니다. 섭외는 확정되지 않았으며 결제 금액은 청구되지 않았습니다."}</p>
                   <div className="btns btns--center mt-24">
                     <Link className="btn btn--lg" to={`/performances/${id}/order`}>청구서로</Link>
                     <button type="button" className="btn btn--primary btn--lg" onClick={retry}>다시 결제</button>
@@ -93,11 +93,11 @@ export function PaymentPage() {
                   <div className="choice choice--col" role="radiogroup" aria-label="결제 수단">
                     <label className="choice__item">
                       <input type="radio" name="pm" checked={method === "CARD"} onChange={() => setMethod("CARD")} />
-                      <span className="choice__mark" /><span><b>테스트 카드</b><small>실제 카드 정보를 받지 않아요. 누르면 바로 승인돼요.</small></span>
+                      <span className="choice__mark" /><span><b>테스트 카드</b><small>실제 카드 정보를 받지 않습니다. 누르면 바로 승인됩니다.</small></span>
                     </label>
                     <label className="choice__item">
                       <input type="radio" name="pm" checked={method === "TRANSFER"} onChange={() => setMethod("TRANSFER")} />
-                      <span className="choice__mark" /><span><b>테스트 계좌이체</b><small>실제 계좌를 쓰지 않아요.</small></span>
+                      <span className="choice__mark" /><span><b>테스트 계좌이체</b><small>실제 계좌를 사용하지 않습니다.</small></span>
                     </label>
                   </div>
                   <p className="test-pay mt-16"><Ico name="info" sm />{TEST_PAY}</p>
@@ -107,7 +107,7 @@ export function PaymentPage() {
                       {formatWon(o.totalAmount)}원 결제
                     </button>
                   </div>
-                  <p className="field__hint mt-8">결제 직전에 청구서 금액을 서버가 다시 확인해요.</p>
+                  <p className="field__hint mt-8">결제 직전에 청구서 금액을 서버에서 다시 확인합니다.</p>
                 </section>
               )}
             </div>
