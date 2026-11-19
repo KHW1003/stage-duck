@@ -30,6 +30,7 @@ import { PostPage } from "./pages/PostPage";
 import { PostingPage } from "./pages/PostingPage";
 import { PostingsPage } from "./pages/PostingsPage";
 import { QuotePage } from "./pages/QuotePage";
+import { QuoteEditPage } from "./pages/QuoteEditPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
@@ -87,6 +88,7 @@ export function AppRoutes() {
           <Route path="/supplier/postings" element={<PostingsPage />} />
           <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
           <Route path="/supplier/postings/:stageId/quote" element={<QuotePage />} />
+          <Route path="/supplier/quotes/:quoteId/edit" element={<QuoteEditPage />} />
           <Route path="/supplier/tech" element={<TechCheckIndexPage />} />
           <Route path="/supplier/tech/:performanceId" element={<TechCheckPage />} />
         </Route>

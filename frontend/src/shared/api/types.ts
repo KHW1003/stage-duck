@@ -309,7 +309,53 @@ export interface QuoteCheck {
   message: string;
 }
 
-/** 201 응답 */
+/** PUT /quotes/{quoteId} 본문 (AC-F2-20): label 은 바꿀 수 없어 보내지 않고, version 은 지금 버전 (다르면 409 VERSION_CONFLICT) */
+export type QuoteUpdateIn = Omit<QuoteIn, "label"> & { version: number };
+
+/** 견적서 버전 하나 (backend quote/schemas.py QuoteVersionOut). 연락처는 없다 */
+export interface QuoteVersionOut {
+  version: number;
+  basedOnPerfVersion: number;
+  venueId: number | null;
+  venueSnapshot: Record<string, unknown> | null;
+  checkinTime: string | null;
+  setupAvailableTime: string | null;
+  setupStart: string | null;
+  setupMinutes: number | null;
+  teardownMinutes: number | null;
+  staff: QuoteStaffIn[];
+  items: QuoteItemIn[];
+  includesEquipment: boolean;
+  includesEngineer: boolean;
+  includesInstall: boolean;
+  includesTransport: boolean;
+  amountItems: number;
+  amountTransport: number;
+  amountInstall: number;
+  amountLabor: number;
+  amountEtc: number;
+  discountAmount: number;
+  totalAmount: number;
+  extraCostNote: string | null;
+  validUntil: string | null;
+  techNote: string | null;
+  createdAt: string;
+}
+
+/** GET /quotes/{quoteId}: 견적서 + 현재 버전 + 이력 (AC-F2-20) */
+export interface QuoteOut {
+  quoteId: number;
+  stageId: number;
+  supplierId: number;
+  label: string;
+  status: string;
+  isFullSpec: boolean;
+  currentVersion: number;
+  current: QuoteVersionOut;
+  versions: QuoteVersionOut[];
+}
+
+/** 201 응답 (PUT 고치기도 같은 모양) */
 export interface QuoteSentOut {
   quoteId: number;
   version: number;
