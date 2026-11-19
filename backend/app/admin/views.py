@@ -66,6 +66,18 @@ def _to_reason_form(request: Request, op: str, identity: str) -> RedirectRespons
     return RedirectResponse(f"{request.url_for('admin:view-reason')}?{query}", status_code=302)
 
 
+def _reason_button(label: str, op: str, identity: str, pk: int) -> str:
+    """행마다 붙는 버튼: 누르면 그 행 하나로 사유(답변) 입력 화면이 열린다 (체크박스 → 작업 메뉴를 안 거친다)."""
+    query = urlencode({"op": op, "pks": pk, "back": identity})
+    return f'<a class="btn btn-sm btn-outline-primary me-1" href="/admin/reason?{query}">{label}</a>'
+
+
+def _action_button(label: str, identity: str, name: str, pk: int, confirm: str) -> str:
+    """사유가 필요 없는 액션을 그 행 하나에 바로 (확인 창을 한 번 띄운다)."""
+    return (f'<a class="btn btn-sm btn-outline-secondary me-1" href="/admin/{identity}/action/{name}?pks={pk}" '
+            f'onclick="return confirm(\'{confirm}\')">{label}</a>')
+
+
 class SupplierAdmin(ModelView, model=Supplier):
     """업체 심사 — AC-F1-19, AC-F1-20."""
 
@@ -145,11 +157,15 @@ class ReportAdmin(ModelView, model=Report):
     icon = "fa-solid fa-flag"
     can_create = can_edit = can_delete = False
     column_list = [Report.id, Report.target_type, Report.target_id, Report.reporter_user_id, Report.reason,
-                   Report.status, Report.handled_by, Report.created_at]
+                   Report.status, Report.handled_by, Report.created_at, "buttons"]
+    column_formatters = {"buttons": lambda m, a: Markup(
+        _reason_button("경고", "report_warn", "report", m.id) + _reason_button("기각", "report_dismiss", "report", m.id)
+        if m.status == "OPEN" else "")}
     column_sortable_list = [Report.id, Report.status, Report.created_at]
     column_default_sort = [(Report.created_at, True)]
     column_labels = {Report.target_type: "대상 종류", Report.target_id: "대상 번호", Report.reporter_user_id: "신고자",
-                     Report.reason: "사유", Report.status: "상태", Report.handled_by: "처리자", Report.created_at: "신고일"}
+                     Report.reason: "사유", Report.status: "상태", Report.handled_by: "처리자", Report.created_at: "신고일",
+                     "buttons": "처리"}
 
     @action(name="warn", label="경고 (사유 입력)")
     async def warn(self, request: Request) -> Response:
@@ -183,7 +199,12 @@ class PrPostAdmin(ModelView, model=PrPost):
     icon = "fa-solid fa-bullhorn"
     can_create = can_edit = can_delete = False
     column_list = [PrPost.id, PrPost.category, PrPost.title, PrPost.supplier_id, PrPost.status, PrPost.blind_reason,
-                   PrPost.created_at]
+                   PrPost.created_at, "buttons"]
+    column_labels = {"buttons": "처리"}
+    column_formatters = {"buttons": lambda m, a: Markup(
+        _reason_button("블라인드", "pr_post_blind", "pr-post", m.id) if m.status == "ACTIVE"
+        else _action_button("블라인드 해제", "pr-post", "unblind", m.id, "이 글의 블라인드를 풀까요?") if m.status == "BLINDED"
+        else "")}
     column_searchable_list = [PrPost.title]
     column_default_sort = [(PrPost.created_at, True)]
 
@@ -315,10 +336,14 @@ class InquiryAdmin(ModelView, model=Inquiry):
     icon = "fa-solid fa-circle-question"
     can_create = can_edit = can_delete = False
     column_list = [Inquiry.id, Inquiry.category, Inquiry.title, Inquiry.user_id, Inquiry.status, Inquiry.created_at,
-                   Inquiry.answered_at]
+                   Inquiry.answered_at, "buttons"]
+    column_labels = {"buttons": "처리"}
+    column_formatters = {"buttons": lambda m, a: Markup(
+        _reason_button("답변", "inquiry_answer", "inquiry", m.id) if m.status == "WAITING" else "")}
+    column_formatters_detail = column_formatters
     column_details_list = [Inquiry.id, Inquiry.category, Inquiry.user_id, Inquiry.performance_id, Inquiry.title,
                            Inquiry.body, Inquiry.attachments, Inquiry.status, Inquiry.answer, Inquiry.answered_at,
-                           Inquiry.created_at]
+                           Inquiry.created_at, "buttons"]
     column_searchable_list = [Inquiry.title]
     column_default_sort = [(Inquiry.created_at, True)]
 

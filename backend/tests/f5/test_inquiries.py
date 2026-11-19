@@ -120,6 +120,15 @@ def test_ac_f5_19_admin_answer_locks_inquiry(db, admin_client):
         assert (res.status_code, res.json()["code"]) == (409, "INVALID_STATE")
 
 
+def test_ac_f5_19_admin_list_has_answer_button_per_row(db, admin_client):
+    """체크박스 → 작업 메뉴를 거치지 않게 행마다 [답변]. 답변 뒤에는 버튼이 없다."""
+    _, inquiry_id = _write(db)
+    link = f"/admin/reason?op=inquiry_answer&pks={inquiry_id}&back=inquiry"
+    assert link in admin_client.get("/admin/inquiry/list").text
+    admin_client.post(f"/admin/reason?op=inquiry_answer&pks={inquiry_id}&back=inquiry", data={"reason": "답변"})
+    assert link not in admin_client.get("/admin/inquiry/list").text
+
+
 def test_ac_f5_19_answer_needs_text_and_only_once(db, admin_client):
     _, inquiry_id = _write(db)
     admin_client.post(f"/admin/reason?op=inquiry_answer&pks={inquiry_id}&back=inquiry", data={"reason": "  "})
