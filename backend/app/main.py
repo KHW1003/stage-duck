@@ -27,6 +27,7 @@ from app.tech.router import router as tech_router
 from app.support.router import inquiry_router
 from app.support.router import router as notice_router
 from app.check.router import router as compare_router
+from app.payment.router import router as order_router
 
 
 def create_app() -> FastAPI:
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     api.include_router(notice_router)  # #103 공지사항
     api.include_router(inquiry_router)  # #102 1:1 문의
     api.include_router(compare_router)  # #48 견적 비교
+    api.include_router(order_router)  # #50 통합 청구서
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)

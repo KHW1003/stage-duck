@@ -16,5 +16,6 @@ from app.models.tech import TechCheck  # noqa: F401  #49 기술 확인
 from app.models.terms import TermsAgreement
 from app.models.user import User
 from app.models.venue import Venue, VenueEquipment
+from app.models.payment import Order, OrderLine  # noqa: F401  #50 통합 청구서
 
 __all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent", "PasswordResetToken", "PasswordResetRequest", "Notice"]
