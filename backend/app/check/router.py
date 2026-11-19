@@ -31,7 +31,9 @@ class CompareQuoteOut(BaseModel):
     version: int
     based_on_perf_version: int
     total_amount: int
-    venue_name: str | None  # 공연장 견적서만 (공간 스냅샷)
+    venue_id: int | None  # 공연장 견적서만 (공간 스냅샷) — 화면이 공간 사진을 고른다
+    venue_type: str | None
+    venue_name: str | None
     max_capacity: int | None
     checkin_time: str | None
     setup_available_time: str | None
@@ -55,7 +57,7 @@ def compare_quotes(
         out.append(CompareQuoteOut(
             quote_id=quote.id, supplier_id=quote.supplier_id, label=quote.label, status=quote.status,
             version=row.version, based_on_perf_version=row.based_on_perf_version, total_amount=row.total_amount,
-            venue_name=snap.get("name"), max_capacity=snap.get("maxCapacity"), checkout_time=snap.get("checkoutTime"),
+            venue_id=snap.get("venueId"), venue_type=snap.get("venueType"), venue_name=snap.get("name"), max_capacity=snap.get("maxCapacity"), checkout_time=snap.get("checkoutTime"),
             checkin_time=_hm(row.checkin_time), setup_available_time=_hm(row.setup_available_time),
             includes_equipment=row.includes_equipment, includes_engineer=row.includes_engineer,
             is_full_spec=quote.is_full_spec, offered=quote.offer_id is not None,
