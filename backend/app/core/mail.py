@@ -104,9 +104,9 @@ def send_test_mail(to: str) -> str:
     if settings.smtp_password and not settings.smtp_password.isascii():
         raise MailError(".env 의 SMTP_PASSWORD 가 예시 문구 그대로예요. Gmail 앱 비밀번호 16자리를 띄어쓰기 없이 넣어 주세요.")
     text = chr(10).join([
-        "STAGE DUCK 메일 보내기 시험이에요.",
+        "STAGE DUCK 메일 발송 시험입니다.",
         "",
-        "이 메일이 보이면 서버의 메일 설정이 맞아요. 비밀번호 찾기 메일도 같은 방법으로 보내져요.",
+        "이 메일을 받으셨다면 서버의 메일 설정이 올바릅니다. 비밀번호 찾기 메일도 같은 방법으로 발송됩니다.",
         "",
         f"보낸 서버: {settings.smtp_host}:{settings.smtp_port}",
     ])

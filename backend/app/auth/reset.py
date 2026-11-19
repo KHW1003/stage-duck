@@ -80,14 +80,14 @@ RESET_SUBJECT = "[STAGE DUCK] 비밀번호 재설정 링크"
 
 def reset_mail_text(link: str) -> str:
     lines = [
-        "안녕하세요, STAGE DUCK이에요.",
+        "안녕하세요, STAGE DUCK입니다.",
         "",
-        f"아래 링크에서 새 비밀번호를 정해 주세요. 링크는 {calc.RESET_TOKEN_MINUTES}분 동안, 한 번만 쓸 수 있어요.",
+        f"아래 링크에서 새 비밀번호를 설정해 주십시오. 링크는 {calc.RESET_TOKEN_MINUTES}분 동안 한 번만 사용할 수 있습니다.",
         "",
         link,
         "",
-        "비밀번호 찾기를 요청하지 않았다면 이 메일은 지워 주세요. 비밀번호는 바뀌지 않아요.",
-        "이 메일은 보내기 전용이에요.",
+        "비밀번호 찾기를 요청하지 않으셨다면 이 메일은 삭제해 주십시오. 비밀번호는 변경되지 않습니다.",
+        "본 메일은 발신 전용입니다.",
     ]
     return chr(10).join(lines)
 
