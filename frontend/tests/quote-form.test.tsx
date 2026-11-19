@@ -149,6 +149,8 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     });
     expect(screen.getByRole("link", { name: "채팅방으로" })).toHaveAttribute("href", "/supplier/postings/2/quote?chat=31");
     expect(screen.getByRole("link", { name: "공고 목록으로" })).toHaveAttribute("href", "/supplier/postings");
+    // AC-F2-20 들어오는 길: 보낸 견적서를 고치는 화면으로
+    expect(screen.getByRole("link", { name: "견적서 고치기" })).toHaveAttribute("href", "/supplier/quotes/77/edit");
   });
 
   it("AC-F2-15 금액 칸은 숫자만 받고, 칸을 벗어나면 천 단위 쉼표로 보여 준다", async () => {

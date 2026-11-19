@@ -130,7 +130,7 @@ export function CommunityPage() {
                   <td className={styles.cat}>[{CATEGORY_LABEL[p.category]}]</td>
                   <td>
                     <Link to={`/community/${p.id}`}>{p.title}</Link>
-                    {p.commentCount > 0 && <span className={`${styles.comments} sd-num`}>[{p.commentCount}]</span>}
+                    {p.commentCount > 0 && <span className={`${styles.commentCount} sd-num`}>[{p.commentCount}]</span>}
                   </td>
                   <td className={styles.small}>{authorLabel(p.author)}</td>
                   <td className={`${styles.small} sd-num`}>{shortDate(p.createdAt, today)}</td>

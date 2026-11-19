@@ -154,15 +154,21 @@ def upload(db: Session, user: User, *, purpose: str, filename: str | None, strea
     return f
 
 
-def _readable(f: StoredFile, user: User) -> bool:
-    """비공개 파일: 올린 사람과 관리자. 채팅 파일의 '그 방 참여자'는 3번 묶음이 채팅 서비스와 함께 붙인다."""
-    return f.owner_user_id == user.id or user.role == "ADMIN"
+def _readable(db: Session, f: StoredFile, user: User) -> bool:
+    """비공개 파일: 올린 사람과 관리자. 채팅 파일은 그 방 참여자도 — 판단은 채팅 서비스가 한다 (3번 #42)."""
+    if f.owner_user_id == user.id or user.role == "ADMIN":
+        return True
+    if f.purpose == "CHAT":
+        from app.chat import service as chat_service  # 채팅 서비스가 이 모듈을 부르므로 여기서 가져온다 (순환 import 방지)
+
+        return chat_service.can_read_chat_file(db, user, f.id)
+    return False
 
 
 def get_private_file(db: Session, user: User, file_id: int) -> tuple[Path, StoredFile]:
     """GET /files/{id}: 비공개 파일 내려받기. 남의 것·지운 것·공개 파일(→ /media 주소)은 404."""
     f = db.get(StoredFile, file_id)
-    if f is None or f.status == "DELETED" or f.visibility != "PRIVATE" or not _readable(f, user):
+    if f is None or f.status == "DELETED" or f.visibility != "PRIVATE" or not _readable(db, f, user):
         raise not_found()
     path = _path(f.storage_key)
     if not path.is_file():

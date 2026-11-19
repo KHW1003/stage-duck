@@ -226,6 +226,7 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     room_id = chat_service.post_quote_message(
         db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
+    chat_service.notify_quote_updated(db, room_id=room_id, quote_id=quote.id, version=quote.current_version)
     # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
     db.commit()
     db.refresh(quote)

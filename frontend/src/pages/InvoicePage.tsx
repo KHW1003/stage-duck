@@ -103,6 +103,9 @@ export function InvoicePage() {
         title="통합 청구서"
         crumbs={[{ label: "내 공연", to: "/me/performances" }, ...(p ? [{ label: p.title, to: `/performances/${p.id}` }] : []), { label: "통합 청구서" }]}
         meta={p && o ? [p.title, dateLabel(p.showDate), `${whenLabel(o.issuedAt)} 발행`] : undefined}
+        actions={o && (o.status === "ISSUED" || o.status === "PAID") ? (
+          <Link className="btn btn--sm btn--ghost" to={`/performances/${id}/cancel`}>취소·위약금 안내</Link>
+        ) : undefined}
       />
       <main className="container main">
         {order.isError ? (

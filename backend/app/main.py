@@ -22,6 +22,7 @@ from app.request.router import me_router as request_me_router, stage_router
 from app.board.router import router as board_router
 from app.quote.router import postings_router, router as quote_router, stage_quote_router
 from app.chat.router import router as chat_router
+from app.chat.router import ws_router as chat_ws_router
 from app.seo.router import router as seo_router
 from app.tech.router import router as tech_router
 from app.profile.router import router as profile_router
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
+    app.include_router(chat_ws_router)  # #42 GET /ws 실시간 (api-contract.md 7장)
     # 공개 사진 (uploads.md 3장). 비공개 파일은 /media 로 나가지 않는다 — GET /api/v1/files/{id}
     app.mount("/media", StaticFiles(directory=Path(get_settings().upload_dir) / "public", check_dir=False), name="media")
     setup_admin(app)

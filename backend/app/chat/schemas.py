@@ -2,15 +2,17 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
+
+from app.chat.calc import attachment_url
 
 _IN = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 _OUT = ConfigDict(from_attributes=True, populate_by_name=True, alias_generator=to_camel)
 
 
 class MessageIn(BaseModel):
-    """AC-F3-06·08·15: 메시지 보내기. IMAGE·FILE은 다음 PR에서 받는다 (지금은 서비스가 400)."""
+    """AC-F3-06·08·15: 메시지 보내기. IMAGE·FILE 은 먼저 POST /files (purpose CHAT) 로 올린 fileId 를 붙인다."""
 
     model_config = _IN
 
@@ -37,6 +39,13 @@ class MessageOut(BaseModel):
     ref_id: int | None  # QUOTE 이면 quote_version_id
     contact_warning: bool  # AC-F3-15
     created_at: datetime
+    file_id: int | None = Field(default=None, exclude=True)
+    attachment_url: str | None = None  # IMAGE·FILE 이면 /api/v1/files/{id} (그 방 참여자만 열림)
+
+    @model_validator(mode="after")
+    def _attachment(self) -> "MessageOut":
+        self.attachment_url = attachment_url(self.file_id)
+        return self
 
 
 class MessagesOut(BaseModel):

@@ -1,16 +1,21 @@
-"""채팅 API (api-contract.md 채팅): 목록·고정·시작·메시지·읽음. WebSocket·사진·파일은 다음 PR."""
+"""채팅 API (api-contract.md 채팅): 목록·고정·시작·메시지(글·사진·파일)·읽음, 그리고 실시간 GET /ws (7장)."""
+import asyncio
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, WebSocket, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
-from app.auth.deps import require_role
-from app.chat import service
+from app.auth.deps import current_user, require_role
+from app.auth.tokens import ACCESS_COOKIE
+from app.chat import realtime, service
 from app.chat.schemas import MessageIn, MessageOut, MessagesOut, PinOut, ReadIn, RoomOut, StartOut
 from app.core.db import get_db
+from app.core.errors import AppError
 from app.models.user import User
 
 router = APIRouter(prefix="/chat-rooms", tags=["chat"])
+ws_router = APIRouter(tags=["chat"])  # /api/v1 밖의 /ws (화면 개발 서버가 /ws 를 그대로 넘긴다)
 
 member = require_role("USER", "SUPPLIER")
 
@@ -68,10 +73,14 @@ def list_messages(
 
 @router.post("/{room_id}/messages", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
 def send_message(
-    room_id: int, body: MessageIn, user: User = Depends(member), db: Session = Depends(get_db)
+    room_id: int,
+    body: MessageIn,
+    user: User = Depends(member),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
 ) -> MessageOut:
-    """AC-F3-06·08·15: 메시지 보내기 (TEXT)."""
-    return MessageOut.model_validate(service.send_message(db, user, room_id, body))
+    """AC-F3-06·08·15: 메시지 보내기 (TEXT·IMAGE·FILE)."""
+    return MessageOut.model_validate(service.send_message(db, user, room_id, body, now=now))
 
 
 @router.post("/{room_id}/read", status_code=status.HTTP_204_NO_CONTENT)
@@ -79,3 +88,42 @@ def mark_read(room_id: int, body: ReadIn, user: User = Depends(member), db: Sess
     """AC-F3-08: 읽음."""
     service.mark_read(db, user, room_id, body.last_message_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@ws_router.websocket("/ws")
+async def events(websocket: WebSocket, db: Session = Depends(get_db)) -> None:
+    """api-contract.md 7장: 내 채팅방·알림 이벤트를 받는 연결 하나. 받기 전용 (보내기는 REST).
+
+    쿠키 인증은 REST 와 같은 기준(current_user)이다. 실패하면 연결을 받은 뒤 4401 로 닫는다
+    (받기 전에 닫으면 브라우저가 닫힘 코드를 볼 수 없다). 확인이 끝나면 DB 세션은 바로 돌려준다.
+    연결 목록에 먼저 올린 뒤 연결을 받는다 → 화면이 '열림'을 본 뒤에 생긴 이벤트는 빠지지 않는다.
+    """
+    try:
+        user = await run_in_threadpool(current_user, websocket.cookies.get(ACCESS_COOKIE), db)
+        user_id = user.id
+    except AppError:
+        await websocket.accept()
+        await websocket.close(code=realtime.CLOSE_UNAUTHENTICATED)
+        return
+    finally:
+        db.close()
+
+    conn = realtime.connect(user_id)
+    try:
+        await websocket.accept()
+    except BaseException:
+        realtime.disconnect(user_id, conn)
+        raise
+    writer = asyncio.create_task(_write(websocket, conn))
+    try:
+        while (await websocket.receive())["type"] != "websocket.disconnect":
+            pass  # 화면이 보낸 것은 쓰지 않는다
+    finally:
+        realtime.disconnect(user_id, conn)
+        writer.cancel()
+
+
+async def _write(websocket: WebSocket, conn: realtime.Connection) -> None:
+    """이 연결의 보낼 줄을 차례로 보낸다. 보내다 실패하면(끊김) 멈추고, 읽는 쪽이 끊김을 받아 정리한다."""
+    while True:
+        await websocket.send_json(await conn.queue.get())

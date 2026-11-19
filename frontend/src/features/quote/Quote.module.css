@@ -93,6 +93,11 @@
 .checkList li { display: flex; align-items: flex-start; gap: 10px; font-size: var(--sd-text-desc); line-height: 1.6; }
 .doneWrap { max-width: var(--sd-doc-width); margin: 0 auto; }
 
+/* 견적서 고치기: 버전 이력 (AC-F2-20) */
+.history { border-top: 1px solid var(--sd-line-strong); }
+.history li { display: flex; align-items: center; gap: 16px; min-height: var(--sd-touch); padding: 0 4px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+.history li > :first-child { min-width: 40px; color: var(--sd-muted); font-weight: 700; }
+
 @media (max-width: 760px) {
   .row3, .row4, .checks { grid-template-columns: 1fr; }
 }
