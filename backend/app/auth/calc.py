@@ -56,8 +56,11 @@ def _password_ok(pw: str) -> bool:
     )
 
 
-def signup_field_errors(data: SignupInput, today: date) -> list[dict]:
-    """AC-F1-01: 비었거나 형식이 틀린 칸마다 이유를 하나씩 돌려준다 (필드 이름은 API 의 camelCase)."""
+def signup_field_errors(data: SignupInput, today: date, *, password_required: bool = True) -> list[dict]:
+    """AC-F1-01: 비었거나 형식이 틀린 칸마다 이유를 하나씩 돌려준다 (필드 이름은 API 의 camelCase).
+
+    소셜 추가 정보(FR-AUTH-04)는 비밀번호를 받지 않으므로 password_required=False 로 부른다.
+    """
     errors: list[dict] = []
 
     def add(field: str, reason: str) -> None:
@@ -68,9 +71,10 @@ def signup_field_errors(data: SignupInput, today: date) -> list[dict]:
         ("phone", data.phone, "전화번호를 입력해 주세요"),
         ("email", data.email, "이메일을 입력해 주세요"),
         ("nickname", data.nickname, "닉네임을 입력해 주세요"),
-        ("password", data.password, "비밀번호를 입력해 주세요"),
         ("signupPurpose", data.signup_purpose, "가입 목적을 골라 주세요"),
     ]
+    if password_required:
+        required.append(("password", data.password, "비밀번호를 입력해 주세요"))
     for field, value, reason in required:
         if _blank(value):
             add(field, reason)

@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     mail_backend: str = "console"  # D-55: 메일 서버가 없어 링크를 서버 로그에 남긴다 (실제 발송은 후속)
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
+    # 소셜 로그인 (FR-AUTH-02·03, plan.md 4장). 키 값은 backend/.env 에만 둔다
+    naver_client_id: str = ""
+    naver_client_secret: str = ""
+    kakao_login_enabled: bool = False  # 기본 꺼짐. 꺼져 있으면 /auth/kakao/* 가 404 (CLAUDE.md 28)
+    kakao_client_id: str = ""  # 카카오 REST API 키
+
     # 검색·공유 노출 (specs/seo.md 8장)
     frontend_dist: str = "../frontend/dist"  # 빌드된 화면 폴더 (Docker 에서는 /app/frontend/dist)
     public_base_url: str = "http://localhost:8000"  # canonical·og:url·sitemap 절대 주소
