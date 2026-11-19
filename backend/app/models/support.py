@@ -5,7 +5,7 @@ created_by 는 비워 둘 수 있다 — 관리자 계정을 지워도 공지는
 """
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, String, Text, false
+from sqlalchemy import JSON, Boolean, CheckConstraint, ForeignKey, Index, String, Text, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base, BigID, DateTime3
@@ -30,4 +30,36 @@ class Notice(Base):
     created_by: Mapped[int | None] = mapped_column(BigID, ForeignKey("users.id"))
 
     def __str__(self) -> str:  # SQLAdmin 목록 표시용
+        return self.title
+
+
+INQUIRY_CATEGORIES = ("PAYMENT", "QUOTE", "SUPPLIER", "ACCOUNT", "ETC")  # 결제·환불 · 견적·컨펌 · 업체 이용 · 계정 · 기타
+INQUIRY_STATUSES = ("WAITING", "ANSWERED")
+
+
+class Inquiry(Base):
+    """1:1 문의 (data-model.md inquiries, FR-CS-01 · D-48). 본인·관리자만 본다. ANSWERED 면 회원이 고치거나 지울 수 없다."""
+
+    __tablename__ = "inquiries"
+    __table_args__ = (
+        CheckConstraint(_in("category", INQUIRY_CATEGORIES), name="ck_inquiries_category"),
+        CheckConstraint(_in("status", INQUIRY_STATUSES), name="ck_inquiries_status"),
+        Index("ix_inquiries_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigID, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigID, ForeignKey("users.id"), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), nullable=False)
+    performance_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("performances.id"))
+    title: Mapped[str] = mapped_column(String(50), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="WAITING", server_default="WAITING")
+    answer: Mapped[str | None] = mapped_column(Text)
+    answered_by: Mapped[int | None] = mapped_column(BigID, ForeignKey("users.id"))
+    attachments: Mapped[list[int]] = mapped_column(JSON, nullable=False, default=list)  # [file_id] 최대 3장
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime3)
+    created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    def __str__(self) -> str:
         return self.title
