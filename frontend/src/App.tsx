@@ -20,6 +20,9 @@ import { SupplierGuidePage } from "./pages/SupplierGuidePage";
 import { TermsPage } from "./pages/TermsPage";
 import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
+import { InvoicePage } from "./pages/InvoicePage";
+import { PaymentPage } from "./pages/PaymentPage";
+import { SheetPage } from "./pages/SheetPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -79,6 +82,7 @@ export function AppRoutes() {
           <Route path="/inquiries/new" element={<InquiryWritePage />} />
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
+          <Route path="/performances/:id/sheet" element={<SheetPage />} />
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
@@ -99,6 +103,8 @@ export function AppRoutes() {
           <Route path="/performances/:id/edit" element={<RequestEditPage />} />
           <Route path="/performances/:id/next" element={<NextStagePage />} />
           <Route path="/performances/:id/compare" element={<ComparePage />} />
+          <Route path="/performances/:id/order" element={<InvoicePage />} />
+          <Route path="/performances/:id/pay" element={<PaymentPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

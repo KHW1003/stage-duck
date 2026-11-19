@@ -3,7 +3,8 @@
  * STEP1 공연 기본 정보 → STEP2 필요한 것 → 게시 확인 창 → POST /performances + POST /performances/{id}/publish.
  * - 화면 쪽 확인은 보조이고, 서버가 준 fieldErrors 가 있으면 그 문구를 칸 아래에 보여 준다 (STEP1 칸이면 STEP1로 돌아간다)
  * - 작성은 됐는데 게시가 실패하면, 다시 누를 때 받은 id 로 게시만 다시 한다 (요청서가 두 개 생기지 않게)
- * - "임시 저장"·"나중에 쓰기"는 받을 API가 없어 넣지 않았다
+ * - 목업 v4 request-1·2.html: 위 단계 막대(.step-bar) + 표 모양 입력(.form-table). "임시 저장" 표시는 받을 API가 없어 넣지 않았다.
+ *   [나중에 쓰기]는 저장하지 않고 내 공연으로 돌아간다
  * - 수정 모드(edit, /performances/:id/edit, #40): 현재 값을 채우고 PUT 으로 새 버전. 게시 뒤에는 필요해요/이미 있어요를 잠그고
  *   [수정 저장]만, 작성 중이면 저장 후 게시. 전화번호는 다시 적을 때만 보낸다 (응답에 번호가 없어서, CLAUDE.md 20)
  */
@@ -11,8 +12,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../shared/api/client";
 import type { PerformanceDetail, PerformanceForm, PerformanceNeeds, PerformancePublished, PerformanceRequest, StageType } from "../shared/api/types";
-import { PageTop } from "../shared/layout/PageTop";
-import { ButtonLink } from "../shared/ui/Button";
+import { Link } from "react-router-dom";
+import { KitPageTop } from "../shared/layout/KitPageTop";
+import { Ico } from "../shared/ui/Ico";
+import type { KitIconName } from "../shared/ui/kitIcons";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { useUpdatePerformance } from "../features/performance/api";
 import { useCreatePerformance, usePublishPerformance } from "../features/request/api";
@@ -21,7 +24,7 @@ import { PublishModal } from "../features/request/PublishModal";
 import { Step1Form } from "../features/request/Step1Form";
 import { Step2Form } from "../features/request/Step2Form";
 import { STEP1_FIELDS, earliestShowDate, step1Errors, step2Errors, type Errors, type Step1Form as Form } from "../features/request/validate";
-import styles from "../features/request/Request.module.css";
+import "../features/request/request-v4.css";
 
 const EMPTY_FORM: Form = {
   title: "", form: "", lineup: [], showDate: "", rehearsalStart: "", showStart: "", showEnd: "",
@@ -36,10 +39,10 @@ const EMPTY_NEEDS: PerformanceNeeds = {
   ownedVenue: null,
 };
 
-const STEPS = [
-  { no: "01", label: "공연 기본 정보" },
-  { no: "02", label: "필요한 것" },
-  { no: "03", label: "확인·게시" },
+const STEPS: { no: string; label: string; icon: KitIconName }[] = [
+  { no: "01", label: "공연 기본 정보", icon: "doc" },
+  { no: "02", label: "필요한 것", icon: "list" },
+  { no: "03", label: "확인·게시", icon: "check" },
 ];
 const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -156,37 +159,39 @@ export function RequestPage({ edit }: { edit?: PerformanceDetail }) {
 
   return (
     <>
-      <PageTop
+      <KitPageTop
         title={edit ? "요청서 수정" : "요청서 쓰기"}
-        desc={liveEdit ? "고치면 새 버전이 생기고, 견적서를 보낸 업체에게 바뀐 항목이 보여요. 확정한 단계는 업체가 다시 확인해요." : "한 번만 적으면 공연장·장비·엔지니어 업체가 모두 같은 내용을 봐요."}
+        desc={
+          liveEdit
+            ? "고치면 새 버전이 생기고, 견적서를 보낸 업체에게 바뀐 항목이 보여요. 확정한 단계는 업체가 다시 확인해요."
+            : step === 2 && form.title.trim() && form.showDate
+              ? `${form.title.trim()} · ${dateLabel(form.showDate)}`
+              : "한 번만 적으면 공연장·장비·엔지니어 업체가 모두 같은 내용을 봐요."
+        }
         crumbs={[{ label: "내 공연", to: "/me/performances" }, { label: edit ? "요청서 수정" : "요청서 쓰기" }]}
       />
-      <div className={`sd-container ${styles.wrap}`}>
-        <ol className={styles.steps} aria-label="요청서 단계">
+      <main className="container container--narrow main">
+        <ol className="step-bar" aria-label="요청서 단계">
           {STEPS.map((s, i) => {
-            const now = published ? 2 : confirming ? 2 : step - 1;
+            const now = published ? 3 : confirming ? 2 : step - 1;
             return (
-              <li
-                key={s.no}
-                className={[styles.step, i < now || published ? styles.done : "", i === now && !published ? styles.now : ""].filter(Boolean).join(" ")}
-                aria-current={i === now && !published ? "step" : undefined}
-              >
-                {s.no}
-                <b>{s.label}</b>
+              <li key={s.no} className={i < now ? "is-done" : i === now ? "is-now" : undefined} aria-current={i === now ? "step" : undefined}>
+                <b>{s.no}</b>
+                <Ico name={s.icon} />
+                {s.label}
               </li>
             );
           })}
         </ol>
 
         {published ? (
-          <div className={`${styles.notice} ${styles.passed}`} role="status">
+          <div className="empty mt-40" role="status">
+            <Ico name="check" />
             <b>공고를 올렸어요</b>
-            지금은 {STAGE_LABEL[published.stages[0].stageType]} 업체에게만 보여요. 견적서가 오면 알림으로 알려 드려요.
-            <div className={styles.actions}>
-              <ButtonLink to="/me/performances" variant="primary">
-                내 공연으로
-              </ButtonLink>
-            </div>
+            <p>지금은 {STAGE_LABEL[published.stages[0].stageType]} 업체에게만 보여요. 견적서가 오면 알림으로 알려 드려요.</p>
+            <Link className="btn btn--primary" to="/me/performances">
+              내 공연으로
+            </Link>
           </div>
         ) : step === 1 ? (
           <>
@@ -219,7 +224,7 @@ export function RequestPage({ edit }: { edit?: PerformanceDetail }) {
             {liveEdit && <ErrorNotice error={Object.keys(serverErrors(update.error)).length ? null : update.error} />}
           </>
         )}
-      </div>
+      </main>
 
       {confirming && (
         <PublishModal

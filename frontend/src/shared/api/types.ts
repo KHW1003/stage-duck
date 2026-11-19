@@ -465,6 +465,58 @@ export interface CompareQuote {
   checks: CheckItem[];
 }
 
+/* ---- 통합 청구서·테스트 결제 (api-contract.md 6.1, #50·#51). 금액은 모두 서버 계산값 ---- */
+
+export type OrderStatus = "ISSUED" | "PAID" | "SETTLEMENT_SCHEDULED" | "CANCELLED";
+/** 결제 전 null · HOLD 보관 중 · SETTLE_SCHEDULED 정산 예정 */
+export type LedgerState = "HOLD" | "SETTLE_SCHEDULED" | null;
+
+export interface OrderLine {
+  stageId: number;
+  stageType: StageType;
+  supplierId: number;
+  companyName: string;
+  quoteVersionId: number;
+  amount: number;
+  ledgerState: LedgerState;
+}
+
+/** GET·POST /performances/{id}/order */
+export interface Order {
+  id: number;
+  performanceId: number;
+  status: OrderStatus;
+  itemsTotal: number;
+  platformFee: number;
+  totalAmount: number;
+  issuedAt: string;
+  paidAt: string | null;
+  lines: OrderLine[];
+}
+
+/** GET /performances/{id}/sheet (#53). contacts 는 결제 뒤에만 채워진다 */
+export interface Sheet {
+  performanceId: number;
+  title: string;
+  showDate: string;
+  sido: string;
+  sigungu: string;
+  audience: number;
+  paid: boolean;
+  paidAt: string | null;
+  schedule: { time: string; title: string; who: string }[];
+  lines: { stageType: StageType; status: StageStatus; companyName: string | null; scope: string; amount: number | null }[];
+  contacts: { role: string; name: string; realName: string | null; phone: string; email: string }[];
+}
+
+/** POST /orders/{id}/payments */
+export interface PaymentResult {
+  paymentId: number;
+  status: "PENDING" | "SUCCEEDED" | "FAILED";
+  amount: number;
+  orderStatus: OrderStatus;
+}
+
 /* ---- 프로필 (api-contract.md 5장 /suppliers/{id}/profile · /users/{id}/profile · /me/profile, #33) ---- */
 
 /** 업체 프로필의 등록 공간 한 줄 (GET /venues 목록 카드와 같은 칸 중 화면이 쓰는 것) */

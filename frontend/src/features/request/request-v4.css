@@ -1,0 +1,56 @@
+/* 요청서 STEP1·STEP2 (목업 v4 request-1.html · request-2.html). 표 모양 .form-table·.step-bar·.cat-tiles·.toggle 은 kit.css.
+   목업은 button[aria-pressed] 로 그렸지만, 여기서는 키보드·화면 낭독기를 위해 radio 를 label 안에 숨겨 같은 모양을 낸다. */
+
+/* 공연 형태 타일: label + 숨긴 radio */
+.cat-tiles > label { position: relative; }
+.cat-tiles > label input { position: absolute; opacity: 0; }
+.cat-tiles > label:has(input:checked) { color: var(--sd-blue); }
+.cat-tiles > label:has(input:checked)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--sd-blue); }
+.cat-tiles > label:has(input:focus-visible) { outline: 2px solid var(--sd-focus); outline-offset: -2px; }
+
+/* 필요해요 / 이미 있어요: label + 숨긴 radio */
+.toggle { margin: 0; padding: 0; }
+.toggle legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.toggle label { position: relative; display: inline-flex; align-items: center; height: 36px; padding: 0 14px; background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-desc); font-weight: 600; cursor: pointer; }
+.toggle label + label { border-left: 1px solid var(--sd-line-strong); }
+.toggle label input { position: absolute; opacity: 0; }
+.toggle label:has(input:checked) { background: var(--sd-ink); color: #fff; }
+.toggle label:has(input:focus-visible) { outline: 2px solid var(--sd-focus); outline-offset: -2px; }
+.toggle:disabled label { cursor: not-allowed; opacity: .6; }
+
+/* STEP2 항목: 머리줄(아이콘 · 이름 · 필요해요/이미 있어요) + 아래 입력 표 */
+.need { border-top: 2px solid var(--sd-rule); }
+.need + .need { margin-top: 40px; }
+.need__head { display: flex; align-items: center; gap: 14px; padding: 16px 4px; border-bottom: 1px solid var(--sd-line); }
+.need__title { flex: 1; min-width: 0; }
+.need__title b { font-size: 18px; }
+.need__title small { display: block; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.need .form-table { border-top: 0; }
+.need-off { padding: 18px 4px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); color: var(--sd-muted); }
+
+/* 줄 추가형 입력 (편성·원하는 장비·가진 장비) */
+.rq-rows { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 560px; }
+.rq-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px 40px; gap: 6px; align-items: center; }
+.rq-row--2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; }
+.form-table__td .rq-row .input { max-width: none; }
+.form-table__td > .btn { align-self: flex-start; }
+.form-table__inline { flex-wrap: wrap; }
+.rq-req { color: var(--sd-conflict-text); margin-left: 2px; }
+.rq-fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.rq-fieldset legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+@media (max-width: 760px) {
+  .cat-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .cat-tiles > * + * { border-left: 0; }
+  .cat-tiles > * { border-right: 1px solid var(--sd-line); border-bottom: 1px solid var(--sd-line); min-height: 84px; }
+  .need__head { flex-wrap: wrap; }
+  .need__head .toggle { margin-left: auto; }
+  .checks { --cols: 2 !important; }
+}
+@media (max-width: 560px) {
+  .need__head .ico-box { display: none; }
+  .checks { --cols: 1 !important; }
+  .rq-row { grid-template-columns: minmax(0, 1fr) 84px 40px; }
+  .rq-row--2 { grid-template-columns: minmax(0, 1fr) 40px; }
+  .rq-row--2 > :nth-child(2) { grid-column: 1; }
+}

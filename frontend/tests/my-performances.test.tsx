@@ -105,11 +105,13 @@ describe("내 공연 목록 (/me/performances)", () => {
 
     const item = await screen.findByRole("article", { name: "가을밤 밴드 공연" });
     const track = within(item).getByRole("list", { name: "섭외 진행" });
-    expect(within(track).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "공연장 확정",
-      "장비 조율 중 · 견적 2건",
-      "엔지니어 대기",
+    // 목업 v4 .rq-steps: 단계 이름(small) + 상태(b)
+    expect(within(track).getAllByRole("listitem").map((li) => [li.querySelector("small")!.textContent, li.querySelector("b")!.textContent])).toEqual([
+      ["공연장", "확정"],
+      ["장비", "조율 중 · 견적 2건"],
+      ["엔지니어", "대기"],
     ]);
+    expect(within(track).getAllByRole("listitem").map((li) => li.className)).toEqual(["is-done", "is-now", ""]);
     expect(within(item).getByText(/장비 업체와 채팅으로 조율하고 있어요/)).toBeInTheDocument();
     expect(within(item).getByRole("link", { name: "공연 보기" })).toHaveAttribute("href", "/performances/5");
   });
@@ -124,6 +126,49 @@ describe("내 공연 목록 (/me/performances)", () => {
 });
 
 describe("내 공연 상세 (/performances/:id)", () => {
+  it("#187 섭외가 끝나면(PAY) 내 공연·공연 상세 모두 [청구서 보기]로 통합 청구서에 간다", async () => {
+    const pay = { stages: SUMMARY.stages.map((st) => ({ ...st, status: st.stageType === "ENGINEER" ? ("SKIPPED" as const) : ("CONFIRMED" as const) })), nextAction: "PAY" as const, nextStageId: null };
+    mockServer({
+      ...ME,
+      "GET /api/v1/performances?mine=true": { status: 200, body: { active: [{ ...SUMMARY, ...pay }], draft: [], past: [] } },
+      "GET /api/v1/performances/5": { status: 200, body: detail(pay) },
+    });
+    const a = renderAt("/me/performances");
+    const item = await screen.findByRole("article", { name: "가을밤 밴드 공연" });
+    expect(within(item).getByRole("link", { name: "청구서 보기" })).toHaveAttribute("href", "/performances/5/order");
+    a.unmount();
+    renderAt("/performances/5");
+    expect(await screen.findByRole("link", { name: "청구서 보기" })).toHaveAttribute("href", "/performances/5/order");
+  });
+
+  it("목업 v4: 진행 중 단계만 처음에 열려 있고, 머리줄을 누르면 접고 펼친다. 확정 단계는 확정한 견적서를, 아래에 요청서 표를 보인다", async () => {
+    const user = userEvent.setup();
+    mockServer({
+      ...ME,
+      "GET /api/v1/performances/5": { status: 200, body: detail({ nextAction: "NEGOTIATE", nextStageId: 2 }) },
+      "GET /api/v1/stages/1/quotes": {
+        status: 200,
+        body: [{ quoteId: 9, supplierId: 30, label: "기본형", status: "CONFIRMED", version: 1, basedOnPerfVersion: 1, totalAmount: 500000, venueId: 3, venueType: "CULTURE_SPACE", venueName: "공간 C", maxCapacity: 120, checkinTime: null, setupAvailableTime: null, checkoutTime: null, includesEquipment: false, includesEngineer: false, isFullSpec: false, offered: false, overall: "PASS", checks: [] }],
+      },
+    });
+    renderAt("/performances/5");
+
+    const toggles = await screen.findAllByRole("button", { name: /^STEP 0/ });
+    expect(toggles.map((b) => b.getAttribute("aria-expanded"))).toEqual(["false", "true", "false"]);
+    expect(screen.getByRole("link", { name: "단계별 비교" })).toHaveAttribute("href", "/performances/5/compare");
+
+    await user.click(toggles[0]);
+    expect(toggles[0]).toHaveAttribute("aria-expanded", "true");
+    expect(await screen.findByText("공간 C")).toBeInTheDocument();
+    expect(screen.getByText("500,000원")).toBeInTheDocument();
+    await user.click(toggles[1]);
+    expect(toggles[1]).toHaveAttribute("aria-expanded", "false");
+
+    const info = screen.getByRole("table");
+    expect(within(info).getByText("밴드 · 보컬 1")).toBeInTheDocument();
+    expect(within(info).getByText(/공연장 \(복합문화공간\) · 장비 \(업체 제안 받기\) · 엔지니어 \(메인 음향\)/)).toBeInTheDocument();
+  });
+
   it("AC-F3-02 [장비 업체 모집 시작]은 Idempotency-Key 와 함께 다음 단계를 연다", async () => {
     const user = userEvent.setup();
     const calls = mockServer({
