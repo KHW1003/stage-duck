@@ -6,7 +6,7 @@
 .cond__foot { display: flex; justify-content: center; gap: 8px; padding: 18px 0 0; }
 .list-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-line); margin-bottom: 24px; }
 .cond__unit { width: 180px; }
-.cond__date { width: 200px; }
+
 .cond__reset { min-width: 120px; }
 .cond__submit { min-width: 200px; }
 .spaces__cta { min-width: 240px; }
@@ -25,7 +25,7 @@
 }
 @media (max-width: 560px) {
   .cat-tiles > * { min-height: 84px; }
-  .cond__unit, .cond__date { width: 100%; }
+  .cond__unit { width: 100%; }
   .cond__foot { flex-direction: column-reverse; }
   .cond__reset, .cond__submit, .spaces__cta { min-width: 0; width: 100%; }
   .list-top .filters { width: 100%; }

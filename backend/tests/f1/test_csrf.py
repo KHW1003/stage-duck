@@ -81,6 +81,7 @@ def test_csrf_exempt_list_is_exactly_the_approved_ones():
     assert EXEMPT_PATHS == {
         "/api/v1/auth/login",
         "/api/v1/auth/signup",
+        "/api/v1/auth/check-available",  # 가입 화면 [중복 확인] — 쿠키 없는 첫 방문
         "/api/v1/auth/signup/supplier",
         "/api/v1/auth/social/complete",
         "/api/v1/auth/password-reset",
