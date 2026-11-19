@@ -494,6 +494,19 @@ export interface Order {
   lines: OrderLine[];
 }
 
+/** GET /performances/{id}/cancel-quote · POST …/cancel (api-contract.md 6.1, #52). 금액은 모두 서버 계산값 */
+export interface CancelQuote {
+  phase: "BEFORE_PAYMENT" | "GRACE_12H" | "D30_PLUS" | "D29_D15" | "D14_D8" | "D7_D2" | "D1" | "D0" | "SUPPLIER_FAULT";
+  ratePercent: number;
+  paid: number;
+  penaltyBase: number;
+  penaltyTotal: number;
+  penaltyBySupplier: { supplierId: number; name: string; amount: number }[];
+  feeRefunded: number;
+  refundTotal: number;
+  cancellationId: number | null;
+}
+
 /** POST /orders/{id}/payments */
 export interface PaymentResult {
   paymentId: number;

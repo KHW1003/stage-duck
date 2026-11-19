@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import not_found
 from app.models.user import User
-from app.payment import service
+from app.payment import cancel, service
 from app.request.router import require_idempotency_key
 
 router = APIRouter(prefix="/performances", tags=["payment"])
@@ -82,6 +82,75 @@ def issue_order(
 def get_order(performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db)) -> OrderOut:
     """AC-F5-03·07: 내 공연의 통합 청구서와 장부 상태. 아직 없으면 404."""
     return _out(db, user, performance_id)
+
+
+# ---- 취소·위약금 (T4-07 #52, AC-F5-08·09·10) ----
+class PenaltyShareOut(BaseModel):
+    model_config = _OUT
+
+    supplier_id: int
+    name: str
+    amount: int
+
+
+class CancelQuoteOut(BaseModel):
+    """api-contract.md 6.1 GET /performances/{id}/cancel-quote. 금액은 모두 서버 계산값."""
+
+    model_config = _OUT
+
+    phase: str
+    rate_percent: int
+    paid: int
+    penalty_base: int
+    penalty_total: int
+    penalty_by_supplier: list[PenaltyShareOut]
+    fee_refunded: int
+    refund_total: int
+    cancellation_id: int | None = None  # 취소했을 때만
+
+
+def _cancel_out(q: cancel.CancelQuote, cancellation_id: int | None = None) -> CancelQuoteOut:
+    a = q.amounts
+    return CancelQuoteOut(
+        phase=a.phase, rate_percent=a.rate_percent, paid=a.paid, penalty_base=a.penalty_base, penalty_total=a.penalty_total,
+        penalty_by_supplier=[PenaltyShareOut(supplier_id=s, name=n, amount=v) for s, n, v in q.by_supplier],
+        fee_refunded=a.fee_refunded, refund_total=a.refund_total, cancellation_id=cancellation_id,
+    )
+
+
+class SupplierCancelIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel, str_strip_whitespace=True)
+
+    reason: str = Field(min_length=1, max_length=500)
+
+
+@router.get("/{performance_id}/cancel-quote", response_model=CancelQuoteOut)
+def get_cancel_quote(
+    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> CancelQuoteOut:
+    """AC-F5-08·09: 지금 취소하면 내는 금액·환불 예정액 미리보기."""
+    return _cancel_out(cancel.cancel_quote(db, user, performance_id, now=now))
+
+
+@router.post("/{performance_id}/cancel", response_model=CancelQuoteOut)
+def cancel_performance(
+    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> CancelQuoteOut:
+    """AC-F5-08·09: 사용자 취소 (테스트 결제 — 실제 환불되지 않습니다)."""
+    c, q = cancel.cancel_by_user(db, user, performance_id, now=now)
+    return _cancel_out(q, c.id)
+
+
+@router.post("/{performance_id}/cancel-by-supplier", response_model=CancelQuoteOut)
+def cancel_by_supplier(
+    performance_id: int, body: SupplierCancelIn, user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db), now: datetime = Depends(get_now),
+) -> CancelQuoteOut:
+    """AC-F5-10: 확정 업체의 사정으로 취소 → 사용자 전액 환불(이용료 포함) + 그 업체 경고 1회."""
+    c, q = cancel.cancel_by_supplier(db, user, performance_id, reason=body.reason, now=now)
+    return _cancel_out(q, c.id)
 
 
 # ---- 테스트 결제 (T4-06 #51, AC-F5-05·06) ----
