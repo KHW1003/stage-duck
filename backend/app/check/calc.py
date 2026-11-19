@@ -221,3 +221,11 @@ def _hhmm(m: int) -> str:
 def has_conflict(results: Sequence[CheckResult]) -> bool:
     """`충돌`이 하나라도 있으면 True — 컨펌할 수 없다 (constitution 5, plan.md 5.4)."""
     return any(r.result == CONFLICT for r in results)
+
+
+_SEVERITY = (PASS, NEEDS_INFO, WARNING, CONFLICT)  # 뒤로 갈수록 나쁘다 (api-contract.md 4.1 overall)
+
+
+def overall(results: Sequence[str]) -> str:
+    """AC-F3-20: 종합 결과 — 충돌이 하나라도 있으면 충돌, 아니면 경고 > 확인 필요 > 통과 중 가장 나쁜 것."""
+    return max(results, key=_SEVERITY.index, default=PASS)
