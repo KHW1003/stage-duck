@@ -328,3 +328,26 @@ def get_posting(db: Session, user: User, stage_id: int) -> dict[str, Any]:
         "show_start": perf.show_start, "show_end": perf.show_end, "audience": perf.audience, "needs": perf.needs,
         "previous_stages": previous,
     } | _user_counts(db, {perf.user_id})[perf.user_id]
+
+
+# ---------------------------------------------------------------------------
+# 묶음 사이 약속 — 3번 → 4번 (비교 화면 #48)
+# ---------------------------------------------------------------------------
+
+
+def stage_quotes_with_checks(db: Session, user: User, stage_id: int) -> list[tuple[Quote, QuoteVersion, list[dict]]]:
+    """[약속 3 → 4] AC-F3-20~24: 단계의 견적서(철회 제외)마다 현재 버전과 자동 검사 결과. 보낸 순서.
+
+    그 공연의 사용자만 본다. 없는 단계·남의 공연은 404. 검사는 견적서 응답과 같은 _checks 를 쓴다.
+    """
+    stage = db.get(Stage, stage_id)  # 읽기 전용 참조 (2번 stages·performances)
+    if stage is None or stage.performance.user_id != user.id:
+        raise not_found()
+    quotes = db.scalars(
+        select(Quote).where(Quote.stage_id == stage_id, Quote.status != "WITHDRAWN").order_by(Quote.id)
+    ).all()
+    result = []
+    for quote in quotes:
+        row = next(v for v in quote.versions if v.version == quote.current_version)
+        result.append((quote, row, _checks(db, quote, row)))
+    return result
