@@ -12,6 +12,9 @@ export interface MenuItem {
   to: string;
   /** React 밖 주소 (서버의 SQLAdmin) — <a href> 로 이동 */
   external?: boolean;
+  /** 채팅: 화면을 옮기지 않고 지금 화면에 ?chat=list 를 붙여 오른쪽 아래 채팅 창을 연다 (목업 v4).
+   *  채팅 창이 없는 메인(HomeLayout)에서는 to(기본 화면 + ?chat=list)로 간다 */
+  chat?: boolean;
 }
 
 export interface AccountLink extends MenuItem {
@@ -26,14 +29,14 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
   ],
   user: [
     { label: "내 공연", to: "/me/performances" },
-    { label: "채팅", to: "/chats" }, // 목업은 오른쪽 아래 채팅 창을 연다 — 채팅 창(3번)이 생기면 바꾼다
+    { label: "채팅", to: "/me/performances?chat=list", chat: true },
     { label: "공간 찾기", to: "/venues" },
     { label: "업체 찾기", to: "/board" },
     { label: "커뮤니티", to: "/community" },
   ],
   partner: [
     { label: "공고 목록", to: "/supplier/postings" },
-    { label: "채팅", to: "/chats" },
+    { label: "채팅", to: "/supplier/postings?chat=list", chat: true },
     { label: "공간 찾기", to: "/venues" },
     { label: "업체 찾기", to: "/board" },
     { label: "커뮤니티", to: "/community" },

@@ -25,13 +25,13 @@ interface Todo {
 
 const TODOS: Todo[] = [
   { icon: "mail", title: "오퍼가 도착했어요", desc: "연말 합동 공연 · 응답 기한 47시간", action: "공고 보기", to: "/supplier/postings", hot: true },
-  { icon: "bubble", title: "가을밤밴드님이 채팅을 시작했어요", desc: "가을밤 밴드 공연 · 장비 · 5분 전", action: "채팅", to: "/chats" },
+  { icon: "bubble", title: "가을밤밴드님이 채팅을 시작했어요", desc: "가을밤 밴드 공연 · 장비 · 5분 전", action: "채팅", to: "/supplier/postings?chat=list" },
   { icon: "pass", title: "재즈 트리오 공연 견적서가 컨펌됐어요", desc: "700,000원 · 결제 완료", action: "담당표", to: "/sheet" },
 ];
 
 const KPI = [
   { label: "보낸 견적서", value: 3, to: "/supplier/postings" },
-  { label: "채팅 중", value: 1, to: "/chats" },
+  { label: "채팅 중", value: 1, to: "/supplier/postings?chat=list" },
   { label: "확인 카드 대기", value: 1, to: "/supplier/postings", tone: "warn" as const },
   { label: "컨펌", value: 1, to: "/supplier/postings", tone: "done" as const },
 ];
