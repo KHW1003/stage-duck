@@ -1,16 +1,16 @@
 /**
- * 내 공연 (/me/performances, #40). 사용자 역할만. 목업 my.html — 공연마다 기본 정보 + 섭외 진행 + 다음 할 일.
+ * 내 공연 (/me/performances, #40). 사용자 역할만. 목업 v4 my.html — 공연마다 사진·제목·D-day·정보 줄 + 섭외 진행 + 할 일.
  * AC-F5-02: "공연장 확정 → 장비 조율 중 (견적 2건) → 엔지니어 대기"처럼 단계와 다음 할 일이 보인다.
+ * 묶음: 진행 중 / 작성 중(보내지 않은 요청서) / 지난 공연.
  */
-import type { PerformanceSummary } from "../shared/api/types";
-import { PageTop } from "../shared/layout/PageTop";
-import { ButtonLink } from "../shared/ui/Button";
+import { Link } from "react-router-dom";
+import type { PerformanceStatus, PerformanceSummary } from "../shared/api/types";
+import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { usePostingLimit, useMyPerformances, type PostingLimit } from "../features/performance/api";
 import { Ico } from "../shared/ui/Ico";
-import { dateLabel, hm, nextActionText } from "../features/performance/labels";
-import { StageTrack } from "../features/performance/StageTrack";
-import styles from "../features/performance/Performance.module.css";
+import { dateLabel, hm, nextActionText, STAGE_NAME } from "../features/performance/labels";
+import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
 import { usePageMeta } from "../features/seo/usePageMeta";
 
 /** "11월 13일 14:00" */
@@ -33,40 +33,171 @@ export function PostingLimitNotice({ limit }: { limit: PostingLimit }) {
   );
 }
 
-function Item({ p }: { p: PerformanceSummary }) {
-  const stage = p.stages.find((s) => s.id === p.nextStageId);
-  const titleId = `perf-${p.id}-title`;
+function Meta({ p, ended = false }: { p: PerformanceSummary; ended?: boolean }) {
   return (
-    <article className={styles.item} aria-labelledby={titleId}>
-      <div className={styles.itemHead}>
-        <div>
-          <h3 id={titleId} className={styles.itemTitle}>
-            {p.title}
+    <div className="page-top__meta">
+      <span>
+        <Ico name="calendar" sm />
+        {dateLabel(p.showDate)}
+        {ended && " · 공연 종료"}
+      </span>
+      {!ended && (
+        <span>
+          공연 {hm(p.showStart)}~{hm(p.showEnd)} · 리허설 {hm(p.rehearsalStart)}
+        </span>
+      )}
+      <span>
+        <Ico name="pin" sm />
+        {p.sido.replace(/(광역시|특별시|특별자치시|도)$/, "")} {p.sigungu}
+      </span>
+      <span>관객 {p.audience}명</span>
+    </div>
+  );
+}
+
+/** 할 일 줄의 버튼 (목업: 채팅에서 확인 · 청구서 보기 · 단계별 비교). 아직 없는 화면(청구서·채팅)은 공연 상세로 */
+function todoAction(p: PerformanceSummary): { label: string; to: string; primary: boolean } | null {
+  const stage = p.stages.find((s) => s.id === p.nextStageId);
+  switch (p.nextAction) {
+    case "OPEN_NEXT":
+      return { label: "다음 단계로", to: `/performances/${p.id}/next`, primary: true };
+    case "NEGOTIATE":
+      return { label: "단계별 비교", to: `/performances/${p.id}/compare`, primary: true };
+    case "WAIT_QUOTES":
+      return stage && (stage.quoteCount ?? 0) > 0 ? { label: "단계별 비교", to: `/performances/${p.id}/compare`, primary: false } : null;
+    case "RECHECK":
+      return { label: "공연 보기", to: `/performances/${p.id}`, primary: true };
+    default:
+      return null;
+  }
+}
+
+function Active({ p }: { p: PerformanceSummary }) {
+  const titleId = `perf-${p.id}-title`;
+  const stage = p.stages.find((s) => s.id === p.nextStageId);
+  const [lead, rest] = splitFirst(nextActionText(p.nextAction, stage));
+  const action = todoAction(p);
+  const quiet = p.nextAction === "WAIT_QUOTES";
+  return (
+    <article className="pf" aria-labelledby={titleId}>
+      <div className="pf__head">
+        <Thumb form={p.form} />
+        <div className="grow">
+          <h3 className="pf__name">
+            <Link id={titleId} to={`/performances/${p.id}`}>
+              {p.title}
+            </Link>{" "}
+            <DDay showDate={p.showDate} />
           </h3>
-          <p className={`${styles.meta} sd-num`}>
-            {dateLabel(p.showDate)} 공연 {hm(p.showStart)}~{hm(p.showEnd)} · 리허설 {hm(p.rehearsalStart)} · {p.sido} {p.sigungu} · 관객 {p.audience}명
-          </p>
+          <Meta p={p} />
         </div>
-        <ButtonLink to={p.status === "DRAFT" ? `/performances/${p.id}/edit` : `/performances/${p.id}`} size="sm">
-          {p.status === "DRAFT" ? "이어서 쓰기" : "공연 보기"}
-        </ButtonLink>
+        <Link className="btn btn--sm" to={`/performances/${p.id}`}>
+          공연 보기
+        </Link>
       </div>
-      <StageTrack stages={p.stages} />
-      <p className={styles.notice}>{nextActionText(p.nextAction, stage)}</p>
+      <div className="pf__body">
+        <RqSteps stages={p.stages} />
+        <div className={quiet ? "todo todo--quiet" : "todo"}>
+          <div className="grow">
+            <b>{lead}</b> {rest}
+          </div>
+          {action && (
+            <Link className={action.primary ? "btn btn--sm btn--primary" : "btn btn--sm"} to={action.to}>
+              {action.label}
+            </Link>
+          )}
+        </div>
+      </div>
     </article>
   );
 }
 
-function Group({ title, desc, items }: { title: string; desc?: string; items: PerformanceSummary[] }) {
+function Draft({ p }: { p: PerformanceSummary }) {
+  const titleId = `perf-${p.id}-title`;
+  return (
+    <article className="pf pf--draft" aria-labelledby={titleId}>
+      <div className="pf__head">
+        <Thumb empty />
+        <div className="grow">
+          <h3 className="pf__name">
+            <span id={titleId}>{p.title}</span> <span className="tag tag--tbd">임시 저장</span>
+          </h3>
+          <div className="page-top__meta">
+            <span>
+              <Ico name="calendar" sm />
+              {dateLabel(p.showDate)}
+            </span>
+            <span>
+              {p.sido.replace(/(광역시|특별시|특별자치시|도)$/, "")} {p.sigungu}
+            </span>
+          </div>
+        </div>
+        <Link className="btn btn--sm btn--primary" to={`/performances/${p.id}/edit`}>
+          이어서 쓰기
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+const PAST_STATUS: Partial<Record<PerformanceStatus, { label: string; pass: boolean }>> = {
+  COMPLETED: { label: "공연 종료", pass: true },
+  CANCELLED: { label: "취소", pass: false },
+  WITHDRAWN: { label: "공고 내림", pass: false },
+};
+
+function Past({ p }: { p: PerformanceSummary }) {
+  const titleId = `perf-${p.id}-title`;
+  const st = PAST_STATUS[p.status];
+  return (
+    <article className="pf pf--past" aria-labelledby={titleId}>
+      <div className="pf__head">
+        <Thumb form={p.form} />
+        <div className="grow">
+          <h3 className="pf__name">
+            <Link id={titleId} to={`/performances/${p.id}`}>
+              {p.title}
+            </Link>{" "}
+            {st && (
+              <span className={st.pass ? "status status--pass" : "status"}>
+                {st.pass && <Ico name="pass" />}
+                {st.label}
+              </span>
+            )}
+          </h3>
+          <Meta p={p} ended />
+          {p.stages.length > 0 && (
+            <ol className="track-line" aria-label="섭외 진행">
+              {p.stages.map((s) => (
+                <li key={s.id} className={s.status === "CONFIRMED" ? "is-done" : s.status === "SKIPPED" ? "is-skip" : undefined}>
+                  {STAGE_NAME[s.stageType]}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+        <Link className="btn btn--sm" to={`/performances/${p.id}`}>
+          공연 보기
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+function Section({ title, desc, items, Row }: { title: string; desc?: string; items: PerformanceSummary[]; Row: (props: { p: PerformanceSummary }) => JSX.Element }) {
   if (items.length === 0) return null;
   return (
-    <section className={styles.group}>
-      <h2 className={styles.groupTitle}>
-        {title} <span className="sd-num">{items.length}</span>
-        {desc && <small>{desc}</small>}
-      </h2>
+    <section className="sec">
+      <div className="sec-head">
+        <div>
+          <h2>
+            {title} <em className="sd-num">{items.length}</em>
+          </h2>
+          {desc && <p>{desc}</p>}
+        </div>
+      </div>
       {items.map((p) => (
-        <Item key={p.id} p={p} />
+        <Row key={p.id} p={p} />
       ))}
     </section>
   );
@@ -80,38 +211,39 @@ export function MyPerformancesPage() {
 
   return (
     <>
-      <PageTop
+      <KitPageTop
         title="내 공연"
+        crumbs={[{ label: "내 공연" }]}
         desc="공연마다 섭외가 어디까지 왔는지와 지금 할 일을 확인하세요."
         actions={
-          <ButtonLink to="/performances/new" variant="primary">
-            요청서 쓰기
-          </ButtonLink>
+          <Link className="btn btn--primary" to="/performances/new">
+            <Ico name="plus" />
+            새 요청서 쓰기
+          </Link>
         }
       />
-      <div className={`sd-container ${styles.wrap}`}>
+      <main className="container main">
         {mine.isPending && <p className="sd-sr-only">불러오는 중이에요</p>}
         <ErrorNotice error={mine.error} />
         {limit.data && <PostingLimitNotice limit={limit.data} />}
         {empty && (
-          <div className={styles.notice} role="status">
+          <div className="empty" role="status">
+            <Ico name="music" />
             <b>아직 준비 중인 공연이 없어요</b>
             <p>요청서를 쓰면 공연장부터 차례로 업체 견적서를 받을 수 있어요.</p>
-            <div className={styles.noticeActions}>
-              <ButtonLink to="/performances/new" variant="primary">
-                요청서 쓰기
-              </ButtonLink>
-            </div>
+            <Link className="btn btn--sm btn--primary" to="/performances/new">
+              요청서 쓰기
+            </Link>
           </div>
         )}
         {mine.data && (
           <>
-            <Group title="진행 중" items={mine.data.active} />
-            <Group title="작성 중" desc="보내지 않은 요청서예요." items={mine.data.draft} />
-            <Group title="지난 공연" items={mine.data.past} />
+            <Section title="진행 중" items={mine.data.active} Row={Active} />
+            <Section title="작성 중" desc="보내지 않은 요청서예요." items={mine.data.draft} Row={Draft} />
+            <Section title="지난 공연" items={mine.data.past} Row={Past} />
           </>
         )}
-      </div>
+      </main>
     </>
   );
 }
