@@ -49,20 +49,23 @@ def test_ac_f1_21_registered_email_gets_link_and_only_hash_is_stored(client, db,
     assert row.used_at is None
 
 
-def test_ac_f1_21_unknown_email_gets_same_response(client, db, clock):
+def test_ac_f1_21_unknown_email_is_told(client, db, clock):
+    """11/19 팀 결정: 가입 화면처럼 가입하지 않은 이메일이라고 알려 준다."""
     res = client.post(REQ, json={"email": "nobody@stageduck.test"})
-    assert res.status_code == 202
-    assert res.json() == {"demoLink": None}
+    assert res.status_code == 404
+    body = res.json()
+    assert body["code"] == "EMAIL_NOT_REGISTERED" and body["message"].startswith("가입하지 않은 이메일이에요")
+    assert body["fieldErrors"] == [{"field": "email", "reason": "가입하지 않은 이메일이에요."}]
     assert db.scalar(select(PasswordResetToken)) is None
 
 
 def test_ac_f1_21_same_email_three_times_per_ten_minutes(client, db, clock):
-    """가입한 이메일이든 아니든 같은 규칙 — 429 로도 가입 여부가 드러나지 않는다."""
+    """가입한 이메일이든 아니든 같은 규칙 (없는 이메일도 3번 묻고 나면 429)."""
     user = make_user(db, password=OLD_PW)
-    for email in (user.email, "nobody@stageduck.test"):
+    for email, ok in ((user.email, 202), ("nobody@stageduck.test", 404)):
         clock["now"] = NOW
         for _ in range(3):
-            assert client.post(REQ, json={"email": email}).status_code == 202
+            assert client.post(REQ, json={"email": email}).status_code == ok
             clock["now"] += timedelta(minutes=1)
         res = client.post(REQ, json={"email": email})
         assert res.status_code == 429
@@ -83,18 +86,19 @@ def test_ac_f1_21_demo_link_only_in_test_env(client, db, clock, monkeypatch):
 
 def test_ac_f1_21_needs_no_csrf_header(client, db, clock):
     """로그인 전 화면이라 csrf 헤더가 없을 수 있다."""
+    user = make_user(db, password=OLD_PW)
     client.cookies.set(CSRF_COOKIE, "x")
-    assert client.post(REQ, json={"email": "a@b.test"}).status_code == 202
+    assert client.post(REQ, json={"email": user.email}).status_code == 202
 
 
 # ---------- AC-F1-23 소셜 전용 계정은 링크를 만들지 않는다 ----------
 
-@pytest.mark.parametrize("kind", ["social", "withdrawn"])
-def test_ac_f1_23_social_only_or_withdrawn_gets_no_link(client, db, clock, kind):
+@pytest.mark.parametrize(("kind", "status", "code"), [("social", 409, "SOCIAL_ACCOUNT"), ("withdrawn", 404, "EMAIL_NOT_REGISTERED")])
+def test_ac_f1_23_social_only_or_withdrawn_gets_no_link(client, db, clock, kind, status, code):
+    """소셜 전용은 "네이버로 로그인", 탈퇴는 가입 안 한 이메일과 같게 알려 준다. 링크는 만들지 않는다."""
     user = make_user(db, password=None) if kind == "social" else make_user(db, password=OLD_PW, status="WITHDRAWN")
     res = client.post(REQ, json={"email": user.email})
-    assert res.status_code == 202
-    assert res.json() == {"demoLink": None}
+    assert res.status_code == status and res.json()["code"] == code
     assert db.scalar(select(PasswordResetToken)) is None
 
 

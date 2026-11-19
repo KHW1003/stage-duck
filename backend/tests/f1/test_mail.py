@@ -88,9 +88,9 @@ def test_port_465_uses_ssl(client, db, clock, smtp, monkeypatch):
     assert len(FakeSMTP.sent) == 1
 
 
-def test_unknown_email_gets_no_mail_and_same_response(client, db, clock, smtp):
+def test_unknown_email_gets_no_mail(client, db, clock, smtp):
     res = client.post(REQ, json={"email": "nobody@stageduck.test"})
-    assert res.status_code == 202 and res.json() == {"demoLink": None}
+    assert res.status_code == 404 and res.json()["code"] == "EMAIL_NOT_REGISTERED"
     assert FakeSMTP.sent == []
 
 

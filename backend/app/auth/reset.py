@@ -1,6 +1,7 @@
 """비밀번호 찾기 (FR-AUTH-09, D-55 · AC-F1-21·22·23). 시간은 인자로 받는다 (CLAUDE.md 6.1).
 
-- 요청: 가입 여부·소셜 계정 여부와 상관없이 같은 응답. 링크는 이메일로 가입한(비밀번호가 있는) 계정만 만든다.
+- 요청: 이메일로 가입한(비밀번호가 있는) 계정만 링크를 만든다. 가입 안 함·탈퇴는 404 EMAIL_NOT_REGISTERED,
+  네이버 전용은 409 SOCIAL_ACCOUNT 로 알려 준다 (11/19 팀 결정 — 가입 화면이 이미 EMAIL_TAKEN 으로 알려 줌).
 - 메일: MAIL_BACKEND=smtp 면 실제로 보낸다 (app/core/mail.py). console 이면 서버 로그에 남기고,
   테스트 환경(APP_ENV=test)이면 화면에 시연용 링크도 돌려준다 (smtp 일 때는 화면에 링크를 주지 않는다).
 - 확인: 30분 안·처음 쓰는 링크만. 바꾸면 그 계정의 다른 링크도 모두 쓴 것으로 하고, 이전 Refresh 를 끊는다.
@@ -50,9 +51,16 @@ def request_reset(db: Session, email: str, *, now: datetime) -> str | None:
     db.add(PasswordResetRequest(email_hash=email_hash, requested_at=now))
 
     user = db.scalar(select(User).where(User.email == email))
-    if user is None or user.password_hash is None or user.status == "WITHDRAWN":
-        db.commit()  # 가입 안 함·소셜 전용·탈퇴: 링크 없이 같은 응답 (AC-F1-23)
-        return None
+    # 11/19 팀 결정: 가입 화면이 이미 "이미 가입된 이메일"을 알려 주므로 여기서도 알려 준다 (AC-F1-21·23 바꿈).
+    # 요청 기록은 먼저 남겨 같은 이메일 10분 3회 제한은 그대로 걸린다.
+    if user is None or user.status == "WITHDRAWN":
+        db.commit()
+        raise AppError(404, "EMAIL_NOT_REGISTERED", "가입하지 않은 이메일이에요. 이메일을 확인하거나 회원가입해 주세요.",
+                       [{"field": "email", "reason": "가입하지 않은 이메일이에요."}])
+    if user.password_hash is None:
+        db.commit()
+        raise AppError(409, "SOCIAL_ACCOUNT", "네이버로 가입한 계정이라 비밀번호가 없어요. 로그인 화면에서 [네이버로 로그인]을 눌러 주세요.",
+                       [{"field": "email", "reason": "네이버로 가입한 계정이에요."}])
 
     token = secrets.token_urlsafe(32)
     db.add(

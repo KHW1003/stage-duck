@@ -165,7 +165,22 @@ describe("비밀번호 찾기 (AC-F1-21·22·23)", () => {
   const RESET = "POST /api/v1/auth/password-reset";
   const CONFIRM = "POST /api/v1/auth/password-reset/confirm";
 
-  it("이메일을 넣으면 가입 여부와 상관없이 같은 '메일 보냄' 화면", async () => {
+  it("가입하지 않은 이메일·네이버 전용 계정은 서버 문구로 알려 주고 같은 화면에 머문다 (11/19 팀 결정)", async () => {
+    mockServer({ [RESET]: { status: 404, body: err("EMAIL_NOT_REGISTERED", "가입하지 않은 이메일이에요. 이메일을 확인하거나 회원가입해 주세요.") } });
+    const a = renderAt("/password/forgot");
+    await userEvent.type(screen.getByLabelText("이메일"), "nobody@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "링크 보내기" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("가입하지 않은 이메일이에요");
+    expect(screen.getByRole("heading", { name: "비밀번호 찾기" })).toBeInTheDocument();
+    a.unmount();
+    mockServer({ [RESET]: { status: 409, body: err("SOCIAL_ACCOUNT", "네이버로 가입한 계정이라 비밀번호가 없어요. 로그인 화면에서 [네이버로 로그인]을 눌러 주세요.") } });
+    renderAt("/password/forgot");
+    await userEvent.type(screen.getByLabelText("이메일"), "naver@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "링크 보내기" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("네이버로 가입한 계정이라");
+  });
+
+  it("가입한 이메일을 넣으면 '메일 보냄' 화면", async () => {
     const calls = mockServer({ [RESET]: { status: 202, body: { demoLink: null } } });
     renderAt("/password/forgot");
     await userEvent.type(screen.getByLabelText("이메일"), "who@stageduck.test");
