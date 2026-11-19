@@ -73,6 +73,11 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     b_email = _approved_supplier(db, "공연장 B 라이브홀", "VENUE")  # 견적을 보내지 않는 업체 — 담당표를 못 봐야 한다
     d_email = _approved_supplier(db, "장비 D 사운드", "EQUIPMENT")
     user, c, b, d = (Actor(e).login() for e in (user_email, c_email, b_email, d_email))
+    # 업체는 거래 약관을 확인해야 견적서를 보낸다 (#206)
+    for s in (c, b, d):
+        version = s.get("/supplier/terms-review")["version"]
+        res = s.c.put("/api/v1/supplier/terms-review", json={"version": version}, headers=s._headers(False))
+        assert res.status_code == 200, res.text
 
     # 공연장 C의 공간 등록 (1번 T1-06) — 계약 예시 없음, 칸 이름은 data-model.md venues
     venue = c.post("/supplier/venues", {

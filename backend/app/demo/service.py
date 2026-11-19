@@ -9,6 +9,8 @@ from app.core.db import Base
 from app.core.errors import not_found
 from app.demo.seed import DEMO_PHONE, HOST, SUPPLIERS, VENUES
 from app.models import Supplier, SupplierCategory, User, Venue, VenueEquipment
+from app.models.terms import SupplierTermsReview
+from app.supplier.terms import TERMS_VERSION
 
 
 def is_seeded(db: Session) -> bool:
@@ -35,6 +37,8 @@ def _seed(db: Session, now: datetime) -> None:
         )
         supplier.categories = [SupplierCategory(category=c) for c in categories]
         db.add(supplier)
+        # 시연 업체는 거래 약관을 이미 확인한 상태로 시작한다 (바로 견적서를 보낼 수 있게)
+        db.add(SupplierTermsReview(user_id=user.id, version=TERMS_VERSION, reviewed_at=now))
         if key in VENUES:
             db.flush()
             spec = dict(VENUES[key])

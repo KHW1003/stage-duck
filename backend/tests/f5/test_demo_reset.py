@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.demo.service import reset_demo, seed_demo
 from app.models import Sanction, Supplier, User
+from app.supplier.terms import review_status
 from tests.conftest import make_supplier, make_user
 
 NOW = datetime(2026, 11, 13, 12, 0)
@@ -56,6 +57,8 @@ def test_ac_f5_14_reset_in_test_env_restores_seed_and_keeps_admin(admin_client, 
     d = db.scalar(select(Supplier).where(Supplier.company_name == "업체 D"))
     assert d.review_status == "APPROVED" and d.setup_minutes == 90
     assert {c.category for c in d.categories} == {"EQUIPMENT", "INSTALL", "ENGINEER"}
+    # 시연 업체는 거래 약관을 확인한 상태로 시작한다 — 초기화 뒤 바로 견적서를 보낼 수 있다
+    assert all(review_status(db, s.user) for s in db.scalars(select(Supplier)))
 
 
 def test_ac_f5_14_demo_tool_needs_admin_login(client, db):
