@@ -1,7 +1,7 @@
 """취소 기록 cancellations (T4-07 #52, FR-PAY-03, AC-F5-08~10, D-57)
 
-Revision ID: 0019
-Revises: 0018
+Revision ID: 0020
+Revises: 0019
 Create Date: 2026-11-19
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from sqlalchemy.dialects import mysql
 
 from app.core.db import BigID, DateTime3
 
-revision = "0019"
-down_revision = "0018"
+revision = "0020"
+down_revision = "0019"
 branch_labels = None
 depends_on = None
 
