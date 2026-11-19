@@ -1,0 +1,80 @@
+/* 고객지원 화면 (목업 v4 notices.html · faq.html · guide.html · terms.html 의 <style> 그대로).
+   이 화면에만 쓰는 클래스라 nt- · faq · guide · tm- 로 시작한다. 반응형은 목업에 없어 760·560px 를 더했다. */
+
+/* 공지사항 */
+.nt-table td.l a { color: var(--sd-ink); }
+.nt-table td.l a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.nt-table tr.is-pin td { background: var(--sd-th); }
+.nt-table th:nth-child(1) { width: 90px; }
+.nt-table th:nth-child(3) { width: 120px; }
+.nt-view h1 { margin-top: 8px; font-size: 24px; letter-spacing: -.6px; line-height: 1.4; }
+.nt-view__meta { margin-top: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
+.nt-view__body { padding: 28px 0 36px; font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; }
+.nt-view__body p + p, .nt-view__body ul, .nt-view__body ul + p { margin-top: 12px; }
+.nt-view__body ul { padding-left: 18px; list-style: disc; }
+.nt-nav { border-top: 1px solid var(--sd-line-strong); }
+.nt-nav a { display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; gap: 12px; padding: 16px 8px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+.nt-nav a span:first-child, .nt-nav small { color: var(--sd-muted); }
+.nt-nav a span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 자주 묻는 질문 */
+.faq__search { display: flex; gap: 8px; margin: 24px 0; }
+.faq__search .input { flex: 1; min-width: 0; }
+.faq h2 { margin: 32px 0 12px; font-size: 16px; color: var(--sd-muted); }
+.faq__more { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 40px; padding: 20px 24px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); font-size: var(--sd-text-desc); }
+
+/* 업체 이용 가이드 */
+.guide__steps { margin-top: 24px; border-top: 1px solid var(--sd-line-strong); }
+.guide__steps li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 24px 0; border-bottom: 1px solid var(--sd-line); }
+.guide__no { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--sd-line-strong); border-radius: 50%; font-size: var(--sd-text-small); font-weight: 700; color: var(--sd-muted); }
+.guide__steps li.is-key .guide__no { border-color: var(--sd-blue); color: var(--sd-blue); }
+.guide__steps b { font-size: 16px; }
+.guide__steps p { margin-top: 6px; font-size: var(--sd-text-desc); line-height: 1.75; color: var(--sd-muted); }
+.guide__steps .btn { margin-top: 2px; }
+
+/* 약관·정책 (스크롤 박스형) */
+.tm { max-width: 640px; margin: 0 auto; }
+.tm-page .page-top__inner { justify-content: center; text-align: center; }
+.tm-center-tabs .tabs { justify-content: center; }
+.tm-page .page-top__crumb { justify-content: center; }
+.tm-head { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 0 12px; text-align: center; }
+.tm-head h2 { font-size: 24px; letter-spacing: -.4px; }
+.tm-meta { margin-top: 6px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.tm-ver select { min-width: 200px; }
+.tm-scroll { height: var(--box-h, 520px); overflow-y: auto; margin-top: 8px; padding: 4px 28px 28px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); }
+.tm-chap { margin-top: 40px; padding-bottom: 10px; border-bottom: 1px solid var(--sd-line); font-size: 15px; color: var(--sd-muted); letter-spacing: -.2px; }
+.tm-scroll .tm-chap:first-child { margin-top: 20px; }
+.tm-art { padding-top: 24px; scroll-margin-top: 24px; }
+.tm-art h3 { font-size: 16px; letter-spacing: -.3px; }
+.tm-p, .tm-ol li, .tm-add p { font-size: var(--sd-text-body); line-height: 1.85; color: var(--sd-ink); }
+.tm-p { margin-top: 8px; }
+.tm-ol { margin-top: 6px; }
+.tm-ol li { display: grid; grid-template-columns: 22px 1fr; margin-top: 4px; }
+.tm-num { color: var(--sd-muted); }
+.tm-table { margin: 12px 0 4px; }
+.tm-add { margin-top: 32px; padding: 16px 0 0; border-top: 1px solid var(--sd-line); }
+.tm-add h3 { font-size: 15px; }
+.tm-add p { margin-top: 6px; }
+.tm-below { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.tm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+@media (max-width: 760px) {
+  .nt-table { min-width: 0; }
+  .nt-table td { padding: 12px 8px; }
+  .tm-scroll { --box-h: 420px; padding: 4px 16px 20px; }
+  .guide__steps li { grid-template-columns: 40px minmax(0, 1fr); }
+  .guide__steps li > .btn { grid-column: 2; justify-self: start; }
+}
+@media (max-width: 560px) {
+  .nt-table th:nth-child(1) { width: 64px; }
+  .nt-table th:nth-child(3) { width: 64px; }
+  .nt-view h1 { font-size: 20px; }
+  .nt-nav a { grid-template-columns: 60px minmax(0, 1fr); }
+  .nt-nav small { display: none; }
+  .faq__more { flex-direction: column; align-items: stretch; text-align: center; padding: 16px; }
+  .tm-head h2 { font-size: 20px; }
+  .tm-center-tabs .container { padding: 0; }
+  .tm-center-tabs .tabs > a { flex: 1; justify-content: center; padding: 0 6px; font-size: 14px; }
+  .tm-below { flex-direction: column; align-items: flex-start; }
+  .tm-ver select { min-width: 0; width: 100%; }
+}

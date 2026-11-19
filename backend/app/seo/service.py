@@ -2,6 +2,7 @@
 
 다른 묶음은 공개 상태 조회 함수만 부른다 (community.get_public_post·public_post_stamps, board.get_post·public_post_stamps).
 """
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ from app.files import service as files
 from app.models.file import StoredFile
 from app.seo import calc
 from app.seo.calc import PageMeta
+from app.support import service as support
 
 FALLBACK_INDEX = (
     '<!doctype html>\n<html lang="ko">\n  <head>\n    <meta charset="UTF-8" />\n'
@@ -49,13 +51,21 @@ def _board_meta(db: Session, post_id: int) -> PageMeta | None:
     return calc.board_meta(post.id, post.category, post.title, post.company_name, post.body, image)
 
 
+def _notice_meta(db: Session, notice_id: int) -> PageMeta | None:
+    notice = support.get_public_notice(db, notice_id, now=datetime.now())
+    return calc.notice_meta(notice.id, notice.title, notice.body) if notice else None
+
+
+_DETAIL_META = {"community": _community_meta, "board": _board_meta, "notices": _notice_meta}
+
+
 def resolve(db: Session, raw_path: str) -> tuple[PageMeta, int]:
     """(head 내용, 상태 코드). 로그인 뒤 화면은 DB 를 읽지 않는다."""
     path = calc.normalize(raw_path)
     found = calc.detail(path)
     if found:
         kind, post_id = found
-        meta = (_community_meta if kind == "community" else _board_meta)(db, post_id)
+        meta = _DETAIL_META[kind](db, post_id)
         return (meta, 200) if meta else (PageMeta(), 404)
     return calc.static_meta(path) or PageMeta(), 200
 
@@ -84,6 +94,7 @@ def sitemap(db: Session) -> str:
     entries = [(p, None) for p in calc.STATIC_PAGES]
     entries += [(f"/community/{i}", t) for i, t in community.public_post_stamps(db)]
     entries += [(f"/board/{i}", t) for i, t in board.public_post_stamps(db)]
+    entries += [(f"/notices/{i}", t) for i, t in support.public_notice_stamps(db, now=datetime.now())]
     return calc.sitemap_xml(get_settings().public_base_url, entries)
 
 

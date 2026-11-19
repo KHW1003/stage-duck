@@ -13,6 +13,10 @@ import { SignupPage } from "./pages/SignupPage";
 import { SpacesPage } from "./pages/SpacesPage";
 import { SpaceDetailPage } from "./pages/SpaceDetailPage";
 import { NextStagePage } from "./pages/NextStagePage";
+import { FaqPage } from "./pages/FaqPage";
+import { NoticeDetailPage, NoticeListPage } from "./pages/NoticePages";
+import { SupplierGuidePage } from "./pages/SupplierGuidePage";
+import { TermsPage } from "./pages/TermsPage";
 import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
@@ -58,6 +62,12 @@ export function AppRoutes() {
         <Route path="/venues/:id" element={<SpaceDetailPage />} />
         <Route path="/board" element={<BoardPage />} />
         <Route path="/board/:id" element={<PostPage />} />
+        <Route path="/notices" element={<NoticeListPage />} />
+        <Route path="/notices/:id" element={<NoticeDetailPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/guide/supplier" element={<SupplierGuidePage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/terms/:type" element={<TermsPage />} />
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
         </Route>

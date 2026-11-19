@@ -325,8 +325,8 @@
 
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/notices` | 🌐 | 공지 목록 `?page=` — 고정 글 먼저 | F5-21 |
-| GET | `/notices/{id}` | 🌐 | 공지 상세 + 이전·다음 글 | |
+| GET | `/notices` | 🌐 | 공지 목록 `?page=` (20개씩) — 고정 글 먼저, 그다음 게시일 최신. 게시일이 미래인 글은 안 보임. `{items:[{id, category, title, isPinned, publishedAt}], page, totalPages, total}` | F5-21 |
+| GET | `/notices/{id}` | 🌐 | 공지 상세 `{…목록 칸, body, prev, next}` — prev = 바로 먼저 올린 글, next = 바로 나중에 올린 글 (`{id, title, publishedAt}` 또는 null). 없거나 게시 전이면 404. 쓰기는 SQLAdmin(공지사항)만 | |
 | POST | `/inquiries` | 로그인 (S\*, 정지 계정 포함) | `{ "category", "performanceId", "title", "body", "fileIds": [41] }` — category: PAYMENT · QUOTE · SUPPLIER · ACCOUNT · ETC. 사진은 먼저 `POST /files` (purpose `INQUIRY`, 최대 3장, uploads.md) | F5-18 |
 | GET | `/me/inquiries` | 로그인 | 내 문의 목록 | |
 | GET | `/inquiries/{id}` | 본인 | 문의 + 답변. 남의 문의는 404 | F5-20 |

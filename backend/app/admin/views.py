@@ -14,6 +14,8 @@ from sqladmin.flash import flash
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
+from wtforms import SelectField
+from wtforms.validators import Optional
 
 from app.admin.auth import current_admin_id
 from app.core.config import get_settings
@@ -23,6 +25,7 @@ from app.community import service as community_service
 from app.demo import service as demo_service
 from app.admin import service as admin_service
 from app.models import FreeComment, FreePost, Performance, PrPost, Report, Sanction, StatusHistory, Supplier, User
+from app.models.support import Notice
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
 
@@ -361,3 +364,32 @@ class DemoToolView(BaseView):
                 flash(request, f"초기화 실패 — {exc.message}", "danger")
             return RedirectResponse(request.url_for("admin:view-demo"), status_code=302)
         return await self.templates.TemplateResponse(request, "demo.html", {})
+
+class NoticeAdmin(ModelView, model=Notice):
+    """공지사항 — 관리자가 쓰고·고치고·지운다 (FR-CS-02, FR-ADMIN-06, AC-F5-21). 2번 묶음.
+
+    상태 전이가 없는 단순 글이라 다른 뷰와 달리 직접 편집한다. [상단 고정]을 켜면 공지사항 목록 맨 위에 보인다.
+    게시일을 비우면 지금 시각, 미래로 두면 그때부터 보인다. 작성자는 로그인한 관리자로 채운다.
+    """
+
+    name = "공지사항"
+    name_plural = "공지사항"
+    icon = "fa-solid fa-bullhorn"
+    can_create = can_edit = can_delete = True
+    column_list = [Notice.id, Notice.category, Notice.title, Notice.is_pinned, Notice.published_at]
+    column_searchable_list = [Notice.title]
+    column_default_sort = [(Notice.is_pinned, True), (Notice.published_at, True)]
+    form_columns = [Notice.category, Notice.title, Notice.body, Notice.is_pinned, Notice.published_at]
+    form_overrides = {"category": SelectField}
+    form_args = {
+        "category": {"choices": [("GUIDE", "안내"), ("MAINTENANCE", "점검"), ("POLICY", "정책")], "label": "분류"},
+        "published_at": {"validators": [Optional()]},
+    }
+    column_labels = {Notice.category: "분류", Notice.title: "제목", Notice.body: "본문 (빈 줄로 문단, - 로 목록)",
+                     Notice.is_pinned: "상단 고정", Notice.published_at: "게시일"}
+
+    async def on_model_change(self, data: dict, model: Notice, is_created: bool, request: Request) -> None:
+        if not data.get("published_at"):
+            data["published_at"] = datetime.now()
+        if is_created:
+            data["created_by"] = current_admin_id(request)
