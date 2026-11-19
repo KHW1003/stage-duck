@@ -152,6 +152,7 @@ export function InvoicePage() {
                   <div className="side-box__sec">
                     <p className="strong">섭외가 확정됐어요</p>
                     <p className="small muted mt-4">업체 연락처가 최종 담당표에 공개됐어요.</p>
+                    <Link className="btn btn--primary btn--block mt-16" to={`/performances/${id}/sheet`}>최종 담당표 보기</Link>
                   </div>
                 ) : (
                   <>

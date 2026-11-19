@@ -494,6 +494,21 @@ export interface Order {
   lines: OrderLine[];
 }
 
+/** GET /performances/{id}/sheet (#53). contacts 는 결제 뒤에만 채워진다 */
+export interface Sheet {
+  performanceId: number;
+  title: string;
+  showDate: string;
+  sido: string;
+  sigungu: string;
+  audience: number;
+  paid: boolean;
+  paidAt: string | null;
+  schedule: { time: string; title: string; who: string }[];
+  lines: { stageType: StageType; status: StageStatus; companyName: string | null; scope: string; amount: number | null }[];
+  contacts: { role: string; name: string; realName: string | null; phone: string; email: string }[];
+}
+
 /** POST /orders/{id}/payments */
 export interface PaymentResult {
   paymentId: number;
