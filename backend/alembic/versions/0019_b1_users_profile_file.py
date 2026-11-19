@@ -1,7 +1,7 @@
 """users.profile_file_id — 개인 프로필 사진 (T1-12 #33, FR-PROFILE-02, data-model.md users, uploads.md 5장)
 
-Revision ID: 0017
-Revises: 0016
+Revision ID: 0019
+Revises: 0018
 Create Date: 2026-11-19
 """
 import sqlalchemy as sa
@@ -9,8 +9,8 @@ from alembic import op
 
 from app.core.db import BigID
 
-revision = "0017"
-down_revision = "0016"
+revision = "0019"
+down_revision = "0018"
 branch_labels = None
 depends_on = None
 
