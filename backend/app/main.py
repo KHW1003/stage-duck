@@ -36,6 +36,9 @@ from app.confirm.router import router as confirm_router
 from app.payment.router import router as order_router
 
 
+from app.core import scheduler  # noqa: E402
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="STAGE DUCK API", version="0.1.0")
     register_error_handlers(app)
@@ -83,6 +86,15 @@ def create_app() -> FastAPI:
     # 화면: 빌드된 JS·CSS, 그리고 나머지 주소는 head 를 채운 index.html (specs/seo.md 1장). 반드시 맨 마지막
     app.mount("/assets", StaticFiles(directory=Path(get_settings().frontend_dist) / "assets", check_dir=False), name="assets")
     app.include_router(seo_router)
+
+    @app.on_event("startup")
+    def _start_scheduler() -> None:  # 결제 마감 리마인드·자동 취소 (D-57), 1분마다
+        scheduler.start()
+
+    @app.on_event("shutdown")
+    def _stop_scheduler() -> None:
+        scheduler.stop()
+
     return app
 
 

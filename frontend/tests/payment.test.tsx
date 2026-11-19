@@ -89,6 +89,16 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     expect(calls.map((c) => `${c.method} ${c.url}`)).toContain("POST /api/v1/performances/5/order");
   });
 
+  it("AC-F5-22 결제 전이면 결제 마감과 자동 취소 안내가 보인다", async () => {
+    const soon = new Date(Date.now() + 26.5 * 3600000);
+    mockServer({ ...BASE, "GET /api/v1/performances/5/order": { status: 200, body: { ...order(), paymentDeadline: soon.toISOString() } } });
+    renderAt("/performances/5/order");
+    const note = await screen.findByRole("note", { name: "결제 마감" });
+    expect(note).toHaveTextContent(`${soon.getMonth() + 1}월 ${soon.getDate()}일`);
+    expect(note).toHaveTextContent("결제를 마쳐 주십시오 · 1일 2시간 남음");
+    expect(note).toHaveTextContent("공연이 자동 취소됩니다");
+  });
+
   it("AC-F5-03 필수 동의 두 개를 해야 [결제하기]가 열린다", async () => {
     mockServer({ ...BASE, "GET /api/v1/performances/5/order": { status: 200, body: order() } });
     renderAt("/performances/5/order");

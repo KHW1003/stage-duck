@@ -307,7 +307,10 @@
 ## 6. F5 부가 기능
 
 ### 6.1 결제·취소
+- 결제 마감 (D-57, #52): `GET /performances/{id}` 와 `GET /performances/{id}/order` 에 `paymentDeadline` (처음 컨펌 뒤 결제 전만, 아니면 null). 마감이 지나면 서버가 1분 안에 자동 취소(취소자 SYSTEM, 0원)하고, 그 뒤 결제는 `409 INVALID_STATE`. 리마인드는 일반 24h·3h 전, 임박 12h·3h 전 `PAYMENT_REMINDER`.
+
 | 메서드 | 경로 | 권한 | 설명 | AC |
+
 |---|---|---|---|---|
 | POST | `/performances/{id}/order` | U | 통합 청구서 발행 — 모든 필요 단계 CONFIRMED/SKIPPED 아니면 `409 INVALID_STATE` | F5-03, F5-04 |
 | GET | `/performances/{id}/order` | U | 청구서 (업체별 금액, 수수료, 합계, 장부 상태) | F5-03, F5-07 |

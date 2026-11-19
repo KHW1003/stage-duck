@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     smtp_starttls: bool = True
     mail_from: str = ""  # 보내는 주소 (SMTP 계정이 보낼 수 있는 주소)
     mail_from_name: str = "STAGE DUCK"
+    scheduler_enabled: bool = True  # 1분마다 결제 마감 처리 (app/core/scheduler.py). 테스트에서는 끈다
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
     # 검색·공유 노출 (specs/seo.md 8장)

@@ -210,6 +210,7 @@ class PerformanceDetailOut(PerformanceSummaryOut):
     needs: dict
     has_contact_phone: bool
     published_at: datetime | None
+    payment_deadline: datetime | None = None  # D-57: 처음 컨펌 뒤 결제 전이면 결제 마감 (4번 payment_deadline)
 
 
 class VersionOut(BaseModel):

@@ -49,6 +49,7 @@ class OrderOut(BaseModel):
     total_amount: int
     issued_at: datetime
     paid_at: datetime | None
+    payment_deadline: datetime | None = None  # D-57 결제 마감 (결제 전만)
     lines: list[OrderLineOut]
 
 
@@ -59,6 +60,7 @@ def _out(db: Session, user: User, performance_id: int) -> OrderOut:
     return OrderOut(
         id=order.id, performance_id=order.performance_id, status=order.status, items_total=order.items_total,
         platform_fee=order.platform_fee, total_amount=order.total_amount, issued_at=order.issued_at, paid_at=order.paid_at,
+        payment_deadline=service.payment_deadline(db, order.performance_id) if order.status == "ISSUED" else None,
         lines=[OrderLineOut(stage_id=line.stage_id, stage_type=stage_types[line.stage_id], supplier_id=line.supplier_id,
                             company_name=names.get(line.supplier_id, ""),
                             quote_version_id=line.quote_version_id, amount=line.amount,
