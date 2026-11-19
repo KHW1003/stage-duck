@@ -23,6 +23,7 @@ import { ComparePage } from "./pages/ComparePage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
+import { MyPage } from "./pages/MyPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { PostPage } from "./pages/PostPage";
 import { PostingPage } from "./pages/PostingPage";
@@ -32,6 +33,7 @@ import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
 import { SupplierSignupPage } from "./pages/SupplierSignupPage";
+import { SupplierProfilePage } from "./pages/SupplierProfilePage";
 import { RequireAuth } from "./shared/auth/RequireAuth";
 import { AppLayout } from "./shared/layout/AppLayout";
 import { NotFound } from "./shared/layout/NotFound";
@@ -65,6 +67,7 @@ export function AppRoutes() {
         <Route path="/venues/:id" element={<SpaceDetailPage />} />
         <Route path="/board" element={<BoardPage />} />
         <Route path="/board/:id" element={<PostPage />} />
+        <Route path="/suppliers/:id" element={<SupplierProfilePage />} />
         <Route path="/notices" element={<NoticeListPage />} />
         <Route path="/notices/:id" element={<NoticeDetailPage />} />
         <Route path="/faq" element={<FaqPage />} />
@@ -91,6 +94,7 @@ export function AppRoutes() {
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />
           <Route path="/me/performances" element={<MyPerformancesPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/performances/:id" element={<PerformancePage />} />
           <Route path="/performances/:id/edit" element={<RequestEditPage />} />
           <Route path="/performances/:id/next" element={<NextStagePage />} />

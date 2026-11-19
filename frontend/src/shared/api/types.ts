@@ -464,3 +464,50 @@ export interface CompareQuote {
   overall: CheckItem["result"];
   checks: CheckItem[];
 }
+
+/* ---- 프로필 (api-contract.md 5장 /suppliers/{id}/profile · /users/{id}/profile · /me/profile, #33) ---- */
+
+/** 업체 프로필의 등록 공간 한 줄 (GET /venues 목록 카드와 같은 칸 중 화면이 쓰는 것) */
+export interface SupplierProfileVenue {
+  id: number;
+  name: string;
+  sido: string;
+  sigungu: string;
+  venueType: string;
+  maxCapacity: number;
+  rentalFee: number;
+}
+
+/** GET /suppliers/{id}/profile (AC-F5-15). 연락처·사업자 정보 없음 (CLAUDE.md 20) */
+export interface SupplierProfile {
+  id: number;
+  companyName: string;
+  imageUrl: string | null;
+  categories: SupplierCategory[];
+  intro: string | null;
+  setupMinutes: number | null;
+  teardownMinutes: number | null;
+  engineerYears: number | null;
+  bandExperience: boolean | null;
+  hasLiabilityInsurance: boolean | null;
+  soundCertification: string | null;
+  joinedAt: string;
+  posts: PrPostItem[];
+  venues: SupplierProfileVenue[];
+}
+
+/** GET /users/{id}/profile · GET /me/profile · PATCH /me/profile 응답 (AC-F5-16). 이름·전화·이메일·생년월일 없음 */
+export interface UserProfile {
+  id: number;
+  nickname: string | null;
+  profileImageUrl: string | null;
+  joinedAt: string;
+  usageCount: number;
+  rejectionCount: number;
+}
+
+/** PATCH /me/profile — 바꾼 칸만 보낸다. 사진은 먼저 POST /files (purpose PROFILE) */
+export interface MyProfileRequest {
+  nickname?: string;
+  profileFileId?: number | null;
+}

@@ -1,0 +1,8 @@
+/* 업체 프로필·마이페이지 (mockup-v4 supplier.html · mypage.html 의 인라인 style 그대로, #33) */
+.summary > .profile-card__who { display: flex; align-items: center; gap: 12px; grid-column: span 2; }
+.summary .profile-card__name { margin: 0; font-size: var(--sd-text-sub); }
+.profile-intro { line-height: 1.8; }
+.form-table__inline .profile-nick { max-width: 280px; }
+.profile-photo { position: relative; cursor: pointer; }
+.profile-photo:focus-within { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+.btn.profile-save { min-width: 240px; }
