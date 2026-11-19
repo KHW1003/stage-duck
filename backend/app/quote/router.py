@@ -36,20 +36,33 @@ def update_quote(
     return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 
+def _quote_out(db: Session, quote) -> QuoteOut:
+    current = next(v for v in quote.versions if v.version == quote.current_version)
+    return QuoteOut(
+        quote_id=quote.id, stage_id=quote.stage_id, supplier_id=quote.supplier_id, label=quote.label,
+        status=quote.status, is_full_spec=quote.is_full_spec, current_version=quote.current_version,
+        current=current, versions=quote.versions, **service.sheet_extra(db, quote),
+    )
+
+
+@router.get("/by-version/{version_id}", response_model=QuoteOut)
+def get_quote_by_version(
+    version_id: int,
+    user: User = Depends(require_role("USER", "SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> QuoteOut:
+    """채팅 견적서 카드의 [내역서 보기] (메시지 refId = quote_version_id). 권한은 GET /quotes/{quoteId} 와 같다."""
+    return _quote_out(db, service.get_quote_by_version(db, user, version_id))
+
+
 @router.get("/{quote_id}", response_model=QuoteOut)
 def get_quote(
     quote_id: int,
     user: User = Depends(require_role("USER", "SUPPLIER")),
     db: Session = Depends(get_db),
 ) -> QuoteOut:
-    """AC-F2-14: 견적서 보기 (현재 버전 + 이력). 다른 업체·다른 사용자는 404."""
-    quote = service.get_quote(db, user, quote_id)
-    current = next(v for v in quote.versions if v.version == quote.current_version)
-    return QuoteOut(
-        quote_id=quote.id, stage_id=quote.stage_id, supplier_id=quote.supplier_id, label=quote.label,
-        status=quote.status, is_full_spec=quote.is_full_spec, current_version=quote.current_version,
-        current=current, versions=quote.versions,
-    )
+    """AC-F2-14: 견적서 보기 (현재 버전 + 이력 + 내역서 머리·자동 검사). 다른 업체·다른 사용자는 404."""
+    return _quote_out(db, service.get_quote(db, user, quote_id))
 
 
 postings_router = APIRouter(prefix="/postings", tags=["quote"])

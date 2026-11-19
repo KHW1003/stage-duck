@@ -364,6 +364,13 @@ export interface QuoteOut {
   currentVersion: number;
   current: QuoteVersionOut;
   versions: QuoteVersionOut[];
+  /** 내역서 화면(문서·인쇄)용 읽기 전용 칸 */
+  stageType: StageType;
+  performanceId: number;
+  performanceTitle: string;
+  showDate: string | null;
+  companyName: string;
+  checks: QuoteCheck[];
 }
 
 /** 201 응답 (PUT 고치기도 같은 모양) */

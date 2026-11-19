@@ -390,7 +390,7 @@ describe("대화방", () => {
     mockServer(AS_USER);
     renderAt("/faq");
     const { panel } = await openRoom("업체 D");
-    expect(await within(panel).findByRole("link", { name: "내역서 보기" })).toHaveAttribute("href", "/performances/5/compare");
+    expect(await within(panel).findByRole("link", { name: "내역서 보기" })).toHaveAttribute("href", "/quotes/by-version/501");
     expect(within(panel).getByRole("img", { name: "업체 D가 보낸 사진" })).toHaveAttribute("src", "/api/v1/files/9/raw");
     expect(within(panel).getByText("사진", { selector: ".msg__b" })).toBeInTheDocument();
   });
