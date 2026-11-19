@@ -67,10 +67,10 @@ def issue_order(db: Session, user: User, performance_id: int, *, now: datetime) 
     if existing is not None:
         return existing, False
     if not perf.stages or any(s.status not in DONE_STAGE_STATUSES for s in perf.stages):
-        raise invalid_state("아직 확정하지 않은 단계가 있어요. 모든 단계를 확정하거나 건너뛴 뒤 청구서를 볼 수 있어요.")
+        raise invalid_state("아직 확정하지 않은 단계가 있습니다. 모든 단계를 확정하거나 건너뛴 후 청구서를 볼 수 있습니다.")
     lines = request_service.confirmed_lines(db, perf.id)
     if not lines:
-        raise invalid_state("확정한 업체가 없어서 청구서를 만들 수 없어요.")
+        raise invalid_state("확정한 업체가 없어 청구서를 만들 수 없습니다.")
     amounts = calc.invoice_amounts([line.amount for line in lines], PLATFORM_FEE_RATE)
     order = Order(
         performance_id=perf.id, status="ISSUED", items_total=amounts.items_total, platform_fee=amounts.platform_fee,
@@ -121,7 +121,7 @@ _ORDER_ALLOWED = {"ISSUED": {"PAID", "CANCELLED"}, "PAID": {"SETTLEMENT_SCHEDULE
 
 def _move_order(db: Session, order: Order, to: str, actor_id: int | None) -> None:
     if to not in _ORDER_ALLOWED.get(order.status, set()):
-        raise invalid_state("지금 청구서 상태에서는 할 수 없는 일이에요.")
+        raise invalid_state("지금 청구서 상태에서는 진행할 수 없습니다.")
     record_transition(db, entity_type="order", entity_id=order.id, from_status=order.status, to_status=to,
                       actor_user_id=actor_id)
     order.status = to
@@ -171,9 +171,9 @@ def pay_order(
             raise not_found()
         return existing, order
     if order.status != "ISSUED":
-        raise invalid_state("이미 결제했거나 취소된 청구서예요. 청구서를 다시 확인해 주세요.")
+        raise invalid_state("이미 결제했거나 취소된 청구서입니다. 청구서를 다시 확인해 주십시오.")
     if amount != order.total_amount:
-        raise AppError(400, "AMOUNT_MISMATCH", "결제 금액이 청구서 금액과 달라요. 화면을 새로 고친 뒤 다시 결제해 주세요.")
+        raise AppError(400, "AMOUNT_MISMATCH", "결제 금액이 청구서 금액과 다릅니다. 화면을 새로 고친 후 다시 결제해 주십시오.")
     payment = Payment(order_id=order.id, idempotency_key=idempotency_key, provider_tx_id=f"mock-{uuid.uuid4().hex}",
                       amount=order.total_amount, status="PENDING")
     db.add(payment)

@@ -85,7 +85,7 @@ describe("최종 담당표 (/performances/:id/sheet)", () => {
     const cancelDialog = within(screen.getByRole("dialog", { name: "업체 취소 및 이용 규칙" }));
     const cancellationArticles = cancelDialog.getAllByRole("article").map((article) => article.id);
     expect(cancelDialog.getByRole("heading", { name: "부칙" })).toBeInTheDocument();
-    expect(cancelDialog.getByText(/다른 업체의 예약은 유지해요/)).toBeInTheDocument();
+    expect(cancelDialog.getByText(/다른 업체의 예약은 유지합니다/)).toBeInTheDocument();
     expect(cancelDialog.queryByRole("heading", { name: "제5조 (정산)" })).not.toBeInTheDocument();
     await userEvent.keyboard("{Escape}");
     expect(cancelTerms).toHaveFocus();
@@ -109,7 +109,7 @@ describe("최종 담당표 (/performances/:id/sheet)", () => {
     mockServer({ ...ME, "/api/v1/performances/5/sheet": { status: 200, body: sheet({ paid: false, paidAt: null, contacts: [] }) } });
     renderAt("/performances/5/sheet");
 
-    expect(await screen.findByText("결제가 끝나면 서로의 연락처가 여기에 보여요.")).toBeInTheDocument();
+    expect(await screen.findByText("결제가 완료되면 서로의 연락처가 여기에 표시됩니다.")).toBeInTheDocument();
     expect(screen.queryByText(/010-/)).not.toBeInTheDocument();
   });
 
