@@ -309,7 +309,53 @@ export interface QuoteCheck {
   message: string;
 }
 
-/** 201 응답 */
+/** PUT /quotes/{quoteId} 본문 (AC-F2-20): label 은 바꿀 수 없어 보내지 않고, version 은 지금 버전 (다르면 409 VERSION_CONFLICT) */
+export type QuoteUpdateIn = Omit<QuoteIn, "label"> & { version: number };
+
+/** 견적서 버전 하나 (backend quote/schemas.py QuoteVersionOut). 연락처는 없다 */
+export interface QuoteVersionOut {
+  version: number;
+  basedOnPerfVersion: number;
+  venueId: number | null;
+  venueSnapshot: Record<string, unknown> | null;
+  checkinTime: string | null;
+  setupAvailableTime: string | null;
+  setupStart: string | null;
+  setupMinutes: number | null;
+  teardownMinutes: number | null;
+  staff: QuoteStaffIn[];
+  items: QuoteItemIn[];
+  includesEquipment: boolean;
+  includesEngineer: boolean;
+  includesInstall: boolean;
+  includesTransport: boolean;
+  amountItems: number;
+  amountTransport: number;
+  amountInstall: number;
+  amountLabor: number;
+  amountEtc: number;
+  discountAmount: number;
+  totalAmount: number;
+  extraCostNote: string | null;
+  validUntil: string | null;
+  techNote: string | null;
+  createdAt: string;
+}
+
+/** GET /quotes/{quoteId}: 견적서 + 현재 버전 + 이력 (AC-F2-20) */
+export interface QuoteOut {
+  quoteId: number;
+  stageId: number;
+  supplierId: number;
+  label: string;
+  status: string;
+  isFullSpec: boolean;
+  currentVersion: number;
+  current: QuoteVersionOut;
+  versions: QuoteVersionOut[];
+}
+
+/** 201 응답 (PUT 고치기도 같은 모양) */
 export interface QuoteSentOut {
   quoteId: number;
   version: number;
@@ -494,6 +540,19 @@ export interface Order {
   lines: OrderLine[];
 }
 
+/** GET /performances/{id}/cancel-quote · POST …/cancel (api-contract.md 6.1, #52). 금액은 모두 서버 계산값 */
+export interface CancelQuote {
+  phase: "BEFORE_PAYMENT" | "GRACE_12H" | "D30_PLUS" | "D29_D15" | "D14_D8" | "D7_D2" | "D1" | "D0" | "SUPPLIER_FAULT";
+  ratePercent: number;
+  paid: number;
+  penaltyBase: number;
+  penaltyTotal: number;
+  penaltyBySupplier: { supplierId: number; name: string; amount: number }[];
+  feeRefunded: number;
+  refundTotal: number;
+  cancellationId: number | null;
+}
+
 /** GET /performances/{id}/sheet (#53). contacts 는 결제 뒤에만 채워진다 */
 export interface Sheet {
   performanceId: number;
@@ -515,4 +574,51 @@ export interface PaymentResult {
   status: "PENDING" | "SUCCEEDED" | "FAILED";
   amount: number;
   orderStatus: OrderStatus;
+}
+
+/* ---- 프로필 (api-contract.md 5장 /suppliers/{id}/profile · /users/{id}/profile · /me/profile, #33) ---- */
+
+/** 업체 프로필의 등록 공간 한 줄 (GET /venues 목록 카드와 같은 칸 중 화면이 쓰는 것) */
+export interface SupplierProfileVenue {
+  id: number;
+  name: string;
+  sido: string;
+  sigungu: string;
+  venueType: string;
+  maxCapacity: number;
+  rentalFee: number;
+}
+
+/** GET /suppliers/{id}/profile (AC-F5-15). 연락처·사업자 정보 없음 (CLAUDE.md 20) */
+export interface SupplierProfile {
+  id: number;
+  companyName: string;
+  imageUrl: string | null;
+  categories: SupplierCategory[];
+  intro: string | null;
+  setupMinutes: number | null;
+  teardownMinutes: number | null;
+  engineerYears: number | null;
+  bandExperience: boolean | null;
+  hasLiabilityInsurance: boolean | null;
+  soundCertification: string | null;
+  joinedAt: string;
+  posts: PrPostItem[];
+  venues: SupplierProfileVenue[];
+}
+
+/** GET /users/{id}/profile · GET /me/profile · PATCH /me/profile 응답 (AC-F5-16). 이름·전화·이메일·생년월일 없음 */
+export interface UserProfile {
+  id: number;
+  nickname: string | null;
+  profileImageUrl: string | null;
+  joinedAt: string;
+  usageCount: number;
+  rejectionCount: number;
+}
+
+/** PATCH /me/profile — 바꾼 칸만 보낸다. 사진은 먼저 POST /files (purpose PROFILE) */
+export interface MyProfileRequest {
+  nickname?: string;
+  profileFileId?: number | null;
 }

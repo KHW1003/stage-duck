@@ -1,4 +1,4 @@
-"""채팅방·메시지·읽음·상단 고정 (T3-02 #42, api-contract.md 채팅). 견적 내역 확인 카드는 #43.
+"""채팅방·메시지·읽음·상단 고정·실시간 이벤트 (T3-02 #42, api-contract.md 채팅·7장). 견적 내역 확인 카드는 #43.
 
 다른 묶음의 테이블은 고치지 않는다. 단계(stages, 2번)는 방이 어느 공연·단계인지 알기 위해,
 사용자(users, 1번)는 닉네임을 보여 주기 위해 **읽기 전용으로** 참조만 한다.
@@ -10,9 +10,11 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.chat.calc import has_contact_pattern
-from app.chat.schemas import MessageIn
+from app.chat import realtime
+from app.chat.calc import ATTACHMENT_MIME, has_contact_pattern
+from app.chat.schemas import MessageIn, MessageOut
 from app.core.errors import AppError, not_found
+from app.files import service as files_service
 from app.models.chat import ChatMessage, ChatRead, ChatRoom
 from app.models.request import Stage
 from app.models.supplier import Supplier
@@ -46,6 +48,25 @@ def _room_for(db: Session, user: User, room_id: int) -> ChatRoom:
     if room is None or not _is_member(db, user, room):
         raise not_found()
     return room
+
+
+def _participant_ids(db: Session, room: ChatRoom) -> list[int]:
+    """그 방의 사용자와 업체 계정 — 실시간 이벤트를 받는 사람 (AC-F3-07: 이 둘 말고는 받지 않는다)."""
+    supplier_user_id = db.scalar(select(Supplier.user_id).where(Supplier.id == room.supplier_id))
+    return [room.user_id, supplier_user_id]
+
+
+def _publish_message(db: Session, room: ChatRoom, message: ChatMessage) -> None:
+    """api-contract.md 7장 message.created. 보낸 사람의 다른 탭도 같은 이벤트를 받는다. 커밋한 뒤에 나간다.
+
+    계약서 payload 는 senderId 라서 REST 응답(senderUserId)과 이름만 바꾼다.
+    """
+    db.flush()
+    payload = MessageOut.model_validate(message).model_dump(mode="json", by_alias=True)
+    payload["senderId"] = payload.pop("senderUserId")
+    realtime.publish_after_commit(
+        db, _participant_ids(db, room), "message.created", {"roomId": room.id, "message": payload}
+    )
 
 
 def _my_read(db: Session, room_id: int, user_id: int, *, lock: bool = False) -> ChatRead:
@@ -176,37 +197,76 @@ def list_messages(db: Session, user: User, room_id: int, *, after: int | None, l
     return {"messages": messages, "partner_last_read_message_id": partner_read}
 
 
-def send_message(db: Session, user: User, room_id: int, body: MessageIn) -> ChatMessage:
+def send_message(db: Session, user: User, room_id: int, body: MessageIn, *, now: datetime) -> ChatMessage:
     """AC-F3-06: 사용자가 [채팅 시작]을 누르기 전에는 업체가 보낼 수 없다 (403 CHAT_NOT_STARTED).
     AC-F3-15: 전화번호·계좌번호 모양이면 막지 않고 contact_warning 만 표시한다.
-    사진·파일(IMAGE·FILE)은 다음 PR (지금은 400).
+    AC-F3-08: 사진·파일은 먼저 올린 내 CHAT 파일(TEMP) 하나를 붙인다 (uploads.md). 남의 것·다른 용도·없는 것·
+    이미 붙은 것은 400. IMAGE 는 jpg·png·webp, FILE 은 pdf (스펙에 나눔이 없어 #42에서 정함).
+    저장(커밋)한 뒤 두 참여자의 /ws 로 message.created 를 보낸다.
     """
     room = _room_for(db, user, room_id)
-    if body.type != "TEXT":
-        raise _bad("type", "사진·파일은 아직 보낼 수 없어요. 글로 보내 주세요.")
-    text = (body.body or "").strip()
-    if not text:
-        raise _bad("body", "보낼 내용을 적어 주세요.")
+    text = (body.body or "").strip() or None
+    if body.type == "TEXT":
+        if body.file_id is not None:
+            raise _bad("fileId", "글 메시지에는 파일을 붙일 수 없어요. 사진·파일로 보내 주세요.")
+        if text is None:
+            raise _bad("body", "보낼 내용을 적어 주세요.")
+    elif body.file_id is None:
+        raise _bad("fileId", "보낼 사진이나 파일을 골라 주세요.")
     if user.role == "SUPPLIER" and room.started_at is None:
         raise AppError(403, "CHAT_NOT_STARTED", "사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")
+
+    file_id = None
+    if body.file_id is not None:
+        (stored,) = files_service.attach_files(db, owner_id=user.id, file_ids=[body.file_id], purpose="CHAT", now=now)
+        if stored.mime_type not in ATTACHMENT_MIME[body.type]:
+            raise _bad("type", "사진은 [사진]으로, PDF는 [파일]로 보내 주세요.")
+        file_id = stored.id
     message = ChatMessage(
-        room_id=room.id, sender_user_id=user.id, type="TEXT", body=text, contact_warning=has_contact_pattern(text)
+        room_id=room.id,
+        sender_user_id=user.id,
+        type=body.type,
+        body=text,
+        file_id=file_id,
+        contact_warning=has_contact_pattern(text or ""),
     )
     db.add(message)
+    _publish_message(db, room, message)
     db.commit()
     return message
 
 
 def mark_read(db: Session, user: User, room_id: int, last_message_id: int) -> None:
-    """AC-F3-08: 여기까지 읽음. 그 방 메시지가 아니면 400, 더 작은 번호가 오면 그대로 둔다."""
-    _room_for(db, user, room_id)
+    """AC-F3-08: 여기까지 읽음. 그 방 메시지가 아니면 400, 더 작은 번호가 오면 그대로 둔다.
+
+    저장한 뒤 두 참여자의 /ws 로 message.read (상대 화면의 읽음 표시, 내 다른 탭의 안 읽은 수).
+    """
+    room = _room_for(db, user, room_id)
     exists = db.scalar(select(ChatMessage.id).where(ChatMessage.id == last_message_id, ChatMessage.room_id == room_id))
     if exists is None:
         raise _bad("lastMessageId", "이 채팅방의 메시지가 아니에요. 채팅방을 새로 열어 주세요.")
     read = _my_read(db, room_id, user.id, lock=True)
     if read.last_read_message_id is None or read.last_read_message_id < last_message_id:
         read.last_read_message_id = last_message_id
+    realtime.publish_after_commit(
+        db,
+        _participant_ids(db, room),
+        "message.read",
+        {"roomId": room.id, "userId": user.id, "lastMessageId": read.last_read_message_id},
+    )
     db.commit()
+
+
+def can_read_chat_file(db: Session, user: User, file_id: int) -> bool:
+    """[3 → 1 파일 모듈] uploads.md CHAT: 메시지로 보낸 채팅 파일은 그 방 참여자가 내려받을 수 있다 (AC-F3-07·08).
+
+    올린 사람·관리자는 파일 모듈이 먼저 허용한다. 아직 메시지에 붙지 않은 파일은 False.
+    """
+    room_id = db.scalar(select(ChatMessage.room_id).where(ChatMessage.file_id == file_id).limit(1))
+    if room_id is None:
+        return False
+    room = db.get(ChatRoom, room_id)
+    return room is not None and _is_member(db, user, room)
 
 
 # ---------------------------------------------------------------------------
@@ -236,9 +296,24 @@ def post_quote_message(db: Session, *, stage_id: int, supplier_id: int, user_id:
             room = _find_room(db, stage_id, supplier_id)
             if room is None:
                 raise
-    db.add(ChatMessage(room_id=room.id, sender_user_id=None, type="QUOTE", ref_id=quote_version_id))
-    db.flush()
+    message = ChatMessage(room_id=room.id, sender_user_id=None, type="QUOTE", ref_id=quote_version_id)
+    db.add(message)
+    _publish_message(db, room, message)  # 부른 쪽이 커밋하면 나간다
     return room.id
+
+
+def notify_quote_updated(db: Session, *, room_id: int, quote_id: int, version: int) -> None:
+    """AC-F2-20, api-contract.md 7장 quote.updated: 견적서 새 버전. 커밋하지 않는다 — 부른 쪽이 커밋하면 나간다.
+
+    changed(바뀐 칸 이름)는 아직 계산하지 않아 빈 목록이다.
+    """
+    room = db.get(ChatRoom, room_id)
+    realtime.publish_after_commit(
+        db,
+        _participant_ids(db, room),
+        "quote.updated",
+        {"roomId": room_id, "quoteId": quote_id, "version": version, "changed": []},
+    )
 
 
 # ---------------------------------------------------------------------------

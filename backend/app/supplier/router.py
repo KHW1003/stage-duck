@@ -50,6 +50,12 @@ def update_application(
     return _out(service.update_application(db, user, body))
 
 
+@router.get("/venues", response_model=list[VenueOut])
+def my_venues(user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db)) -> list[VenueOut]:
+    """AC-F2-18 화면용: 내 공간 목록 (숨긴 공간 포함, 등록 순). 견적서 작성에서 공간을 고를 때 쓴다."""
+    return [VenueOut.model_validate(v) for v in service.my_venues(db, user)]
+
+
 @router.post("/venues", response_model=VenueOut, status_code=status.HTTP_201_CREATED)
 def create_venue(body: VenueIn, user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db)) -> VenueOut:
     """AC-F2-01·02: 승인된 공연장 업체의 공간 등록."""

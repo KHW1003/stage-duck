@@ -1,6 +1,7 @@
 /**
  * 견적서 쓰기 (/supplier/postings/:stageId/quote, #41). 승인된 업체만. 목업 p-quote.html (업체 테마).
  * - AC-F2-15: 보내면 완료 안내 + [채팅방으로]·[다른 견적서 쓰기]·[공고 목록으로]
+ * - AC-F2-20: [견적서 고치기]는 /supplier/quotes/<보낸 quoteId>/edit (새 버전 v2)
  * - AC-F2-16: [다른 견적서 쓰기]는 ?new=<보낸 quoteId> 로 빈 양식을 새로 연다 (label 을 바꿔 하나 더)
  * - 응답 checks[]의 경고·충돌·확인 필요를 완료 화면에 글자와 함께 보여 준다 (StatusBadge)
  * - 409 STAGE_NOT_OPEN: 보낼 수 없는 공고 안내 + [공고 목록으로]
@@ -44,6 +45,7 @@ function Sent({ p, body, result, again }: { p: PostingDetail; body: QuoteIn; res
     actions.push({ label: "채팅방으로", to: `${base}?${qs}`, primary: true });
   }
   actions.push({ label: "다른 견적서 쓰기", to: `${base}?new=${result.quoteId}`, primary: result.chatRoomId === null });
+  actions.push({ label: "견적서 고치기", to: `/supplier/quotes/${result.quoteId}/edit` });
   actions.push({ label: "공고 목록으로", to: LIST_PATH });
 
   const fullSpec = body.includes.equipment && body.includes.engineer;

@@ -10,7 +10,7 @@ from sqlalchemy import CheckConstraint, Computed, ForeignKey, Integer, String, U
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base, BigID, DateTime3
-from app.models.request import UInt
+from app.models.request import UInt, UTinyInt
 from app.models.user import _in
 
 ORDER_STATUSES = ("ISSUED", "PAID", "SETTLEMENT_SCHEDULED", "CANCELLED")
@@ -73,6 +73,31 @@ class Payment(Base):
     amount: Mapped[int] = mapped_column(UInt, nullable=False)  # 서버 계산값
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="PENDING")
     completed_at: Mapped[datetime | None] = mapped_column(DateTime3)
+    created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
+
+
+CANCEL_REQUESTERS = ("USER", "SUPPLIER", "SYSTEM")
+CANCEL_PHASES = ("BEFORE_PAYMENT", "GRACE_12H", "D30_PLUS", "D29_D15", "D14_D8", "D7_D2", "D1", "D0", "SUPPLIER_FAULT")
+
+
+class Cancellation(Base):
+    """취소 한 번 (AC-F5-08~10, D-57). order_id 가 비면 결제 전 취소. 금액은 payment/calc.cancel_amounts 결과."""
+
+    __tablename__ = "cancellations"
+    __table_args__ = (
+        CheckConstraint(_in("requested_by", CANCEL_REQUESTERS), name="ck_cancellations_requested_by"),
+        CheckConstraint(_in("phase", CANCEL_PHASES), name="ck_cancellations_phase"),
+    )
+
+    id: Mapped[int] = mapped_column(BigID, primary_key=True, autoincrement=True)
+    performance_id: Mapped[int] = mapped_column(BigID, ForeignKey("performances.id"), nullable=False)
+    order_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("orders.id"))
+    requested_by: Mapped[str] = mapped_column(String(10), nullable=False)
+    fault_supplier_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("suppliers.id"))
+    phase: Mapped[str] = mapped_column(String(20), nullable=False)
+    rate_percent: Mapped[int] = mapped_column(UTinyInt, nullable=False)
+    penalty_total: Mapped[int] = mapped_column(UInt, nullable=False)
+    refund_total: Mapped[int] = mapped_column(UInt, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
 
 

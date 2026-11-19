@@ -22,19 +22,23 @@ import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
 import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
+import { CancelPage } from "./pages/CancelPage";
 import { SheetPage } from "./pages/SheetPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
+import { MyPage } from "./pages/MyPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { PostPage } from "./pages/PostPage";
 import { PostingPage } from "./pages/PostingPage";
 import { PostingsPage } from "./pages/PostingsPage";
 import { QuotePage } from "./pages/QuotePage";
+import { QuoteEditPage } from "./pages/QuoteEditPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
 import { SupplierSignupPage } from "./pages/SupplierSignupPage";
+import { SupplierProfilePage } from "./pages/SupplierProfilePage";
 import { RequireAuth } from "./shared/auth/RequireAuth";
 import { AppLayout } from "./shared/layout/AppLayout";
 import { NotFound } from "./shared/layout/NotFound";
@@ -68,6 +72,7 @@ export function AppRoutes() {
         <Route path="/venues/:id" element={<SpaceDetailPage />} />
         <Route path="/board" element={<BoardPage />} />
         <Route path="/board/:id" element={<PostPage />} />
+        <Route path="/suppliers/:id" element={<SupplierProfilePage />} />
         <Route path="/notices" element={<NoticeListPage />} />
         <Route path="/notices/:id" element={<NoticeDetailPage />} />
         <Route path="/faq" element={<FaqPage />} />
@@ -89,18 +94,21 @@ export function AppRoutes() {
           <Route path="/supplier/postings" element={<PostingsPage />} />
           <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
           <Route path="/supplier/postings/:stageId/quote" element={<QuotePage />} />
+          <Route path="/supplier/quotes/:quoteId/edit" element={<QuoteEditPage />} />
           <Route path="/supplier/tech" element={<TechCheckIndexPage />} />
           <Route path="/supplier/tech/:performanceId" element={<TechCheckPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />
           <Route path="/me/performances" element={<MyPerformancesPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/performances/:id" element={<PerformancePage />} />
           <Route path="/performances/:id/edit" element={<RequestEditPage />} />
           <Route path="/performances/:id/next" element={<NextStagePage />} />
           <Route path="/performances/:id/compare" element={<ComparePage />} />
           <Route path="/performances/:id/order" element={<InvoicePage />} />
           <Route path="/performances/:id/pay" element={<PaymentPage />} />
+          <Route path="/performances/:id/cancel" element={<CancelPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
