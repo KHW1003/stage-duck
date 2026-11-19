@@ -23,6 +23,18 @@ table { border-collapse: collapse; width: 100%; }
 :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
+/* 스크롤 막대: 얇게, 막대(thumb)만 — 화살표·바탕 길 없음 (11/19 피드백, 채팅 창·목록·표 모두 같게).
+   크롬·사파리·엣지는 ::-webkit-scrollbar, 그것을 모르는 브라우저(파이어폭스)만 scrollbar-width.
+   (크롬은 scrollbar-width 를 쓰면 ::-webkit-scrollbar 를 무시하므로 둘을 나눈다) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--sd-line-strong); }
+::-webkit-scrollbar-thumb:hover { background: var(--sd-muted); }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--sd-line-strong) transparent; }
+}
+
 /* 화면들이 함께 쓰는 아주 작은 도우미 */
 /* 좌우만 정한다. base.css 는 화면 CSS 보다 늦게 불려서, 줄임 표기(padding: 0 …)를 쓰면 화면의 위아래 여백을 0으로 덮는다 */
 .sd-container { max-width: calc(var(--sd-page-width) + var(--sd-page-pad) * 2); margin-inline: auto; padding-inline: var(--sd-page-pad); }
