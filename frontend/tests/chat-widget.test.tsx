@@ -175,6 +175,16 @@ describe("채팅 버튼과 목록", () => {
     expect(document.documentElement).not.toHaveClass("chat-open");
   });
 
+  it("머리 메뉴 [채팅]은 /chats(없는 화면)가 아니라 지금 화면에 ?chat=list 를 붙여 목록 창을 연다 (404 고침)", async () => {
+    mockServer(AS_USER);
+    renderAt("/faq");
+    const menu = (await screen.findAllByRole("link", { name: "채팅" }))[0];
+    expect(menu.getAttribute("href")).toBe("/faq?chat=list");
+    await userEvent.click(menu);
+    expect(await screen.findByRole("dialog", { name: "채팅" })).toBeInTheDocument();
+    expect(screen.queryByText("화면을 찾을 수 없어요")).not.toBeInTheDocument();
+  });
+
   it("승인된 업체에게도 버튼이 있고, 방문자·심사 중 업체에게는 없다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER }, "GET /api/v1/chat-rooms": { status: 200, body: [] } });
     const a = renderAt("/faq");
