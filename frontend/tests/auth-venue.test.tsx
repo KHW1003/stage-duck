@@ -26,7 +26,7 @@ function mockServer(routes: Record<string, Reply>) {
       const method = (init?.method ?? "GET").toUpperCase();
       calls.push({ url, method, body: init?.body ? JSON.parse(String(init.body)) : undefined });
       const r = routes[`${method} ${url}`] ?? { status: 401, body: { code: "UNAUTHENTICATED", message: "", fieldErrors: [] } };
-      return new Response(JSON.stringify(r.body ?? {}), { status: r.status });
+      return new Response(r.status === 204 ? null : JSON.stringify(r.body ?? {}), { status: r.status });
     }),
   );
   return calls;
@@ -160,18 +160,42 @@ describe("사용자 가입 (/signup)", () => {
   });
 });
 
-describe("비밀번호 찾기", () => {
+describe("비밀번호 찾기 (AC-F1-21·22·23)", () => {
+  const RESET = "POST /api/v1/auth/password-reset";
+  const CONFIRM = "POST /api/v1/auth/password-reset/confirm";
+
   it("이메일을 넣으면 가입 여부와 상관없이 같은 '메일 보냄' 화면", async () => {
-    mockServer({});
+    const calls = mockServer({ [RESET]: { status: 202, body: { demoLink: null } } });
     renderAt("/password/forgot");
     await userEvent.type(screen.getByLabelText("이메일"), "who@stageduck.test");
     await userEvent.click(screen.getByRole("button", { name: "링크 보내기" }));
-    expect(screen.getByRole("heading", { name: "메일을 보냈어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "메일을 보냈어요" })).toBeInTheDocument();
     expect(screen.getByText("who@stageduck.test")).toBeInTheDocument();
+    expect(calls.find((c) => c.method === "POST")!.body).toEqual({ email: "who@stageduck.test" });
+    expect(screen.queryByText("시연용 링크")).not.toBeInTheDocument();
   });
 
-  it("토큰 없는 링크는 만료 화면, 새 비밀번호는 규칙과 확인을 본다", async () => {
-    mockServer({});
+  it("시연 서버는 링크를 화면에 보여 주고, 누르면 새 비밀번호 화면", async () => {
+    mockServer({ [RESET]: { status: 202, body: { demoLink: "/password/reset?token=tok1" } } });
+    renderAt("/password/forgot");
+    await userEvent.type(screen.getByLabelText("이메일"), "host@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "링크 보내기" }));
+    await userEvent.click(await screen.findByRole("link", { name: "이 링크로 열기" }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/password/reset?token=tok1");
+    expect(screen.getByRole("heading", { name: "새 비밀번호" })).toBeInTheDocument();
+  });
+
+  it("10분에 3번을 넘기면 서버 문구가 보이고 같은 화면에 머문다", async () => {
+    mockServer({ [RESET]: { status: 429, body: err("PASSWORD_RESET_RATE_LIMITED", "같은 이메일은 10분에 3번까지 요청할 수 있어요.") } });
+    renderAt("/password/forgot");
+    await userEvent.type(screen.getByLabelText("이메일"), "who@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "링크 보내기" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("10분에 3번까지");
+    expect(screen.getByRole("heading", { name: "비밀번호 찾기" })).toBeInTheDocument();
+  });
+
+  it("토큰 없는 링크는 만료 화면, 새 비밀번호는 규칙과 확인을 본 뒤 저장", async () => {
+    const calls = mockServer({ [CONFIRM]: { status: 204 } });
     const a = renderAt("/password/reset");
     expect(screen.getByRole("heading", { name: "링크가 만료됐어요" })).toBeInTheDocument();
     a.unmount();
@@ -179,11 +203,23 @@ describe("비밀번호 찾기", () => {
     await userEvent.type(screen.getByLabelText("새 비밀번호"), "short");
     await userEvent.click(screen.getByRole("button", { name: "비밀번호 바꾸기" }));
     expect(screen.getByLabelText("새 비밀번호")).toHaveAttribute("aria-invalid", "true");
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
     await userEvent.clear(screen.getByLabelText("새 비밀번호"));
     await userEvent.type(screen.getByLabelText("새 비밀번호"), "newpass12");
     await userEvent.type(screen.getByLabelText("새 비밀번호 확인"), "newpass12");
     await userEvent.click(screen.getByRole("button", { name: "비밀번호 바꾸기" }));
-    expect(screen.getByRole("heading", { name: "비밀번호를 바꿨어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "비밀번호를 바꿨어요" })).toBeInTheDocument();
+    expect(calls.find((c) => c.method === "POST")!.body).toEqual({ token: "abc", password: "newpass12" });
+  });
+
+  it("만료·이미 쓴 링크면 서버 응답대로 만료 화면과 [다시 요청]", async () => {
+    mockServer({ [CONFIRM]: { status: 400, body: err("RESET_TOKEN_INVALID", "링크가 만료됐어요.") } });
+    renderAt("/password/reset?token=old");
+    await userEvent.type(screen.getByLabelText("새 비밀번호"), "newpass12");
+    await userEvent.type(screen.getByLabelText("새 비밀번호 확인"), "newpass12");
+    await userEvent.click(screen.getByRole("button", { name: "비밀번호 바꾸기" }));
+    expect(await screen.findByRole("heading", { name: "링크가 만료됐어요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "다시 요청" })).toHaveAttribute("href", "/password/forgot");
   });
 });
 

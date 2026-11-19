@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14  # plan.md 4장 Refresh 14일
     login_max_failures: int = 5  # FR-AUTH-06 연속 실패 횟수
     login_lock_minutes: int = 10  # FR-AUTH-06 잠금 시간
+    mail_backend: str = "console"  # D-55: 메일 서버가 없어 링크를 서버 로그에 남긴다 (실제 발송은 후속)
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
     # 검색·공유 노출 (specs/seo.md 8장)

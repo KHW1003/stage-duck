@@ -54,6 +54,29 @@ class LoginIn(BaseModel):
     password: str = Field(min_length=1, max_length=200)
 
 
+class PasswordResetIn(BaseModel):
+    """AC-F1-21. 이메일 형식이 틀려도 같은 202 — 가입 여부를 알려 주지 않는다."""
+
+    model_config = _IN
+
+    email: str = Field(min_length=1, max_length=255)
+
+
+class PasswordResetOut(BaseModel):
+    """시연용 링크는 테스트 환경에서만 (D-55). 운영·로컬은 null."""
+
+    model_config = _OUT
+
+    demo_link: str | None = None
+
+
+class PasswordResetConfirmIn(BaseModel):
+    model_config = _IN
+
+    token: str = Field(min_length=1, max_length=200)
+    password: str = Field(min_length=1, max_length=200, json_schema_extra={"format": "password"})
+
+
 class AuthOut(BaseModel):
     """가입·로그인 응답. 연락처는 넣지 않는다 (CLAUDE.md 20)."""
 

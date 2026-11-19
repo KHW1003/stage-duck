@@ -83,6 +83,8 @@ def test_csrf_exempt_list_is_exactly_the_approved_ones():
         "/api/v1/auth/signup",
         "/api/v1/auth/signup/supplier",
         "/api/v1/auth/social/complete",
+        "/api/v1/auth/password-reset",
+        "/api/v1/auth/password-reset/confirm",
         "/api/v1/dev/switch-account",
     }
 

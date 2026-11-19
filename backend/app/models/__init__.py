@@ -5,6 +5,7 @@ from app.models.chat import ChatMessage, ChatRead, ChatRoom  # noqa: F401  #42 �
 from app.models.community import FreeBookmark, FreeComment, FreeHelpful, FreePost
 from app.models.file import StoredFile
 from app.models.history import StatusHistory
+from app.models.password_reset import PasswordResetRequest, PasswordResetToken  # noqa: F401  #122 비밀번호 찾기
 from app.models.policy import Report, Sanction
 from app.models.quote import Quote, QuoteVersion
 from app.models.rejection import RejectionEvent  # noqa: F401  #39 반려
@@ -15,4 +16,4 @@ from app.models.terms import TermsAgreement
 from app.models.user import User
 from app.models.venue import Venue, VenueEquipment
 
-__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent"]
+__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent", "PasswordResetToken", "PasswordResetRequest"]
