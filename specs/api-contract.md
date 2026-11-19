@@ -70,7 +70,9 @@
 | GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태 | F1-11 |
 | POST | `/supplier/application` | S\* | 2단계 입점 신청 (사업자 정보, 등록증 파일 id) | F1-17, F1-18 |
 | GET | `/supplier/application` | S\* | 심사 상태·반려 사유 | F1-20 |
-| PUT | `/supplier/application` | S\* | 반려 후 수정·재신청 | F1-20 |
+| PUT | `/supplier/application` | S* | 반려 후 수정·재신청 | F1-20 |
+| GET | `/supplier/terms-review` | S | 업체 약관 확인 상태 `{version, reviewed}` | |
+| PUT | `/supplier/terms-review` | S | 현재 약관 확인 `{version}` → `{version, reviewed}` | |
 | POST | `/dev/switch-account` | **T** | 시연 계정 전환 | F1-16 |
 
 **POST /auth/signup**
@@ -306,6 +308,7 @@
 | GET | `/performances/{id}/cancel-quote` | U | 지금 취소하면 내는 금액·환불 예정액 미리보기 | F5-08, F5-09 |
 | POST | `/performances/{id}/cancel` | U | 사용자 취소 | F5-08, F5-09 |
 | POST | `/performances/{id}/cancel-by-supplier` | S(확정 업체) | 업체 사정 취소 → 전액 환불 + 경고 | F5-10 |
+| GET | `/supplier/reservations` | S | 내 업체가 확정된 공연의 일정·담당 부문·견적 합계·결제/취소 상태 | |
 | GET | `/performances/{id}/sheet` | U, 확정 업체 | 최종 담당표 — **결제 후에만 연락처 포함**, 확정 안 된 업체 404 | F5-11, F5-12 |
 
 **GET /performances/{id}/cancel-quote** (D-1, 업체 금액 185만 원 + 이용료 5% 예)

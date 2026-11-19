@@ -94,7 +94,9 @@ def _user_cancelled(db: Session, performance_id: int) -> bool:
     return db.scalar(stmt.limit(1)) is not None
 
 
-def cancel_by_user(db: Session, user: User, performance_id: int, *, now: datetime) -> tuple[Cancellation, CancelQuote]:
+def cancel_by_user(
+    db: Session, user: User, performance_id: int, *, now: datetime, expected: dict[str, int | str] | None = None,
+) -> tuple[Cancellation, CancelQuote]:
     """AC-F5-08·09: 사용자 취소. 결제 전이면 0원 + (견적서를 받은 공연이면) 반려 기록 (D-53·D-57),
     결제 후면 시점별 위약금을 업체 금액 비율로 나누고 나머지를 환불 예정으로 장부에 남긴다."""
     perf = _owned(db, user, performance_id, lock=True)
@@ -106,6 +108,8 @@ def cancel_by_user(db: Session, user: User, performance_id: int, *, now: datetim
     except ValueError:
         raise invalid_state("공연 날짜가 지나서 취소할 수 없어요.") from None
     q = _quote(db, perf, order, phase)
+    if expected is not None and any(getattr(q.amounts, field) != value for field, value in expected.items()):
+        raise invalid_state("취소 금액이 바뀌었어요. 새 위약금과 환불 예정액을 확인해 주세요.")
     if phase == "BEFORE_PAYMENT":
         rejection.record_rejection(db, perf.id, now=now)
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id)

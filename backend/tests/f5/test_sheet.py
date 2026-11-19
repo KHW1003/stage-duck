@@ -91,3 +91,38 @@ def test_ac_f5_11_schedule_from_confirmed_quote_versions(client, db):
         ("17:00", "리허설 · 사운드체크"), ("19:00", "공연 시작"), ("21:00", "공연 끝 · 철수 시작"),
         ("22:00", "퇴실 마감"), ("22:00", "철수 완료"),
     ]
+
+
+def test_supplier_reservations_only_show_confirmed_work_for_that_supplier(client, db):
+    user, perf_id, (c, d) = _ready(client, db)
+    url = "/api/v1/supplier/reservations"
+    venue = _supplier_client(db, c).get(url).json()
+    equip = _supplier_client(db, d).get(url).json()
+
+    assert user.get(url).status_code == 404
+    assert _as(db, make_supplier(db, review_status="APPROVED").user).get(url).json() == []
+    assert _as(db, make_supplier(db, review_status="PENDING").user).get(url).status_code == 403
+    assert len(venue) == len(equip) == 1
+    assert {k: venue[0][k] for k in ("performanceId", "status", "stageTypes", "amount")} == {
+        "performanceId": perf_id, "status": "AWAITING_PAYMENT", "stageTypes": ["VENUE"], "amount": 500000,
+    }
+    assert equip[0]["stageTypes"] == ["EQUIPMENT"]
+    assert equip[0]["amount"] == 1350000
+    assert set(venue[0]) == {
+        "performanceId", "title", "showDate", "showStart", "showEnd", "sido", "sigungu", "status", "stageTypes", "amount",
+    }
+
+    assert user.post(f"/api/v1/performances/{perf_id}/cancel").status_code == 200
+    assert _supplier_client(db, c).get(url).json()[0]["status"] == "CANCELLED"
+
+
+def test_supplier_reservations_reflect_supplier_cancelled_paid_order(client, db):
+    _, perf_id, (c, d) = _paid(client, db)
+    url = "/api/v1/supplier/reservations"
+    venue = _supplier_client(db, c)
+    equip = _supplier_client(db, d)
+    assert venue.get(url).json()[0]["status"] == "PAID"
+
+    assert venue.post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "공간 누수"}).status_code == 200
+    assert venue.get(url).json()[0]["status"] == "CANCELLED"
+    assert equip.get(url).json()[0]["status"] == "NEEDS_REVIEW"

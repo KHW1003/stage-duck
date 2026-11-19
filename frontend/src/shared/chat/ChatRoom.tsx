@@ -7,6 +7,7 @@
  * AC-F3-08: [사진 보내기](jpg·png·webp → IMAGE)·[파일 보내기](pdf → FILE), 10MB. 사진은 누르면 새 창에서 크게 보기
  * 최종 견적 카드·확정(#43)은 여기서 만들지 않는다.
  */
+import { OUTSIDE_PAYMENT_NOTICE } from "../../features/support/terms";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, Fragment, type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -29,7 +30,7 @@ import { Ico } from "../ui/Ico";
 import type { ChatMsg } from "./normalize";
 import { Avatar, PinMenuItem, dayLabel, msgTime } from "./parts";
 
-const WARN = "플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.";
+const WARN = OUTSIDE_PAYMENT_NOTICE + " 연락처는 결제 후 최종 담당표에서 공개돼요.";
 
 interface Props {
   roomId: number;

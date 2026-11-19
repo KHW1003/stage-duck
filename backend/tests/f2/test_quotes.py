@@ -8,10 +8,12 @@ from sqlalchemy import select
 from app.main import app
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Stage
+from app.models.terms import SupplierTermsReview
 from app.quote import service as quote_service
 from app.request.router import get_today
 from app.supplier import service as supplier_service
 from app.supplier.service import VenueSnapshot
+from app.supplier.terms import TERMS_VERSION
 from tests.conftest import login_as, make_supplier, make_user
 from tests.f2.test_posting import TODAY, _published, _set_stages
 
@@ -427,6 +429,28 @@ def test_quote_counts_groups_by_stage_and_skips_withdrawn(client, db):
 def test_quote_counts_empty_input(db):
     assert quote_service.quote_counts(db, []) == {}
 
+
+def test_supplier_must_review_current_terms_before_sending_quote(client, db):
+    team, _, stage_id = _equipment_open(client, db)
+    supplier = _supplier_d(db, terms_reviewed=False)
+    supplier_client = _as(db, supplier.user)
+    other = _as(db, _supplier_d(db, terms_reviewed=False).user)
+    review_url = "/api/v1/supplier/terms-review"
+    quote_url = f"/api/v1/stages/{stage_id}/quotes"
+
+    assert supplier_client.get(review_url).json() == {"version": TERMS_VERSION, "reviewed": False}
+    assert team.put(review_url, json={"version": TERMS_VERSION}).status_code == 404
+    blocked = supplier_client.post(quote_url, json=_body())
+    assert (blocked.status_code, blocked.json()["code"]) == (409, "SUPPLIER_TERMS_REVIEW_REQUIRED")
+    assert supplier_client.put(review_url, json={"version": "old"}).json()["code"] == "SUPPLIER_TERMS_VERSION_CHANGED"
+    assert supplier_client.get(review_url).json()["reviewed"] is False
+
+    for _ in range(2):
+        assert supplier_client.put(review_url, json={"version": TERMS_VERSION}).json()["reviewed"] is True
+    assert supplier_client.get(review_url).json()["reviewed"] is True
+    assert other.get(review_url).json()["reviewed"] is False
+    assert len(db.scalars(select(SupplierTermsReview)).all()) == 1
+    assert supplier_client.post(quote_url, json=_body()).status_code == 201
 
 # ---- 내역서 화면 (문서·인쇄): 머리 칸·자동 검사·버전 번호로 찾기 -----------------------------------------
 

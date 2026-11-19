@@ -8,6 +8,8 @@ import { Link } from "react-router-dom";
 
 export type TermsType = "service" | "supplier" | "privacy";
 
+export const OUTSIDE_PAYMENT_NOTICE = "플랫폼 밖에서 직접 결제한 거래에는 STAGE DUCK의 결제금 보관 및 환불 절차가 적용되지 않아요.";
+
 export const TERMS_TABS: { type: TermsType; label: string }[] = [
   { type: "service", label: "이용약관" },
   { type: "supplier", label: "업체 이용약관" },
@@ -54,6 +56,64 @@ const PENALTY: [string, string][] = [
   ["공연 당일", "100%"],
 ];
 
+export function CancellationPenaltyTable() {
+  return (
+    <div className="tm-table table-box">
+      <table className="table table--fit" aria-label="취소 시점별 위약금">
+        <thead>
+          <tr>
+            <th>취소 시점</th>
+            <th className="r">위약금 (업체 금액 기준)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PENALTY.map(([when, rate]) => (
+            <tr key={when}>
+              <td>{when}</td>
+              <td className="r">{rate}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export const CANCELLATION_TERMS: Article = {
+  id: "service-7",
+  title: "제7조 (취소와 위약금)",
+  ol: [
+    <>
+      사용자 사정으로 취소하면 업체 금액에 아래 비율을 적용한 위약금을 업체들에게 금액 비율대로 나눠 드려요. 위약금이 붙는 구간에서는 플랫폼 이용료를 돌려 드리지
+      않아요.
+      <CancellationPenaltyTable />
+    </>,
+    "결제 전 취소, 결제 기한 만료, 결제 후 취소가 90일 안에 3번이면 경고 1회가 기록돼요.",
+    "업체 사정으로 취소되면 플랫폼 이용료를 포함한 기존 결제액을 모두 돌려 드려요. 다른 업체의 예약은 유지되고, 취소된 단계만 다시 모집할 수 있어요.",
+  ],
+};
+
+export const PAYMENT_DEADLINE_TERMS: Article = {
+  id: "service-5",
+  title: "제5조 (요청과 결제 기한)",
+  ol: [
+    "공연 요청은 공연 14일 전까지 올릴 수 있어요.",
+    "처음 업체를 컨펌한 때부터 7일 안에(공연까지 13일 이하면 48시간 안에) 남은 업체 선택과 결제를 끝내야 해요. 마감은 공연 5일 전 0시를 넘지 않고, 마감 전에 알림을 보내 드려요.",
+    "마감까지 결제하지 않으면 컨펌한 업체 일정이 풀리고 공연이 취소돼요. 이때 위약금은 없지만, 채팅을 시작한 공연이면 반려 1회로 기록돼요.",
+  ],
+};
+
+export const PAYMENT_HOLD_TERMS: Article = {
+  id: "service-6",
+  title: "제6조 (결제와 보관)",
+  ol: [
+    "통합 청구서 한 장으로 한 번에 결제해요.",
+    "결제금은 공연이 끝날 때까지 STAGE DUCK이 보관하고, 공연이 끝나면 업체별로 정산해요.",
+    "시연 환경의 결제는 테스트 결제라 실제로 청구되지 않아요.",
+    OUTSIDE_PAYMENT_NOTICE,
+  ],
+};
+
 const SERVICE: TermsDoc = {
   title: "STAGE DUCK 이용약관",
   version: "1.0",
@@ -94,54 +154,9 @@ const SERVICE: TermsDoc = {
     {
       title: "제3장 요청·결제·취소",
       articles: [
-        {
-          id: "service-5",
-          title: "제5조 (요청과 결제 기한)",
-          ol: [
-            "공연 요청은 공연 14일 전까지 올릴 수 있어요.",
-            "처음 업체를 컨펌한 때부터 7일 안에(공연까지 13일 이하면 48시간 안에) 남은 업체 선택과 결제를 끝내야 해요. 마감은 공연 5일 전 0시를 넘지 않고, 마감 전에 알림을 보내 드려요.",
-            "마감까지 결제하지 않으면 컨펌한 업체 일정이 풀리고 공연이 취소돼요. 이때 위약금은 없지만, 채팅을 시작한 공연이면 반려 1회로 기록돼요.",
-          ],
-        },
-        {
-          id: "service-6",
-          title: "제6조 (결제와 보관)",
-          ol: [
-            "통합 청구서 한 장으로 한 번에 결제해요.",
-            "결제금은 공연이 끝날 때까지 STAGE DUCK이 보관하고, 공연이 끝나면 업체별로 정산해요.",
-            "시연 환경의 결제는 테스트 결제라 실제로 청구되지 않아요.",
-          ],
-        },
-        {
-          id: "service-7",
-          title: "제7조 (취소와 위약금)",
-          ol: [
-            <>
-              사용자 사정으로 취소하면 업체 금액에 아래 비율을 적용한 위약금을 업체들에게 금액 비율대로 나눠 드려요. 위약금이 붙는 구간에서는 플랫폼 이용료를 돌려 드리지
-              않아요.
-              <div className="tm-table table-box">
-                <table className="table table--fit">
-                  <thead>
-                    <tr>
-                      <th>취소 시점</th>
-                      <th className="r">위약금 (업체 금액 기준)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {PENALTY.map(([when, rate]) => (
-                      <tr key={when}>
-                        <td>{when}</td>
-                        <td className="r">{rate}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>,
-            "결제 전 취소, 결제 기한 만료, 결제 후 취소가 90일 안에 3번이면 경고 1회가 기록돼요.",
-            "업체 사정으로 취소되면 플랫폼 이용료까지 모두 돌려 드리고, 그 단계만 다시 모집할 수 있어요.",
-          ],
-        },
+        PAYMENT_DEADLINE_TERMS,
+        PAYMENT_HOLD_TERMS,
+        CANCELLATION_TERMS,
       ],
     },
     {
@@ -151,8 +166,7 @@ const SERVICE: TermsDoc = {
           id: "service-8",
           title: "제8조 (하면 안 되는 일)",
           ol: [
-            "견적서를 받은 뒤 플랫폼 밖에서 연락해 계좌이체로 거래하는 일",
-            "결제 전에 전화번호·계좌번호·외부 링크를 주고받는 일",
+            "공개 게시물에 전화번호·계좌번호·외부 링크를 올리는 일",
             "견적서·확정한 조건과 다르게 이행하는 일",
             "다른 사람 정보로 가입하거나 거짓 내용을 올리는 일",
           ],
@@ -173,6 +187,26 @@ const SERVICE: TermsDoc = {
       title: "제5장 기타",
       articles: [{ id: "service-11", title: "제11조 (문의)", p: <>궁금한 점이나 다툼은 {inquiry}로 알려 주세요.</> }],
     },
+  ],
+};
+
+export const SUPPLIER_SETTLEMENT_TERMS: Article = {
+  id: "supplier-5",
+  title: "제5조 (정산)",
+  ol: [
+    "결제금은 공연이 끝날 때까지 보관되고, 공연이 끝나면 정산 예정 금액으로 바뀌어요.",
+    OUTSIDE_PAYMENT_NOTICE,
+    "사용자가 공연 29일 전부터 취소하면 위약금을 업체 금액 비율대로 받아요. 결제 전 취소, 결제 기한 만료, 결제 후 12시간 안·공연 30일 전 이전 취소는 위약금이 없어요.",
+  ],
+};
+
+export const SUPPLIER_CANCELLATION_TERMS: Article = {
+  id: "supplier-6",
+  title: "제6조 (업체 사정 취소)",
+  ol: [
+    "업체 사정으로 취소하면 공연팀에 기존 결제액 전액을 환불하고, 취소한 업체에 경고 1회를 기록해요.",
+    "한 업체가 취소해도 다른 업체의 예약은 유지해요. 다른 업체가 약속한 서비스를 제공하면 해당 계약에 따라 정산해요.",
+    "취소로 생긴 추가 비용은 취소 사유와 책임을 확인해 누가 부담할지 정해요.",
   ],
 };
 
@@ -203,15 +237,8 @@ const SUPPLIER: TermsDoc = {
           ol: ["금액은 부가세를 포함한 원 단위로 적고, 최종 합계는 10,000원 이상이어야 해요.", "채팅으로 조율하며 업체할인을 넣을 수 있고, 고치면 새 버전으로 보내져요."],
         },
         { id: "supplier-4", title: "제4조 (확정과 이행)", ol: ["사용자가 확정한 견적서의 내용·시간대로 이행해요.", "확정한 조건은 최종 담당표에 그대로 보관돼요."] },
-        {
-          id: "supplier-5",
-          title: "제5조 (정산)",
-          ol: [
-            "결제금은 공연이 끝날 때까지 보관되고, 공연이 끝나면 정산 예정 금액으로 바뀌어요.",
-            "사용자가 공연 29일 전부터 취소하면 위약금을 업체 금액 비율대로 받아요. 결제 전 취소, 결제 기한 만료, 결제 후 12시간 안·공연 30일 전 이전 취소는 위약금이 없어요.",
-          ],
-        },
-        { id: "supplier-6", title: "제6조 (업체 사정 취소)", p: "업체 사정으로 취소하면 사용자에게 전액 환불되고 그 업체에 경고 1회가 기록돼요." },
+        SUPPLIER_SETTLEMENT_TERMS,
+        SUPPLIER_CANCELLATION_TERMS,
       ],
     },
     {
@@ -286,6 +313,17 @@ const PRIVACY: TermsDoc = {
 };
 
 export const TERMS: Record<TermsType, TermsDoc> = { service: SERVICE, supplier: SUPPLIER, privacy: PRIVACY };
+
+function groupTerms(doc: TermsDoc, cancellationIds: readonly string[]) {
+  const articles = doc.chapters.flatMap((chapter) => chapter.articles);
+  return {
+    transaction: articles.filter((article) => !cancellationIds.includes(article.id)),
+    cancellation: articles.filter((article) => cancellationIds.includes(article.id)),
+  };
+}
+
+export const SERVICE_TERM_GROUPS = groupTerms(SERVICE, ["service-7", "service-11"]);
+export const SUPPLIER_TERM_GROUPS = groupTerms(SUPPLIER, ["supplier-6", "supplier-7", "supplier-8"]);
 
 export function isTermsType(v: string | undefined): v is TermsType {
   return v === "service" || v === "supplier" || v === "privacy";

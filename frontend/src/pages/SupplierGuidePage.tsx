@@ -4,6 +4,7 @@
  */
 import { Link } from "react-router-dom";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { OUTSIDE_PAYMENT_NOTICE } from "../features/support/terms";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { Ico } from "../shared/ui/Ico";
 import "../features/support/support.css";
@@ -44,8 +45,8 @@ const STEPS: Step[] = [
   },
   {
     title: "결제 뒤 공연 준비",
-    desc: "사용자가 모든 단계를 확정하고 결제하면 최종 담당표에서 일정·담당 범위·연락처를 함께 봐요. 기술 확인 메모도 여기서 정리해요.",
-    action: { label: "기술 확인", to: "/supplier/tech" },
+    desc: "사용자가 모든 단계를 확정하고 결제하면 최종 담당표에서 일정·담당 범위·연락처를 함께 봐요. 내 예약에서 공연별 현장 준비 사항도 정리할 수 있어요.",
+    action: { label: "내 예약", to: "/supplier/reservations" },
   },
   { title: "공연 뒤 정산", desc: "공연이 끝나면 보관 중이던 결제금이 정산 예정 금액으로 바뀌어요. 입점비와 수수료는 없어요." },
 ];
@@ -81,7 +82,7 @@ export function SupplierGuidePage() {
           <div className="notice notice--line mt-24">
             <Ico name="info" />
             <div>
-              결제 전에는 전화번호·계좌번호·외부 링크를 주고받을 수 없어요. 플랫폼 밖 거래가 확인되면 경고가 기록되고, 3회면 이용이 정지돼요. 자세한
+              {OUTSIDE_PAYMENT_NOTICE} 자세한
               규칙은{" "}
               <Link className="link link--point" to="/terms/supplier">
                 업체 이용약관

@@ -10,6 +10,16 @@ from app.models.user import _in
 TERMS_TYPES = ("SERVICE", "PRIVACY_REQUIRED", "PRIVACY_OPTIONAL", "MARKETING")
 
 
+class SupplierTermsReview(Base):
+    """거래 전 업체가 확인한 약관 버전과 시각."""
+
+    __tablename__ = "supplier_terms_reviews"
+
+    user_id: Mapped[int] = mapped_column(BigID, ForeignKey("users.id"), primary_key=True)
+    version: Mapped[str] = mapped_column(String(30), primary_key=True)
+    reviewed_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False)
+
+
 class TermsAgreement(Base):
     __tablename__ = "terms_agreements"
     __table_args__ = (CheckConstraint(_in("terms_type", TERMS_TYPES), name="ck_terms_agreements_terms_type"),)

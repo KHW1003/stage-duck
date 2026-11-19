@@ -3,15 +3,18 @@
  * React: SheetPage = PageTop + Timeline + ScopeTable + Contacts. 사용자와 확정 업체가 같은 화면을 본다.
  * 연락처는 서버가 결제 뒤에만 준다 — 결제 전이면 안내만 보여 준다. 목업의 마이페이지 왼쪽 메뉴는 공통 레이아웃(1번) 몫이라 뺐다.
  */
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useSheet } from "../features/payment/api";
 import { STAGE_NAME, dateLabel } from "../features/performance/labels";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { CancellationPenaltyTable } from "../features/support/terms";
+import { useMe } from "../shared/auth/useMe";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { Ico, type KitIconName } from "../shared/ui/Ico";
 import { formatWon } from "../shared/ui/MoneyText";
 import { whenLabel } from "./InvoicePage";
+import { SupplierTermsPanel } from "./SupplierTermsReview";
 
 /** 일정 제목에 맞는 아이콘 (보기용) */
 function scheduleIcon(title: string): KitIconName {
@@ -26,12 +29,19 @@ function scheduleIcon(title: string): KitIconName {
 export function SheetPage() {
   const id = Number(useParams().id);
   const sheet = useSheet(id);
+  const isSupplier = useMe().data?.role === "SUPPLIER";
   usePageMeta("최종 담당표");
   const s = sheet.data;
 
   return (
     <>
-      <KitPageTop title="최종 담당표" crumbs={[{ label: "내 공연", to: "/me/performances" }, { label: "최종 담당표" }]} />
+      <KitPageTop
+        title="최종 담당표"
+        crumbs={[
+          isSupplier ? { label: "내 예약", to: "/supplier/reservations" } : { label: "내 공연", to: "/me/performances" },
+          { label: "최종 담당표" },
+        ]}
+      />
       <main className="container main">
         {sheet.isError ? (
           <ErrorNotice error={sheet.error} />
@@ -48,6 +58,11 @@ export function SheetPage() {
               </div>
               <button className="btn btn--sm" type="button" onClick={() => window.print()}><Ico name="print" sm />인쇄</button>
             </div>
+            {isSupplier && (
+              <SupplierTermsPanel
+                actions={<Link className="btn btn--primary" to={"/supplier/tech/" + id}>현장 준비 확인</Link>}
+              />
+            )}
             <div className="with-aside mt-24">
               <div>
                 <section className="sec">
@@ -83,6 +98,13 @@ export function SheetPage() {
                     </table>
                   </div>
                 </section>
+                {isSupplier && (
+                  <section className="sec">
+                    <div className="sec-head"><h2>공연팀 취소 시 위약금</h2></div>
+                    <CancellationPenaltyTable />
+                    <p className="field__hint mt-8">공연팀 사정으로 취소하면 위약금은 확정 업체의 금액 비율에 따라 나눠 정산해요.</p>
+                  </section>
+                )}
               </div>
               <aside aria-label="연락처">
                 <div className="sec-head"><h2><Ico name="users" />연락처</h2></div>
