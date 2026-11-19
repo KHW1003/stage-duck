@@ -180,6 +180,20 @@ def performance_input(db: Session, performance_id: int) -> PerformanceInput:
     )
 
 
+def performance_paid(db: Session, performance_id: int, *, actor_id: int | None) -> None:
+    """[약속 4 → 2] 테스트 결제가 성공하면 4번 결제(payment.service)가 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
+
+    결제 대기(AWAITING_PAYMENT) → 섭외 확정(CONFIRMED) + 상태 이력. 내 공연의 다음 할 일이 PAY → DONE 이 된다.
+    이미 CONFIRMED 면 아무것도 하지 않는다 (같은 결제 결과가 두 번 와도 한 번만, AC-F5-06). 그 밖의 상태면 409 INVALID_STATE.
+    """
+    perf = db.get(Performance, performance_id, with_for_update=True)
+    if perf is None:
+        raise not_found()
+    if perf.status == "CONFIRMED":
+        return
+    _move_performance(db, perf, "CONFIRMED", actor_id)
+
+
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     """[약속 2·3 → 4] 확정된 단계마다 한 줄. 건너뛴 단계는 넣지 않는다. 순서는 배정 순서(공연장 → 장비 → 엔지니어).
 
@@ -210,6 +224,7 @@ _ALLOWED = {
     ("ASSIGNING", "WITHDRAWN"),
     ("PUBLISHED", "ASSIGNING"),  # 첫 단계 확정 (#38)
     ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
+    ("AWAITING_PAYMENT", "CONFIRMED"),  # 테스트 결제 성공 (4번 #51 → performance_paid)
 }
 _STAGE_ALLOWED = {  # data-model.md 11장 stages.status
     ("WAITING", "OPEN"),

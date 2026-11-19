@@ -126,6 +126,21 @@ describe("내 공연 목록 (/me/performances)", () => {
 });
 
 describe("내 공연 상세 (/performances/:id)", () => {
+  it("#187 섭외가 끝나면(PAY) 내 공연·공연 상세 모두 [청구서 보기]로 통합 청구서에 간다", async () => {
+    const pay = { stages: SUMMARY.stages.map((st) => ({ ...st, status: st.stageType === "ENGINEER" ? ("SKIPPED" as const) : ("CONFIRMED" as const) })), nextAction: "PAY" as const, nextStageId: null };
+    mockServer({
+      ...ME,
+      "GET /api/v1/performances?mine=true": { status: 200, body: { active: [{ ...SUMMARY, ...pay }], draft: [], past: [] } },
+      "GET /api/v1/performances/5": { status: 200, body: detail(pay) },
+    });
+    const a = renderAt("/me/performances");
+    const item = await screen.findByRole("article", { name: "가을밤 밴드 공연" });
+    expect(within(item).getByRole("link", { name: "청구서 보기" })).toHaveAttribute("href", "/performances/5/order");
+    a.unmount();
+    renderAt("/performances/5");
+    expect(await screen.findByRole("link", { name: "청구서 보기" })).toHaveAttribute("href", "/performances/5/order");
+  });
+
   it("목업 v4: 진행 중 단계만 처음에 열려 있고, 머리줄을 누르면 접고 펼친다. 확정 단계는 확정한 견적서를, 아래에 요청서 표를 보인다", async () => {
     const user = userEvent.setup();
     mockServer({
