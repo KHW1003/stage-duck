@@ -6,6 +6,7 @@ import { useId, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import type { KitIconName } from "../../shared/ui/kitIcons";
 import { Ico } from "../../shared/ui/Ico";
+import { DateField, yearsFromNow } from "../../shared/ui/DateField";
 import { FORMS, SIDO } from "./codes";
 import { Err, Hint, Row } from "./FormRow";
 import type { Errors, Step1Form as Form } from "./validate";
@@ -123,7 +124,16 @@ export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint 
         </div>
         <div className="form-table">
           <Row label="공연 날짜" required htmlFor={f("showDate")}>
-            <input className="input" type="date" min={minDate} style={{ maxWidth: 220 }} {...text("showDate")} />
+            <DateField
+              id={f("showDate")}
+              value={value.showDate}
+              onChange={(v) => onChange({ ...value, showDate: v })}
+              min={minDate}
+              max={yearsFromNow(2)}
+              aria-label="공연 날짜"
+              aria-invalid={!!errors.showDate}
+              aria-describedby={errors.showDate ? f("showDate-err") : undefined}
+            />
             <Err id={f("showDate-err")} msg={errors.showDate} />
           </Row>
           <Row label="시간" required>

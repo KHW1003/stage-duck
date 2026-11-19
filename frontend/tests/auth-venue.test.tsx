@@ -8,6 +8,7 @@ import { DEFAULT_COND, condFromQuery, filterVenues, toQuery } from "../src/featu
 import { REGIONS } from "../src/features/venue/view";
 import { ageOn, localErrors } from "../src/pages/SignupPage";
 import type { Me } from "../src/shared/api/types";
+import { pickDate } from "./pickDate";
 
 /** 로그인·가입·비밀번호 찾기·공간 찾기·공간 상세 (목업 v4 login·signup·password·spaces·space) */
 
@@ -128,7 +129,7 @@ describe("사용자 가입 (/signup)", () => {
     await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
     await userEvent.type(screen.getByLabelText("비밀번호 확인"), "password1");
     await userEvent.type(screen.getByLabelText("전화번호"), "010-0000-0001");
-    await userEvent.type(screen.getByLabelText("생년월일"), "1995-03-02");
+    pickDate(screen.getByLabelText(/^생년월일/), "1995-03-02");
     await userEvent.click(screen.getByRole("button", { name: "가입하기" }));
     expect(screen.getByText("필수 약관에 동의해 주세요.")).toBeInTheDocument();
     expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
@@ -144,9 +145,10 @@ describe("사용자 가입 (/signup)", () => {
   it("서버가 돌려준 칸 오류(닉네임 중복)는 그 칸 아래에 보인다", async () => {
     mockServer({ "POST /api/v1/auth/signup": { status: 409, body: err("NICKNAME_TAKEN", "이미 쓰는 닉네임이에요.", [{ field: "nickname", reason: "이미 쓰는 닉네임이에요." }]) } });
     renderAt("/signup");
-    for (const [label, v] of [["이름", "김공연"], ["닉네임", "가을밤밴드"], ["이메일", "h@stageduck.test"], ["비밀번호", "password1"], ["비밀번호 확인", "password1"], ["전화번호", "01000000001"], ["생년월일", "1995-03-02"]]) {
+    for (const [label, v] of [["이름", "김공연"], ["닉네임", "가을밤밴드"], ["이메일", "h@stageduck.test"], ["비밀번호", "password1"], ["비밀번호 확인", "password1"], ["전화번호", "01000000001"]]) {
       await userEvent.type(screen.getByLabelText(label), v);
     }
+    pickDate(screen.getByLabelText(/^생년월일/), "1995-03-02");
     await userEvent.click(screen.getByLabelText("전체 동의"));
     await userEvent.click(screen.getByRole("button", { name: "가입하기" }));
     expect(await screen.findByText("이미 쓰는 닉네임이에요.")).toBeInTheDocument();

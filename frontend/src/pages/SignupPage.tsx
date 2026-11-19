@@ -12,6 +12,7 @@ import { useSignup, type SignupRequest } from "../features/auth/api";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import { KitPageTop } from "../shared/layout/KitPageTop";
+import { DateField, yearsFromNow } from "../shared/ui/DateField";
 import { DoneView } from "../shared/ui/DoneView";
 import { Ico } from "../shared/ui/Ico";
 import "./signup.css";
@@ -238,7 +239,16 @@ export function SignupPage() {
                 <input className="input" inputMode="tel" value={form.phone} onChange={set("phone")} placeholder="010-0000-0000" aria-label="전화번호" aria-invalid={!!err("phone")} autoComplete="tel" />
               </Row>
               <Row label="생년월일" error={err("birthDate")}>
-                <input className="input signup__date" type="date" value={form.birthDate} onChange={set("birthDate")} aria-label="생년월일" aria-invalid={!!err("birthDate")} />
+                <DateField
+                  value={form.birthDate}
+                  onChange={(v) => setForm((f) => ({ ...f, birthDate: v }))}
+                  min={yearsFromNow(-100)}
+                  max={yearsFromNow(0)}
+                  initialMonth={yearsFromNow(-25)}
+                  placeholder="생년월일을 골라 주세요"
+                  aria-label="생년월일"
+                  aria-invalid={!!err("birthDate")}
+                />
               </Row>
               <Row label="가입 목적" req={false}>
                 <select className="select signup__short" value={form.purpose} onChange={set("purpose")} aria-label="가입 목적">
