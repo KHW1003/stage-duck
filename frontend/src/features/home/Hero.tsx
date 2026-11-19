@@ -25,12 +25,14 @@ const STATS = [
 
 export function Hero({ userName, perf }: Props) {
   const user = !!userName;
+  /** 처음 가입했거나 진행 중인 요청서가 없는 사용자: "이어서"·"받은 견적" 대신 시작 안내 (11/19 피드백) */
+  const fresh = user && perf === null;
   return (
     <section className={s.hero}>
       <div className={cx(s.wrap, s.heroGrid)}>
         <div className={s.heroCopy}>
           {user ? (
-            <p className={s.eyebrow}>{userName}님, 다시 오셨네요</p>
+            <p className={s.eyebrow}>{fresh ? `${userName}님, 반가워요` : `${userName}님, 다시 오셨네요`}</p>
           ) : (
             <p className={s.eyebrow}>
               작은 공연의 시작, <b>STAGE DUCK</b>
@@ -40,7 +42,7 @@ export function Hero({ userName, perf }: Props) {
             <h1>
               공연 준비,
               <br />
-              이어서 할까요?
+              {fresh ? "시작해 볼까요?" : "이어서 할까요?"}
             </h1>
           ) : (
             <h1>
@@ -55,7 +57,11 @@ export function Hero({ userName, perf }: Props) {
             공간에 맞는 제안을 받고, 비용과 일정을 함께 비교하세요.
           </p>
           <div className={s.heroActions}>
-            {user ? (
+            {fresh ? (
+              <Link className={cx(s.btn, s.btnPrimary)} to="/performances/new">
+                새 공연 요청서 쓰기
+              </Link>
+            ) : user ? (
               <Link className={cx(s.btn, s.btnPrimary)} to={perf ? `/performances/${perf.id}` : "/me/performances"}>
                 받은 견적 비교하기
               </Link>
@@ -68,8 +74,8 @@ export function Hero({ userName, perf }: Props) {
               공간 먼저 둘러보기
             </Link>
           </div>
-          <Link className={s.heroSub} to="/performances/new">
-            {user ? "새 공연 요청서 쓰기" : "이미 공간이 있어요"} <span aria-hidden="true">→</span>
+          <Link className={s.heroSub} to={fresh ? "/board" : "/performances/new"}>
+            {fresh ? "업체 먼저 둘러보기" : user ? "새 공연 요청서 쓰기" : "이미 공간이 있어요"} <span aria-hidden="true">→</span>
           </Link>
           <dl className={s.heroStats}>
             {STATS.map((st) => (

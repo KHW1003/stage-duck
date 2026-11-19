@@ -45,18 +45,40 @@ function rowText(stage: StageSummary, prev?: StageSummary): string {
 
 const ROW_CLASS: Record<RowState, string> = { done: s.isDone, current: s.isCurrent, wait: s.isWait };
 
+/** 공연이 없을 때 보여 주는 진행 순서 미리보기 (11/19 피드백: 빈 칸이 휑해 보임) */
+const PREVIEW: { title: string; desc: string; icon: "house" | "megaphone" | "bubble" | "card" }[] = [
+  { title: "공연장", desc: "공간 조건과 대관료를 비교해요", icon: "house" },
+  { title: "장비", desc: "음향·조명 견적서를 받아요", icon: "megaphone" },
+  { title: "엔지니어", desc: "리허설부터 공연까지 함께해요", icon: "bubble" },
+  { title: "통합 결제", desc: "한 번에 결제하고 공연 뒤 정산돼요", icon: "card" },
+];
+
 export function NowPanel({ perf }: { perf: PerformanceSummary | null }) {
   if (!perf) {
     return (
-      <div className={s.now}>
+      <div className={cx(s.now, s.nowEmpty)}>
         <div className={s.nowHead}>
           <div>
             <p className={s.nowLabel}>내가 준비하는 공연</p>
             <h2>아직 준비 중인 공연이 없어요</h2>
-            <p className={s.nowMeta}>요청서를 쓰면 공연장, 장비, 엔지니어 업체의 견적서를 차례로 받아요.</p>
+            <p className={s.nowMeta}>요청서 한 장이면 아래 순서대로 견적서가 도착합니다.</p>
           </div>
         </div>
-        <Link className={s.nowMore} to="/performances/new">
+        <ol className={cx(s.nowSteps, s.nowPreview)} aria-label="요청서를 쓰면 진행되는 순서">
+          {PREVIEW.map((p, i) => (
+            <li key={p.title} className={s.stepRow}>
+              <span className={s.stepRowNo}>{i + 1}</span>
+              <div>
+                <b>{p.title}</b>
+                <small>{p.desc}</small>
+              </div>
+              <span className={s.nowPreviewIcon} aria-hidden="true">
+                <HomeIcon name={p.icon} />
+              </span>
+            </li>
+          ))}
+        </ol>
+        <Link className={cx(s.btn, s.btnPrimary, s.nowCta)} to="/performances/new">
           새 공연 요청서 쓰기 <span aria-hidden="true">→</span>
         </Link>
       </div>
