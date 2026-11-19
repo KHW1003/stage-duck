@@ -101,3 +101,24 @@ export function isToday(iso: string, now = new Date()): boolean {
   const d = new Date(iso);
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
+
+/** 알림 받는 방법 (notifications.md 10장): 중요 알림을 메일로도 받을지 */
+export interface NotificationSettings {
+  emailEnabled: boolean;
+  email: string;
+}
+const SETTINGS_KEY = ["notification-settings"] as const;
+
+export function useNotificationSettings() {
+  return useQuery({ queryKey: SETTINGS_KEY, queryFn: () => api<NotificationSettings>("/me/notifications/settings") });
+}
+
+export function useSetMailNotification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (emailEnabled: boolean) =>
+      api<NotificationSettings>("/me/notifications/settings", { method: "PUT", body: JSON.stringify({ emailEnabled }) }),
+    meta: { errorToast: true },
+    onSuccess: (data) => qc.setQueryData(SETTINGS_KEY, data),
+  });
+}

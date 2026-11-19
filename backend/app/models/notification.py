@@ -5,7 +5,7 @@
 """
 from datetime import datetime
 
-from sqlalchemy import JSON, ForeignKey, Index, String, func
+from sqlalchemy import JSON, Boolean, ForeignKey, Index, String, func, true
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base, BigID, DateTime3
@@ -30,3 +30,13 @@ class Notification(Base):
     payload: Mapped[dict | None] = mapped_column(JSON)
     read_at: Mapped[datetime | None] = mapped_column(DateTime3)
     created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
+
+
+class NotificationSetting(Base):
+    """알림 받는 방법 (메일 알림 켜기·끄기). 줄이 없으면 기본값(메일 켬)."""
+
+    __tablename__ = "notification_settings"
+
+    user_id: Mapped[int] = mapped_column(BigID, ForeignKey("users.id"), primary_key=True)
+    email_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default=true())
+    updated_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now(), onupdate=func.now())

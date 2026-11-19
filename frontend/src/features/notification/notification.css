@@ -22,3 +22,20 @@
 .noti-bell { position: relative; display: inline-flex; }
 .noti-readall { margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--sd-muted); cursor: pointer; }
 .noti-readall:hover { color: var(--sd-ink); }
+
+/* 메일로도 받기 (notifications.md 10장) */
+.noti-mail { display: flex; align-items: center; gap: 14px; margin-top: 32px; padding: 18px 20px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-band); }
+.noti-mail > .icon { flex: none; width: 24px; height: 24px; color: var(--sd-muted); }
+.noti-mail__text { flex: 1; min-width: 0; }
+.noti-mail__text p { margin: 4px 0 0; color: var(--sd-muted); font-size: var(--sd-text-desc); overflow-wrap: anywhere; }
+.noti-mail__switch { display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: var(--sd-touch); font-size: var(--sd-text-desc); font-weight: 700; cursor: pointer; }
+.noti-mail__switch input { appearance: none; position: relative; width: 44px; height: 26px; margin: 0; border-radius: 999px; background: var(--sd-line-strong); cursor: pointer; transition: background .15s; }
+.noti-mail__switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--sd-bg); transition: transform .15s; }
+.noti-mail__switch input:checked { background: var(--sd-ink); }
+.noti-mail__switch input:checked::after { transform: translateX(18px); }
+.noti-mail__switch input:focus-visible { outline: 3px solid var(--sd-focus-ring); outline-offset: 2px; }
+.noti-mail__switch input:disabled { opacity: .6; }
+@media (max-width: 560px) {
+  .noti-mail { flex-wrap: wrap; }
+  .noti-mail > .icon { display: none; }
+}
