@@ -8,7 +8,7 @@
  * - 수정 모드(edit, /performances/:id/edit, #40): 현재 값을 채우고 PUT 으로 새 버전. 게시 뒤에는 필요해요/이미 있어요를 잠그고
  *   [수정 저장]만, 작성 중이면 저장 후 게시. 전화번호는 다시 적을 때만 보낸다 (응답에 번호가 없어서, CLAUDE.md 20)
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../shared/api/client";
 import type { PerformanceDetail, PerformanceForm, PerformanceNeeds, PerformancePublished, PerformanceRequest, StageType } from "../shared/api/types";
@@ -95,6 +95,10 @@ export function RequestPage({ edit }: { edit?: PerformanceDetail }) {
   const [confirming, setConfirming] = useState(false);
   const [createdId, setCreatedId] = useState<number | null>(edit?.id ?? null);
   const [published, setPublished] = useState<PerformancePublished | null>(null);
+  // STEP 이 바뀌거나 게시가 끝나면 맨 위부터 보이게 (다음 단계 버튼은 화면 아래에 있다)
+  useEffect(() => {
+    document.scrollingElement?.scrollTo?.({ top: 0 });
+  }, [step, published]);
   const create = useCreatePerformance();
   const publish = usePublishPerformance();
   const update = useUpdatePerformance();
