@@ -87,6 +87,43 @@ a { text-underline-offset: 2px; }
   --tblr-btn-hover-color: var(--sd-text);
   --tblr-btn-hover-border-color: var(--sd-line);
 }
+
+/* 행 작업: 표 안에 맞는 작은 무채색 버튼. 사유·답변을 적는 주 동작만 주황 테두리 (btn-outline-primary 느낌) */
+.sd-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  margin: 2px 6px 2px 0;
+  border: 1px solid var(--sd-line);
+  border-radius: var(--sd-radius);
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+.sd-row-action:last-child { margin-right: 0; }
+.sd-row-action:hover,
+.sd-row-action:active {
+  background: var(--sd-bg);
+  border-color: var(--sd-muted);
+  color: var(--sd-text);
+  text-decoration: none;
+}
+.sd-row-action:focus-visible {
+  outline: 2px solid var(--sd-accent-text);
+  outline-offset: 2px;
+}
+.sd-row-action--main { border-color: var(--sd-accent); color: var(--sd-accent-text); background: transparent; }
+.sd-row-action--main:hover,
+.sd-row-action--main:active { background: var(--sd-accent-soft); border-color: var(--sd-accent); color: var(--sd-accent-text); }
+
 .form-control, .form-select {
   border-radius: var(--sd-radius);
   background-color: var(--sd-surface-2);
@@ -245,7 +282,7 @@ a { text-underline-offset: 2px; }
 .sd-shortcut span { display: block; font-size: 12px; color: var(--sd-muted); margin-top: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sd-shortcut, .sd-shortcut::after { transition: none; }
+  .sd-shortcut, .sd-shortcut::after, .sd-row-action { transition: none; }
 }
 
 /* 체크박스: 무채색 상자, 체크하면 주황 */

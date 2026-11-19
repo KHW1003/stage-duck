@@ -69,12 +69,12 @@ def _to_reason_form(request: Request, op: str, identity: str) -> RedirectRespons
 def _reason_button(label: str, op: str, identity: str, pk: int) -> str:
     """행마다 붙는 버튼: 누르면 그 행 하나로 사유(답변) 입력 화면이 열린다 (체크박스 → 작업 메뉴를 안 거친다)."""
     query = urlencode({"op": op, "pks": pk, "back": identity})
-    return f'<a class="btn btn-sm btn-outline-primary me-1" href="/admin/reason?{query}">{label}</a>'
+    return f'<a class="sd-row-action sd-row-action--main" href="/admin/reason?{query}">{label}</a>'
 
 
 def _action_button(label: str, identity: str, name: str, pk: int, confirm: str) -> str:
     """사유가 필요 없는 액션을 그 행 하나에 바로 (확인 창을 한 번 띄운다)."""
-    return (f'<a class="btn btn-sm btn-outline-secondary me-1" href="/admin/{identity}/action/{name}?pks={pk}" '
+    return (f'<a class="sd-row-action" href="/admin/{identity}/action/{name}?pks={pk}" '
             f'onclick="return confirm(\'{confirm}\')">{label}</a>')
 
 
