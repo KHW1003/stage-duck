@@ -29,19 +29,17 @@ const EQUIPMENT_POSTING: PostingDetail = {
 
 const VENUE_POSTING: PostingDetail = { ...EQUIPMENT_POSTING, stageId: 1, stageType: "VENUE" };
 
-const APPLICATION = { companyName: "업체 C", categories: ["VENUE"] };
+/** GET /supplier/venues (VenueOut 배열). 서버가 내 공간만 준다. 관리자가 숨긴 공간(HIDDEN)도 들어 있다 */
 const VENUE_ROW = {
-  sido: "광주광역시", sigungu: "동구", venueType: "CULTURE_SPACE", maxCapacity: 120, rentalFee: 500000,
-  hasResidentEngineer: false, bandAllowed: true, checkinTime: "15:00", externalEquipmentAllowed: true,
-  externalEngineerAllowed: true, hasWaitingRoom: null, hasParking: null,
+  sido: "광주광역시", sigungu: "동구", address: "가상로 1", venueType: "CULTURE_SPACE", maxCapacity: 120,
+  checkinTime: "15:00", checkoutTime: "23:00", rentalFee: 500000, hasResidentEngineer: false, bandAllowed: true,
+  externalEquipmentAllowed: true, externalEngineerAllowed: true, hasWaitingRoom: null, hasStagePlatform: null,
+  hasParking: null, hallRegistered: null, equipment: [],
 };
-const VENUES = {
-  items: [
-    { ...VENUE_ROW, id: 3, name: "공간 C", companyName: "업체 C" },
-    { ...VENUE_ROW, id: 1, name: "공간 A", companyName: "업체 A" },
-  ],
-  page: 1, size: 50, total: 2,
-};
+const MY_VENUES = [
+  { ...VENUE_ROW, id: 3, name: "공간 C", status: "ACTIVE" },
+  { ...VENUE_ROW, id: 4, name: "공간 D", status: "HIDDEN" },
+];
 
 type Reply = { status: number; body?: unknown };
 type Call = { key: string; body: unknown };
@@ -88,8 +86,7 @@ const EQUIP = { ...ME, "GET /api/v1/postings/2": { status: 200, body: EQUIPMENT_
 const VENUE = {
   ...ME,
   "GET /api/v1/postings/1": { status: 200, body: VENUE_POSTING },
-  "GET /api/v1/supplier/application": { status: 200, body: APPLICATION },
-  "GET /api/v1/venues?size=50": { status: 200, body: VENUES },
+  "GET /api/v1/supplier/venues": { status: 200, body: MY_VENUES },
 };
 const SENT = { quoteId: 77, version: 1, chatRoomId: 31, checks: [] };
 
@@ -261,9 +258,13 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     expect(await screen.findAllByText("공연장 견적서에는 꼭 입력해 주세요.")).toHaveLength(3);
     expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
 
-    // 내 공간만 보인다 (다른 업체 공간 A 는 없다)
+    // GET /supplier/venues 가 준 내 공간만 보인다 (다른 업체 공간 A 는 없고, 숨긴 공간 D 도 뺀다)
+    expect(calls.some((c) => c.key === "GET /api/v1/supplier/venues")).toBe(true);
+    expect(calls.some((c) => c.key.startsWith("GET /api/v1/venues"))).toBe(false);
     await user.click(venue);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([expect.stringContaining("공간 C")]);
     expect(screen.queryByRole("option", { name: /공간 A/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /공간 D/ })).not.toBeInTheDocument();
     await user.click(await screen.findByRole("option", { name: /공간 C/ }));
     await typeIn(user, /^입실 시각/, "15:00");
     await typeIn(user, /^설치 가능 시각/, "15:30");
@@ -272,6 +273,13 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });
     const body = calls.find((c) => c.key === "POST /api/v1/stages/1/quotes")?.body as Record<string, unknown>;
     expect(body).toMatchObject({ venueId: 3, checkinTime: "15:00", setupAvailableTime: "15:30", totalAmount: 500000 });
+  });
+
+  it("AC-F2-18 등록한 공간이 없으면 공간을 먼저 등록하라고 안내한다", async () => {
+    mockServer({ ...VENUE, "GET /api/v1/supplier/venues": { status: 200, body: [] } });
+    renderAt("/supplier/postings/1/quote");
+
+    expect(await screen.findByText("먼저 공간을 등록해 주세요.")).toBeInTheDocument();
   });
 
   it("AC-F2-18 공연장 단계가 아니면 공간·입실·설치 가능 시각 칸이 없다", async () => {
