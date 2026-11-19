@@ -44,6 +44,7 @@ POS, KW = "POSITIONAL_OR_KEYWORD", "KEYWORD_ONLY"
         (request.after_confirm, [("db", POS), ("stage_id", POS), ("full_spec", KW)]),
         (request.is_related, [("db", POS), ("user_id", POS), ("supplier_id", POS)]),
         (request.performance_input, [("db", POS), ("performance_id", POS)]),  # → 3·4 자동 검사
+        (request.performance_paid, [("db", POS), ("performance_id", POS), ("actor_id", KW)]),  # 4 → 2 결제 성공
         # 3 → 2
         (chat.invalidate_pending_cards, [("db", POS), ("stage_id", POS)]),
         (chat.chat_started, [("db", POS), ("performance_id", POS), ("supplier_id", POS)]),

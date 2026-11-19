@@ -55,7 +55,7 @@ function Meta({ p, ended = false }: { p: PerformanceSummary; ended?: boolean }) 
   );
 }
 
-/** 할 일 줄의 버튼 (목업: 채팅에서 확인 · 청구서 보기 · 단계별 비교). 아직 없는 화면(청구서·채팅)은 공연 상세로 */
+/** 할 일 줄의 버튼 (목업: 채팅에서 확인 · 청구서 보기 · 단계별 비교). 청구서는 #187 /performances/:id/order */
 function todoAction(p: PerformanceSummary): { label: string; to: string; primary: boolean } | null {
   const stage = p.stages.find((s) => s.id === p.nextStageId);
   switch (p.nextAction) {
@@ -67,6 +67,10 @@ function todoAction(p: PerformanceSummary): { label: string; to: string; primary
       return stage && (stage.quoteCount ?? 0) > 0 ? { label: "단계별 비교", to: `/performances/${p.id}/compare`, primary: false } : null;
     case "RECHECK":
       return { label: "공연 보기", to: `/performances/${p.id}`, primary: true };
+    case "PAY":
+      return { label: "청구서 보기", to: `/performances/${p.id}/order`, primary: true };
+    case "DONE":
+      return { label: "청구서 보기", to: `/performances/${p.id}/order`, primary: false };
     default:
       return null;
   }

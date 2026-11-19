@@ -287,6 +287,20 @@ export function PerformancePage() {
               <div className="grow">
                 <b>섭외가 모두 끝났어요.</b> 통합 청구서를 확인하고 테스트 결제를 해 주세요. 실제 청구되지 않습니다.
               </div>
+              <Link className="btn btn--sm btn--primary" to={`/performances/${p.id}/order`}>
+                청구서 보기
+              </Link>
+            </div>
+          )}
+          {p.nextAction === "DONE" && (
+            <div className="todo todo--quiet">
+              <Ico name="pass" />
+              <div className="grow">
+                <b>테스트 결제가 끝났어요.</b> 결제금은 공연이 끝날 때까지 보관돼요.
+              </div>
+              <Link className="btn btn--sm" to={`/performances/${p.id}/order`}>
+                청구서 보기
+              </Link>
             </div>
           )}
           <div className="steps">
