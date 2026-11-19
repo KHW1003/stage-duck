@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
@@ -158,7 +158,7 @@ describe("소셜 추가 정보 (/signup/extra)", () => {
     mockServer({});
     renderAt("/signup/extra");
     expect(await screen.findByText("로그인이 필요해요. 다시 로그인해 주세요.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "다시 로그인하기" })).toHaveAttribute("href", "/login");
+    expect(within(screen.getByRole("alert")).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
     expect(screen.queryByRole("button", { name: "가입하기" })).toBeNull();
   });
 });

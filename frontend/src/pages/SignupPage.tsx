@@ -99,7 +99,7 @@ function SocialExtra() {
               {pending.error instanceof ApiError ? pending.error.body.message : pending.error.message}
               <div className="mt-8">
                 <Link className="link" to="/login">
-                  다시 로그인하기
+                  로그인
                 </Link>
               </div>
             </div>
