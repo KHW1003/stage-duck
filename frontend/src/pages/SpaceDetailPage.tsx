@@ -240,6 +240,7 @@ export function SpaceDetailPage() {
   const active = useActiveSection(useMemo(() => TABS.map((t) => t.id), []));
   const [modal, setModal] = useState<{ kind: "offer"; title: string } | { kind: "report" } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [burst, setBurst] = useState(0); // 저장할 때마다 하트 방울을 새로 띄운다
   if (!Number.isInteger(id) || (venue.error instanceof ApiError && venue.error.status === 404)) return <NotFound />;
   if (!v) return <p className="sd-sr-only">불러오는 중이에요</p>;
   const photos = venuePhotos(v);
@@ -323,8 +324,25 @@ export function SpaceDetailPage() {
                 </tbody>
               </table>
               <div className="btns mt-16">
-                <button className="btn btn--sm" type="button" aria-pressed={saved} onClick={() => setSaved((s) => !s)}>
-                  <Ico name="heart" sm />
+                <button
+                  className="btn btn--sm fav-btn"
+                  type="button"
+                  aria-pressed={saved}
+                  onClick={() => {
+                    if (!saved) setBurst((n) => n + 1);
+                    setSaved((s) => !s);
+                  }}
+                >
+                  <span className="fav-btn__icon">
+                    <Ico name="heart" sm />
+                    {burst > 0 && saved && (
+                      <span className="fav-btn__burst" key={burst} aria-hidden="true">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <i key={i} />
+                        ))}
+                      </span>
+                    )}
+                  </span>
                   {saved ? "관심 업체 저장됨" : "관심 업체 저장"}
                 </button>
                 <button className="btn btn--sm btn--ghost" type="button" onClick={() => setModal({ kind: "report" })}>

@@ -30,8 +30,9 @@ interface Props {
   onPin: (roomId: number, pin: boolean) => void;
 }
 
-/** 내역서 보기: 사용자는 단계별 비교 화면, 업체는 공고 화면 (견적서 상세 화면이 생기면 바꾼다) */
-function quoteLink(room: Room, role: Props["role"]) {
+/** 내역서 보기: 견적서 문서 화면 (QUOTE 메시지 refId = 견적서 버전 번호). 번호가 없으면 예전처럼 비교·공고 화면 */
+function quoteLink(room: Room, role: Props["role"], versionId: number | null) {
+  if (versionId) return `/quotes/by-version/${versionId}`;
   return role === "USER" ? `/performances/${room.performanceId}/compare` : `/supplier/postings/${room.stageId}`;
 }
 
@@ -49,7 +50,7 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
             <p className="c-card__meta">{role === "USER" ? `${partner}가 견적서를 보냈어요` : "견적서를 보냈어요"}</p>
           </div>
           <div className="c-card__foot">
-            <Link to={quoteLink(room, role)} onClick={onLeave}>
+            <Link to={quoteLink(room, role, m.refId)} onClick={onLeave}>
               내역서 보기
             </Link>
           </div>

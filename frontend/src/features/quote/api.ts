@@ -29,10 +29,20 @@ export function useSendQuote(stageId: number) {
 }
 
 /** AC-F2-20: 내 견적서 + 현재 버전 + 이력. 남의 견적서는 서버가 404 */
-export function useQuote(quoteId: number) {
+export function useQuote(quoteId: number, enabled = true) {
   return useQuery({
     queryKey: ["quotes", quoteId],
     queryFn: () => api<QuoteOut>(`/quotes/${quoteId}`),
+    enabled: enabled && Number.isInteger(quoteId) && quoteId > 0,
+  });
+}
+
+/** 채팅 견적서 카드(refId = 견적서 버전 번호)의 [내역서 보기] */
+export function useQuoteByVersion(versionId: number, enabled = true) {
+  return useQuery({
+    queryKey: ["quotes", "by-version", versionId],
+    queryFn: () => api<QuoteOut>(`/quotes/by-version/${versionId}`),
+    enabled: enabled && Number.isInteger(versionId) && versionId > 0,
   });
 }
 

@@ -426,3 +426,26 @@ def test_quote_counts_groups_by_stage_and_skips_withdrawn(client, db):
 
 def test_quote_counts_empty_input(db):
     assert quote_service.quote_counts(db, []) == {}
+
+
+# ---- 내역서 화면 (문서·인쇄): 머리 칸·자동 검사·버전 번호로 찾기 -----------------------------------------
+
+
+def test_quote_sheet_fields_and_lookup_by_version(client, db):
+    user, perf_id, stage_id = _equipment_open(client, db)
+    supplier = _supplier_d(db)
+    d = _as(db, supplier.user)
+    quote_id = d.post(f"/api/v1/stages/{stage_id}/quotes", json=_body()).json()["quoteId"]
+    version_id = db.scalar(select(QuoteVersion.id).where(QuoteVersion.quote_id == quote_id))
+
+    data = d.get(f"/api/v1/quotes/{quote_id}").json()
+    assert (data["stageType"], data["performanceId"], data["companyName"]) == ("EQUIPMENT", perf_id, supplier.company_name)
+    assert data["performanceTitle"] == "가을밤 밴드 공연" and data["showDate"] == "2026-11-28"
+    assert data["checks"] and {c["id"] for c in data["checks"]} >= {"CHK-05", "CHK-12"}  # 설치 시간·요청서 버전
+    assert "phone" not in str(data) and "@" not in str(data)  # 연락처는 넣지 않는다 (CLAUDE.md 20)
+
+    # 채팅 견적서 카드는 버전 번호(refId)만 안다 → 같은 견적서, 같은 권한
+    assert user.get(f"/api/v1/quotes/by-version/{version_id}").json()["quoteId"] == quote_id
+    other = _as(db, _supplier_d(db).user)
+    assert other.get(f"/api/v1/quotes/by-version/{version_id}").status_code == 404
+    assert d.get("/api/v1/quotes/by-version/999999").status_code == 404

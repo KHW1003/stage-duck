@@ -233,6 +233,30 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     return quote, row, checks, room_id
 
 
+def get_quote_by_version(db: Session, user: User, version_id: int) -> Quote:
+    """채팅 견적서 카드(refId = quote_version_id)의 [내역서 보기]: 버전 번호로 견적서를 찾는다. 권한은 get_quote 와 같다."""
+    row = db.get(QuoteVersion, version_id)
+    if row is None:
+        raise not_found()
+    return get_quote(db, user, row.quote_id)
+
+
+def sheet_extra(db: Session, quote: Quote) -> dict:
+    """내역서 머리(단계·공연·업체 상호)와 현재 버전의 자동 검사. 읽기 전용 참조 (2번 stages·performances, 1번 suppliers)."""
+    stage = quote.stage
+    perf = stage.performance
+    supplier = db.get(Supplier, quote.supplier_id)
+    current = next(v for v in quote.versions if v.version == quote.current_version)
+    return {
+        "stage_type": stage.stage_type,
+        "performance_id": perf.id,
+        "performance_title": perf.title,
+        "show_date": perf.show_date,
+        "company_name": supplier.company_name if supplier else "",
+        "checks": _checks(db, quote, current),
+    }
+
+
 def get_quote(db: Session, user: User, quote_id: int) -> Quote:
     """AC-F2-14, AC-F1-14: 견적서 (현재 버전 + 이력). 보낸 업체와 그 공연의 사용자만 보고, 나머지는 404."""
     quote = db.get(Quote, quote_id)

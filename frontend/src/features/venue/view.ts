@@ -14,13 +14,26 @@ export const TYPE_LABEL: Record<VenueTypeCode, string> = {
 export const TILE_TYPES: VenueTypeCode[] = ["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP", "GARDEN", "WAREHOUSE"];
 
 /** 지역 고르기 (화면 이름 → 서버 시·도 이름). 전체 = 지역 조건 없음.
- * 순서는 시·도 표준 순서(서울 우선, request/codes.ts SIDO 와 같은 차례) — 11/19 피드백 */
+ * 어디서나 전체 → 서울 → 시·도 표준 순서(request/codes.ts SIDO 와 같은 차례), 17개 시·도 모두 — 11/19 피드백 */
 export const REGIONS: { label: string; sido: string | null }[] = [
+  { label: "전체", sido: null },
   { label: "서울", sido: "서울특별시" },
   { label: "부산", sido: "부산광역시" },
+  { label: "대구", sido: "대구광역시" },
+  { label: "인천", sido: "인천광역시" },
   { label: "광주", sido: "광주광역시" },
+  { label: "대전", sido: "대전광역시" },
+  { label: "울산", sido: "울산광역시" },
+  { label: "세종", sido: "세종특별자치시" },
+  { label: "경기", sido: "경기도" },
+  { label: "강원", sido: "강원특별자치도" },
+  { label: "충북", sido: "충청북도" },
+  { label: "충남", sido: "충청남도" },
+  { label: "전북", sido: "전북특별자치도" },
   { label: "전남", sido: "전라남도" },
-  { label: "전체", sido: null },
+  { label: "경북", sido: "경상북도" },
+  { label: "경남", sido: "경상남도" },
+  { label: "제주", sido: "제주특별자치도" },
 ];
 
 /** "광주광역시" → "광주" (카드 메타 줄) */
