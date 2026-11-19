@@ -1,7 +1,7 @@
 /** 공고 목록·상세·견적서 보내기 API (backend quote/router.py). 서버 데이터는 TanStack Query 로만 (CLAUDE.md 6.2) */
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { PostingDetail, PostingSummary, QuoteIn, QuoteSentOut } from "../../shared/api/types";
+import type { PostingDetail, PostingSummary, QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn } from "../../shared/api/types";
 import { useApplication } from "../supplier/api";
 import type { VenuePage } from "../venue/api";
 
@@ -27,6 +27,23 @@ export function usePosting(stageId: number) {
 export function useSendQuote(stageId: number) {
   return useMutation({
     mutationFn: (body: QuoteIn) => api<QuoteSentOut>(`/stages/${stageId}/quotes`, { method: "POST", body: JSON.stringify(body) }),
+  });
+}
+
+/** AC-F2-20: 내 견적서 + 현재 버전 + 이력. 남의 견적서는 서버가 404 */
+export function useQuote(quoteId: number) {
+  return useQuery({
+    queryKey: ["quotes", quoteId],
+    queryFn: () => api<QuoteOut>(`/quotes/${quoteId}`),
+  });
+}
+
+/** AC-F2-20: 고치면 새 버전이 생긴다. 이력이 바뀌니 견적서를 다시 불러온다 */
+export function useUpdateQuote(quoteId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: QuoteUpdateIn) => api<QuoteSentOut>(`/quotes/${quoteId}`, { method: "PUT", body: JSON.stringify(body) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["quotes", quoteId] }),
   });
 }
 
