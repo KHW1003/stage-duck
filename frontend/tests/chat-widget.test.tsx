@@ -57,8 +57,18 @@ const THREAD_31 = {
   partnerLastReadMessageId: 119,
 };
 
-type Reply = { status: number; body?: unknown };
+/** wait 가 있으면 그 약속이 풀릴 때까지 답을 미룬다 (올리는 중 표시 확인용) */
+type Reply = { status: number; body?: unknown; wait?: Promise<unknown> };
 type Call = { key: string; body: unknown };
+
+/** FormData 는 { 이름: 글 또는 파일 이름 } 으로 적어 둔다 */
+function parseBody(body: BodyInit | null | undefined): unknown {
+  if (!body) return undefined;
+  if (body instanceof FormData) {
+    return Object.fromEntries([...body.entries()].map(([k, v]) => [k, typeof v === "string" ? v : v.name]));
+  }
+  return JSON.parse(String(body));
+}
 
 /** 같은 주소에 여러 번 답할 때는 배열로 순서대로 */
 function mockServer(routes: Record<string, Reply | Reply[]>) {
@@ -68,9 +78,10 @@ function mockServer(routes: Record<string, Reply | Reply[]>) {
     vi.fn(async (url: string, init?: RequestInit) => {
       const method = (init?.method ?? "GET").toUpperCase();
       const key = `${method} ${url}`;
-      calls.push({ key, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+      calls.push({ key, body: parseBody(init?.body) });
       const route = routes[key];
       const r = Array.isArray(route) ? route.shift() : route;
+      if (r?.wait) await r.wait;
       const reply = r ?? { status: 404, body: { code: "NOT_FOUND", message: "찾을 수 없어요.", fieldErrors: [] } };
       return new Response(reply.status === 204 ? null : JSON.stringify(reply.body ?? {}), { status: reply.status });
     }),
@@ -423,5 +434,174 @@ describe("대화방", () => {
     lastSocket().open();
     expect(await within(panel).findByText("끊긴 동안 보낸 메시지")).toBeInTheDocument();
     expect(calls.some((c) => c.key === "GET /api/v1/chat-rooms/31/messages?after=120")).toBe(true);
+  });
+});
+
+/* ---- 사진·파일 보내기 (AC-F3-08, uploads.md CHAT: jpg·png·webp·pdf, 10MB, PRIVATE) ---- */
+
+const MB = 1024 * 1024;
+function fakeFile(name: string, type: string, size = 1024): File {
+  const f = new File(["x"], name, { type });
+  Object.defineProperty(f, "size", { value: size });
+  return f;
+}
+function pick(panel: HTMLElement, label: "사진 고르기" | "파일 고르기", file: File) {
+  fireEvent.change(within(panel).getByLabelText(label), { target: { files: [file] } });
+}
+const UPLOADED = { status: 201, body: { id: 41, url: "/api/v1/files/41", thumbUrl: null, width: 1200, height: 800 } };
+
+describe("사진·파일 보내기", () => {
+  it("AC-F3-08 [사진 보내기]로 png 를 고르면 POST /files(CHAT) → POST messages(IMAGE, fileId) → 내 말풍선에 사진(누르면 크게 보기)", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "POST /api/v1/files": UPLOADED,
+      "POST /api/v1/chat-rooms/31/messages": { status: 201, body: msg(121, 12, null, { type: "IMAGE", attachmentUrl: "/api/v1/files/41" }) },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+    expect(within(panel).getByRole("button", { name: "사진 보내기" })).toBeEnabled();
+    pick(panel, "사진 고르기", fakeFile("무대.png", "image/png"));
+
+    const img = await within(panel).findByRole("img", { name: "내가 보낸 사진" });
+    expect(img).toHaveAttribute("src", "/api/v1/files/41");
+    expect(img.closest("a")).toHaveAttribute("href", "/api/v1/files/41");
+    expect(img.closest("a")).toHaveAttribute("target", "_blank");
+    expect(calls.find((c) => c.key === "POST /api/v1/files")?.body).toEqual({ file: "무대.png", purpose: "CHAT" });
+    expect(calls.find((c) => c.key === "POST /api/v1/chat-rooms/31/messages")?.body).toEqual({ type: "IMAGE", fileId: 41 });
+  });
+
+  it("AC-F3-08 [파일 보내기]로 pdf 를 고르면 type FILE(파일 이름을 body 로), 말풍선에 파일 이름과 내려받기 링크", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "POST /api/v1/files": UPLOADED,
+      "POST /api/v1/chat-rooms/31/messages": { status: 201, body: msg(121, 12, "장비목록.pdf", { type: "FILE", attachmentUrl: "/api/v1/files/41" }) },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+    pick(panel, "파일 고르기", fakeFile("장비목록.pdf", "application/pdf"));
+
+    expect(await within(panel).findByText("장비목록.pdf")).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: "장비목록.pdf 내려받기" })).toHaveAttribute("href", "/api/v1/files/41");
+    expect(calls.find((c) => c.key === "POST /api/v1/files")?.body).toEqual({ file: "장비목록.pdf", purpose: "CHAT" });
+    expect(calls.find((c) => c.key === "POST /api/v1/chat-rooms/31/messages")?.body).toEqual({ type: "FILE", fileId: 41, body: "장비목록.pdf" });
+  });
+
+  it("형식이 아니거나(gif·exe, 사진 칸의 pdf) 10MB 를 넘으면 보내기 전에 막고 안내한다", async () => {
+    const calls = mockServer(AS_USER);
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+
+    pick(panel, "사진 고르기", fakeFile("움짤.gif", "image/gif"));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent("jpg·png·webp 사진만 올릴 수 있어요.");
+    pick(panel, "사진 고르기", fakeFile("견적.pdf", "application/pdf"));
+    expect(within(panel).getByRole("alert")).toHaveTextContent("jpg·png·webp 사진만 올릴 수 있어요.");
+    pick(panel, "파일 고르기", fakeFile("setup.exe", "application/x-msdownload"));
+    expect(within(panel).getByRole("alert")).toHaveTextContent("PDF 파일만 올릴 수 있어요.");
+    pick(panel, "사진 고르기", fakeFile("큰사진.jpg", "image/jpeg", 10 * MB + 1));
+    expect(within(panel).getByRole("alert")).toHaveTextContent("10MB 이하 파일만 올릴 수 있어요.");
+
+    expect(calls.some((c) => c.key === "POST /api/v1/files")).toBe(false);
+    expect(calls.some((c) => c.key === "POST /api/v1/chat-rooms/31/messages")).toBe(false);
+  });
+
+  it("10MB 딱 맞으면 올리고, 서버가 413 FILE_TOO_LARGE 를 돌려주면 서버 문구를 그대로 보인다", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "POST /api/v1/files": { status: 413, body: { code: "FILE_TOO_LARGE", message: "10MB 이하 파일만 올릴 수 있어요.", fieldErrors: [] } },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+    pick(panel, "사진 고르기", fakeFile("경계.webp", "image/webp", 10 * MB));
+    expect(await within(panel).findByRole("alert")).toHaveTextContent("10MB 이하 파일만 올릴 수 있어요.");
+    expect(calls.filter((c) => c.key === "POST /api/v1/files")).toHaveLength(1);
+    expect(calls.some((c) => c.key === "POST /api/v1/chat-rooms/31/messages")).toBe(false);
+  });
+
+  it("올리는 동안 '올리는 중'을 보이고 버튼을 끄며, 메시지 보내기가 실패하면 서버 message 를 그대로 보인다", async () => {
+    let release: (v?: unknown) => void = () => {};
+    const wait = new Promise((r) => (release = r));
+    mockServer({
+      ...AS_USER,
+      "POST /api/v1/files": { ...UPLOADED, wait },
+      "POST /api/v1/chat-rooms/31/messages": {
+        status: 400,
+        body: {
+          code: "VALIDATION_FAILED",
+          message: "사진은 [사진]으로, PDF는 [파일]로 보내 주세요.",
+          fieldErrors: [{ field: "type", reason: "사진은 [사진]으로, PDF는 [파일]로 보내 주세요." }],
+        },
+      },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+    pick(panel, "사진 고르기", fakeFile("무대.png", "image/png"));
+
+    expect(await within(panel).findByRole("status")).toHaveTextContent("올리는 중이에요");
+    expect(within(panel).getByRole("button", { name: "사진 보내기" })).toBeDisabled();
+    expect(within(panel).getByRole("button", { name: "파일 보내기" })).toBeDisabled();
+    release();
+    expect(await within(panel).findByRole("alert")).toHaveTextContent("사진은 [사진]으로, PDF는 [파일]로 보내 주세요.");
+    expect(within(panel).queryByRole("status")).not.toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: "사진 보내기" })).toBeEnabled();
+  });
+
+  it("AC-F3-06 시작 전 방에서 업체는 사진·파일 버튼도 없다", async () => {
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/chat-rooms": { status: 200, body: [room(34, "가을밤밴드", 80, null, { startedAt: null })] },
+      "GET /api/v1/chat-rooms/34/messages": { status: 200, body: { messages: [msg(80, null, null, { type: "QUOTE", refId: 400 })], partnerLastReadMessageId: null } },
+      "POST /api/v1/chat-rooms/34/read": { status: 204 },
+    });
+    renderAt("/faq");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
+    const panel = screen.getByRole("dialog", { name: "채팅" });
+    await user.click(await within(panel).findByText("가을밤밴드"));
+    await within(panel).findByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.");
+    expect(within(panel).queryByRole("button", { name: "사진 보내기" })).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("button", { name: "파일 보내기" })).not.toBeInTheDocument();
+    expect(within(panel).queryByLabelText("사진 고르기")).not.toBeInTheDocument();
+  });
+
+  it("AC-F3-08 새로고침 뒤 GET messages 의 IMAGE·FILE 도 attachmentUrl 로 사진·내려받기가 보인다", async () => {
+    mockServer({
+      ...AS_USER,
+      "GET /api/v1/chat-rooms/31/messages": {
+        status: 200,
+        body: {
+          messages: [
+            msg(118, 12, null, { type: "IMAGE", attachmentUrl: "/api/v1/files/40" }),
+            msg(119, 7, "장비목록.pdf", { type: "FILE", attachmentUrl: "/api/v1/files/42" }),
+          ],
+          partnerLastReadMessageId: 118,
+        },
+      },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    expect(await within(panel).findByRole("img", { name: "내가 보낸 사진" })).toHaveAttribute("src", "/api/v1/files/40");
+    expect(within(panel).getByRole("link", { name: "장비목록.pdf 내려받기" })).toHaveAttribute("href", "/api/v1/files/42");
+  });
+
+  it("AC-F3-08 상대가 보낸 IMAGE 가 WebSocket message.created 로 오면 새로고침 없이 사진 말풍선이 생긴다", async () => {
+    const calls = mockServer(AS_USER);
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    await within(panel).findByText("드럼 마이크도 추가돼요?");
+    const fetchCount = calls.filter((c) => c.key === "GET /api/v1/chat-rooms/31/messages").length;
+    lastSocket().open();
+    lastSocket().emit("message.created", {
+      roomId: 31,
+      message: { id: 122, type: "IMAGE", body: null, attachmentUrl: "/api/v1/files/43", refId: null, senderId: 7, contactWarning: false, createdAt: "2026-11-13T13:30:00+09:00" },
+    });
+    await waitFor(() =>
+      expect(within(panel).getAllByRole("img", { name: "업체 D가 보낸 사진" }).map((i) => i.getAttribute("src"))).toContain("/api/v1/files/43"),
+    );
+    expect(calls.filter((c) => c.key === "GET /api/v1/chat-rooms/31/messages")).toHaveLength(fetchCount);
   });
 });

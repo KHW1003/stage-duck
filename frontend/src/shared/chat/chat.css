@@ -113,6 +113,15 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .composer--start { flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--sd-line); font-size: var(--sd-text-small); color: var(--sd-muted); }
 .chat-panel .composer--start .btn { width: auto; padding: 0 16px; }
 .chat-panel__err { padding: 8px 16px 0; background: var(--sd-bg); }
+/* 사진·파일 보내기 (AC-F3-08) */
+.chat-panel .msg__photo-link { display: block; border-radius: 12px; }
+.chat-panel .msg__file { display: flex; align-items: center; gap: 8px; white-space: normal; }
+.chat-panel .msg__file-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.chat-panel .msg__file a { flex: none; color: var(--sd-blue); font-weight: 600; }
+.chat-panel .composer .icon-btn { flex: none; width: 44px; height: 44px; color: var(--sd-muted); }
+.chat-panel .composer .icon-btn:disabled { opacity: .5; cursor: not-allowed; }
+.chat-panel .composer__hint { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--sd-warn-text); font-size: var(--sd-text-small); }
+.chat-panel .composer__status { margin: 0; padding: 8px 16px 0; background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-small); }
 
 /* 좁은 화면: 꽉 찬 창 */
 @media (max-width: 560px) {
