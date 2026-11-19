@@ -34,5 +34,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_confirm_requests_room_status", table_name="confirm_requests")
+    # 인덱스는 표와 함께 지워진다. 따로 먼저 지우면 MariaDB 가 외래키가 쓰는 인덱스라며 막는다 (1553)
     op.drop_table("confirm_requests")
