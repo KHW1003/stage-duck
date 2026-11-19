@@ -161,6 +161,7 @@ export function CommunityWritePage() {
       <PageTop
         title={editing ? "커뮤니티 글 수정" : "커뮤니티 글쓰기"}
         crumbs={[{ label: "커뮤니티", to: "/community" }, { label: editing ? "글 수정" : "글쓰기" }]}
+        narrow
       />
       <div className={`sd-container ${styles.wrap}`}>
         <div className={styles.narrow}>

@@ -96,7 +96,7 @@ export const SPACES: SpaceSample[] = [
 ];
 
 export const SEARCH_OPTIONS = {
-  region: ["전국", "광주", "서울", "부산"],
+  region: ["전국", "서울", "부산", "광주"], // 서울 우선 (시·도 표준 순서)
   type: ["전체 공간", "전문 공연장", "복합문화공간", "야외·루프탑"],
   audience: ["상관없음", "50명 이하", "50~150명", "150명 이상"],
 };

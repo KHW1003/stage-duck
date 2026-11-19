@@ -81,3 +81,12 @@ export const HOME: Record<LayoutKind, string> = {
   "partner-review": "/supplier/onboarding",
   admin: "/admin",
 };
+
+/** 머리 로고를 누르면 가는 곳: 메인 (업체는 업체 메인). 내 공연·공고 목록이 아니다 (11/19 피드백) */
+export const LOGO_HOME: Record<LayoutKind, string> = {
+  guest: "/",
+  user: "/",
+  partner: "/partner",
+  "partner-review": "/partner",
+  admin: "/admin",
+};

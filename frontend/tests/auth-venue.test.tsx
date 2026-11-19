@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { VenueDetail, VenueListItem } from "../src/features/venue/api";
 import { DEFAULT_COND, condFromQuery, filterVenues, toQuery } from "../src/features/venue/filter";
+import { REGIONS } from "../src/features/venue/view";
 import { ageOn, localErrors } from "../src/pages/SignupPage";
 import type { Me } from "../src/shared/api/types";
 
@@ -462,4 +463,8 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
     renderAt("/supplier/tech/9");
     expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
   });
+});
+
+it("지역은 서울부터 시·도 표준 순서 (11/19 피드백)", () => {
+  expect(REGIONS.map((r) => r.label)).toEqual(["서울", "부산", "광주", "전남", "전체"]);
 });

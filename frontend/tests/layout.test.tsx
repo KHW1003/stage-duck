@@ -110,6 +110,13 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
   });
 
+  it("로고를 누르면 메인으로 간다 — 사용자도 내 공연이 아니라 / (11/19 피드백)", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderAt("/me/performances");
+    const logo = (await screen.findAllByRole("img", { name: "STAGE DUCK" }))[0]; // 머리 로고 (바닥글에도 있다)
+    expect(logo.closest("a")).toHaveAttribute("href", "/");
+  });
+
   it("사용자 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (견적함은 계정 메뉴로)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/");

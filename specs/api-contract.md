@@ -108,6 +108,7 @@
 |---|---|---|---|---|
 | PUT | `/supplier/profile` | S | 3단계: 지역, 소개, 사진, 설치·철수 시간, 엔지니어 정보, 신뢰 지표 | |
 | PUT | `/supplier/equipment` | S | 보유 장비 목록 (자유 입력, 전체 교체) | |
+| GET | `/supplier/venues` | S(VENUE) | 내 공간 목록 (숨긴 공간 포함, 등록 순, `VenueOut` 배열). 견적서 작성에서 공간 고르기 (#192) | F2-18 |
 | POST | `/supplier/venues` | S(VENUE) | 공간 등록 | F2-01, F2-02 |
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
