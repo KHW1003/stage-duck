@@ -576,6 +576,63 @@ export interface PaymentResult {
   orderStatus: OrderStatus;
 }
 
+// ---- 채팅 (#42, api-contract.md 채팅·7장 WebSocket) ----
+export type ChatMessageType = "TEXT" | "IMAGE" | "FILE" | "QUOTE" | "CONFIRM_REQUEST" | "CONFIRMED" | "NOTICE";
+
+/** GET /chat-rooms 한 줄. partnerName 은 업체 상호 또는 사용자 닉네임 (실명 아님) */
+export interface ChatRoom {
+  roomId: number;
+  stageId: number;
+  stageType: StageType;
+  performanceId: number;
+  partnerName: string;
+  startedAt: string | null;
+  pinnedAt: string | null;
+  unreadCount: number;
+  lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string } | null;
+}
+
+/** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */
+export interface ChatMessageOut {
+  id: number;
+  type: ChatMessageType;
+  body: string | null;
+  senderUserId: number | null;
+  refId: number | null;
+  contactWarning: boolean;
+  createdAt: string;
+  attachmentUrl?: string | null;
+}
+
+export interface ChatMessagesOut {
+  messages: ChatMessageOut[];
+  partnerLastReadMessageId: number | null;
+}
+
+export interface ChatMessageIn {
+  type: "TEXT" | "IMAGE" | "FILE";
+  body?: string | null;
+  fileId?: number | null;
+}
+
+/** WebSocket message.created 의 message (REST 와 달리 보낸 사람이 senderId) */
+export interface WsChatMessage {
+  id: number;
+  type: ChatMessageType;
+  body: string | null;
+  attachmentUrl?: string | null;
+  refId: number | null;
+  senderId: number | null;
+  contactWarning: boolean;
+  createdAt: string;
+}
+
+/** GET /ws 받기 전용 이벤트 가운데 채팅 위젯이 쓰는 것 */
+export type WsChatEvent =
+  | { type: "message.created"; data: { roomId: number; message: WsChatMessage } }
+  | { type: "message.read"; data: { roomId: number; userId: number; lastMessageId: number } }
+  | { type: "quote.updated"; data: { roomId: number; quoteId: number; version: number; changed: string[] } };
+
 /* ---- 프로필 (api-contract.md 5장 /suppliers/{id}/profile · /users/{id}/profile · /me/profile, #33) ---- */
 
 /** 업체 프로필의 등록 공간 한 줄 (GET /venues 목록 카드와 같은 칸 중 화면이 쓰는 것) */
