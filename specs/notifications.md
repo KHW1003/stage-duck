@@ -168,10 +168,10 @@ WebSocket `notification` 이벤트 payload를 `{ id, type, category, title, body
 |---|---|---|
 | 1 | `SUPPLIER_APPROVED` · `SUPPLIER_REJECTED` · `OFFER_RECEIVED` · `OFFER_DECLINED` · `OFFER_EXPIRED` · `POST_BLINDED` | supplier/service approve·reject, offer/service, policy/service blind_post |
 | 2 | `POSTING_OPENED` (게시·다음 단계 열기) · `INQUIRY_ANSWERED` · `COMMUNITY_COMMENT` · `COMMUNITY_REPLY` | request/service publish·advance, support/service, community/service |
-| 3 | `QUOTE_RECEIVED` · `QUOTE_UPDATED`(채팅 시작한 사이만) · `CHAT_STARTED` | quote/service, chat/service start_chat |
+| 3 | `QUOTE_RECEIVED` · `QUOTE_UPDATED`(채팅 시작한 사이만) · `CHAT_STARTED` · `CONFIRM_REQUESTED` · `CONFIRMED` · `NOT_SELECTED` · `CONFIRM_EXPIRED` | quote/service, chat/service start_chat, confirm/service (#43) |
 | 4 | `PAID` · `CANCELLED_BY_USER` · `CANCELLED_BY_SUPPLIER` · `WARNING_ISSUED` · `ACCOUNT_SUSPENDED` | payment/service·cancel, policy/service _warn |
 
-- 아직 없는 기능에 딸린 알림은 그 기능을 만들 때 붙인다: 최종 견적 카드·컨펌(#43: `CONFIRM_*`·`CONFIRMED`·`NOT_SELECTED`), 결제 마감(`PAYMENT_*`·`HOLD_EXPIRED`), 정산(`SETTLEMENT_SCHEDULED`), 공고 수정·내리기(`POSTING_UPDATED`·`POSTING_CLOSED`), 정지 해제(`ACCOUNT_UNSUSPENDED`).
+- 아직 없는 기능에 딸린 알림은 그 기능을 만들 때 붙인다: 최종 견적 기한 6시간 전(`CONFIRM_EXPIRING`, 스케줄러), 결제 마감(`PAYMENT_*`·`HOLD_EXPIRED`), 정산(`SETTLEMENT_SCHEDULED`), 공고 수정·내리기(`POSTING_UPDATED`·`POSTING_CLOSED`), 정지 해제(`ACCOUNT_UNSUSPENDED`).
 - `INVOICE_READY`는 보내지 않는다. 청구서는 사용자가 직접 [청구서 보기]를 눌러 만들므로 1장 규칙 2(내가 한 일)에 걸린다.
 - 화면 문구는 "견적 요청" (11/19 팀 결정). 탭 이름도 "견적 요청".
 - `QUOTE_RECEIVED` 이동 주소는 실제 라우트 `/performances/{id}/compare`.

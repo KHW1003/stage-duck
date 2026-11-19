@@ -220,7 +220,8 @@
 ### 4.3 견적 내역 확인·컨펌·다음 단계
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| POST | `/quotes/{quoteId}/confirm-requests` | S(본인) | [견적 내역 확인] 카드 전송 (현재 버전 고정, 48시간) | F3-09, F3-12 |
+| POST | `/quotes/{quoteId}/confirm-requests` | S(본인) | [최종 견적 보내기] 카드 전송 (현재 버전 고정, 48시간). 보낸(SENT) 견적서·열린 단계만(`409 INVALID_STATE`), 채팅 시작 전 `403 CHAT_NOT_STARTED`, 방에 대기 카드가 있으면 `409 INVALID_STATE` → `201` 카드 | F3-09, F3-12 |
+| GET | `/confirm-requests/{id}` | 그 방 U·S | 카드 `{ id, roomId, quoteId, quoteVersionId, version, currentVersion, label, totalAmount, stageId, stageType, performanceId, status, expiresAt, viewedAt, decidedAt, nextStageType, checkoutAvailable }` (뒤 둘은 CONFIRMED 일 때만). 48시간 지났으면 여기서 `EXPIRED` | F3-12 |
 | POST | `/confirm-requests/{id}/view` | U | 내역서 열람 기록 (`viewedAt`) | F3-10 |
 | POST | `/confirm-requests/{id}/accept` | U | **컨펌** (`Idempotency-Key`) | F3-10, F3-11, F3-13 |
 | POST | `/confirm-requests/{id}/renegotiate` | U | [다시 조율] | |
@@ -230,8 +231,8 @@
 **POST /confirm-requests/{id}/accept**
 ```json
 // 200
-{ "stageId": 5, "stageStatus": "CONFIRMED", "confirmedQuoteVersionId": 88,
-  "next": { "stageType": "EQUIPMENT", "suggestSkip": false }, "checkoutAvailable": false }
+{ "stageId": 5, "stageStatus": "CONFIRMED", "confirmedQuoteVersionId": 88, "performanceId": 3,
+  "next": { "stageType": "EQUIPMENT", "suggestSkip": false }, "checkoutAvailable": false, "card": { /* GET 과 같은 칸 */ } }
 // 409 — 다른 탭에서 이미 컨펌
 { "code": "STAGE_ALREADY_CONFIRMED", "message": "이 단계는 이미 다른 견적서로 정해졌어요." }
 // 422 — 견적서가 수정됨
@@ -239,6 +240,8 @@
 ```
 - 검사 실패 순서: 카드 상태·만료(`422 CONFIRM_REQUEST_EXPIRED`) → 열람(`422 DETAIL_NOT_VIEWED`) → 버전(`422 CONFIRM_REQUEST_STALE`) → 자동 검사(`409 CHECK_CONFLICT`) → 단계(`409 STAGE_ALREADY_CONFIRMED`).
 - 성공하면 같은 단계 다른 견적서 `CLOSED` + 해당 채팅방에 안내 카드 (반려 이벤트 없음).
+- 같은 카드로 다시 오면(키가 달라도) 처음 결과를 그대로 돌려준다. 견적서를 고치면 그 견적서의 대기 카드는 `INVALIDATED`.
+- [다시 조율] → 카드 `RENEGOTIATE` + 채팅방 안내, 업체는 새 카드를 보낼 수 있다. 결제 마감(D-57)이 생기면 카드 만료 = min(48시간, 결제 마감).
 
 ### 4.4 직접 오퍼(화면 문구 "견적 요청")·관심 업체
 화면에는 "견적 요청하기 · 받은 견적 요청"으로 보인다 (11/19 팀 결정). 주소·코드는 offer 그대로.

@@ -8,6 +8,7 @@
  * 최종 견적 카드·확정(#43)은 여기서 만들지 않는다.
  */
 import { OUTSIDE_PAYMENT_NOTICE } from "../../features/support/terms";
+import { ConfirmRequestCard, ConfirmedCard } from "../../features/confirm/ConfirmCards";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, Fragment, type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -69,6 +70,9 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
         </div>
       );
     }
+    // #43 최종 견적 카드 · 확정 완료 카드 (refId = 카드 번호)
+    if (m.type === "CONFIRM_REQUEST" && m.refId) return <ConfirmRequestCard id={m.refId} role={role} partner={partner} onLeave={onLeave} />;
+    if (m.type === "CONFIRMED" && m.refId) return <ConfirmedCard id={m.refId} role={role} onLeave={onLeave} />;
     const text = m.type === "CONFIRM_REQUEST" ? "최종 견적이 도착했어요" : m.type === "CONFIRMED" ? "확정했어요" : (m.body ?? "안내");
     return <span className="room__sys">{text}</span>;
   }

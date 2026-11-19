@@ -60,3 +60,28 @@ class ChatRead(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime3, nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+CONFIRM_STATUSES = ("PENDING", "CONFIRMED", "RENEGOTIATE", "EXPIRED", "INVALIDATED")
+
+
+class ConfirmRequest(Base):
+    """견적 내역 확인 카드 = 최종 견적 (data-model.md 6장 confirm_requests, #43, AC-F3-09~14).
+
+    보낸 순간의 견적서 버전을 고정한다. 48시간이 지나면 EXPIRED (읽을 때 바꾼다), 견적서를 고치면 INVALIDATED.
+    방당 대기(PENDING) 카드 1장은 서비스가 방 행을 잠그고 검사한다 (명세의 pending_guard 생성 칸 대신).
+    """
+
+    __tablename__ = "confirm_requests"
+    __table_args__ = (
+        CheckConstraint(_in("status", CONFIRM_STATUSES), name="ck_confirm_requests_status"),
+        Index("ix_confirm_requests_room_status", "room_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigID, primary_key=True, autoincrement=True)
+    room_id: Mapped[int] = mapped_column(BigID, ForeignKey("chat_rooms.id"), nullable=False)
+    quote_version_id: Mapped[int] = mapped_column(BigID, ForeignKey("quote_versions.id"), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING")
+    expires_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False)
+    viewed_at: Mapped[datetime | None] = mapped_column(DateTime3)  # 내역서 열람 — NULL 이면 확정 불가 (AC-F3-10)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime3)
+    created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())

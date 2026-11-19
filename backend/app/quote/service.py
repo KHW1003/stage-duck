@@ -249,7 +249,10 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
                     "stage": notification.stage_label(stage.stage_type), "amount": notification.won(row.total_amount)},
             payload={"roomId": room_id, "quoteId": quote.id},
         )
-    # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
+    # AC-F3-09: 이 견적서의 대기 중인 최종 견적 카드는 INVALIDATED ("새 견적이 있어요")
+    from app.confirm.service import invalidate_for_quote  # 3번 안 (순환 import 피함)
+
+    invalidate_for_quote(db, quote.id, now=datetime.now())
     db.commit()
     db.refresh(quote)
     return quote, row, checks, room_id

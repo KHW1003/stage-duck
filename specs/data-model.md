@@ -291,7 +291,7 @@ erDiagram
 | expires_at | DATETIME(3) | NOT NULL | 보낸 시각 + 48시간 |
 | viewed_at | DATETIME(3) | NULL | 내역서 열람 — NULL이면 컨펌 불가 (AC-F3-10) |
 | decided_at | DATETIME(3) | NULL | |
-| **pending_guard** | BIGINT UNSIGNED | PERSISTENT = IF(status='PENDING', room_id, NULL), UNIQUE | 방당 대기 카드 1장 |
+| **pending_guard** | BIGINT UNSIGNED | PERSISTENT = IF(status='PENDING', room_id, NULL), UNIQUE | 방당 대기 카드 1장 — #43 구현은 생성 칸 대신 방 행을 잠그고 서비스에서 검사 (SQLite 테스트와 같게) |
 
 > 단계당 컨펌 1개는 `stages` 행 잠금 + `stages.status` 검사로 보장한다 (plan.md 5.3).
 
