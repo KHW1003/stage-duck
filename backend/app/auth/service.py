@@ -54,6 +54,29 @@ def landing(db: Session, user: User) -> str:
     return calc.landing_for(user.role, supplier_review_status(db, user))
 
 
+def check_available(db: Session, field: str, value: str) -> tuple[bool, str]:
+    """가입 화면 [중복 확인]: 모양이 틀리면 400, 이미 있으면 (False, 이유), 쓸 수 있으면 (True, 안내).
+    가입할 때도 같은 검사를 다시 한다 (확인과 가입 사이에 다른 사람이 먼저 가입할 수 있어서)."""
+    value = (value or "").strip()
+    if field == "email":
+        if not value:
+            reason = "이메일을 입력해 주세요"
+        elif len(value) > 255 or not calc.EMAIL_RE.fullmatch(value):
+            reason = "이메일 형식을 확인해 주세요"
+        else:
+            taken = db.scalar(select(User.id).where(User.email == normalize_email(value))) is not None
+            return (False, _email_taken().message) if taken else (True, "쓸 수 있는 이메일이에요.")
+    else:
+        if not value:
+            reason = "닉네임을 입력해 주세요"
+        elif len(value) > 30:
+            reason = "닉네임은 30자까지 입력할 수 있어요"
+        else:
+            taken = db.scalar(select(User.id).where(User.nickname == value)) is not None
+            return (False, _nickname_taken().message) if taken else (True, "쓸 수 있는 닉네임이에요.")
+    raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": field, "reason": reason}])
+
+
 def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
     """AC-F1-01·02·03: 칸 검사 → 만 14세 → 필수 약관 → 중복 → 저장 (약관 4종을 버전·일시와 함께)."""
     data = calc.SignupInput(

@@ -193,3 +193,22 @@ def test_signup_always_creates_user_role_only(client, db):
     res = client.post(URL, json=_body(role="ADMIN"))
     assert res.status_code == 201
     assert db.get(User, res.json()["id"]).role == "USER"
+
+
+# ---------- 가입 화면 [중복 확인] — 누르는 즉시 ----------
+CHECK = "/api/v1/auth/check-available"
+
+
+def test_check_available_email_and_nickname(client, db):
+    make_user(db, email="taken@stageduck.test", nickname="있는닉")
+    res = client.post(CHECK, json={"field": "email", "value": " Taken@StageDuck.test "})
+    assert res.status_code == 200 and res.json() == {"available": False, "message": "이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요."}
+    assert client.post(CHECK, json={"field": "email", "value": "new@stageduck.test"}).json()["available"] is True
+    assert client.post(CHECK, json={"field": "nickname", "value": "있는닉"}).json()["available"] is False
+    assert client.post(CHECK, json={"field": "nickname", "value": "새닉네임"}).json() == {"available": True, "message": "쓸 수 있는 닉네임이에요."}
+
+
+@pytest.mark.parametrize(("field", "value", "reason"), [("email", "", "이메일을 입력해 주세요"), ("email", "abc", "이메일 형식을 확인해 주세요"), ("nickname", "가" * 31, "닉네임은 30자까지 입력할 수 있어요")])
+def test_check_available_rejects_bad_shape(client, field, value, reason):
+    res = client.post(CHECK, json={"field": field, "value": value})
+    assert res.status_code == 400 and res.json()["fieldErrors"] == [{"field": field, "reason": reason}]

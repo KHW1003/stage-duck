@@ -8,7 +8,7 @@
  */
 import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSignup, type SignupRequest } from "../features/auth/api";
+import { checkAvailable, useSignup, type SignupRequest } from "../features/auth/api";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import { KitPageTop } from "../shared/layout/KitPageTop";
@@ -76,7 +76,9 @@ export function SignupPage() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [tried, setTried] = useState(false);
   const [terms, setTerms] = useState({ service: false, privacy: false, marketing: false });
-  const [nickNote, setNickNote] = useState(false);
+  type Dup = "email" | "nickname";
+  const [avail, setAvail] = useState<Partial<Record<Dup, { value: string; ok: boolean; msg: string }>>>({});
+  const [checking, setChecking] = useState<Dup | null>(null);
   const [done, setDone] = useState<{ nickname: string; email: string } | null>(null);
 
   const set = (k: Field) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -86,7 +88,30 @@ export function SignupPage() {
     if (signup.error instanceof ApiError) for (const fe of signup.error.body.fieldErrors) out[SERVER_FIELD[fe.field] ?? "name"] = fe.reason;
     return out;
   }, [signup.error]);
-  const err = (k: Field) => local[k] ?? server[k];
+  /** [중복 확인] 결과 — 그 뒤로 칸을 고치면 지운다 */
+  const dup = (k: Dup) => (avail[k]?.value === form[k].trim() ? avail[k] : undefined);
+  const err = (k: Field) => local[k] ?? server[k] ?? (k === "email" || k === "nickname" ? (dup(k)?.ok === false ? dup(k)!.msg : undefined) : undefined);
+  const check = async (k: Dup) => {
+    const value = form[k].trim();
+    setChecking(k);
+    try {
+      const r = await checkAvailable(k, value);
+      setAvail((a) => ({ ...a, [k]: { value, ok: r.available, msg: r.message } }));
+    } catch (e) {
+      const msg = e instanceof ApiError ? (e.body.fieldErrors[0]?.reason ?? e.body.message) : "확인하지 못했어요. 잠시 뒤 다시 눌러 주세요.";
+      setAvail((a) => ({ ...a, [k]: { value, ok: false, msg } }));
+    } finally {
+      setChecking(null);
+    }
+  };
+  const okHint = (k: Dup, fallback?: ReactNode) =>
+    dup(k)?.ok ? (
+      <span style={{ color: "var(--sd-pass-text)" }}>
+        <Ico name="check" sm /> {dup(k)!.msg}
+      </span>
+    ) : (
+      fallback
+    );
   const all = terms.service && terms.privacy && terms.marketing;
   const required = terms.service && terms.privacy;
   const generalError = signup.error instanceof ApiError && signup.error.body.fieldErrors.length === 0 ? signup.error.body.message : null;
@@ -218,16 +243,21 @@ export function SignupPage() {
               <Row label="이름" error={err("name")}>
                 <input className="input" value={form.name} onChange={set("name")} placeholder="이름" aria-label="이름" aria-invalid={!!err("name")} autoComplete="name" />
               </Row>
-              <Row label="닉네임" error={err("nickname")} hint={nickNote ? "같은 닉네임이 있으면 [가입하기]를 누를 때 알려 드려요." : "업체에게는 닉네임만 보여요."}>
+              <Row label="닉네임" error={err("nickname")} hint={okHint("nickname", "업체에게는 닉네임만 보여요.")}>
                 <span className="form-table__inline">
                   <input className="input signup__short" value={form.nickname} onChange={set("nickname")} aria-label="닉네임" aria-invalid={!!err("nickname")} />
-                  <button className="btn btn--sm" type="button" onClick={() => setNickNote(true)}>
-                    중복 확인
+                  <button className="btn btn--sm" type="button" onClick={() => check("nickname")} disabled={checking === "nickname"} aria-label="닉네임 중복 확인">
+                    {checking === "nickname" ? "확인 중…" : "중복 확인"}
                   </button>
                 </span>
               </Row>
-              <Row label="이메일" error={err("email")}>
-                <input className="input" type="email" value={form.email} onChange={set("email")} aria-label="이메일" aria-invalid={!!err("email")} autoComplete="email" />
+              <Row label="이메일" error={err("email")} hint={okHint("email")}>
+                <span className="form-table__inline">
+                  <input className="input signup__email" type="email" value={form.email} onChange={set("email")} aria-label="이메일" aria-invalid={!!err("email")} autoComplete="email" />
+                  <button className="btn btn--sm" type="button" onClick={() => check("email")} disabled={checking === "email"} aria-label="이메일 중복 확인">
+                    {checking === "email" ? "확인 중…" : "중복 확인"}
+                  </button>
+                </span>
               </Row>
               <Row label="비밀번호" error={err("password")} hint="8자 이상, 영문과 숫자를 함께 써 주세요.">
                 <input className="input" type="password" value={form.password} onChange={set("password")} aria-label="비밀번호" aria-invalid={!!err("password")} autoComplete="new-password" />

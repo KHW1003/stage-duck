@@ -109,6 +109,26 @@ describe("로그인 (/login)", () => {
 });
 
 describe("사용자 가입 (/signup)", () => {
+  it("[중복 확인]을 누르는 즉시 이메일이 이미 있는지 알려 주고, 칸을 고치면 문구가 사라진다", async () => {
+    const calls = mockServer({ "POST /api/v1/auth/check-available": { status: 200, body: { available: false, message: "이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요." } } });
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("이메일"), "host@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "이메일 중복 확인" }));
+    expect(await screen.findByText("이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요.")).toBeInTheDocument();
+    expect(calls.find((c) => c.url.endsWith("/check-available"))!.body).toEqual({ field: "email", value: "host@stageduck.test" });
+    expect(screen.getByLabelText("이메일")).toHaveAttribute("aria-invalid", "true");
+    await userEvent.type(screen.getByLabelText("이메일"), "x");
+    expect(screen.queryByText("이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요.")).not.toBeInTheDocument();
+  });
+
+  it("[중복 확인]에서 쓸 수 있는 닉네임이면 바로 초록 안내가 보인다", async () => {
+    mockServer({ "POST /api/v1/auth/check-available": { status: 200, body: { available: true, message: "쓸 수 있는 닉네임이에요." } } });
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("닉네임"), "가을밤밴드");
+    await userEvent.click(screen.getByRole("button", { name: "닉네임 중복 확인" }));
+    expect(await screen.findByText("쓸 수 있는 닉네임이에요.")).toBeInTheDocument();
+  });
+
   it("만 14세는 생일이 지나야 된다", () => {
     expect(ageOn("2012-11-18", new Date(2026, 10, 18))).toBe(14);
     expect(ageOn("2012-11-19", new Date(2026, 10, 18))).toBe(13);
