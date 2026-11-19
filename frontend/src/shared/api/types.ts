@@ -73,6 +73,17 @@ export interface SupplierApplication {
   appliedAt: string;
 }
 
+/** GET /supplier/venues — 내 공간 목록 (backend supplier VenueOut). 견적서 공간 고르기에 쓰는 칸만 적는다 */
+export interface MyVenue {
+  id: number;
+  name: string;
+  sido: string;
+  sigungu: string;
+  maxCapacity: number;
+  /** venues.status — HIDDEN 은 관리자가 숨긴 공간 */
+  status: "ACTIVE" | "HIDDEN";
+}
+
 // ---- 공연 요청서 (api-contract.md 3.2, 묶음 2) ----
 export type PerformanceForm = "BAND" | "THEATER" | "TALK_EVENT" | "RELIGIOUS" | "ETC";
 export type PerformanceStatus =

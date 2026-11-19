@@ -321,7 +321,7 @@ export function QuoteForm(props: Props) {
                 <Field
                   label="공간"
                   required
-                  hint={venues.data && venues.data.length === 0 ? "등록한 공간이 없어요. 공간을 먼저 등록해 주세요." : undefined}
+                  hint={venues.data && venues.data.length === 0 ? "먼저 공간을 등록해 주세요." : undefined}
                   error={errorOf("venueId")}
                 >
                   {(c) => <Select {...c} value={f.venueId} options={venueOptions} onChange={(venueId) => set({ venueId })} placeholder="내 공간 고르기" />}
