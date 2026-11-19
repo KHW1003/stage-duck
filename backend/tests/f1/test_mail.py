@@ -178,3 +178,9 @@ def test_reset_request_does_not_break_when_mail_from_is_example_text(client, db,
     user = make_user(db, password=OLD_PW)
     res = client.post(REQ, json={"email": user.email})
     assert res.status_code == 202 and FakeSMTP.sent == []
+
+
+def test_mail_has_date_and_message_id(smtp):
+    mail.send_test_mail("me@example.com")
+    (msg,) = FakeSMTP.sent
+    assert msg["Date"] and msg["Message-ID"].endswith("@stageduck.test>")

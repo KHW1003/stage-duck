@@ -12,7 +12,7 @@ import smtplib
 import ssl
 import threading
 from email.message import EmailMessage
-from email.utils import formataddr
+from email.utils import formataddr, formatdate, make_msgid
 
 from app.core.config import Settings, get_settings
 
@@ -25,6 +25,9 @@ def build_message(settings: Settings, to: str, subject: str, text: str) -> Email
     msg["Subject"] = subject
     msg["From"] = formataddr((settings.mail_from_name, settings.mail_from))
     msg["To"] = to
+    # Gmail 등은 Date·Message-ID 가 없는 메일을 거절하거나 스팸으로 보낸다 (RFC 5322)
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain=settings.mail_from.rsplit("@", 1)[-1] or None)
     msg.set_content(text)
     return msg
 
