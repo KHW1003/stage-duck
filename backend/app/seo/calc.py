@@ -54,7 +54,7 @@ _PHONE = re.compile(r"\+?\d{2,4}[-.\s]?\d{3,4}[-.\s]?\d{4}")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _MONEY = re.compile(r"\d[\d,]*\s*(?:만\s*)?원")
 _SPACE = re.compile(r"\s+")
-_DETAIL = re.compile(r"^/(community|board)/(\d+)$")
+_DETAIL = re.compile(r"^/(community|board|notices)/(\d+)$")
 
 
 def normalize(path: str) -> str:
@@ -87,6 +87,12 @@ def board_meta(post_id: int, category: str, title: str, company: str, body: str,
     og = f"[{PR_CATEGORY.get(category, category)}] {title} · {company}"
     return PageMeta(title=f"{og} · {SITE}", og_title=og, description=summarize(body), image=image,
                     path=f"/board/{post_id}", type="article", index=True)
+
+
+def notice_meta(notice_id: int, title: str, body: str) -> PageMeta:
+    """seo.md 3장: {제목} · STAGE DUCK 공지 / 본문 앞 80자."""
+    return PageMeta(title=f"{title} · {SITE} 공지", og_title=title, description=summarize(body),
+                    path=f"/notices/{notice_id}", type="article", index=True)
 
 
 def static_meta(path: str) -> PageMeta | None:

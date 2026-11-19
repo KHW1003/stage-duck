@@ -16,6 +16,10 @@ const PAGES: { path: string; h1: string | RegExp }[] = [
   { path: "/login", h1: "로그인" },
   { path: "/signup", h1: "가입하기" },
   { path: "/password/forgot", h1: "비밀번호 찾기" },
+  { path: "/notices", h1: "공지사항" },
+  { path: "/faq", h1: "자주 묻는 질문" },
+  { path: "/guide/supplier", h1: "업체 이용 가이드" },
+  { path: "/terms/service", h1: "약관·정책" },
   { path: "/no-such-page", h1: "화면을 찾을 수 없어요" },
 ];
 
