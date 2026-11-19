@@ -242,6 +242,8 @@ describe("로그아웃 (AC-F1-12 화면 부분)", () => {
     await userEvent.click(await screen.findByRole("button", { name: /광주밴드/ }));
     await userEvent.click(screen.getByRole("menuitem", { name: "로그아웃" }));
     expect(await screen.findByTestId("where")).toHaveTextContent("/login");
+    // 보던 화면(?next=)을 달고 가지 않는다 — 다음 사람이 로그인하면 앞사람 화면으로 가는 문제 (E2E 로 찾음)
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/login$/));
     expect(calls).toContainEqual({ url: "/api/v1/auth/logout", method: "POST" });
     await waitFor(() => expect(screen.queryByText("광주밴드")).not.toBeInTheDocument());
     expect(screen.getByRole("link", { name: "로그인" })).toBeInTheDocument();
