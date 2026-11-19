@@ -22,6 +22,7 @@ import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
 import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
+import { SheetPage } from "./pages/SheetPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -78,6 +79,7 @@ export function AppRoutes() {
           <Route path="/inquiries/new" element={<InquiryWritePage />} />
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
+          <Route path="/performances/:id/sheet" element={<SheetPage />} />
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />

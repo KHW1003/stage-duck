@@ -1,7 +1,15 @@
 /** 통합 청구서·테스트 결제 API (#50·#51). 서버 데이터는 TanStack Query 로만 다룬다 (CLAUDE.md 6.2). */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../../shared/api/client";
-import type { Order, PaymentResult } from "../../shared/api/types";
+import type { Order, PaymentResult, Sheet } from "../../shared/api/types";
+
+/** 최종 담당표 (#53). 사용자·확정 업체만, 남이면 404 */
+export function useSheet(performanceId: number) {
+  return useQuery({
+    queryKey: ["performances", performanceId, "sheet"],
+    queryFn: () => api<Sheet>(`/performances/${performanceId}/sheet`),
+  });
+}
 
 export const orderKey = (performanceId: number) => ["performances", performanceId, "order"] as const;
 
