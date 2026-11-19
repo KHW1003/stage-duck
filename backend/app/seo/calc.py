@@ -27,7 +27,7 @@ class PageMeta:
 STATIC_PAGES: dict[str, tuple[str, str]] = {
     "/": ("STAGE DUCK · 공연장부터 엔지니어까지 차례로", "요청서를 쓰면 공연장, 장비, 엔지니어 업체의 견적서를 차례로 받아 비교하고 컨펌해요."),
     "/venues": ("공연 공간 찾기 · STAGE DUCK", "지역·관객 수·공간 조건으로 공연할 곳을 찾아보세요."),
-    "/board": ("업체 PR 게시판 · STAGE DUCK", "공연장·장비·엔지니어 업체가 직접 올린 소개 글을 둘러보세요."),
+    "/board": ("업체 찾기 · STAGE DUCK", "공연장·장비·엔지니어 업체가 직접 올린 소개 글을 둘러보세요."),
     "/community": ("커뮤니티 · STAGE DUCK", "공연 준비하면서 궁금한 것, 알게 된 것을 나눠요."),
     "/notices": ("공지사항 · STAGE DUCK", "STAGE DUCK 공지사항이에요."),
     "/faq": ("자주 묻는 질문 · STAGE DUCK", "요청서·견적·결제·취소, 업체 입점·정산에 대해 자주 묻는 질문이에요."),
