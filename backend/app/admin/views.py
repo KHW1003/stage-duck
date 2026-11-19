@@ -66,16 +66,28 @@ def _to_reason_form(request: Request, op: str, identity: str) -> RedirectRespons
     return RedirectResponse(f"{request.url_for('admin:view-reason')}?{query}", status_code=302)
 
 
+# 행 버튼 아이콘 (Font Awesome, SQLAdmin 에 들어 있음). 주 동작은 주황 강조 (admin.css .sd-row-btn--main)
+_ROW_ICON = {
+    "inquiry_answer": "fa-reply", "report_warn": "fa-triangle-exclamation", "report_dismiss": "fa-xmark",
+    "pr_post_blind": "fa-eye-slash", "unblind": "fa-eye",
+}
+_ROW_MAIN = {"inquiry_answer", "report_warn"}
+
+
+def _row_button(label: str, key: str, href: str, extra: str = "") -> str:
+    main = " sd-row-btn--main" if key in _ROW_MAIN else ""
+    icon = f'<i class="fa-solid {_ROW_ICON[key]}" aria-hidden="true"></i>' if key in _ROW_ICON else ""
+    return f'<a class="sd-row-btn{main}" href="{href}"{extra}>{icon}<span>{label}</span></a>'
+
+
 def _reason_button(label: str, op: str, identity: str, pk: int) -> str:
     """행마다 붙는 버튼: 누르면 그 행 하나로 사유(답변) 입력 화면이 열린다 (체크박스 → 작업 메뉴를 안 거친다)."""
-    query = urlencode({"op": op, "pks": pk, "back": identity})
-    return f'<a class="btn btn-sm btn-outline-primary me-1" href="/admin/reason?{query}">{label}</a>'
+    return _row_button(label, op, f"/admin/reason?{urlencode({'op': op, 'pks': pk, 'back': identity})}")
 
 
 def _action_button(label: str, identity: str, name: str, pk: int, confirm: str) -> str:
     """사유가 필요 없는 액션을 그 행 하나에 바로 (확인 창을 한 번 띄운다)."""
-    return (f'<a class="btn btn-sm btn-outline-secondary me-1" href="/admin/{identity}/action/{name}?pks={pk}" '
-            f'onclick="return confirm(\'{confirm}\')">{label}</a>')
+    return _row_button(label, name, f"/admin/{identity}/action/{name}?pks={pk}", f" onclick=\"return confirm('{confirm}')\"")
 
 
 class SupplierAdmin(ModelView, model=Supplier):
