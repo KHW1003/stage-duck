@@ -1,7 +1,7 @@
 /**
  * 단계별 견적 비교 (/performances/:id/compare?stage=). 목업: mockup-v4/pages/compare.html · FR-CHK-01 · AC-F3-20~24 · 묶음 4
  * 검사·종합 결과는 서버 run_checks() 결과를 그대로 그린다 (CLAUDE.md 12). 화면은 판정하지 않는다.
- * 목업의 사진·업체 이름·채팅·오퍼 칸은 API 가 아직 주지 않아 뺐다 (내용 미정).
+ * 공간 사진은 공간 찾기와 같은 기본 사진(venuePhotos). 업체 이름·채팅·오퍼 칸은 아직 뺐다 (내용 미정).
  */
 import type { CSSProperties } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -9,6 +9,7 @@ import { useStageQuotes } from "../features/compare/api";
 import { usePerformance } from "../features/performance/api";
 import { STAGE_NAME, STAGE_STATUS, dateLabel, hm } from "../features/performance/labels";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { venuePhotos } from "../features/venue/view";
 import type { CheckItem, CompareQuote, StageSummary } from "../shared/api/types";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { StatusBadge } from "../shared/StatusBadge";
@@ -47,6 +48,10 @@ function QuoteColumn({ q, stage }: { q: CompareQuote; stage: StageSummary }) {
   const off = stage.status === "CONFIRMED" && !confirmed;
   return (
     <article className={["q-col", confirmed && "is-on", off && "is-off"].filter(Boolean).join(" ")} aria-label={nameOf(q)}>
+      {q.venueId !== null && q.venueType !== null && (
+        <div className="q-col__photo" role="img" aria-label={`${nameOf(q)} 사진`}
+          style={{ "--img": `url('${venuePhotos({ id: q.venueId, venueType: q.venueType })[0]}')` } as CSSProperties} />
+      )}
       <div className="q-col__head">
         <p className="q-col__kind">
           {kind(q, stage)} {q.isFullSpec && <span className="tag tag--fill">풀스펙</span>}

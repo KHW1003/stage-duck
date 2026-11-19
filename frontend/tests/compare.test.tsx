@@ -28,7 +28,7 @@ const PERF = {
 function quote(over: Partial<CompareQuote>): CompareQuote {
   return {
     quoteId: 1, supplierId: 1, label: "기본형", status: "SENT", version: 1, basedOnPerfVersion: 1, totalAmount: 500000,
-    venueName: "공간 C", maxCapacity: 120, checkinTime: "14:00", setupAvailableTime: "15:00", checkoutTime: "23:00",
+    venueId: 3, venueType: "CULTURE_SPACE", venueName: "공간 C", maxCapacity: 120, checkinTime: "14:00", setupAvailableTime: "15:00", checkoutTime: "23:00",
     includesEquipment: false, includesEngineer: false, isFullSpec: false, offered: false, overall: "PASS",
     checks: [
       { id: "CHK-01", result: "PASS", message: "수용 인원 120명 ≥ 관객 80명" },
@@ -77,6 +77,7 @@ describe("단계별 견적 비교 (/performances/:id/compare)", () => {
     const a = await screen.findByRole("article", { name: "공간 A · 기본형" });
     expect(within(a).getByText("풀스펙")).toBeInTheDocument();
     expect(within(a).getByText("4,000,000")).toBeInTheDocument();
+    expect(within(a).getByRole("img", { name: "공간 A · 기본형 사진" })).toBeInTheDocument();
 
     const b = screen.getByRole("article", { name: "공간 B · 기본형" });
     expect(within(b).getByRole("status", { name: "검사 결과: 경고" })).toBeInTheDocument();
