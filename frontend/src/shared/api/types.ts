@@ -368,3 +368,34 @@ export interface PrPostRequest {
   priceRange: string | null;
   fileIds: number[];
 }
+
+/* ---- 단계별 견적 비교 (api-contract.md 4.1 GET /stages/{stageId}/quotes, #48) ---- */
+
+export interface CheckItem {
+  id: string;
+  result: "PASS" | "NEEDS_INFO" | "CONFLICT" | "WARNING";
+  message: string;
+}
+
+/** 비교 화면 견적서 한 칸. 검사·종합 결과는 서버 run_checks() 그대로 */
+export interface CompareQuote {
+  quoteId: number;
+  supplierId: number;
+  label: string;
+  status: string;
+  version: number;
+  basedOnPerfVersion: number;
+  totalAmount: number;
+  /** 공연장 견적서만 (공간 스냅샷) */
+  venueName: string | null;
+  maxCapacity: number | null;
+  checkinTime: string | null;
+  setupAvailableTime: string | null;
+  checkoutTime: string | null;
+  includesEquipment: boolean;
+  includesEngineer: boolean;
+  isFullSpec: boolean;
+  offered: boolean;
+  overall: CheckItem["result"];
+  checks: CheckItem[];
+}

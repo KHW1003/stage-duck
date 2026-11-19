@@ -1,0 +1,23 @@
+/* 단계별 견적 비교 — mockup-v4/pages/compare.html 의 <style> 그대로 (항목별로 나란히 보기).
+   q-cols·q-col 은 kit.css. 행마다 role="row" 로 묶어도 격자가 유지되게 .sp__row 는 display: contents */
+.sp { display: grid; grid-template-columns: 136px repeat(var(--cols, 3), minmax(0, 1fr)); column-gap: 12px; }
+.sp__row { display: contents; }
+.sp__row > div { padding: 14px 22px; font-size: var(--sd-text-desc); line-height: 1.55; }
+.sp__k { padding-left: 0 !important; color: var(--sd-muted); font-size: var(--sd-text-small) !important; border-top: 1px solid transparent; }
+.sp__h.is-k { background: none; }
+.sp__h.is-v, .sp__v { background: var(--sd-th); }
+.sp__h.is-v { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding-top: 20px; padding-bottom: 16px; border-radius: var(--sd-r-box) var(--sd-r-box) 0 0; }
+.sp__h b { font-size: 16px; letter-spacing: -.3px; }
+.sp__h span { color: var(--sd-muted); font-size: var(--sd-text-small); }
+.sp__h em { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-style: normal; font-size: var(--sd-text-small); font-weight: 700; color: var(--sd-ink); }
+.sp__h em .icon { width: 14px; height: 14px; color: var(--sd-pass-text); }
+.sp__v { border-top: 1px solid var(--sd-line); color: var(--sd-ink); }
+.sp__v.is-last { padding-bottom: 20px; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
+.sp__v.is-pick { font-weight: 600; }
+.sp__price { font-size: 18px; font-weight: 800; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  .q-cols { grid-template-columns: 1fr; }
+  .q-col + .q-col { border-left: 0; border-top: 1px solid var(--sd-line-strong); }
+  .sp { overflow-x: auto; }
+}
