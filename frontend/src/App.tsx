@@ -35,6 +35,7 @@ import { PostingPage } from "./pages/PostingPage";
 import { PostingsPage } from "./pages/PostingsPage";
 import { QuotePage } from "./pages/QuotePage";
 import { QuoteEditPage } from "./pages/QuoteEditPage";
+import { QuoteSheetPage } from "./pages/QuoteSheetPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
@@ -86,6 +87,8 @@ export function AppRoutes() {
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
           <Route path="/performances/:id/sheet" element={<SheetPage />} />
+          <Route path="/quotes/:quoteId" element={<QuoteSheetPage />} />
+          <Route path="/quotes/by-version/:versionId" element={<QuoteSheetPage />} />
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />

@@ -1,9 +1,9 @@
 /**
  * 업체 메인 — 승인 업체 첫 화면 (mockup/partner.html 3번 st-approved).
- * 인사 → 지금 할 일 · 내 견적서 → 나에게 맞는 공고(전체·공고·받은 오퍼) → 이번 달 일정 · 내 업체.
+ * 인사 → 지금 할 일 · 내 견적서 → 나에게 맞는 공고(전체·공고·받은 견적 요청) → 이번 달 일정 · 내 업체.
  *
  * 값은 아직 목업 예시(시연_예시값.md)다. 바꿀 곳:
- * - 공고·오퍼 목록: 3번 공고 목록 API(#41, PostingSummary)가 develop 에 들어오면 JOBS 대신
+ * - 공고·견적 요청 목록: 3번 공고 목록 API(#41, PostingSummary)가 develop 에 들어오면 JOBS 대신
  * - 할 일: 알림(notify, #45) / 견적서 수·정산: 견적서·결제 묶음
  */
 import { useMemo, useState } from "react";
@@ -24,14 +24,14 @@ interface Todo {
 }
 
 const TODOS: Todo[] = [
-  { icon: "mail", title: "오퍼가 도착했어요", desc: "연말 합동 공연 · 응답 기한 47시간", action: "공고 보기", to: "/supplier/postings", hot: true },
-  { icon: "bubble", title: "가을밤밴드님이 채팅을 시작했어요", desc: "가을밤 밴드 공연 · 장비 · 5분 전", action: "채팅", to: "/chats" },
+  { icon: "mail", title: "견적 요청이 도착했어요", desc: "연말 합동 공연 · 응답 기한 47시간", action: "공고 보기", to: "/supplier/postings", hot: true },
+  { icon: "bubble", title: "가을밤밴드님이 채팅을 시작했어요", desc: "가을밤 밴드 공연 · 장비 · 5분 전", action: "채팅", to: "/supplier/postings?chat=list" },
   { icon: "pass", title: "재즈 트리오 공연 견적서가 컨펌됐어요", desc: "700,000원 · 결제 완료", action: "담당표", to: "/sheet" },
 ];
 
 const KPI = [
   { label: "보낸 견적서", value: 3, to: "/supplier/postings" },
-  { label: "채팅 중", value: 1, to: "/chats" },
+  { label: "채팅 중", value: 1, to: "/supplier/postings?chat=list" },
   { label: "확인 카드 대기", value: 1, to: "/supplier/postings", tone: "warn" as const },
   { label: "컨펌", value: 1, to: "/supplier/postings", tone: "done" as const },
 ];
@@ -72,7 +72,7 @@ const JOBS: Job[] = [
     due: "응답 기한 47시간",
     offer: true,
     urgent: true,
-    action: { label: "오퍼 보기", to: "/supplier/postings", primary: true },
+    action: { label: "견적 요청 보기", to: "/supplier/postings", primary: true },
   },
 ];
 
@@ -85,7 +85,7 @@ type Filter = "all" | "posting" | "offer";
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "posting", label: "공고" },
-  { key: "offer", label: "받은 오퍼" },
+  { key: "offer", label: "받은 견적 요청" },
 ];
 
 const parse = (iso: string) => {
@@ -287,7 +287,7 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
                   </div>
                   <div className={s.jobMain}>
                     <div className={s.jobTags}>
-                      {j.offer && <span className={cx(s.badge, s.badgeBlue)}>받은 오퍼</span>}
+                      {j.offer && <span className={cx(s.badge, s.badgeBlue)}>받은 견적 요청</span>}
                       <span className={s.chip}>장비 단계</span>
                     </div>
                     <h3>{j.title}</h3>

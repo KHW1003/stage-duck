@@ -147,7 +147,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     renderAt("/");
     await screen.findByRole("button", { name: /업체D담당/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "내 예약", "내 소개 글", "커뮤니티"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "내 예약", "채팅", "공간 찾기", "업체 찾기", "커뮤니티"]);
     const reservationLink = within(nav).getByRole("link", { name: "내 예약" });
     await userEvent.click(reservationLink);
     expect(await screen.findByRole("heading", { name: "가을밤 밴드 공연" })).toBeInTheDocument();
@@ -157,10 +157,6 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(reservations.getByRole("link", { name: "담당표 보기" })).toHaveAttribute("href", "/performances/5/sheet");
     expect(reservations.getByRole("link", { name: "현장 준비 확인" })).toHaveAttribute("href", "/supplier/tech/5");
     expect(reservationLink).toHaveAttribute("aria-current", "page");
-    const postsLink = within(nav).getByRole("link", { name: "내 소개 글" });
-    await userEvent.click(postsLink);
-    expect(await screen.findByText("내 소개 글 화면")).toBeInTheDocument();
-    expect(postsLink).toHaveAttribute("aria-current", "page");
     await userEvent.click(screen.getByRole("button", { name: /업체D담당/ }));
     expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual([
       "업체 프로필",

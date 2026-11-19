@@ -36,16 +36,17 @@ function roleText(kind: LayoutKind, me: Me): string {
 
 function MenuLink({ item }: { item: MenuItem }) {
   if (item.external) return <a href={item.to}>{item.label}</a>;
+  if (item.chat) return <Link to={{ search: "?chat=list" }}>{item.label}</Link>; // 지금 화면 그대로 채팅 창만 연다
   return <NavLink to={item.to}>{item.label}</NavLink>;
 }
 
 export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
   const partner = kind === "partner" || kind === "partner-review";
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const hasMenu = MENUS[kind].length > 0 || !me;
   // 화면을 옮기면 모바일 메뉴 판을 닫는다
-  useEffect(() => setNavOpen(false), [pathname]);
+  useEffect(() => setNavOpen(false), [pathname, search]);
   useEffect(() => {
     if (!navOpen) return;
     const close = (e: KeyboardEvent) => e.key === "Escape" && setNavOpen(false);

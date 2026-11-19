@@ -2,7 +2,7 @@
  * 떠 있는 채팅 위젯 (D-42, mockup-v4 chat-widget.js·css/chat.css, 상단 고정은 mockup-v3 — D-56).
  * - 로그인한 사용자·승인 업체에게만 오른쪽 아래 둥근 버튼(안 읽은 수) → 누르면 목록 창 (AppLayout 이 부른다)
  * - 창이 열려 있으면 뒤 화면 스크롤을 잠그고, 창 밖을 누르거나 Esc 를 누르면 닫힌다
- * - 주소에 ?chat=<roomId> 가 붙어 오면(견적서 완료 화면의 [채팅방으로]) 그 방을 연다
+ * - 주소에 ?chat=<roomId> 가 붙어 오면(견적서 완료 화면의 [채팅방으로]) 그 방을 연다. ?chat=list 면 목록 창을 연다 (머리 메뉴 [채팅])
  * - 열린 상태는 AppLayout 안에 있어서 화면을 옮겨도 이어진다
  * - 실시간 받기는 useChatSocket (api-contract.md 7장)
  */
@@ -38,7 +38,11 @@ export function ChatWidget({ me }: { me: Me }) {
   useEffect(() => {
     if (chatParam === null) return;
     const id = Number(chatParam);
-    if (Number.isInteger(id) && id > 0) {
+    if (chatParam === "list") {
+      setRoomId(null);
+      setOpen(true);
+      setPop(true);
+    } else if (Number.isInteger(id) && id > 0) {
       setRoomId(id);
       setOpen(true);
       setPop(true);
