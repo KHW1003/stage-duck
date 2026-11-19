@@ -33,7 +33,7 @@ class FakeSMTP:
 
     def send_message(self, msg):
         if FakeSMTP.fail:
-            raise smtplib.SMTPAuthenticationError(535, b"bad credentials")
+            raise smtplib.SMTPAuthenticationError(535, b"5.7.1 Username and Password not accepted")
         FakeSMTP.sent.append(msg)
 
 

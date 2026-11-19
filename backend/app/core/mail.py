@@ -51,7 +51,13 @@ def _connect_and_send(settings: Settings, msg: EmailMessage) -> None:
 def _reason(exc: Exception) -> str:
     """흔한 실패를 고칠 곳이 보이게 바꾼다."""
     if isinstance(exc, smtplib.SMTPAuthenticationError):
-        return "로그인에 실패했어요. SMTP_USER(보내는 주소)와 SMTP_PASSWORD(Gmail 은 앱 비밀번호 16자리, 띄어쓰기 없이)를 확인해 주세요."
+        server = exc.smtp_error.decode("utf-8", "replace") if isinstance(exc.smtp_error, bytes) else str(exc.smtp_error)
+        return (
+            "로그인에 실패했어요. SMTP_USER(보내는 주소)와 SMTP_PASSWORD 를 확인해 주세요. "
+            "Gmail 은 앱 비밀번호 16자리(띄어쓰기 없이), 네이버는 메일 환경설정에서 IMAP/SMTP '사용함' + "
+            "2단계 인증 계정이면 애플리케이션 비밀번호가 필요해요. "
+            f"(메일 서버 답: {exc.smtp_code} {server[:120]})"
+        )
     if isinstance(exc, smtplib.SMTPRecipientsRefused):
         return "받는 주소를 메일 서버가 거절했어요. 주소를 확인해 주세요."
     if isinstance(exc, smtplib.SMTPSenderRefused):
