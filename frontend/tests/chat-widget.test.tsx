@@ -362,7 +362,7 @@ describe("대화방", () => {
     await within(panel).findByText("010-0000-0000 으로 연락 주세요");
     const notes = within(panel).getAllByRole("note");
     expect(notes).toHaveLength(1);
-    expect(notes[0]).toHaveTextContent("플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요.");
+    expect(notes[0]).toHaveTextContent("플랫폼 밖에서 직접 결제한 거래에는 STAGE DUCK의 결제금 보관 및 환불 절차가 적용되지 않아요.");
   });
 
   it("QUOTE 메시지는 견적서 카드(내역서 보기), IMAGE 는 attachmentUrl 이 있으면 사진 · 없으면 '사진' 글자", async () => {

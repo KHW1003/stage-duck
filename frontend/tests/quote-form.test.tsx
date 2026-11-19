@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
@@ -81,7 +81,11 @@ function renderAt(path: string) {
   );
 }
 
-const ME = { "GET /api/v1/me": { status: 200, body: SUPPLIER } };
+const REVIEW = { version: "1.0:1.0", reviewed: true };
+const ME = {
+  "GET /api/v1/me": { status: 200, body: SUPPLIER },
+  "GET /api/v1/supplier/terms-review": { status: 200, body: REVIEW },
+};
 const EQUIP = { ...ME, "GET /api/v1/postings/2": { status: 200, body: EQUIPMENT_POSTING } };
 const VENUE = {
   ...ME,
@@ -117,6 +121,45 @@ afterEach(() => {
 });
 
 describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
+  it("약관 전문을 차례로 확인하기 전에는 견적을 보내지 않는다", async () => {
+    let reachEnd = () => {};
+    vi.stubGlobal("IntersectionObserver", class {
+      constructor(callback: IntersectionObserverCallback) {
+        reachEnd = () => callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+      observe() {}
+      disconnect() {}
+    });
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer({
+      ...EQUIP,
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { ...REVIEW, reviewed: false } },
+      "PUT /api/v1/supplier/terms-review": { status: 200, body: REVIEW },
+      "POST /api/v1/stages/2/quotes": { status: 201, body: SENT },
+    });
+    renderAt("/supplier/postings/2/quote");
+    await fillExample(user);
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "본문 닫기" }));
+    expect(screen.getByLabelText(/견적서 이름/)).toHaveValue("기본형");
+    expect(calls.filter(({ key }) => /^(PUT|POST)/.test(key))).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    for (const title of ["입점·견적·이행 및 정산", "업체 취소 및 이용 규칙", "개인정보 처리방침"]) {
+      const dialog = within(screen.getByRole("dialog", { name: title }));
+      const next = dialog.getByRole("button", {
+        name: title === "개인정보 처리방침" ? "확인하고 견적 보내기" : "확인하고 다음",
+      });
+      expect(next).toBeDisabled();
+      act(() => reachEnd());
+      await user.click(next);
+    }
+    expect(await screen.findByRole("heading", { name: "견적서를 보냈어요" })).toBeInTheDocument();
+    expect(calls.filter(({ key }) => /^(PUT|POST)/.test(key)).map(({ key }) => key)).toEqual([
+      "PUT /api/v1/supplier/terms-review", "POST /api/v1/stages/2/quotes",
+    ]);
+  });
+
   it("AC-F2-15 예시 값으로 보내면 본문이 계약서 모양(camelCase, 정수 금액)이고, 완료 안내와 [채팅방으로]·[공고 목록으로]가 보인다", async () => {
     const user = userEvent.setup({ delay: null });
     const calls = mockServer({ ...EQUIP, "POST /api/v1/stages/2/quotes": { status: 201, body: SENT } });

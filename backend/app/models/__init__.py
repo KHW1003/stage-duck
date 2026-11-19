@@ -13,9 +13,9 @@ from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier, SupplierCategory
 from app.models.support import Inquiry, Notice  # noqa: F401  #103 공지사항, #102 1:1 문의
 from app.models.tech import TechCheck  # noqa: F401  #49 기술 확인
-from app.models.terms import TermsAgreement
+from app.models.terms import SupplierTermsReview, TermsAgreement
 from app.models.user import User
 from app.models.venue import Venue, VenueEquipment
 from app.models.payment import Cancellation, LedgerEntry, Order, OrderLine, Payment  # noqa: F401  #50·#51·#52 청구서·결제·장부·취소
 
-__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent", "PasswordResetToken", "PasswordResetRequest", "Notice"]
+__all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "SupplierTermsReview", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent", "PasswordResetToken", "PasswordResetRequest", "Notice"]

@@ -6,6 +6,7 @@
  * AC-F3-15: contactWarning 메시지 아래 플랫폼 밖 거래 경고
  * 최종 견적 카드·확정(#43)과 사진 보내기(다음 PR)는 여기서 만들지 않는다.
  */
+import { OUTSIDE_PAYMENT_NOTICE } from "../../features/support/terms";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -18,7 +19,7 @@ import { Ico } from "../ui/Ico";
 import type { ChatMsg } from "./normalize";
 import { Avatar, PinMenuItem, dayLabel, msgTime } from "./parts";
 
-const WARN = "플랫폼 밖에서 거래하면 노쇼·사기 때 환불 보호를 받을 수 없어요. 연락처는 결제 후 최종 담당표에서 공개돼요.";
+const WARN = OUTSIDE_PAYMENT_NOTICE + " 연락처는 결제 후 최종 담당표에서 공개돼요.";
 
 interface Props {
   roomId: number;

@@ -3,31 +3,11 @@
  * 세 문서를 탭으로 한 화면에. 탭은 주소가 바뀌는 링크라 가입 화면 [보기]·바닥글이 해당 탭을 바로 연다.
  * 내용은 features/support/terms.tsx (시연용 요약본). 버전·시행일을 함께 보인다.
  */
-import { Fragment } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { TERMS, TERMS_TABS, isTermsType, type Article } from "../features/support/terms";
+import { TERMS, TERMS_TABS, isTermsType } from "../features/support/terms";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { Ico } from "../shared/ui/Ico";
-import "../features/support/support.css";
-
-function ArticleView({ a }: { a: Article }) {
-  return (
-    <article className="tm-art" id={a.id}>
-      <h3>{a.title}</h3>
-      {a.p && <div className="tm-p">{a.p}</div>}
-      {a.ol && (
-        <ol className="tm-ol">
-          {a.ol.map((item, i) => (
-            <li key={i}>
-              <span className="tm-num">{"①②③④⑤⑥⑦⑧⑨"[i]}</span>
-              <div>{item}</div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </article>
-  );
-}
+import { TermsDocumentBody } from "../features/support/TermsDocumentBody";
 
 export function TermsPage() {
   const { type } = useParams();
@@ -81,18 +61,7 @@ export function TermsPage() {
               </label>
             </div>
             <div className="tm-scroll" tabIndex={0} aria-label={`${tab?.label} 전문`} key={type}>
-              {doc.chapters.map((c, i) => (
-                <Fragment key={c.title ?? i}>
-                  {c.title && <h3 className="tm-chap">{c.title}</h3>}
-                  {c.articles.map((a) => (
-                    <ArticleView key={a.id} a={a} />
-                  ))}
-                </Fragment>
-              ))}
-              <section className="tm-add">
-                <h3>부칙</h3>
-                <p>{doc.addendum}</p>
-              </section>
+              <TermsDocumentBody doc={doc} />
             </div>
             <div className="tm-below">
               <span>상자 안을 스크롤해서 끝까지 읽을 수 있어요.</span>

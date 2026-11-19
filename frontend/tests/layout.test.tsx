@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import { act } from "react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { SupplierReservationsPage } from "../src/pages/SupplierReservationsPage";
 import type { Me } from "../src/shared/api/types";
 import { RequireAuth } from "../src/shared/auth/RequireAuth";
 import { AppLayout } from "../src/shared/layout/AppLayout";
@@ -64,6 +65,8 @@ function renderAt(path: string) {
             </Route>
             <Route element={<RequireAuth roles={["SUPPLIER"]} approvedOnly />}>
               <Route path="/supplier/postings" element={<p>공고 목록 화면</p>} />
+              <Route path="/supplier/reservations" element={<SupplierReservationsPage />} />
+              <Route path="/supplier/posts" element={<p>내 소개 글 화면</p>} />
             </Route>
             <Route path="/login" element={<Where />} />
             <Route path="/supplier/onboarding" element={<Where />} />
@@ -129,18 +132,40 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.getByText("사용자 계정")).toBeInTheDocument();
   });
 
-  it("승인 업체 메뉴·계정 메뉴는 목업 v4와 같다 (기술 확인은 계정 메뉴로)", async () => {
-    mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
+  it("승인 업체는 내 예약에서 맡은 공연과 담당표·현장 준비 링크를 본다", async () => {
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/supplier/reservations": {
+        status: 200,
+        body: [{
+          performanceId: 5, title: "가을밤 밴드 공연", showDate: "2026-11-28",
+          showStart: "19:00:00", showEnd: "21:00:00", sido: "광주", sigungu: "동구",
+          status: "AWAITING_PAYMENT", stageTypes: ["EQUIPMENT"], amount: 420000,
+        }],
+      },
+    });
     renderAt("/");
     await screen.findByRole("button", { name: /업체D담당/ });
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "채팅", "공간 찾기", "업체 찾기", "커뮤니티"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["공고 목록", "내 예약", "내 소개 글", "커뮤니티"]);
+    const reservationLink = within(nav).getByRole("link", { name: "내 예약" });
+    await userEvent.click(reservationLink);
+    expect(await screen.findByRole("heading", { name: "가을밤 밴드 공연" })).toBeInTheDocument();
+    const reservations = within(screen.getByRole("list", { name: "맡은 공연" }));
+    expect(reservations.getByText("결제 대기")).toBeInTheDocument();
+    expect(reservations.getByText("420,000원")).toBeInTheDocument();
+    expect(reservations.getByRole("link", { name: "담당표 보기" })).toHaveAttribute("href", "/performances/5/sheet");
+    expect(reservations.getByRole("link", { name: "현장 준비 확인" })).toHaveAttribute("href", "/supplier/tech/5");
+    expect(reservationLink).toHaveAttribute("aria-current", "page");
+    const postsLink = within(nav).getByRole("link", { name: "내 소개 글" });
+    await userEvent.click(postsLink);
+    expect(await screen.findByText("내 소개 글 화면")).toBeInTheDocument();
+    expect(postsLink).toHaveAttribute("aria-current", "page");
     await userEvent.click(screen.getByRole("button", { name: /업체D담당/ }));
     expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual([
       "업체 프로필",
       "내 소개 글",
-      "최종 담당표",
-      "기술 확인",
+      "내 예약",
       "1:1 문의",
       "알림",
       "로그아웃",

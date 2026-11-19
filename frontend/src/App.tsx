@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
 import { CommunitySavedPage } from "./pages/CommunitySavedPage";
@@ -18,7 +18,8 @@ import { InquiryListPage, InquiryPostPage, InquiryWritePage } from "./pages/Inqu
 import { NoticeDetailPage, NoticeListPage } from "./pages/NoticePages";
 import { SupplierGuidePage } from "./pages/SupplierGuidePage";
 import { TermsPage } from "./pages/TermsPage";
-import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
+import { SupplierReservationsPage } from "./pages/SupplierReservationsPage";
+import { TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
 import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
@@ -95,7 +96,8 @@ export function AppRoutes() {
           <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
           <Route path="/supplier/postings/:stageId/quote" element={<QuotePage />} />
           <Route path="/supplier/quotes/:quoteId/edit" element={<QuoteEditPage />} />
-          <Route path="/supplier/tech" element={<TechCheckIndexPage />} />
+          <Route path="/supplier/reservations" element={<SupplierReservationsPage />} />
+          <Route path="/supplier/tech" element={<Navigate replace to="/supplier/reservations" />} />
           <Route path="/supplier/tech/:performanceId" element={<TechCheckPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>

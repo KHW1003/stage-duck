@@ -407,7 +407,7 @@ describe("다음 단계로 (/performances/:id/next)", () => {
   });
 });
 
-describe("기술 확인 (/supplier/tech/:performanceId)", () => {
+describe("현장 준비 확인 (/supplier/tech/:performanceId)", () => {
   const SUP = { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" };
   const row = (id: number, item: string, mine: boolean, answer: string, memo: string | null) => ({
     id, item, detail: null, ownerSupplierId: mine ? 7 : 3, ownerLabel: mine ? "업체 D" : "업체 C (공간)", mine, answer, memo, answeredAt: null,
@@ -423,11 +423,12 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
   it("AC-F3-25 내 항목에만 답할 수 있고, 남의 항목은 그 업체만 답한다고 보인다", async () => {
     const calls = mockServer({
       "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
       "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
       "PUT /api/v1/tech-checks/4": { status: 200, body: {} },
     });
     renderAt("/supplier/tech/5");
-    expect(await screen.findByRole("heading", { level: 1, name: "기술 확인" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "현장 준비 확인" })).toBeInTheDocument();
     expect(screen.getByText("업체 C만 답할 수 있어요")).toBeInTheDocument();
     expect(screen.queryByLabelText("음량 제한 시각 답변")).not.toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("FOH 믹서 자리 답변"), "객석 맨 뒤 중앙");
@@ -443,11 +444,12 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
   it("요약 칸은 전체·답변 완료·내가 답할 항목 수, 항목 추가는 담당 업체를 골라 보낸다", async () => {
     const calls = mockServer({
       "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
       "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
       "POST /api/v1/performances/5/tech-checks": { status: 201, body: {} },
     });
     renderAt("/supplier/tech/5");
-    await screen.findByRole("heading", { level: 1, name: "기술 확인" });
+    await screen.findByRole("heading", { level: 1, name: "현장 준비 확인" });
     const nums = [...document.querySelectorAll(".summary b")].map((b) => b.textContent);
     expect(nums).toEqual(["4개", "2개", "1개"]);
     await userEvent.click(screen.getByRole("button", { name: "항목 추가" }));

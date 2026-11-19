@@ -24,6 +24,7 @@ from app.quote.schemas import QuoteBody, QuoteIn, QuoteUpdateIn
 from app.request import rejection
 from app.request import service as request_service
 from app.supplier import service as supplier_service
+from app.supplier.terms import require_review
 
 VENUE_FIELDS = ("venue_id", "checkin_time", "setup_available_time")
 
@@ -173,6 +174,7 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     stage = db.get(Stage, stage_id)  # 읽기 전용 참조 (2번 stages·performances)
     _venue_fields(stage.stage_type, body)
     calc.verify_total(body.amounts, body.total_amount, body.discount_amount)
+    require_review(db, user)
 
     quote = Quote(
         stage_id=stage_id,
@@ -216,6 +218,7 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     stage = quote.stage  # 읽기 전용 참조 (2번 stages·performances)
     _venue_fields(stage.stage_type, body)
     calc.verify_total(body.amounts, body.total_amount, body.discount_amount)
+    require_review(db, user)
 
     quote.current_version += 1
     quote.is_full_spec = body.includes.equipment and body.includes.engineer

@@ -80,6 +80,7 @@ function renderAt(path: string) {
 
 const BASE = {
   "GET /api/v1/me": { status: 200, body: SUPPLIER },
+  "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
   "GET /api/v1/postings/2": { status: 200, body: POSTING },
 };
 const PATH = "/supplier/quotes/77/edit";
@@ -90,6 +91,30 @@ afterEach(() => {
 });
 
 describe("견적서 고치기 (/supplier/quotes/:quoteId/edit)", () => {
+  it("기존 견적을 고칠 때도 약관을 확인한 뒤 수정 견적을 전송한다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer({
+      ...BASE,
+      "GET /api/v1/quotes/77": { status: 200, body: QUOTE_V1 },
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: false } },
+      "PUT /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
+      "PUT /api/v1/quotes/77": { status: 200, body: SENT_V2 },
+    });
+    renderAt(PATH);
+
+    fireEvent.change(await screen.findByLabelText("운반비"), { target: { value: "250000" } });
+    await user.click(screen.getByRole("button", { name: "고친 견적서 보내기" }));
+    expect(screen.getByRole("dialog", { name: "입점·견적·이행 및 정산" })).toBeInTheDocument();
+    expect(calls.filter(({ key }) => key.startsWith("PUT"))).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "확인하고 다음" }));
+    await user.click(screen.getByRole("button", { name: "확인하고 다음" }));
+    await user.click(screen.getByRole("button", { name: "확인하고 수정 견적 보내기" }));
+    expect(await screen.findByRole("heading", { name: "v2로 고쳤어요" })).toBeInTheDocument();
+    expect(calls.filter(({ key }) => key.startsWith("PUT")).map(({ key }) => key)).toEqual([
+      "PUT /api/v1/supplier/terms-review", "PUT /api/v1/quotes/77",
+    ]);
+  });
+
   it("AC-F2-20 현재 버전 값이 미리 채워지고, 135만으로 고쳐 보내면 PUT 본문에 version 과 새 값만(label 없이) 담기고 v2 완료 안내가 보인다", async () => {
     const user = userEvent.setup({ delay: null });
     const calls = mockServer({

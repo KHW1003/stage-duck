@@ -220,7 +220,9 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `/performances/:id/stages/:stage/quotes` | 단계별 견적 비교 (대표 화면) | 사용자 |
 | `/chats` · `/chats/:roomId` | 채팅 | 사용자·업체 |
 | `/performances/:id/order` | 통합 청구서·결제·취소 | 사용자 |
-| `/performances/:id/sheet` | 최종 담당표 | 사용자·확정 업체 |
+| `/performances/:id/sheet` | 최종 담당표, 업체 거래 약관 확인 | 사용자·확정 업체 |
+| `/supplier/reservations` | 내 예약 (맡은 공연 및 견적 금액) | 업체(승인) |
+| `/supplier/tech/:performanceId` | 현장 준비 확인 | 업체(승인), 약관 확인 후 |
 | `/supplier/onboarding` · `/supplier/profile` · `/supplier/venues` | 입점 2·3단계, 서비스·공간 관리 | 업체 |
 | `/supplier/postings` · `/supplier/postings/:id` · `/supplier/offers` | 공고 목록·상세, 받은 오퍼 | 업체(승인) |
 | `/admin` | **React 라우트 아님** — 서버의 SQLAdmin (6.5) | 관리자 |

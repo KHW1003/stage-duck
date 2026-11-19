@@ -282,6 +282,8 @@ describe("업체 찾기 머리 메뉴", () => {
     await user.click(await screen.findByRole("button", { name: /업체D담당/ }));
     const menu = screen.getByRole("menuitem", { name: "내 소개 글" });
     expect(menu).toHaveAttribute("href", "/supplier/posts");
-    expect(within(screen.getByRole("navigation", { name: "주 메뉴" })).getByRole("link", { name: "업체 찾기" })).toHaveAttribute("aria-current", "page");
+    const nav = within(screen.getByRole("navigation", { name: "주 메뉴" }));
+    expect(nav.getByRole("link", { name: "내 소개 글" })).toHaveAttribute("href", "/supplier/posts");
+    expect(nav.queryByRole("link", { name: "업체 찾기" })).not.toBeInTheDocument();
   });
 });

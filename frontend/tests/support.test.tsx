@@ -183,6 +183,10 @@ describe("약관·정책 (/terms/:type)", () => {
     expect(screen.getByTestId("where")).toHaveTextContent(/^\/terms\/service$/);
     expect(screen.getByRole("heading", { level: 2, name: "STAGE DUCK 이용약관" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "공연 당일" })).toBeInTheDocument();
+    const payment = document.getElementById("service-6")!;
+    expect(within(payment).getByText(/플랫폼 밖에서 직접 결제한 거래에는/)).toBeInTheDocument();
+    const conduct = document.getElementById("service-8")!;
+    expect(within(conduct).queryByText(/계좌이체로 거래하는 일/)).not.toBeInTheDocument();
   });
 
   it("모르는 종류나 /terms 는 이용약관으로 보낸다", () => {

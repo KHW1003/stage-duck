@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../src/App";
+import { TERMS } from "../src/features/support/terms";
 import type { Me, Sheet } from "../src/shared/api/types";
 
 /** 최종 담당표 화면 (#53) — AC-F5-11·12. 연락처는 서버가 결제 뒤에만 준다 */
@@ -66,6 +68,41 @@ describe("최종 담당표 (/performances/:id/sheet)", () => {
     const contacts = screen.getByRole("complementary", { name: "연락처" });
     expect(within(contacts).getByText("010-0000-0003")).toBeInTheDocument();
     expect(within(contacts).getByText("김공연")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "업체 취소 및 이용 규칙 보기" })).not.toBeInTheDocument();
+  });
+
+  it("업체는 결제 전에도 담당표에서 취소와 정산 조항을 각각 읽을 수 있다", async () => {
+    const supplier: Me = { ...USER, role: "SUPPLIER", supplierReviewStatus: "APPROVED" };
+    mockServer({
+      "/api/v1/me": { status: 200, body: supplier },
+      "/api/v1/performances/5/sheet": { status: 200, body: sheet({ paid: false, paidAt: null, contacts: [] }) },
+    });
+    renderAt("/performances/5/sheet");
+
+    const cancelTerms = await screen.findByRole("button", { name: "업체 취소 및 이용 규칙 보기" });
+    expect(screen.getByRole("table", { name: "취소 시점별 위약금" })).toBeInTheDocument();
+    await userEvent.click(cancelTerms);
+    const cancelDialog = within(screen.getByRole("dialog", { name: "업체 취소 및 이용 규칙" }));
+    const cancellationArticles = cancelDialog.getAllByRole("article").map((article) => article.id);
+    expect(cancelDialog.getByRole("heading", { name: "부칙" })).toBeInTheDocument();
+    expect(cancelDialog.getByText(/다른 업체의 예약은 유지해요/)).toBeInTheDocument();
+    expect(cancelDialog.queryByRole("heading", { name: "제5조 (정산)" })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(cancelTerms).toHaveFocus();
+
+    await userEvent.click(screen.getByRole("button", { name: "입점·견적·이행 및 정산 보기" }));
+    const settlement = within(screen.getByRole("dialog", { name: "입점·견적·이행 및 정산" }));
+    const settlementArticles = settlement.getAllByRole("article").map((article) => article.id);
+    expect([...settlementArticles, ...cancellationArticles]).toEqual(
+      TERMS.supplier.chapters.flatMap((chapter) => chapter.articles.map((article) => article.id)),
+    );
+    expect(settlement.getByRole("heading", { name: "제5조 (정산)" })).toBeInTheDocument();
+    expect(settlement.getByText(/위약금을 업체 금액 비율대로/)).toBeInTheDocument();
+    expect(settlement.queryByRole("heading", { name: "제6조 (업체 사정 취소)" })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "개인정보 처리방침 보기" }));
+    const privacy = within(screen.getByRole("dialog", { name: "개인정보 처리방침" }));
+    expect(privacy.getByRole("heading", { name: "6. 내 권리" })).toBeInTheDocument();
   });
 
   it("AC-F5-12 결제 전에는 연락처 대신 안내만", async () => {

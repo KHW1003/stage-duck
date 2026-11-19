@@ -6,7 +6,7 @@
  * - 409 INVALID_STATE: 서버 문구 그대로 + [공고 목록으로] (보낸 상태가 아니면 고칠 수 없다)
  * - 남의 견적서는 서버가 404 → 볼 수 없다는 안내
  */
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { ApiError } from "../shared/api/client";
 import type { PostingDetail, QuoteOut, QuoteSentOut } from "../shared/api/types";
@@ -17,7 +17,9 @@ import { ErrorNotice } from "../shared/ui/ErrorText";
 import { MoneyText } from "../shared/ui/MoneyText";
 import { usePosting, useQuote, useUpdateQuote } from "../features/quote/api";
 import { dateLabel, hm, stageTag } from "../features/quote/labels";
-import { QuoteForm } from "../features/quote/QuoteForm";
+import { QuoteForm, type QuoteBodyIn } from "../features/quote/QuoteForm";
+import { useSupplierTermsReview } from "../features/supplier/termsReview";
+import { SupplierTermsFlow } from "./SupplierTermsReview";
 import styles from "../features/quote/Quote.module.css";
 
 const LIST_PATH = "/supplier/postings";
@@ -76,6 +78,23 @@ function Updated({ p, quote, result }: { p: PostingDetail; quote: QuoteOut; resu
 function Editor({ quote, reload }: { quote: QuoteOut; reload: () => void }) {
   const posting = usePosting(quote.stageId);
   const update = useUpdateQuote(quote.quoteId);
+  const review = useSupplierTermsReview();
+  const [draftToSend, setDraftToSend] = useState<QuoteBodyIn | null>(null);
+
+  function sendUpdate(body: QuoteBodyIn) {
+    update.mutate({ ...body, version: quote.currentVersion }, {
+      onError: (error) => {
+        if (error instanceof ApiError && error.body.code === "SUPPLIER_TERMS_REVIEW_REQUIRED") {
+          setDraftToSend(body);
+        }
+      },
+    });
+  }
+
+  function submit(body: QuoteBodyIn) {
+    if (review.data?.reviewed) sendUpdate(body);
+    else setDraftToSend(body);
+  }
   const p = posting.data;
   const code = update.error instanceof ApiError ? update.error.body.code : undefined;
   const conflict = code === "VERSION_CONFLICT";
@@ -123,11 +142,21 @@ function Editor({ quote, reload }: { quote: QuoteOut; reload: () => void }) {
             current={quote.current}
             sending={update.isPending}
             error={conflict ? null : update.error}
-            onSubmit={(body) => update.mutate({ ...body, version: quote.currentVersion })}
+            onSubmit={submit}
           />
         )}
         <History quote={quote} />
       </div>
+      {draftToSend && (
+        <SupplierTermsFlow
+          completeLabel="확인하고 수정 견적 보내기"
+          onClose={() => setDraftToSend(null)}
+          onComplete={() => {
+            setDraftToSend(null);
+            sendUpdate(draftToSend);
+          }}
+        />
+      )}
     </>
   );
 }

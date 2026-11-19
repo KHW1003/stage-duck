@@ -17,6 +17,7 @@ from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.tech import TechCheck
 from app.models.user import User
+from app.supplier.terms import require_review
 from app.tech import calc
 from app.tech.schemas import (
     OwnerOption,
@@ -141,6 +142,7 @@ def add_check(db: Session, user: User, performance_id: int, body: TechCheckIn) -
         errors.append({"field": "ownerSupplierId", "reason": "이 공연에 확정된 업체를 골라 주세요"})
     if errors:
         raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
+    require_review(db, user)
     check = TechCheck(
         performance_id=performance_id,
         item=body.item.strip(),
@@ -166,6 +168,7 @@ def answer_check(db: Session, user: User, check_id: int, body: TechAnswerIn, *, 
     errors = calc.answer_errors(body.answer, body.memo)
     if errors:
         raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
+    require_review(db, user)
     mine = next(p for p in acc.parties if p.supplier.id == acc.me.id)
     check.answer = body.answer
     check.memo = (body.memo or "").strip() or None

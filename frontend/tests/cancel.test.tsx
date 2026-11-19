@@ -63,7 +63,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     expect(screen.getByText(/반려 1회로 기록돼요/)).toBeInTheDocument();
   });
 
-  it("AC-F5-08 확인 창에서 [취소 요청]을 누르면 한 번 보내고 결과를 보여 준다", async () => {
+  it("AC-F5-08 두 번째 확인 창에서만 취소를 접수하고 결과를 보여 준다", async () => {
     const calls = mockServer({
       ...ME,
       "GET /api/v1/performances/5/cancel-quote": { status: 200, body: D1 },
@@ -72,8 +72,22 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     renderAt("/performances/5/cancel");
 
     await userEvent.click(await screen.findByRole("button", { name: "취소 요청" }));
-    const dialog = screen.getByRole("dialog");
-    await userEvent.click(within(dialog).getByRole("button", { name: "취소 요청" }));
+    const review = screen.getByRole("dialog", { name: "취소 요청" });
+    await userEvent.click(within(review).getByRole("button", { name: "다음 · 금액 최종 확인" }));
+    const final = await screen.findByRole("dialog", { name: "공연 취소 최종 확인" });
+    expect(review).not.toBeInTheDocument();
+    expect(within(final).getByText(/위약금 1,295,000원이 발생해요/)).toBeInTheDocument();
+    expect(within(final).getByText("92,500원")).toBeInTheDocument();
+    expect(within(final).getByText("555,000원")).toBeInTheDocument();
+    expect(calls).not.toContain("POST /api/v1/performances/5/cancel");
+    await userEvent.click(within(final).getByRole("button", { name: "예약 유지" }));
+    expect(final).not.toBeInTheDocument();
+    expect(calls).not.toContain("POST /api/v1/performances/5/cancel");
+
+    await userEvent.click(screen.getByRole("button", { name: "취소 요청" }));
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "다음 · 금액 최종 확인" }));
+    const secondFinal = await screen.findByRole("dialog", { name: "공연 취소 최종 확인" });
+    await userEvent.click(within(secondFinal).getByRole("button", { name: "공연 취소 확정" }));
 
     expect(await screen.findByText("취소했어요")).toBeInTheDocument();
     expect(screen.getByText("환불 예정액 555,000원")).toBeInTheDocument();
