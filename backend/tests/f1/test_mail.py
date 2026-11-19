@@ -47,7 +47,7 @@ def smtp(monkeypatch):
     s = get_settings()
     for k, v in {
         "mail_backend": "smtp", "smtp_host": "smtp.example.test", "smtp_port": 587, "smtp_user": "mailer@stageduck.test",
-        "smtp_password": "app-password", "smtp_starttls": True, "mail_from": "no-reply@stageduck.test",
+        "smtp_password": "app-password", "smtp_starttls": True, "mail_from": "no-reply@stageduck.test", "mail_from_name": "STAGE DUCK",
         "public_base_url": "https://demo.stageduck.test",
     }.items():
         monkeypatch.setattr(s, k, v)
