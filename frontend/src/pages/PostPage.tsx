@@ -1,7 +1,7 @@
 /**
  * 소개 글 (/board/:id, #30). 목업 v4 post.html. FR-BOARD-02, AC-F4-04(방문자도 본다).
  * 연락처는 넣지 않는다 (CLAUDE.md 20) — 서버도 돌려주지 않는다.
- * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. 목업의 오퍼 보내기·관심 업체 저장은 #32, 신고는 #31, 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
+ * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. 목업의 견적 요청하기·관심 업체 저장은 #32, 신고는 #31, 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
  */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
