@@ -36,3 +36,15 @@ def has_contact_pattern(body: str | None) -> bool:
         or _has_hyphen_account(body)
         or _BARE_DIGITS.search(body)
     )
+
+
+# 사진·파일 메시지의 종류별 형식 (uploads.md CHAT: jpg·png·webp·pdf). 스펙에 나눔이 없어 #42에서 정했다.
+ATTACHMENT_MIME = {
+    "IMAGE": ("image/jpeg", "image/png", "image/webp"),
+    "FILE": ("application/pdf",),
+}
+
+
+def attachment_url(file_id: int | None) -> str | None:
+    """채팅 첨부 주소. 채팅 파일은 언제나 비공개라 권한을 보는 GET /api/v1/files/{id} 로 연다 (uploads.md 3장)."""
+    return f"/api/v1/files/{file_id}" if file_id is not None else None
