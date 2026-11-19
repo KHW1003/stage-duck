@@ -1,5 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { ErrorToast, showErrorToast } from "./shared/ui/ErrorToast";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
 import { CommunitySavedPage } from "./pages/CommunitySavedPage";
@@ -127,13 +128,21 @@ export function AppRoutes() {
   );
 }
 
-const queryClient = new QueryClient();
+/** meta.errorToast 가 붙은 동작이 실패하면 화면 아래 알림으로 (ErrorToast.tsx) */
+const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, _v, _c, mutation) => {
+      if (mutation.options.meta?.errorToast) showErrorToast(error);
+    },
+  }),
+});
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppRoutes />
+        <ErrorToast />
       </BrowserRouter>
     </QueryClientProvider>
   );

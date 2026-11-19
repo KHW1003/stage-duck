@@ -10,8 +10,10 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthSplit } from "../features/auth/AuthSplit";
 import { useLogin } from "../features/auth/api";
+import { emailError } from "../features/auth/rules";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
+import { NETWORK_ERROR_MESSAGE } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
 
 const SAVED_EMAIL = "sd.login.email";
@@ -44,12 +46,16 @@ export function LoginPage() {
   const [remember, setRemember] = useState(() => readSaved() !== "");
   const [naverNote, setNaverNote] = useState(false);
 
-  const err = login.error instanceof ApiError ? login.error.body : null;
+  const [blank, setBlank] = useState<string | null>(null);
+  // 서버 답이 없는 실패(연결 끊김 등)도 칸 아래에 보인다
+  const err = login.error instanceof ApiError ? login.error.body : login.error ? { code: "NETWORK", message: NETWORK_ERROR_MESSAGE } : null;
   const locked = err?.code === "LOGIN_LOCKED";
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) return;
+    const missing = !email.trim() ? "이메일을 적어 주세요." : !password ? "비밀번호를 적어 주세요." : emailError(email);
+    setBlank(missing ?? null);
+    if (missing) return;
     login.mutate(
       { email: email.trim(), password },
       {
@@ -89,7 +95,13 @@ export function LoginPage() {
             aria-invalid={!!err && !locked}
             required
           />
-          {err && !locked && (
+          {blank && (
+            <p className="field__error" role="alert">
+              <Ico name="warn" sm />
+              {blank}
+            </p>
+          )}
+          {!blank && err && !locked && (
             <p className="field__error" role="alert">
               <Ico name="warn" sm />
               {err.message}

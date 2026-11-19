@@ -37,6 +37,7 @@ export function usePinRoom() {
   return useMutation({
     mutationFn: ({ roomId, pin }: { roomId: number; pin: boolean }) =>
       api<unknown>(`/chat-rooms/${roomId}/pin`, { method: pin ? "PUT" : "DELETE" }),
+    meta: { errorToast: true },
     onSuccess: () => qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true }),
   });
 }
