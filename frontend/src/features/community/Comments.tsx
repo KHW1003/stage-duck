@@ -10,6 +10,7 @@ import { Button, ButtonLink } from "../../shared/ui/Button";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
 import { useAddComment, useDeleteComment, useHelpful } from "./api";
 import { authorLabel, loginPath, longDate } from "./labels";
+import { ConfirmDelete } from "./ConfirmDelete";
 import { ReportModal } from "./ReportModal";
 import styles from "./Community.module.css";
 
@@ -67,6 +68,7 @@ function Item({ c, post, member, reply }: { c: FreeComment; post: FreePost; memb
   const remove = useDeleteComment();
   const [replying, setReplying] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [askDelete, setAskDelete] = useState(false);
   const back = `/community/${post.id}`;
   const text =
     c.body ?? (c.status === "DELETED" ? "삭제된 댓글이에요." : "블라인드된 댓글이에요.");
@@ -104,7 +106,7 @@ function Item({ c, post, member, reply }: { c: FreeComment; post: FreePost; memb
             </ButtonLink>
           )}
           {c.isMine && (
-            <Button size="sm" variant="ghost" loading={remove.isPending} onClick={() => remove.mutate(c.id)}>
+            <Button size="sm" variant="ghost" onClick={() => setAskDelete(true)}>
               삭제
             </Button>
           )}
@@ -115,7 +117,17 @@ function Item({ c, post, member, reply }: { c: FreeComment; post: FreePost; memb
           )}
         </div>
       )}
-      <ErrorNotice error={helpful.error ?? remove.error} />
+      <ErrorNotice error={helpful.error} />
+      {askDelete && (
+        <ConfirmDelete
+          title={reply ? "답글을 지울까요?" : "댓글을 지울까요?"}
+          desc={'지운 자리에는 "삭제된 댓글이에요."만 남아요.'}
+          loading={remove.isPending}
+          error={remove.error}
+          onCancel={() => setAskDelete(false)}
+          onConfirm={() => remove.mutate(c.id, { onSuccess: () => setAskDelete(false) })}
+        />
+      )}
 
       {replying && <Form postId={post.id} parentId={c.id} onDone={() => setReplying(false)} />}
       {c.replies.length > 0 && (

@@ -454,6 +454,7 @@ export function InquiryPostPage() {
     : undefined;
   const remove = useDeleteInquiry();
   const [asking, setAsking] = useState(false);
+  const [zoom, setZoom] = useState<number | null>(null);
   usePageMeta(data ? data.title : "1:1 문의");
   useEffect(() => {
     if (remove.isSuccess) navigate("/inquiries", { replace: true });
@@ -479,7 +480,7 @@ export function InquiryPostPage() {
             <div className="iq-head">
               <div className="iq-head__top">
                 <span className="tag">{categoryLabel(data.category)}</span>
-                <StateText status={data.status} />
+                <span className="iq-state">{data.status === "WAITING" ? "답변 대기" : "답변 완료"}</span>
               </div>
               <h1>{data.title}</h1>
               <div className="list__meta">
@@ -495,9 +496,9 @@ export function InquiryPostPage() {
             {data.photos.length > 0 && (
               <div className="iq-files">
                 {data.photos.map((f, i) => (
-                  <a key={f.id} href={f.url} target="_blank" rel="noopener noreferrer">
+                  <button key={f.id} type="button" className="iq-thumb" onClick={() => setZoom(i)} aria-label={`첨부 사진 ${i + 1} 크게 보기`}>
                     <img src={f.url} alt={`첨부 사진 ${i + 1}`} />
-                  </a>
+                  </button>
                 ))}
               </div>
             )}
@@ -557,6 +558,19 @@ export function InquiryPostPage() {
           </article>
         )}
       </main>
+      {zoom !== null && data?.photos[zoom] && (
+        <KitModal
+          title={`첨부 사진 ${zoom + 1} / ${data.photos.length}`}
+          onClose={() => setZoom(null)}
+          foot={
+            <button className="btn" type="button" onClick={() => setZoom(null)}>
+              닫기
+            </button>
+          }
+        >
+          <img className="iq-zoom" src={data.photos[zoom].url} alt={`첨부 사진 ${zoom + 1}`} />
+        </KitModal>
+      )}
       {asking && data && (
         <KitModal
           title="문의를 지울까요?"

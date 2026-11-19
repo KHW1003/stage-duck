@@ -23,7 +23,8 @@ export interface Cond {
   date: string;
 }
 
-export const DEFAULT_COND: Cond = { region: "광주", audience: "", types: ["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP"], conditions: [], date: "" };
+/** 처음 지역은 서울 (11/19 피드백, 지역 목록도 서울 우선). 메인에서 지역을 골라 오면 그 지역(?sido=) */
+export const DEFAULT_COND: Cond = { region: "서울", audience: "", types: ["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP"], conditions: [], date: "" };
 
 const TYPE_FROM_HOME: Record<string, VenueTypeCode> = { "전문 공연장": "CONCERT_HALL", 복합문화공간: "CULTURE_SPACE", "야외·루프탑": "ROOFTOP" };
 

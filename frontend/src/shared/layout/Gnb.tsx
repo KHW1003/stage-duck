@@ -15,7 +15,7 @@ import type { LayoutKind } from "../auth/useMe";
 import { useLogout } from "../auth/useMe";
 import { ButtonLink } from "../ui/Button";
 import { Icon } from "../ui/Icon";
-import { ACCOUNT_LINKS, HOME, MENUS, NOTIFICATIONS_PATH, type MenuItem } from "./menus";
+import { ACCOUNT_LINKS, HOME, LOGO_HOME, MENUS, NOTIFICATIONS_PATH, type MenuItem } from "./menus";
 import styles from "./Gnb.module.css";
 
 /** 계정 메뉴 머리 둘째 줄 (목업: "사용자 계정" / "업체 계정 · 승인" / "관리자 계정 · 이메일") */
@@ -67,7 +67,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
             {logo}
           </a>
         ) : (
-          <Link className={styles.logo} to={HOME[kind]}>
+          <Link className={styles.logo} to={LOGO_HOME[kind]}>
             {logo}
           </Link>
         )}
