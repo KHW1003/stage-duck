@@ -102,6 +102,7 @@ export function useToggleFavorite() {
       save
         ? api<void>("/favorites", { method: "POST", body: JSON.stringify({ supplierId }) })
         : api<void>(`/favorites/${supplierId}`, { method: "DELETE" }),
+    meta: { errorToast: true },
     onSettled: () => void qc.invalidateQueries({ queryKey: FAVORITES_KEY }),
   });
 }

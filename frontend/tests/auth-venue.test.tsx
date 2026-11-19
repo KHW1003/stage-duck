@@ -61,6 +61,27 @@ afterEach(() => {
 const err = (code: string, message: string, fieldErrors: { field: string; reason: string }[] = []) => ({ code, message, fieldErrors });
 
 describe("로그인 (/login)", () => {
+  it("빈 칸이나 이메일 모양이 틀리면 보내지 않고 이유를 보인다", async () => {
+    const calls = mockServer({});
+    renderAt("/login");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByText("이메일을 적어 주세요.")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("이메일"), "abc");
+    await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByText("이메일 형식을 확인해 주세요.")).toBeInTheDocument();
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
+  });
+
+  it("서버와 연결되지 않으면 그 안내를 보인다", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    renderAt("/login");
+    await userEvent.type(screen.getByLabelText("이메일"), "a@stageduck.test");
+    await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(await screen.findByText("서버와 연결되지 않았어요. 잠시 뒤 다시 시도해 주세요.")).toBeInTheDocument();
+  });
+
   it("AC-F1-11 로그인하면 서버가 정한 첫 화면으로 간다", async () => {
     const calls = mockServer({ "POST /api/v1/auth/login": { status: 200, body: { id: 3, role: "USER", nickname: "가을밤밴드", landing: "/community" } } });
     renderAt("/login");
