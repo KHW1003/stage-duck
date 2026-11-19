@@ -8,7 +8,7 @@
 - 48시간 안에 답이 없으면 EXPIRED. 스케줄러 대신 읽고 셀 때 바꾼다 (plan.md 5.7 의 오퍼 만료와 같은 결과)
 - 업체가 그 단계에 견적서를 보내면 요청은 QUOTED, 견적서에 offer_id 가 붙어 "내가 요청한 업체" 표시 (AC-F3-18)
 - 연락처는 어디에도 넣지 않는다. 사용자는 닉네임만 (CLAUDE.md 20)
-알림(OFFER_RECEIVED·OFFER_DECLINED·OFFER_EXPIRED)은 사이트 안 알림(#45)이 생기면 붙인다.
+알림(#45): 보낼 때 업체에게 OFFER_RECEIVED, 거절하면 사용자에게 OFFER_DECLINED, 만료되면 사용자에게 OFFER_EXPIRED.
 """
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -22,6 +22,7 @@ from app.models.offer import FavoriteSupplier, Offer
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
 from app.request import service as request_service
 from app.supplier import service as supplier_service
 
@@ -37,11 +38,19 @@ def _bad(field: str, reason: str) -> AppError:
 
 
 def expire_due(db: Session, now: datetime) -> None:
-    """48시간이 지난 PENDING 요청을 EXPIRED 로. 커밋하지 않는다."""
-    db.execute(
-        update(Offer).where(Offer.status == "PENDING", Offer.expires_at <= now).values(status="EXPIRED")
-        .execution_options(synchronize_session=False)
-    )
+    """48시간이 지난 PENDING 요청을 EXPIRED 로 바꾸고 사용자에게 OFFER_EXPIRED (#45). 커밋하지 않는다."""
+    due = db.execute(
+        select(Offer, Supplier.company_name, Stage.performance_id)
+        .join(Supplier, Supplier.id == Offer.supplier_id).join(Stage, Stage.id == Offer.stage_id)
+        .where(Offer.status == "PENDING", Offer.expires_at <= now).with_for_update(of=Offer)
+    ).all()
+    for offer, company, performance_id in due:
+        offer.status = "EXPIRED"
+        notification.notify(
+            db, offer.user_id, "OFFER_EXPIRED", link=f"/performances/{performance_id}",
+            params={"company": company}, payload={"offerId": offer.id, "performanceId": performance_id},
+        )
+    db.flush()
 
 
 def _supplier_stage_types(supplier: Supplier) -> set[str]:
@@ -87,6 +96,13 @@ def send_offer(db: Session, user: User, stage_id: int, supplier_id: int, message
         expires_at=now + timedelta(hours=OFFER_HOURS),
     )
     db.add(offer)
+    db.flush()
+    perf = stage.performance
+    notification.notify(
+        db, supplier.user_id, "OFFER_RECEIVED", link="/supplier/offers",
+        params={"title": perf.title, "date": notification.month_day(perf.show_date)},
+        payload={"offerId": offer.id, "stageId": stage.id},
+    )
     db.commit()
     return offer
 
@@ -161,6 +177,12 @@ def decline_offer(db: Session, user: User, offer_id: int, reason: str, *, now: d
         raise invalid_state("이미 답했거나 기한이 지난 요청이에요.")
     offer.status = "DECLINED"
     offer.decline_reason = reason
+    stage = db.get(Stage, offer.stage_id)
+    notification.notify(
+        db, offer.user_id, "OFFER_DECLINED", link=f"/performances/{stage.performance_id}",
+        params={"company": supplier.company_name, "reason": DECLINE_LABEL[reason]},
+        payload={"offerId": offer.id, "performanceId": stage.performance_id},
+    )
     db.commit()
     return offer
 

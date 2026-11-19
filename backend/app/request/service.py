@@ -17,7 +17,7 @@ from app.check.calc import PerformanceInput
 from app.core.history import record_transition
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, PerformanceVersion, Stage
-from app.models.supplier import Supplier
+from app.models.supplier import Supplier, SupplierCategory
 from app.models.user import User
 from app.request import calc, rejection
 from app.request.schemas import PerformanceIn
@@ -249,6 +249,27 @@ OPEN_STATUSES = ("OPEN", "NEGOTIATING")
 CATEGORY_STAGE = {"VENUE": "VENUE", "EQUIPMENT": "EQUIPMENT", "INSTALL": "EQUIPMENT", "ENGINEER": "ENGINEER"}
 
 
+def _notify_posting_opened(db: Session, perf: Performance, stage: Stage) -> None:
+    """#45 단계가 열리면 그 부문의 승인·정상 업체에게 POSTING_OPENED (notifications.md 3.1). 커밋하지 않는다.
+
+    업체 활동 지역 칸이 아직 없어 지역으로는 거르지 않는다. 함수 안 import — 2번 → 3번 순환을 피한다.
+    """
+    from app.notification import service as notification
+
+    categories = [c for c, t in CATEGORY_STAGE.items() if t == stage.stage_type]
+    user_ids = db.scalars(
+        select(Supplier.user_id).distinct()
+        .join(SupplierCategory, SupplierCategory.supplier_id == Supplier.id)
+        .join(User, User.id == Supplier.user_id)
+        .where(SupplierCategory.category.in_(categories), Supplier.review_status == "APPROVED", User.status == "ACTIVE")
+    ).all()
+    notification.notify_many(
+        db, user_ids, "POSTING_OPENED", link=f"/supplier/postings/{stage.id}",
+        params={"title": perf.title, "date": notification.month_day(perf.show_date), "stage": notification.stage_label(stage.stage_type)},
+        payload={"stageId": stage.id, "performanceId": perf.id},
+    )
+
+
 def _fill(perf: Performance, body: PerformanceIn, data: dict) -> None:
     """요청서 행의 칸 = 현재 버전 값 (조회용). 버전별 원본은 performance_versions."""
     perf.title = body.title
@@ -361,6 +382,8 @@ def publish(db: Session, user: User, performance_id: int, *, now: datetime) -> P
         record_transition(
             db, entity_type="stage", entity_id=stage.id, from_status=None, to_status=status, actor_user_id=user.id
         )
+        if status == "OPEN":
+            _notify_posting_opened(db, perf, stage)
     record_transition(
         db, entity_type="performance", entity_id=perf.id, from_status=perf.status, to_status="PUBLISHED",
         actor_user_id=user.id,
@@ -534,6 +557,7 @@ def advance(
     else:
         _move_stage(db, nxt, "OPEN", user.id)
         nxt.opened_at = now
+        _notify_posting_opened(db, perf, nxt)
     db.flush()
     _sync_performance(db, perf, user.id)
     db.commit()

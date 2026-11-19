@@ -12,6 +12,7 @@ from app.models.rejection import RejectionEvent  # noqa: F401  #39 반려
 from app.models.request import Performance, PerformanceVersion, Stage
 from app.models.supplier import Supplier, SupplierCategory
 from app.models.support import Inquiry, Notice  # noqa: F401  #103 공지사항, #102 1:1 문의
+from app.models.notification import Notification  # noqa: F401  #45 사이트 안 알림
 from app.models.offer import FavoriteSupplier, Offer  # noqa: F401  #32 견적 요청·관심 업체
 from app.models.tech import TechCheck  # noqa: F401  #49 기술 확인
 from app.models.terms import SupplierTermsReview, TermsAgreement

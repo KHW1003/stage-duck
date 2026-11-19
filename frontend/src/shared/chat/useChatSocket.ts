@@ -5,6 +5,7 @@
  * - quote.updated: 그 방 메시지와 목록을 새로 받는다
  * 끊기면 다시 연결하고, 다시 연결되면 열어 둔 방마다 ?after=마지막 id 로 빠진 메시지를 채운다.
  */
+import { NOTIFICATIONS_KEY } from "../../features/notification/api";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { CHAT_ROOMS_KEY, addToThread, fetchThread, messagesKey } from "../../features/chat/api";
@@ -31,6 +32,11 @@ function parse(raw: unknown): WsChatEvent | null {
 }
 
 function handle(qc: QueryClient, e: WsChatEvent, meId: number) {
+  // 사이트 안 알림 (#45): 같은 연결로 온다. 목록·안 읽은 수를 다시 받는다
+  if ((e as { type: string }).type === "notification") {
+    void qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
+    return;
+  }
   const key = messagesKey(e.data.roomId);
   if (e.type === "message.created") {
     qc.setQueryData<ChatThread>(key, (old) =>

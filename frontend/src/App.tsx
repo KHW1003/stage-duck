@@ -30,6 +30,7 @@ import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
 import { MyPage } from "./pages/MyPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { SupplierOffersPage } from "./pages/SupplierOffersPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { PostPage } from "./pages/PostPage";
@@ -69,6 +70,7 @@ export function AppRoutes() {
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
           <Route path="/community/write" element={<CommunityWritePage />} />
           <Route path="/community/saved" element={<CommunitySavedPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/community/:id/edit" element={<CommunityWritePage />} />
         </Route>
         <Route path="/community/:id" element={<CommunityPostPage />} />

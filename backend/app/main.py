@@ -31,6 +31,7 @@ from app.support.router import router as notice_router
 from app.check.router import router as compare_router
 from app.payment.router import payment_router
 from app.offer.router import router as offer_router
+from app.notification.router import router as notification_router
 from app.payment.router import router as order_router
 
 
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     api.include_router(order_router)  # #50 통합 청구서
     api.include_router(payment_router)  # #51 테스트 결제
     api.include_router(offer_router)  # #32 견적 요청·관심 업체
+    api.include_router(notification_router)  # #45 사이트 안 알림
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
