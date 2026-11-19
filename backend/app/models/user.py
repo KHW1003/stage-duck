@@ -1,7 +1,7 @@
 """회원 (data-model.md 2장 users)."""
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, SmallInteger, String, func
+from sqlalchemy import CheckConstraint, Date, ForeignKey, SmallInteger, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base, BigID, DateTime3
@@ -29,6 +29,11 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     birth_date: Mapped[date | None] = mapped_column(Date)
     nickname: Mapped[str | None] = mapped_column(String(30), unique=True)
+    # 개인 프로필 사진 (uploads.md 5장, #33). files.owner_user_id → users 와 서로 가리켜서 use_alter 로 고리를 끊는다.
+    # 표를 비울 때(시연 초기화) files 가 users 보다 먼저 지워지므로 SET NULL 로 둔다
+    profile_file_id: Mapped[int | None] = mapped_column(
+        BigID, ForeignKey("files.id", name="fk_users_profile_file_id", use_alter=True, ondelete="SET NULL")
+    )
     signup_purpose: Mapped[str | None] = mapped_column(String(30))
     musician_type: Mapped[str | None] = mapped_column(String(20))
     signup_channel: Mapped[str | None] = mapped_column(String(30))

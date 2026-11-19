@@ -47,6 +47,11 @@ def _remove(*keys: str | None) -> None:
             _path(key).unlink(missing_ok=True)
 
 
+def remove_stored(f: StoredFile) -> None:
+    """[1번 프로필용] DELETED 로 바꿔 커밋한 뒤 디스크에서 지운다 (uploads.md 1장: 사진을 빼면 지운다)."""
+    _remove(f.storage_key, f.thumb_key)
+
+
 def file_url(f: StoredFile) -> str:
     return calc.public_url(f.storage_key) if f.visibility == "PUBLIC" else f"/api/v1/files/{f.id}"
 
