@@ -1,0 +1,8 @@
+/* 테스트 결제 화면만 — mockup-v4/pages/pay.html 의 <style> 그대로. 청구서 부품(invoice·escrow·side-box)은 kit.css */
+.pay-wrap { max-width: 640px; margin: 0 auto; }
+.pay-amt { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 4px; border-top: 2px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line); }
+.pay-amt b { font-size: 30px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.spin { width: 40px; height: 40px; border: 3px solid var(--sd-line); border-top-color: var(--sd-ink); border-radius: 50%; animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.result__icon--bad { border-color: var(--sd-conflict-text); color: var(--sd-conflict-text); }
+.pay-wait { display: grid; place-items: center; }

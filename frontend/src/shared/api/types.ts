@@ -464,3 +464,40 @@ export interface CompareQuote {
   overall: CheckItem["result"];
   checks: CheckItem[];
 }
+
+/* ---- 통합 청구서·테스트 결제 (api-contract.md 6.1, #50·#51). 금액은 모두 서버 계산값 ---- */
+
+export type OrderStatus = "ISSUED" | "PAID" | "SETTLEMENT_SCHEDULED" | "CANCELLED";
+/** 결제 전 null · HOLD 보관 중 · SETTLE_SCHEDULED 정산 예정 */
+export type LedgerState = "HOLD" | "SETTLE_SCHEDULED" | null;
+
+export interface OrderLine {
+  stageId: number;
+  stageType: StageType;
+  supplierId: number;
+  companyName: string;
+  quoteVersionId: number;
+  amount: number;
+  ledgerState: LedgerState;
+}
+
+/** GET·POST /performances/{id}/order */
+export interface Order {
+  id: number;
+  performanceId: number;
+  status: OrderStatus;
+  itemsTotal: number;
+  platformFee: number;
+  totalAmount: number;
+  issuedAt: string;
+  paidAt: string | null;
+  lines: OrderLine[];
+}
+
+/** POST /orders/{id}/payments */
+export interface PaymentResult {
+  paymentId: number;
+  status: "PENDING" | "SUCCEEDED" | "FAILED";
+  amount: number;
+  orderStatus: OrderStatus;
+}
