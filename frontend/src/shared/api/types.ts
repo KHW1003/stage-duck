@@ -386,7 +386,9 @@ export interface CompareQuote {
   version: number;
   basedOnPerfVersion: number;
   totalAmount: number;
-  /** 공연장 견적서만 (공간 스냅샷) */
+  /** 공연장 견적서만 (공간 스냅샷). venueId·venueType 으로 공간 사진을 고른다 */
+  venueId: number | null;
+  venueType: "CONCERT_HALL" | "CULTURE_SPACE" | "ROOFTOP" | "GARDEN" | "WAREHOUSE" | "ETC" | null;
   venueName: string | null;
   maxCapacity: number | null;
   checkinTime: string | null;
