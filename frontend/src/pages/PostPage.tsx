@@ -1,11 +1,12 @@
 /**
  * 소개 글 (/board/:id, #30). 목업 v4 post.html. FR-BOARD-02, AC-F4-04(방문자도 본다).
  * 연락처는 넣지 않는다 (CLAUDE.md 20) — 서버도 돌려주지 않는다.
- * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. 목업의 견적 요청하기·관심 업체 저장은 #32, 신고는 #31, 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
+ * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. [관심 업체 저장]·[견적 요청하기]는 #32 (말머리 부문의 열린 단계), 신고는 #31, 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
  */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { usePrPost } from "../features/board/api";
+import { FavoriteButton, OfferPicker } from "../features/offer/OfferParts";
 import { PR_CATEGORY_LABEL, monthDay } from "../features/board/labels";
 import { ApiError } from "../shared/api/client";
 import type { PrPost } from "../shared/api/types";
@@ -105,6 +106,11 @@ export function PostPage() {
                 <small>{label.slice(1, -1)} · {p.sido}</small>
               </div>
             </div>
+            <FavoriteButton supplierId={p.supplierId} next={`/board/${p.id}`} className="btn btn--sm btn--block mt-12" />
+          </div>
+          <div className={styles.sideSec} aria-label="견적 요청하기" role="group">
+            <p className={styles.sideTitle}>이 업체에 견적 요청하기</p>
+            <OfferPicker supplierId={p.supplierId} companyName={p.companyName} stageTypes={[p.category]} next={`/board/${p.id}`} />
           </div>
           <div className={`${styles.sideSec} ${styles.sideGray}`}>
             <p>게시글에는 전화번호·계좌번호·외부 링크를 쓸 수 없어요. 연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>

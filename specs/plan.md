@@ -224,7 +224,8 @@ APScheduler(서버 내부, 1분 간격)로 처리한다.
 | `/supplier/reservations` | 내 예약 (맡은 공연 및 견적 금액) | 업체(승인) |
 | `/supplier/tech/:performanceId` | 현장 준비 확인 | 업체(승인), 약관 확인 후 |
 | `/supplier/onboarding` · `/supplier/profile` · `/supplier/venues` | 입점 2·3단계, 서비스·공간 관리 | 업체 |
-| `/supplier/postings` · `/supplier/postings/:id` · `/supplier/offers` | 공고 목록·상세, 받은 오퍼 | 업체(승인) |
+| `/supplier/postings` · `/supplier/postings/:id` · `/supplier/offers` | 공고 목록·상세, 받은 견적 요청 | 업체(승인) |
+| `/favorites` | 관심 업체 (열린 단계면 바로 견적 요청) | 사용자 |
 | `/admin` | **React 라우트 아님** — 서버의 SQLAdmin (6.5) | 관리자 |
 
 ## 6.5 관리자 화면 — SQLAdmin (UI 디자인 없음)

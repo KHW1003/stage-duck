@@ -240,14 +240,19 @@
 - 검사 실패 순서: 카드 상태·만료(`422 CONFIRM_REQUEST_EXPIRED`) → 열람(`422 DETAIL_NOT_VIEWED`) → 버전(`422 CONFIRM_REQUEST_STALE`) → 자동 검사(`409 CHECK_CONFLICT`) → 단계(`409 STAGE_ALREADY_CONFIRMED`).
 - 성공하면 같은 단계 다른 견적서 `CLOSED` + 해당 채팅방에 안내 카드 (반려 이벤트 없음).
 
-### 4.4 직접 오퍼·관심 업체
+### 4.4 직접 오퍼(화면 문구 "견적 요청")·관심 업체
+화면에는 "견적 요청하기 · 받은 견적 요청"으로 보인다 (11/19 팀 결정). 주소·코드는 offer 그대로.
+
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| POST | `/stages/{stageId}/offers` | U | `{ "supplierId": 9 }` — 열린 단계·해당 부문만, 동시 10곳 (`409 OFFER_LIMIT`) | F3-16, F3-17 |
-| GET | `/supplier/offers` | S | 받은 오퍼 | |
-| POST | `/offers/{id}/decline` | S(본인) | 거절 (사유 선택) | |
-| — | 오퍼를 받은 업체가 `POST /stages/{stageId}/quotes`에 `offerId`를 넣으면 견적서에 "내가 오퍼한 업체" 표시 | | | F3-18 |
-| POST | `/favorites` · DELETE `/favorites/{supplierId}` · GET `/favorites` | U | 관심 업체 저장 | F3-16, F3-19 |
+| POST | `/stages/{stageId}/offers` | U(본인 공연) | `{ "supplierId": 9, "message": "리허설 17시 가능할까요?" }` (message 선택, 300자, 연락처 모양이면 `400` field `message`) → `201 { offerId, supplierId, companyName, status, declineReason, expiresAt, createdAt }`. 지금 열린 단계가 아니면 `409 STAGE_NOT_OPEN`, 그 부문의 승인·정상 업체가 아니면 `400` field `supplierId`, 같은 업체에 또 보내면 `409 INVALID_STATE`, 동시(PENDING·QUOTED) 10곳이면 `409 OFFER_LIMIT` (단계 행 잠금) | F3-16, F3-17 |
+| GET | `/stages/{stageId}/offers` | U(본인 공연) | 그 단계에 보낸 요청 `{ activeCount, limit: 10, items: [위와 같은 칸] }` | F3-17 |
+| GET | `/supplier/offers` | S(승인) | 받은 요청 (최근 순) `[{ offerId, stageId, stageType, stageOpen, performanceId, title, showDate, sido, sigungu, audience, nickname, message, status, declineReason, expiresAt, createdAt }]` — 사용자는 닉네임만, 연락처 없음. 승인 전 `403 SUPPLIER_NOT_APPROVED` | |
+| POST | `/offers/{id}/decline` | S(받은 업체) | `{ "reason": "SCHEDULE" \| "CAPACITY" \| "REGION" \| "BUDGET" \| "ETC" }` → `204`. 답하기 전(PENDING)만, 아니면 `409 INVALID_STATE`, 남의 요청 `404` | |
+| — | 요청을 받은 업체가 그 단계에 `POST /stages/{stageId}/quotes`로 견적서를 보내면 서버가 요청을 찾아 `QUOTED`로 바꾸고 견적서 `offer_id`를 채운다 (본문에 `offerId`를 넣지 않아도 된다). 비교 화면 `offered: true` = "내가 요청한 업체" | | | F3-18 |
+| POST | `/favorites` `{ "supplierId" }` → `204` (이미 있으면 그대로) · DELETE `/favorites/{supplierId}` → `204` · GET `/favorites` → `[{ supplierId, companyName, categories, stageTypes }]` | U | 관심 업체. 단계가 열리지 않아도 저장 가능. 화면이 열린 단계와 `stageTypes`를 맞춰 "저장한 업체에 견적을 요청할까요?" 안내 | F3-16, F3-19 |
+
+- 48시간 안에 답이 없으면 `EXPIRED` (요청을 읽거나 셀 때 바꾼다). 알림(`OFFER_RECEIVED`·`OFFER_DECLINED`·`OFFER_EXPIRED`)은 사이트 안 알림(#45)에서 붙인다.
 
 ### 4.5 기술 확인
 | 메서드 | 경로 | 권한 | 설명 | AC |

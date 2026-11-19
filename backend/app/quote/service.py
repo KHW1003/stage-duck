@@ -19,6 +19,7 @@ from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.offer import service as offer_service
 from app.quote import calc
 from app.quote.schemas import QuoteBody, QuoteIn, QuoteUpdateIn
 from app.request import rejection
@@ -176,9 +177,12 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     calc.verify_total(body.amounts, body.total_amount, body.discount_amount)
     require_review(db, user)
 
+    # 견적 요청(1번 #32)을 받은 업체면 그 요청에 답한 것으로 (AC-F3-18 "내가 요청한 업체")
+    offer_id = offer_service.link_quote(db, stage_id=stage_id, supplier_id=supplier.id, now=datetime.now())
     quote = Quote(
         stage_id=stage_id,
         supplier_id=supplier.id,
+        offer_id=offer_id,
         label=body.label,
         current_version=1,
         status="SENT",

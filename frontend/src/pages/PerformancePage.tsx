@@ -17,6 +17,7 @@ import { usePerformance, useWithdraw } from "../features/performance/api";
 import { ConfirmModal } from "../features/performance/ConfirmModal";
 import { dateLabel, hm, nextActionText, STAGE_NAME, STAGE_STATUS } from "../features/performance/labels";
 import { NextStagePanel } from "../features/performance/NextStagePanel";
+import { FavoriteSuggest } from "../features/offer/FavoriteSuggest";
 import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
 import { CONDITIONS, FORMS, SERVICES, TASKS, VENUE_TYPES } from "../features/request/codes";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -133,6 +134,7 @@ function StepRow({ p, s, index, last }: { p: PerformanceDetail; s: StageSummary;
                 <p className="muted mt-12" style={{ fontSize: 13 }}>
                   한 단계에서 여러 업체와 채팅할 수 있지만, 확정은 한 업체만 할 수 있어요.
                 </p>
+                {(s.status === "OPEN" || s.status === "NEGOTIATING") && <FavoriteSuggest stage={s} title={p.title} />}
               </>
             )}
             {state === "done" && isNext && p.nextAction === "OPEN_NEXT" && (
