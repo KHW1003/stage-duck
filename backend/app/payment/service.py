@@ -13,6 +13,7 @@ from app.models.payment import LedgerEntry, Order, OrderLine, Payment
 from app.models.request import Performance
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
 from app.payment import calc
 from app.request import service as request_service
 
@@ -146,6 +147,13 @@ def _apply_result(db: Session, payment: Payment, result: str, *, now: datetime, 
                            memo="결제금 보관 (업체 몫)") for line in order.lines)
     db.add(LedgerEntry(order_id=order.id, supplier_id=None, entry_type="PLATFORM_FEE", amount=order.platform_fee,
                        memo="플랫폼 이용료"))
+    # #45 확정 업체 모두에게 PAID (사용자는 본인이 결제했으므로 받지 않는다)
+    perf = db.get(Performance, order.performance_id)
+    supplier_users = db.scalars(select(Supplier.user_id).where(Supplier.id.in_({ln.supplier_id for ln in order.lines})))
+    notification.notify_many(
+        db, supplier_users, "PAID", link=f"/performances/{perf.id}/sheet", params={"title": perf.title},
+        payload={"performanceId": perf.id, "orderId": order.id},
+    )
 
 
 def pay_order(

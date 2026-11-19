@@ -4,7 +4,7 @@
 - 글쓰기는 사용자·업체, 1분에 1개 (AC-F4-16). 연락처·계좌 모양은 저장하고 경고만.
 - 사진은 1번 `files.service.attach_files` 로 붙인다 (내 TEMP 파일·용도·개수 검사는 그 함수가 한다).
 - 댓글·답글·도움 돼요·저장·블라인드는 T2-08(#101). 블라인드하면 작성자에게 경고 1회 (4번 `policy.service.warn`, 3회면 정지).
-- 댓글 알림(내 글에 댓글, 내 댓글에 답글)은 3번 `notify()`(#45)가 생기면 `add_comment` 에서 부른다.
+- 댓글 알림(내 글에 댓글, 내 댓글에 답글)은 `add_comment` 에서 3번 `notify()`(#45)를 부른다. 내 글·내 댓글에 내가 쓰면 없음.
 """
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -229,6 +229,15 @@ def add_comment(db: Session, user: User, post_id: int, body: str, parent_id: int
     comment = FreeComment(post_id=post.id, parent_id=parent_id, author_user_id=user.id, body=body, status="ACTIVE", created_at=now)
     db.add(comment)
     post.comment_count += 1
+    db.flush()
+    from app.notification import service as notification  # 3번 → 함수 안 import
+
+    to, kind = (parent.author_user_id, "COMMUNITY_REPLY") if parent_id is not None else (post.author_user_id, "COMMUNITY_COMMENT")
+    notification.notify(
+        db, to, kind, link=f"/community/{post.id}#c{comment.id}",
+        params={"title": notification.snippet(post.title, 20), "snippet": notification.snippet(body, 30)},
+        payload={"postId": post.id, "commentId": comment.id}, actor_id=user.id,
+    )
     db.commit()
     db.refresh(comment)
     return comment, has_contact_pattern(body)

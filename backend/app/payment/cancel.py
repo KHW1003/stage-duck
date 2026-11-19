@@ -11,9 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import invalid_state, not_found
 from app.models.payment import Cancellation, LedgerEntry, Order
-from app.models.request import Performance
+from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
 from app.payment import calc
 from app.payment.service import _move_order, supplier_names
 from app.policy import service as policy_service
@@ -113,8 +114,23 @@ def cancel_by_user(
     if phase == "BEFORE_PAYMENT":
         rejection.record_rejection(db, perf.id, now=now)
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id)
+    _notify_user_cancel(db, perf, q)
     db.commit()
     return c, q
+
+
+def _notify_user_cancel(db: Session, perf: Performance, q: "CancelQuote") -> None:
+    """#45 확정 업체 모두에게 CANCELLED_BY_USER. 위약금은 그 업체 몫만 (0원 구간이면 "위약금은 없어요", D-57)."""
+    penalty: dict[int, int] = {}
+    for sid, _, share in q.by_supplier:  # 한 업체가 여러 단계를 맡았으면 합친다
+        penalty[sid] = penalty.get(sid, 0) + share
+    for supplier_id, user_id in db.execute(select(Supplier.id, Supplier.user_id).where(Supplier.id.in_(penalty))).all():
+        share = penalty[supplier_id]
+        notification.notify(
+            db, user_id, "CANCELLED_BY_USER", link="/supplier/reservations",
+            params={"title": perf.title, "penalty": f"위약금 {notification.won(share)}원 정산 예정" if share else "위약금은 없어요"},
+            payload={"performanceId": perf.id},
+        )
 
 
 def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: str, now: datetime) -> tuple[Cancellation, CancelQuote]:
@@ -130,5 +146,12 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     q = _quote(db, perf, order, "SUPPLIER_FAULT")
     policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
     c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
+    # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
+    stage_types = sorted({db.get(Stage, ln.stage_id).stage_type for ln in order.lines if ln.supplier_id == supplier.id})
+    notification.notify(
+        db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types)},
+        payload={"performanceId": perf.id},
+    )
     db.commit()
     return c, q

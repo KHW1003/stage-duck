@@ -19,6 +19,7 @@ from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
 from app.offer import service as offer_service
 from app.quote import calc
 from app.quote.schemas import QuoteBody, QuoteIn, QuoteUpdateIn
@@ -200,7 +201,13 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     room_id = chat_service.post_quote_message(
         db, stage_id=stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
-    # #45에서 QUOTE_RECEIVED 알림 (사용자 견적함 도착 알림)
+    # #45 사용자에게 QUOTE_RECEIVED (견적 요청을 받은 업체가 보낸 것도 이 알림 하나, notifications.md 3.3)
+    perf = stage.performance
+    notification.notify(
+        db, perf.user_id, "QUOTE_RECEIVED", link=f"/performances/{perf.id}/compare",
+        params={"company": supplier.company_name, "stage": notification.stage_label(stage.stage_type), "amount": notification.won(row.total_amount)},
+        payload={"performanceId": perf.id, "stageId": stage_id, "quoteId": quote.id, "roomId": room_id},
+    )
     db.commit()
     return quote, row, checks, room_id
 
@@ -234,6 +241,14 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
         db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
     chat_service.notify_quote_updated(db, room_id=room_id, quote_id=quote.id, version=quote.current_version)
+    # #45 채팅을 시작한 사이에만 QUOTE_UPDATED (notifications.md 3.2)
+    if chat_service.chat_started(db, stage.performance_id, supplier.id):
+        notification.notify(
+            db, stage.performance.user_id, "QUOTE_UPDATED", link=f"/chats/{room_id}",
+            params={"company": supplier.company_name, "version": quote.current_version,
+                    "stage": notification.stage_label(stage.stage_type), "amount": notification.won(row.total_amount)},
+            payload={"roomId": room_id, "quoteId": quote.id},
+        )
     # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
     db.commit()
     db.refresh(quote)

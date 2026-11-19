@@ -52,11 +52,19 @@ def _transition(db: Session, supplier_id: int, to: str, actor_id: int | None, re
     return supplier
 
 
+def _notify(db: Session, user_id: int, type_: str, link: str, params: dict) -> None:
+    """#45 사이트 안 알림 (3번 notification). 함수 안에서 import — 1번 ↔ 3번 순환을 피한다."""
+    from app.notification import service as notification
+
+    notification.notify(db, user_id, type_, link=link, params=params)
+
+
 def approve(db: Session, supplier_id: int, *, actor_id: int | None) -> Supplier:
     """AC-F1-19: 승인되면 3단계 서비스 등록과 공고 목록이 열린다."""
     supplier = _transition(db, supplier_id, "APPROVED", actor_id, None)
     supplier.reject_reason = None
     supplier.approved_at = supplier.approved_at or datetime.now()
+    _notify(db, supplier.user_id, "SUPPLIER_APPROVED", "/supplier/profile", {})
     db.commit()
     return supplier
 
@@ -66,6 +74,7 @@ def reject(db: Session, supplier_id: int, *, actor_id: int | None, reason: str |
     reason = _require_reason(reason)
     supplier = _transition(db, supplier_id, "REJECTED", actor_id, reason)
     supplier.reject_reason = reason
+    _notify(db, supplier.user_id, "SUPPLIER_REJECTED", "/supplier/onboarding", {"reason": reason})
     db.commit()
     return supplier
 
