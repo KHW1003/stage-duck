@@ -60,3 +60,21 @@ test("메인 머리 메뉴로 커뮤니티에 간다 (휴대폰은 메뉴 버튼
   await expect(page).toHaveURL(/\/community$/);
   await expect(page.getByRole("heading", { level: 1, name: "커뮤니티" })).toBeVisible();
 });
+
+test("1:1 문의: 쓰면 답변 대기로 보이고, 목록에 모인다 (AC-F5-18)", async ({ page }, info) => {
+  const errors = collectErrors(page);
+  const title = `닉네임을 바꾸고 싶어요 (${info.project.name})`; // 두 폭이 같은 서버를 써서 제목을 나눈다
+  await login(page);
+  await expect(page).toHaveURL(/\/me\/performances$/);
+  await page.goto("/inquiries/new");
+  await page.locator(".iq-chips label", { hasText: "계정" }).click();
+  await page.getByRole("textbox", { name: "제목" }).fill(title);
+  await page.getByRole("textbox", { name: "내용" }).fill("닉네임은 어디서 바꾸나요?");
+  await page.getByRole("button", { name: "문의 보내기" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+  await expect(page.getByText("운영자가 문의를 확인하고 있어요")).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await page.getByRole("link", { name: "목록" }).click();
+  await expect(page.getByRole("link", { name: title })).toBeVisible();
+  expect(errors).toEqual([]);
+});
