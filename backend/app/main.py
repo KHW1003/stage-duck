@@ -24,6 +24,7 @@ from app.quote.router import postings_router, router as quote_router, stage_quot
 from app.chat.router import router as chat_router
 from app.seo.router import router as seo_router
 from app.tech.router import router as tech_router
+from app.support.router import inquiry_router
 from app.support.router import router as notice_router
 from app.check.router import router as compare_router
 
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     api.include_router(chat_router)  # #42 채팅
     api.include_router(tech_router)  # #49 기술 확인
     api.include_router(notice_router)  # #103 공지사항
+    api.include_router(inquiry_router)  # #102 1:1 문의
     api.include_router(compare_router)  # #48 견적 비교
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)

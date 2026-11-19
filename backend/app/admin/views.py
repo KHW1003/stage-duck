@@ -25,9 +25,10 @@ from app.community import service as community_service
 from app.demo import service as demo_service
 from app.admin import service as admin_service
 from app.models import FreeComment, FreePost, Performance, PrPost, Report, Sanction, StatusHistory, Supplier, User
-from app.models.support import Notice
+from app.models.support import Inquiry, Notice
 from app.policy import service as policy_service
 from app.supplier import service as supplier_service
+from app.support import service as support_service
 
 
 def _pks(request: Request) -> list[int]:
@@ -302,7 +303,28 @@ REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "pr_post_blind": ("업체 소개 글 블라인드 (업체 경고 1회)", policy_service.blind_post),
     "free_post_blind": ("커뮤니티 글 블라인드 (작성자 경고 1회)", community_service.blind_post),
     "free_comment_blind": ("커뮤니티 댓글 블라인드 (작성자 경고 1회)", community_service.blind_comment),
+    "inquiry_answer": ("1:1 문의 답변 (아래 칸에 답변 글)", support_service.answer_inquiry),
 }
+
+
+class InquiryAdmin(ModelView, model=Inquiry):
+    """1:1 문의 — [답변]하면 답변 완료, 그 뒤 회원은 고치거나 지울 수 없다 (FR-CS-01, FR-ADMIN-06, AC-F5-19). #102."""
+
+    name = "1:1 문의"
+    name_plural = "1:1 문의"
+    icon = "fa-solid fa-circle-question"
+    can_create = can_edit = can_delete = False
+    column_list = [Inquiry.id, Inquiry.category, Inquiry.title, Inquiry.user_id, Inquiry.status, Inquiry.created_at,
+                   Inquiry.answered_at]
+    column_details_list = [Inquiry.id, Inquiry.category, Inquiry.user_id, Inquiry.performance_id, Inquiry.title,
+                           Inquiry.body, Inquiry.attachments, Inquiry.status, Inquiry.answer, Inquiry.answered_at,
+                           Inquiry.created_at]
+    column_searchable_list = [Inquiry.title]
+    column_default_sort = [(Inquiry.created_at, True)]
+
+    @action(name="answer", label="답변 (답변 글 입력)")
+    async def answer(self, request: Request) -> Response:
+        return _to_reason_form(request, "inquiry_answer", self.identity)
 
 
 class ReasonView(BaseView):
