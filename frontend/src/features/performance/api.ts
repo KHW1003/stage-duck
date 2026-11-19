@@ -15,10 +15,12 @@ export const PERFORMANCES_KEY = ["performances"] as const;
 /** 건너뛰기 책임 고지 동의 (FR-ASSIGN-03). 안내 문구가 바뀌면 버전을 올린다 */
 export const SKIP_ACK = { acknowledgement: "STAGE_SKIP_OWNED", noticeVersion: "1" } as const;
 
-export function useMyPerformances() {
+/** 내 공연 (사용자만). enabled=false 면 부르지 않는다 — 업체 화면(1:1 문의)에서 같이 쓸 때 */
+export function useMyPerformances({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [...PERFORMANCES_KEY, "mine"],
     queryFn: () => api<MyPerformances>("/performances?mine=true"),
+    enabled,
   });
 }
 

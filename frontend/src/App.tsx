@@ -14,6 +14,7 @@ import { SpacesPage } from "./pages/SpacesPage";
 import { SpaceDetailPage } from "./pages/SpaceDetailPage";
 import { NextStagePage } from "./pages/NextStagePage";
 import { FaqPage } from "./pages/FaqPage";
+import { InquiryListPage, InquiryPostPage, InquiryWritePage } from "./pages/InquiryPages";
 import { NoticeDetailPage, NoticeListPage } from "./pages/NoticePages";
 import { SupplierGuidePage } from "./pages/SupplierGuidePage";
 import { TermsPage } from "./pages/TermsPage";
@@ -69,6 +70,12 @@ export function AppRoutes() {
         <Route path="/guide/supplier" element={<SupplierGuidePage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/terms/:type" element={<TermsPage />} />
+        <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
+          <Route path="/inquiries" element={<InquiryListPage />} />
+          <Route path="/inquiries/new" element={<InquiryWritePage />} />
+          <Route path="/inquiries/:id" element={<InquiryPostPage />} />
+          <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
+        </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
         </Route>
