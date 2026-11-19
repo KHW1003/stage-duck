@@ -15,7 +15,14 @@ class Settings(BaseSettings):
     refresh_token_days: int = 14  # plan.md 4장 Refresh 14일
     login_max_failures: int = 5  # FR-AUTH-06 연속 실패 횟수
     login_lock_minutes: int = 10  # FR-AUTH-06 잠금 시간
-    mail_backend: str = "console"  # D-55: 메일 서버가 없어 링크를 서버 로그에 남긴다 (실제 발송은 후속)
+    mail_backend: str = "console"  # console = 서버 로그에 남김 (D-55) / smtp = 실제로 보냄 (app/core/mail.py)
+    smtp_host: str = ""
+    smtp_port: int = 587  # 465 = SSL, 587 = STARTTLS
+    smtp_user: str = ""
+    smtp_password: str = ""  # Gmail 은 계정 비밀번호가 아니라 "앱 비밀번호" — 서버 .env 에만
+    smtp_starttls: bool = True
+    mail_from: str = ""  # 보내는 주소 (SMTP 계정이 보낼 수 있는 주소)
+    mail_from_name: str = "STAGE DUCK"
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
     # 검색·공유 노출 (specs/seo.md 8장)
