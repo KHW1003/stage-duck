@@ -44,6 +44,7 @@ def test_ac_f3_20_compare_full_spec_warning_pass(venue_stage):
     b_setup = next(c for c in rows["B"]["checks"] if c["id"] == "CHK-02")
     assert b_setup["result"] == "WARNING" and "0분" in b_setup["message"]
     assert {q["offered"] for q in rows.values()} == {False}
+    assert (rows["C"]["venueName"], rows["C"]["maxCapacity"], rows["C"]["setupAvailableTime"]) == ("공간 C", 120, "15:00")
 
 
 def test_ac_f3_20_other_user_gets_404(venue_stage, client, db):
