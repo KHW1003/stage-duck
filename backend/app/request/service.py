@@ -110,7 +110,7 @@ def stage_confirmed(db: Session, stage_id: int, quote_version_id: int, *, actor_
         raise AppError(409, "STAGE_ALREADY_CONFIRMED", "이 단계는 이미 다른 견적서로 정해졌어요.")
     _move_stage(db, stage, "CONFIRMED", actor_id)
     stage.confirmed_quote_version_id = quote_version_id
-    stage.confirmed_at = func.now()
+    stage.confirmed_at = datetime.now()  # 앱 시각(KST). DB now() 는 SQLite 에서 UTC 라 결제 마감(D-57)이 어긋난다
     perf = db.get(Performance, stage.performance_id)
     if perf.status == "PUBLISHED":
         _move_performance(db, perf, "ASSIGNING", actor_id)
@@ -199,6 +199,19 @@ def performance_paid(db: Session, performance_id: int, *, actor_id: int | None) 
     _move_performance(db, perf, "CONFIRMED", actor_id)
 
 
+def performance_cancelled(db: Session, performance_id: int, *, actor_id: int | None) -> None:
+    """[약속 4 → 2] 사용자 취소·결제 마감 자동 취소 때 4번이 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
+
+    공연을 CANCELLED 로 바꾸고 상태 이력을 남긴다. 이미 CANCELLED 면 아무것도 하지 않는다.
+    """
+    perf = db.get(Performance, performance_id, with_for_update=True)
+    if perf is None:
+        raise not_found()
+    if perf.status == "CANCELLED":
+        return
+    _move_performance(db, perf, "CANCELLED", actor_id)
+
+
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     """[약속 2·3 → 4] 확정된 단계마다 한 줄. 건너뛴 단계는 넣지 않는다. 순서는 배정 순서(공연장 → 장비 → 엔지니어).
 
@@ -230,6 +243,11 @@ _ALLOWED = {
     ("PUBLISHED", "ASSIGNING"),  # 첫 단계 확정 (#38)
     ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
     ("AWAITING_PAYMENT", "CONFIRMED"),  # 테스트 결제 성공 (4번 #51 → performance_paid)
+    # 취소 (4번 #52 → performance_cancelled): 사용자 취소·결제 마감 자동 취소
+    ("PUBLISHED", "CANCELLED"),
+    ("ASSIGNING", "CANCELLED"),
+    ("AWAITING_PAYMENT", "CANCELLED"),
+    ("CONFIRMED", "CANCELLED"),
 }
 _STAGE_ALLOWED = {  # data-model.md 11장 stages.status
     ("WAITING", "OPEN"),

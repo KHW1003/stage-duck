@@ -245,3 +245,19 @@ def test_renegotiate_closes_card_and_others_cannot_see(client, db):
     assert user.post(f"{API}/confirm-requests/{card['id']}/renegotiate").status_code == 409
     assert db.scalar(select(func.count()).select_from(ConfirmRequest).where(ConfirmRequest.status == "PENDING")) == 0
     assert _card(d, _quote_id(db, supplier))["status"] == "PENDING"  # 다시 보낼 수 있다
+
+
+def test_first_confirm_sets_payment_deadline_and_notifies_user(client, db):
+    """D-57: 처음 컨펌하면 결제 마감이 정해지고 사용자에게 PAYMENT_DEADLINE_SET (마지막 단계면 PAYMENT_READY 도)."""
+    user, d, room_id, perf_id, supplier = _room(client, db)
+    for s in db.scalars(select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == "ENGINEER")):
+        s.status = "SKIPPED"
+    db.commit()
+    card = _card(d, _quote_id(db, supplier))
+    user.post(f"{API}/confirm-requests/{card['id']}/view")
+    assert user.post(f"{API}/confirm-requests/{card['id']}/accept", headers=KEY).status_code == 200
+
+    owner = user.get(f"{API}/me").json()["id"]
+    types = list(db.scalars(select(Notification.type).where(Notification.user_id == owner)))
+    assert "PAYMENT_DEADLINE_SET" in types and "PAYMENT_READY" in types
+    assert user.get(f"{API}/performances/{perf_id}").json()["paymentDeadline"] is not None

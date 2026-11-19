@@ -19,6 +19,7 @@ from app.payment import calc
 from app.payment.service import _move_order, supplier_names
 from app.policy import service as policy_service
 from app.request import rejection
+from app.request import service as request_service
 
 PAID_STATUSES = ("PAID",)  # 정산 예정(공연 끝) 뒤에는 취소하지 않는다
 CANCELABLE_PERF = ("PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT", "CONFIRMED")
@@ -114,6 +115,7 @@ def cancel_by_user(
     if phase == "BEFORE_PAYMENT":
         rejection.record_rejection(db, perf.id, now=now)
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id)
+    request_service.performance_cancelled(db, perf.id, actor_id=user.id)  # 공연도 취소로 (2번 약속)
     _notify_user_cancel(db, perf, q)
     db.commit()
     return c, q

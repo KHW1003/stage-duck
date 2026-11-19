@@ -36,7 +36,10 @@ def payment_deadline(db: Session, performance_id: int) -> datetime | None:
     쓰는 곳: 3번 확인 카드 만료 = min(보낸 뒤 48시간, 이 값) (#43), 결제 알림 문구 (#45).
     구현: 4번 목산 — 처음 컨펌 시각이 생기는 #43 뒤 T4-06·T4-07 (#51, #52).
     """
-    raise NotImplementedError("4번 묶음 #51·#52 에서 구현한다 (처음 컨펌 시각은 #43)")
+    from app.payment.deadline import deadline_for  # 순환 import 피함
+
+    perf = db.get(Performance, performance_id)
+    return deadline_for(db, perf) if perf is not None else None
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +145,7 @@ def _apply_result(db: Session, payment: Payment, result: str, *, now: datetime, 
     payment.status, payment.completed_at = "SUCCEEDED", now
     _move_order(db, order, "PAID", actor_id)
     order.paid_at = now
+    request_service.performance_paid(db, order.performance_id, actor_id=actor_id)  # 결제 대기 → 섭외 확정 (2번 약속)
     # 결제금은 플랫폼이 보관 (보관 중). 업체 몫은 업체별로, 이용료는 플랫폼 몫
     db.add_all(LedgerEntry(order_id=order.id, supplier_id=line.supplier_id, entry_type="HOLD", amount=line.amount,
                            memo="결제금 보관 (업체 몫)") for line in order.lines)
@@ -172,6 +176,9 @@ def pay_order(
         return existing, order
     if order.status != "ISSUED":
         raise invalid_state("이미 결제했거나 취소된 청구서입니다. 청구서를 다시 확인해 주십시오.")
+    from app.payment.deadline import ensure_open  # D-57: 마감이 지났으면 자동 취소하고 409
+
+    ensure_open(db, order, now)
     if amount != order.total_amount:
         raise AppError(400, "AMOUNT_MISMATCH", "결제 금액이 청구서 금액과 다릅니다. 화면을 새로 고친 후 다시 결제해 주십시오.")
     payment = Payment(order_id=order.id, idempotency_key=idempotency_key, provider_tx_id=f"mock-{uuid.uuid4().hex}",

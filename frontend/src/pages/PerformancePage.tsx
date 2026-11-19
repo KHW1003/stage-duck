@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { PerformanceDetail, StageSummary } from "../shared/api/types";
 import { ErrorNotice } from "../shared/ui/ErrorText";
+import { DeadlineNotice } from "../shared/ui/DeadlineNotice";
 import { Ico } from "../shared/ui/Ico";
 import { useStageQuotes } from "../features/compare/api";
 import { usePerformance, useWithdraw } from "../features/performance/api";
@@ -273,6 +274,7 @@ export function PerformancePage() {
       </div>
 
       <main className="container main">
+        <DeadlineNotice deadline={p.paymentDeadline} what={p.status === "AWAITING_PAYMENT" ? "결제" : "남은 업체 선택과 결제"} />
         <section className="sec">
           <div className="sec-head">
             <h2>

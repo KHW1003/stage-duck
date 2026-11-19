@@ -110,8 +110,13 @@ def send_card(db: Session, user: User, quote_id: int, *, now: datetime) -> CardV
         if old.status == "PENDING":
             raise invalid_state("이미 보낸 최종 견적이 있어요. 사용자가 답하거나 기한이 지나면 다시 보낼 수 있어요.")
     version = db.scalar(select(QuoteVersion).where(QuoteVersion.quote_id == quote.id, QuoteVersion.version == quote.current_version))
-    card = ConfirmRequest(room_id=room.id, quote_version_id=version.id, status="PENDING",
-                          expires_at=now + timedelta(hours=CARD_HOURS), created_at=now)
+    expires = now + timedelta(hours=CARD_HOURS)
+    from app.payment.deadline import deadline_for  # 4번 결제 마감 (D-57): 카드 만료 = min(48시간, 결제 마감)
+
+    deadline = deadline_for(db, stage.performance)
+    if deadline is not None:
+        expires = min(expires, deadline)
+    card = ConfirmRequest(room_id=room.id, quote_version_id=version.id, status="PENDING", expires_at=expires, created_at=now)
     db.add(card)
     db.flush()
     _system(db, room, "CONFIRM_REQUEST", card.id)
@@ -200,8 +205,30 @@ def accept(db: Session, user: User, card_id: int, *, now: datetime) -> AcceptRes
         payload={"performanceId": perf.id, "stageId": stage.id},
     )
     _close_others(db, stage, view.quote, user.id, now)
+    _notify_deadline(db, stage, now)
     db.commit()
     return AcceptResult(_load(db, user, card_id), request_service.after_confirm(db, stage.id, full_spec=view.quote.is_full_spec))
+
+
+def _notify_deadline(db: Session, stage: Stage, now: datetime) -> None:
+    """D-57: 처음 컨펌이면 결제 마감 안내, 모든 단계가 끝나 결제할 수 있게 됐으면 결제 안내 (사용자에게)."""
+    from app.payment import deadline as dl
+
+    db.flush()
+    perf = stage.performance
+    db.refresh(perf)
+    deadline = dl.deadline_for(db, perf)
+    if deadline is None:
+        return
+    confirmed = [s for s in perf.stages if s.confirmed_at is not None]
+    if len(confirmed) == 1:
+        notification.notify(db, perf.user_id, "PAYMENT_DEADLINE_SET", link=f"/performances/{perf.id}",
+                            params={"deadline": dl.label(deadline), "title": perf.title}, payload={"performanceId": perf.id})
+    if request_service.after_confirm(db, stage.id, full_spec=False).checkout_available:
+        total = sum(ln.amount for ln in request_service.confirmed_lines(db, perf.id))
+        notification.notify(db, perf.user_id, "PAYMENT_READY", link=f"/performances/{perf.id}/order",
+                            params={"deadline": dl.label(deadline), "title": perf.title, "amount": notification.won(total)},
+                            payload={"performanceId": perf.id})
 
 
 def _move_quote(db: Session, quote: Quote, to: str, actor_id: int) -> None:

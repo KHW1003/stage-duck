@@ -13,6 +13,7 @@ import { CancellationPenaltyTable, SERVICE_TERM_GROUPS, TERMS } from "../feature
 import type { Order, StageType } from "../shared/api/types";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice } from "../shared/ui/ErrorText";
+import { DeadlineNotice } from "../shared/ui/DeadlineNotice";
 import { Ico, type KitIconName } from "../shared/ui/Ico";
 import { formatWon } from "../shared/ui/MoneyText";
 import { TransactionTermsModal } from "./TransactionTermsModal";
@@ -230,6 +231,7 @@ export function InvoicePage() {
                       ) : (
                         <button type="button" className="btn btn--primary btn--lg btn--block mt-16" disabled>결제하기</button>
                       )}
+                      <DeadlineNotice deadline={o.paymentDeadline} what="결제" />
                       <p className="test-pay mt-8"><Ico name="info" sm />{TEST_PAY}</p>
                       <p className="field__hint mt-8">버튼을 두 번 눌러도 한 번만 결제됩니다.</p>
                     </div>

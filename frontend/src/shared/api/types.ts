@@ -207,6 +207,8 @@ export interface PerformanceDetail extends PerformanceSummary {
   needs: PerformanceNeeds;
   hasContactPhone: boolean;
   publishedAt: string | null;
+  /** D-57 처음 컨펌 뒤 결제 전이면 결제 마감 */
+  paymentDeadline?: string | null;
 }
 
 export interface AdvanceResult {
@@ -555,6 +557,8 @@ export interface Order {
   totalAmount: number;
   issuedAt: string;
   paidAt: string | null;
+  /** D-57 결제 마감 (결제 전만). 지나면 자동 취소 */
+  paymentDeadline?: string | null;
   lines: OrderLine[];
 }
 

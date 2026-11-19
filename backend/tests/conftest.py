@@ -15,6 +15,7 @@ os.environ.setdefault("ADMIN_SESSION_SECRET", "test-secret")
 os.environ.setdefault("UPLOAD_DIR", (_tmp / "uploads").as_posix())  # 업로드 파일은 임시 폴더에
 # 내 backend/.env 가 MAIL_BACKEND=smtp 여도 테스트는 진짜 메일을 보내지 않는다 (smtp 는 test_mail.py 가 가짜로 켠다)
 os.environ["MAIL_BACKEND"] = "console"
+os.environ["SCHEDULER_ENABLED"] = "false"  # 테스트는 run_due 를 직접 부른다
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

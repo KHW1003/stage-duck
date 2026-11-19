@@ -42,3 +42,11 @@ TEMPLATES: dict[str, tuple[str, str, str | None]] = {
 }
 
 STAGE_LABEL = {"VENUE": "공연장", "EQUIPMENT": "장비", "ENGINEER": "엔지니어"}
+
+# 결제 마감 (D-57, #52 후반) — 사용자에게 보내는 글이라 합니다체
+TEMPLATES.update({
+    "PAYMENT_DEADLINE_SET": ("PAYMENT", "{deadline}까지 남은 업체 선택과 결제를 마쳐 주십시오", "{title} · 마감이 지나면 확정한 업체 일정이 해제됩니다"),
+    "PAYMENT_READY": ("PAYMENT", "{deadline}까지 결제하시면 섭외가 확정됩니다", "{title} · 합계 {amount}원"),
+    "PAYMENT_REMINDER": ("PAYMENT", "결제 마감까지 {left} 남았습니다", "{title} · {deadline}까지 {what}를 마쳐 주십시오"),
+    "HOLD_EXPIRED": ("PAYMENT", "결제 기한이 지나 확정한 일정이 해제되었습니다", "{title} · 다시 진행하려면 요청서를 새로 올려 주십시오"),
+})
