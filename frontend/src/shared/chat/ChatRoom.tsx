@@ -4,12 +4,23 @@
  * AC-F3-07: 남의 방(서버 404)은 열 수 없다는 안내만
  * AC-F3-08: 방을 열거나 새 메시지가 오면 POST read, 상대가 읽은 내 말풍선에 "읽음"
  * AC-F3-15: contactWarning 메시지 아래 플랫폼 밖 거래 경고
- * 최종 견적 카드·확정(#43)과 사진 보내기(다음 PR)는 여기서 만들지 않는다.
+ * AC-F3-08: [사진 보내기](jpg·png·webp → IMAGE)·[파일 보내기](pdf → FILE), 10MB. 사진은 누르면 새 창에서 크게 보기
+ * 최종 견적 카드·확정(#43)은 여기서 만들지 않는다.
  */
 import { useQueryClient } from "@tanstack/react-query";
-import { Fragment, type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, Fragment, type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CHAT_ROOMS_KEY, markRead, useChatThread, useSendMessage, useStartChat } from "../../features/chat/api";
+import {
+  ATTACH_RULES,
+  type AttachType,
+  CHAT_ROOMS_KEY,
+  attachmentProblem,
+  markRead,
+  useChatThread,
+  useSendAttachment,
+  useSendMessage,
+  useStartChat,
+} from "../../features/chat/api";
 import { STAGE_NAME } from "../../features/performance/labels";
 import { ApiError } from "../api/client";
 import type { ChatRoom as Room } from "../api/types";
@@ -61,9 +72,27 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
   }
   let content;
   if (m.type === "IMAGE" && m.attachmentUrl) {
-    content = <img className="msg__photo" src={m.attachmentUrl} alt={`${mine ? "내가" : `${partner}가`} 보낸 사진`} />;
+    // 누르면 새 창에서 크게 보기 (비공개 파일이라 그 방 참여자만 열림)
+    content = (
+      <a className="msg__photo-link" href={m.attachmentUrl} target="_blank" rel="noopener noreferrer">
+        <img className="msg__photo" src={m.attachmentUrl} alt={`${mine ? "내가" : `${partner}가`} 보낸 사진`} />
+      </a>
+    );
+  } else if (m.type === "FILE") {
+    const name = m.body ?? "파일";
+    content = (
+      <div className="msg__b msg__file">
+        <Ico name="file" sm />
+        <span className="msg__file-name">{name}</span>
+        {m.attachmentUrl && (
+          <a href={m.attachmentUrl} target="_blank" rel="noopener noreferrer" aria-label={`${name} 내려받기`}>
+            내려받기
+          </a>
+        )}
+      </div>
+    );
   } else {
-    content = <p className="msg__b">{m.type === "IMAGE" ? "사진" : m.type === "FILE" ? "파일" : m.body}</p>;
+    content = <p className="msg__b">{m.type === "IMAGE" ? "사진" : m.body}</p>;
   }
   return (
     <>
@@ -86,12 +115,37 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
 
 function Composer({ roomId }: { roomId: number }) {
   const [text, setText] = useState("");
+  const [pickError, setPickError] = useState<string | null>(null);
   const send = useSendMessage(roomId);
+  const attach = useSendAttachment(roomId);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const busy = send.isPending || attach.isPending;
+  const clearErrors = () => {
+    setPickError(null);
+    send.reset();
+    attach.reset();
+  };
   const submit = () => {
     const body = text.trim();
-    if (!body || send.isPending) return;
+    if (!body || busy) return;
+    clearErrors();
     send.mutate({ type: "TEXT", body }, { onSuccess: () => setText("") });
   };
+  /** AC-F3-08: 고른 파일을 형식·크기로 먼저 보고, 맞으면 올린 뒤 메시지로 보낸다 */
+  const onPick = (type: AttachType) => (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || busy) return;
+    clearErrors();
+    const problem = attachmentProblem(type, file);
+    if (problem) {
+      setPickError(problem);
+      return;
+    }
+    attach.mutate({ type, file });
+  };
+  const error = send.error ?? attach.error;
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -100,14 +154,35 @@ function Composer({ roomId }: { roomId: number }) {
   };
   return (
     <>
-      {send.error && (
+      {pickError && (
         <div className="chat-panel__err">
-          <ErrorNotice error={send.error} />
+          <p className="composer__hint" role="alert">
+            <Ico name="warn" sm />
+            {pickError}
+          </p>
         </div>
       )}
+      {error && (
+        <div className="chat-panel__err">
+          <ErrorNotice error={error} />
+        </div>
+      )}
+      {attach.isPending && (
+        <p className="composer__status" role="status">
+          올리는 중이에요…
+        </p>
+      )}
       <div className="composer">
+        <button className="icon-btn" type="button" aria-label="사진 보내기" disabled={busy} onClick={() => photoInput.current?.click()}>
+          <Ico name="image" />
+        </button>
+        <button className="icon-btn" type="button" aria-label="파일 보내기" disabled={busy} onClick={() => fileInput.current?.click()}>
+          <Ico name="clip" />
+        </button>
+        <input ref={photoInput} type="file" hidden accept={ATTACH_RULES.IMAGE.accept} aria-label="사진 고르기" onChange={onPick("IMAGE")} />
+        <input ref={fileInput} type="file" hidden accept={ATTACH_RULES.FILE.accept} aria-label="파일 고르기" onChange={onPick("FILE")} />
         <textarea rows={1} placeholder="메시지를 입력하세요" aria-label="메시지" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} />
-        <button className="btn btn--primary" type="button" aria-label="보내기" disabled={send.isPending || !text.trim()} onClick={submit}>
+        <button className="btn btn--primary" type="button" aria-label="보내기" disabled={busy || !text.trim()} onClick={submit}>
           <Ico name="send" sm />
         </button>
       </div>

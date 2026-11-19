@@ -1,7 +1,7 @@
 /** 채팅 API (backend chat/router.py). 보내기는 REST, 받기는 WebSocket(shared/chat/useChatSocket). 서버 데이터는 TanStack Query 로만 */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { ChatMessageIn, ChatMessageOut, ChatMessagesOut, ChatRoom } from "../../shared/api/types";
+import type { ChatMessageIn, ChatMessageOut, ChatMessagesOut, ChatRoom, UploadedFile } from "../../shared/api/types";
 import { type ChatThread, fromRest, mergeMessages, threadFromRest } from "../../shared/chat/normalize";
 
 export const CHAT_ROOMS_KEY = ["chat-rooms"] as const;
@@ -50,18 +50,57 @@ export function useStartChat(roomId: number) {
   });
 }
 
-/** AC-F3-06·08·15: 메시지 보내기. 보낸 메시지는 바로 말풍선으로 (WebSocket 으로 또 와도 id 로 한 번만) */
-export function useSendMessage(roomId: number) {
+function postMessage(roomId: number, body: ChatMessageIn) {
+  return api<ChatMessageOut>(`/chat-rooms/${roomId}/messages`, { method: "POST", body: JSON.stringify(body) });
+}
+
+/** 보낸 메시지는 바로 말풍선으로 (WebSocket 으로 또 와도 id 로 한 번만) */
+function useAddSent(roomId: number) {
   const qc = useQueryClient();
+  return (m: ChatMessageOut) => {
+    qc.setQueryData<ChatThread>(messagesKey(roomId), (old) =>
+      addToThread(old, { messages: [fromRest(m)], partnerLastReadMessageId: null }),
+    );
+    void qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true });
+  };
+}
+
+/** AC-F3-06·08·15: 글 메시지 보내기 */
+export function useSendMessage(roomId: number) {
+  const onSuccess = useAddSent(roomId);
+  return useMutation({ mutationFn: (body: ChatMessageIn) => postMessage(roomId, body), onSuccess });
+}
+
+/**
+ * 사진·파일 형식 (uploads.md CHAT 10MB, backend chat/calc.py ATTACHMENT_MIME: IMAGE = jpg·png·webp, FILE = pdf).
+ * 화면 검사는 보조다 — 서버가 다시 보고 400·413 을 돌려준다.
+ */
+export const ATTACH_MAX_BYTES = 10 * 1024 * 1024;
+export const ATTACH_RULES = {
+  IMAGE: { mimes: ["image/jpeg", "image/png", "image/webp"], accept: "image/jpeg,image/png,image/webp", formatMessage: "jpg·png·webp 사진만 올릴 수 있어요." },
+  FILE: { mimes: ["application/pdf"], accept: "application/pdf,.pdf", formatMessage: "PDF 파일만 올릴 수 있어요." },
+} as const;
+export type AttachType = keyof typeof ATTACH_RULES;
+
+/** 보내기 전에 막을 이유 (없으면 null) */
+export function attachmentProblem(type: AttachType, file: File): string | null {
+  if (!(ATTACH_RULES[type].mimes as readonly string[]).includes(file.type)) return ATTACH_RULES[type].formatMessage;
+  if (file.size > ATTACH_MAX_BYTES) return "10MB 이하 파일만 올릴 수 있어요.";
+  return null;
+}
+
+/** AC-F3-08: 사진·파일 보내기 = POST /files (purpose CHAT, 비공개) → POST messages {type, fileId}. FILE 은 파일 이름을 body 로 */
+export function useSendAttachment(roomId: number) {
+  const onSuccess = useAddSent(roomId);
   return useMutation({
-    mutationFn: (body: ChatMessageIn) =>
-      api<ChatMessageOut>(`/chat-rooms/${roomId}/messages`, { method: "POST", body: JSON.stringify(body) }),
-    onSuccess: (m) => {
-      qc.setQueryData<ChatThread>(messagesKey(roomId), (old) =>
-        addToThread(old, { messages: [fromRest(m)], partnerLastReadMessageId: null }),
-      );
-      void qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true });
+    mutationFn: async ({ type, file }: { type: AttachType; file: File }) => {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("purpose", "CHAT");
+      const uploaded = await api<UploadedFile>("/files", { method: "POST", body: form });
+      return postMessage(roomId, type === "FILE" ? { type, fileId: uploaded.id, body: file.name } : { type, fileId: uploaded.id });
     },
+    onSuccess,
   });
 }
 
