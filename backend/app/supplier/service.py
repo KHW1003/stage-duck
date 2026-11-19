@@ -257,6 +257,12 @@ def create_venue(db: Session, user: User, body: VenueIn) -> Venue:
     return venue
 
 
+def my_venues(db: Session, user: User) -> list[Venue]:
+    """GET /supplier/venues: 내 공간만 (숨긴 공간도). 승인된 공연장 부문 업체가 아니면 403 (_venue_owner)."""
+    supplier = _venue_owner(db, user)
+    return list(db.scalars(select(Venue).where(Venue.supplier_id == supplier.id).order_by(Venue.id)))
+
+
 def _public_venues():
     """누구나 보는 공간: 숨김 아님 + 승인된 업체 (정지 업체 공간은 숨기고, 풀리면 다시 보인다 — D-34와 같은 방식)."""
     return (

@@ -3,9 +3,11 @@ from dataclasses import asdict
 from datetime import time
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.core.errors import AppError
+from app.main import app
 from app.models import Venue
 from app.supplier.service import get_venue_snapshot
 from tests.conftest import login_as, make_supplier, make_user
@@ -104,3 +106,26 @@ def test_other_suppliers_venue_is_not_found(venue_owner, client, db):
     assert res.status_code == 404
     db.expire_all()
     assert db.get(Venue, venue_id).name == "공간 C"
+
+
+def test_my_venues_lists_only_my_own_including_hidden(venue_owner, db):
+    """GET /supplier/venues (AC-F2-18 견적서 작성 화면용): 내 공간만, 숨긴 공간도, 등록 순."""
+    first = venue_owner.post(URL, json=_body()).json()["id"]
+    second = venue_owner.post(URL, json=_body(name="공간 C-2")).json()["id"]
+    db.get(Venue, second).status = "HIDDEN"
+    db.commit()
+    other = make_supplier(db, review_status="APPROVED", categories=("VENUE",))
+    login_as(TestClient(app), other.user).post(URL, json=_body(name="남의 공간"))
+
+    res = venue_owner.get(URL)
+
+    assert res.status_code == 200
+    assert [(v["id"], v["name"]) for v in res.json()] == [(first, "공간 C"), (second, "공간 C-2")]
+    assert res.json()[0]["maxCapacity"] == 120 and res.json()[0]["checkinTime"].startswith("15:00")
+
+
+def test_my_venues_permissions(client, db):
+    assert login_as(client, make_user(db)).get(URL).status_code == 404
+    equip = make_supplier(db, review_status="APPROVED", categories=("EQUIPMENT",))
+    res = login_as(TestClient(app), equip.user).get(URL)
+    assert (res.status_code, res.json()["code"]) == (403, "CATEGORY_NOT_APPROVED")
