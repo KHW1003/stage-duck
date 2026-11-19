@@ -22,6 +22,7 @@ import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
 import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
+import { CancelPage } from "./pages/CancelPage";
 import { SheetPage } from "./pages/SheetPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
@@ -101,6 +102,7 @@ export function AppRoutes() {
           <Route path="/performances/:id/compare" element={<ComparePage />} />
           <Route path="/performances/:id/order" element={<InvoicePage />} />
           <Route path="/performances/:id/pay" element={<PaymentPage />} />
+          <Route path="/performances/:id/cancel" element={<CancelPage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
