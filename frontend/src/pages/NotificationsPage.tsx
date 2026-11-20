@@ -2,9 +2,11 @@
  * 알림 (/notifications, 사용자·업체). specs/notifications.md 6장, 이슈 #45, 목업 v4 notifications.html.
  * - 분류 탭 7개(전체 + 6), 오늘 / 이전 묶음, 안 읽은 줄은 점. 누르면 읽음 처리 후 이동 (채팅 알림은 채팅 창)
  * - [모두 읽음], 20개씩 [더 보기]
+ * - 아래에 "중요한 알림은 메일로도 받기" 켜기·끄기 (10장)
  */
 import { useState } from "react";
 import { CATEGORY_TABS, isToday, useMarkRead, useNotifications, type NotificationCategory } from "../features/notification/api";
+import { MailSetting } from "../features/notification/MailSetting";
 import { NotificationList } from "../features/notification/NotificationList";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { KitPageTop } from "../shared/layout/KitPageTop";
@@ -80,6 +82,7 @@ export function NotificationsPage() {
             </button>
           </div>
         )}
+        <MailSetting />
       </main>
     </>
   );

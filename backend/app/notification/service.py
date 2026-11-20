@@ -6,6 +6,7 @@
 - 문구는 templates.py 틀을 채워 확정해 저장한다. 연락처 모양(전화·계좌·메일)은 가린다 (1장 규칙 4).
 - 채팅 메시지는 알림을 만들지 않는다 (1장 규칙 1) — 이 모듈을 부르지 않는다.
 - 90일 지난 알림은 목록을 볼 때 지운다 (스케줄러 대신, 1장 규칙 7).
+- 중요 알림(mailer.MAIL_TYPES)은 커밋 뒤 메일로도 보낸다. 받는 사람이 끌 수 있다 (10장).
 """
 import re
 from datetime import date, datetime, timedelta
@@ -15,7 +16,8 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.chat import realtime
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationSetting
+from app.notification import mailer
 from app.notification.templates import STAGE_LABEL, TEMPLATES
 
 PAGE_SIZE = 20
@@ -74,6 +76,7 @@ def notify(
     db.add(row)
     db.flush()
     realtime.publish_after_commit(db, [user_id], "notification", _event(row))
+    mailer.queue(db, row)  # 중요 알림은 메일로도 (커밋 뒤에 보낸다)
     return row
 
 
@@ -128,4 +131,22 @@ def mark_read(db: Session, user_id: int, *, ids: list[int] | None, all_: bool, n
             return
         stmt = stmt.where(Notification.id.in_(ids))
     db.execute(stmt.values(read_at=now).execution_options(synchronize_session=False))
+    db.commit()
+
+
+# ---------------------------------------------------------------------------
+# 알림 받는 방법 (GET·PUT /me/notifications/settings, 10장)
+# ---------------------------------------------------------------------------
+
+
+def get_settings_of(db: Session, user_id: int) -> bool:
+    return mailer.email_enabled(db, user_id)
+
+
+def set_email(db: Session, user_id: int, enabled: bool) -> None:
+    row = db.get(NotificationSetting, user_id)
+    if row is None:
+        db.add(NotificationSetting(user_id=user_id, email_enabled=enabled))
+    else:
+        row.email_enabled = enabled
     db.commit()

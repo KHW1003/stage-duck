@@ -299,6 +299,8 @@
 | GET | `/me/notifications` | 로그인 (S\*, 정지 포함) | `?category=&before=` 최신순 20개 → `{ "items": [{ id, type, category, title, body, link, read, createdAt }], "nextBefore", "unreadCount" }` | |
 | GET | `/me/notifications/unread-count` | 로그인 | `{ "count" }` — 머리 종 배지 | |
 | POST | `/me/notifications/read` | 로그인 | `{ "ids": [12] }` 또는 `{ "all": true }` → `204`. 남의 id는 무시 | |
+| GET | `/me/notifications/settings` | 로그인 | `{ "emailEnabled", "email" }` — 중요 알림 메일 (notifications.md 10장) | |
+| PUT | `/me/notifications/settings` | 로그인 | `{ "emailEnabled": false }` → 같은 모양 | |
 
 - 어떤 일에 누구에게 어떤 알림이 가는지는 [notifications.md](notifications.md) 3장. 채팅 메시지는 알림을 만들지 않는다.
 
