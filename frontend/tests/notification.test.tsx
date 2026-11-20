@@ -170,3 +170,23 @@ describe("알림 화면 (/notifications)", () => {
     expect(screen.queryByRole("button", { name: "모두 읽음" })).not.toBeInTheDocument();
   });
 });
+
+describe("메일로도 받기 (notifications.md 10장)", () => {
+  it("알림 화면 아래에서 메일 알림을 끄면 PUT emailEnabled=false", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({
+      ...ME,
+      "GET /api/v1/me/notifications/unread-count": { status: 200, body: { count: 0 } },
+      "GET /api/v1/me/notifications": { status: 200, body: { items: [], nextBefore: null, unreadCount: 0 } },
+      "GET /api/v1/me/notifications/settings": { status: 200, body: { emailEnabled: true, email: "host@example.com" } },
+      "PUT /api/v1/me/notifications/settings": { status: 200, body: { emailEnabled: false, email: "host@example.com" } },
+    });
+    renderAt("/notifications");
+    const toggle = await screen.findByRole("switch", { name: "중요한 알림은 메일로도 받기" });
+    expect(toggle).toBeChecked();
+    expect(screen.getByText("host@example.com")).toBeInTheDocument();
+    await user.click(toggle);
+    await waitFor(() => expect(calls.find((c) => c.key === "PUT /api/v1/me/notifications/settings")?.body).toEqual({ emailEnabled: false }));
+    await waitFor(() => expect(screen.getByRole("switch", { name: "중요한 알림은 메일로도 받기" })).not.toBeChecked());
+  });
+});

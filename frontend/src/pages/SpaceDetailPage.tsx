@@ -10,6 +10,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FavoriteButton, OfferPicker } from "../features/offer/OfferParts";
+import { useReviewSummaries } from "../features/review/api";
+import { RatingBadge } from "../features/review/Stars";
 import type { StageType } from "../shared/api/types";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { useVenue, type VenueDetail } from "../features/venue/api";
@@ -207,7 +209,10 @@ export function SpaceDetailPage() {
                   <tr>
                     <th>업체</th>
                     <td>
-                      <span className="link link--point">{v.companyName}</span>
+                      <Link className="link link--point" to={`/suppliers/${v.supplierId}`}>
+                        {v.companyName}
+                      </Link>
+                      <SupplierRating supplierId={v.supplierId} />
                     </td>
                   </tr>
                   <tr>
@@ -353,4 +358,15 @@ export function SpaceDetailPage() {
       {modal?.kind === "report" && <ReportModal onClose={() => setModal(null)} />}
     </div>
   );
+}
+
+/** 공간 업체의 별점 (후기가 있을 때만, specs/reviews.md) */
+function SupplierRating({ supplierId }: { supplierId: number }) {
+  const r = useReviewSummaries([supplierId]).get(supplierId);
+  return r ? (
+    <>
+      {" "}
+      <RatingBadge average={r.average} count={r.count} />
+    </>
+  ) : null;
 }

@@ -85,3 +85,34 @@ def read(
 ) -> Response:
     service.mark_read(db, user.id, ids=body.ids, all_=body.all, now=now)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ---------- 알림 받는 방법 (10장): 중요 알림을 메일로도 받을지 ----------
+
+
+class SettingsOut(BaseModel):
+    model_config = _CFG
+
+    email_enabled: bool
+    email: str
+
+
+class SettingsIn(BaseModel):
+    model_config = _CFG
+
+    email_enabled: bool
+
+
+def _settings_out(db: Session, user: User) -> SettingsOut:
+    return SettingsOut(email_enabled=service.get_settings_of(db, user.id), email=user.email)
+
+
+@router.get("/settings", response_model=SettingsOut)
+def get_settings(user: User = Depends(current_user), db: Session = Depends(get_db)) -> SettingsOut:
+    return _settings_out(db, user)
+
+
+@router.put("/settings", response_model=SettingsOut)
+def put_settings(body: SettingsIn, user: User = Depends(current_user), db: Session = Depends(get_db)) -> SettingsOut:
+    service.set_email(db, user.id, body.email_enabled)
+    return _settings_out(db, user)

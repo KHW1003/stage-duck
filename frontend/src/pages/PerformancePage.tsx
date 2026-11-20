@@ -19,6 +19,7 @@ import { ConfirmModal } from "../features/performance/ConfirmModal";
 import { dateLabel, hm, nextActionText, STAGE_NAME, STAGE_STATUS } from "../features/performance/labels";
 import { NextStagePanel } from "../features/performance/NextStagePanel";
 import { FavoriteSuggest } from "../features/offer/FavoriteSuggest";
+import { PerformanceReviews } from "../features/review/PerformanceReviews";
 import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
 import { CONDITIONS, FORMS, SERVICES, TASKS, VENUE_TYPES } from "../features/request/codes";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -275,6 +276,7 @@ export function PerformancePage() {
 
       <main className="container main">
         <DeadlineNotice deadline={p.paymentDeadline} what={p.status === "AWAITING_PAYMENT" ? "결제" : "남은 업체 선택과 결제"} />
+        {(p.status === "CONFIRMED" || p.status === "COMPLETED") && <PerformanceReviews performanceId={p.id} />}
         <section className="sec">
           <div className="sec-head">
             <h2>
