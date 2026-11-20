@@ -394,3 +394,14 @@
 
 ## 8. 열린 질문
 - ~~파일 업로드 크기 제한~~ → uploads.md (D-51)
+
+## 후기·평점 (11/20 추가)
+
+자세한 규칙·응답 모양은 `specs/reviews.md` 3장.
+
+| 메서드 | 경로 | 권한 |
+|---|---|---|
+| GET·POST | `/performances/{id}/reviews` | 공연 주인 사용자 |
+| DELETE | `/reviews/{id}` | 쓴 사람 |
+| GET | `/suppliers/{id}/reviews` | 누구나 |
+| GET | `/review-summaries?ids=` | 누구나 |

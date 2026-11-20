@@ -21,3 +21,4 @@ from app.models.venue import Venue, VenueEquipment
 from app.models.payment import Cancellation, LedgerEntry, Order, OrderLine, Payment  # noqa: F401  #50·#51·#52 청구서·결제·장부·취소
 
 __all__ = ["FreePost", "FreeComment", "FreeHelpful", "FreeBookmark", "Base", "User", "Supplier", "SupplierCategory", "Sanction", "Report", "StatusHistory", "TermsAgreement", "SupplierTermsReview", "StoredFile", "Performance", "PerformanceVersion", "Stage", "Quote", "QuoteVersion", "Venue", "VenueEquipment", "TechCheck", "RejectionEvent", "PasswordResetToken", "PasswordResetRequest", "Notice"]
+from app.models.review import Review  # noqa: F401  공연 후기·평점
