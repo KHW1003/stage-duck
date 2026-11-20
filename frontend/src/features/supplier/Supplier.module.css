@@ -51,3 +51,8 @@
   .actions { flex-direction: column-reverse; }
   .actions > * { width: 100%; }
 }
+
+/* 칸 옆 버튼 ([중복 확인]) */
+.withButton { display: flex; gap: 8px; align-items: center; }
+.withButton > input { flex: 1; min-width: 0; }
+.withButton > button { flex: none; }

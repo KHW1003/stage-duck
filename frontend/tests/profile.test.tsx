@@ -132,6 +132,22 @@ describe("사용자 프로필 부품 (UserProfileCard)", () => {
 });
 
 describe("마이페이지 (/mypage)", () => {
+  it("닉네임 [중복 확인]: 지금 내 닉네임이면 서버에 묻지 않고, 바꾼 닉네임은 바로 확인한다", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({ ...AS_USER, "POST /api/v1/auth/check-available": { status: 200, body: { available: false, message: "이미 쓰고 있는 닉네임이에요. 다른 닉네임을 써 주세요." } } });
+    renderAt("/mypage");
+    const input = await screen.findByLabelText("닉네임");
+    await waitFor(() => expect(input).toHaveValue("가을밤밴드"));
+    await user.click(screen.getByRole("button", { name: "닉네임 중복 확인" }));
+    expect(await screen.findByText("지금 쓰는 닉네임이에요.")).toBeInTheDocument();
+    expect(calls.filter((c) => c.url.endsWith("/check-available"))).toHaveLength(0);
+
+    await user.clear(input);
+    await user.type(input, "겨울밤밴드");
+    await user.click(screen.getByRole("button", { name: "닉네임 중복 확인" }));
+    expect(await screen.findByText("이미 쓰고 있는 닉네임이에요. 다른 닉네임을 써 주세요.")).toBeInTheDocument();
+  });
+
   it("AC-F5-16 업체에게 보이는 모습과, 나만 보이는 계정 정보를 나눠 보여 준다", async () => {
     mockServer(AS_USER);
     renderAt("/mypage");
@@ -147,8 +163,9 @@ describe("마이페이지 (/mypage)", () => {
     expect(within(account).getByText("host@stageduck.test")).toBeInTheDocument();
     expect(within(account).getByText("나만 보여요.")).toBeInTheDocument();
 
-    // 목업과 다르게 정한 것 (#33): 중복 확인·비밀번호 바꾸기·탈퇴·마케팅 수신은 없다
-    for (const name of ["중복 확인", "비밀번호 바꾸기", "탈퇴"]) expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
+    // 목업과 다르게 정한 것 (#33): 비밀번호 바꾸기·탈퇴·마케팅 수신은 없다. [중복 확인]은 누르는 즉시 확인한다
+    expect(screen.getByRole("button", { name: "닉네임 중복 확인" })).toBeInTheDocument();
+    for (const name of ["비밀번호 바꾸기", "탈퇴"]) expect(screen.queryByRole("button", { name })).not.toBeInTheDocument();
     expect(screen.queryByText("마케팅 수신")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "내 프로필" })).toHaveAttribute("aria-current", "page");
   });
