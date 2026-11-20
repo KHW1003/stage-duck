@@ -44,8 +44,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 인덱스는 표와 함께 지워진다. 따로 먼저 지우면 MariaDB 가 외래키가 쓰는 인덱스라며 막는다 (1553)
     with op.batch_alter_table("quotes") as batch:
         batch.drop_constraint("fk_quotes_offer_id", type_="foreignkey")
     op.drop_table("favorite_suppliers")
-    op.drop_index("ix_offers_supplier_status", table_name="offers")
     op.drop_table("offers")
