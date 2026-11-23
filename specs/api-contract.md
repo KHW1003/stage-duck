@@ -322,6 +322,7 @@
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
 | GET | `/pr-posts` | 🌐 | `?category=&sido=&page=` — category 생략 시 전체, 최신순(끌어올린 시각). 정지 업체 글 제외 | F4-04, F4-09, F4-11 |
+| GET | `/pr-posts/mine` | S | 내 소개 글 목록 — 내린(`DELETED`) 글은 빼고, 가려진(`BLINDED`) 글은 사유와 함께 본인에게만 준다. 응답 `{items: [소개 글 상세 + status, blindReason, canBump, nextBumpAt]}` (부문 순서: 공연장·장비·엔지니어). 끌어올리기 가능 여부·시각은 서버가 계산. 업체 정보가 없으면 빈 목록, 정지 계정도 본다 | F4-10, FR-BOARD-02·03 |
 | GET | `/pr-posts/{id}` | 🌐 | 상세 | F4-04 |
 | POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`). 연락처·외부 링크 모양이 있으면 저장은 하고 응답 `contactWarning: true` (화면이 경고) | F4-01~03, F4-10 |
 | PUT | `/pr-posts/{id}` | S(본인) | 수정 (말머리는 못 바꿈). 응답에 `contactWarning`. 블라인드 중 `409 INVALID_STATE`, 말머리 변경·칸 오류 `400 VALIDATION_FAILED`, 정지 계정 `403 ACCOUNT_SUSPENDED`, 남의 글·지운 글 `404` | F4-03, F4-10 |
