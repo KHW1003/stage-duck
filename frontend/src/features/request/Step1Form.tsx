@@ -11,6 +11,7 @@ import { FORMS, SIDO } from "./codes";
 import { Err, Hint, Row } from "./FormRow";
 import type { Errors, Step1Form as Form } from "./validate";
 import "./request-v4.css";
+import { Select } from "../../shared/ui/Select";
 
 interface Props {
   value: Form;
@@ -171,20 +172,14 @@ export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint 
         <div className="form-table">
           <Row label="지역" required>
             <span className="form-table__inline">
-              <select
-                className="select"
+              <Select
                 aria-label="시·도"
+                placeholder="시·도 골라 주세요"
                 value={value.sido}
-                onChange={(e) => onChange({ ...value, sido: e.target.value })}
+                options={SIDO.map((s) => ({ value: s, label: s }))}
+                onChange={(v) => onChange({ ...value, sido: v })}
                 aria-invalid={errors.sido ? true : undefined}
-              >
-                <option value="">시·도 골라 주세요</option>
-                {SIDO.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              />
               <input className="input" aria-label="시·군·구" placeholder="예: 동구" {...text("sigungu")} />
             </span>
             <Err msg={errors.sido} />

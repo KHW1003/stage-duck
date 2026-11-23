@@ -21,6 +21,7 @@ import { QuoteForm, type QuoteBodyIn } from "../features/quote/QuoteForm";
 import { useSupplierTermsReview } from "../features/supplier/termsReview";
 import { SupplierTermsFlow } from "./SupplierTermsReview";
 import styles from "../features/quote/Quote.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const LIST_PATH = "/supplier/postings";
 
@@ -162,6 +163,7 @@ function Editor({ quote, reload }: { quote: QuoteOut; reload: () => void }) {
 }
 
 export function QuoteEditPage() {
+  usePageMeta("견적서 고치기");
   const quoteId = Number(useParams().quoteId);
   const quote = useQuote(quoteId);
   const hidden = quote.error instanceof ApiError && quote.error.status === 404;

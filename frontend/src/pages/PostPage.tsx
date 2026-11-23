@@ -16,6 +16,7 @@ import { useMe } from "../shared/auth/useMe";
 import { NotFound } from "../shared/layout/NotFound";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import styles from "../features/board/Board.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 function Gallery({ post }: { post: PrPost }) {
   const [current, setCurrent] = useState(0);
@@ -52,6 +53,7 @@ function Gallery({ post }: { post: PrPost }) {
 }
 
 export function PostPage() {
+  usePageMeta("소개 글");
   const id = Number(useParams().id);
   const post = usePrPost(id);
   const me = useMe();

@@ -55,6 +55,11 @@ def supplier_profile(db: Session, supplier_id: int) -> SupplierProfileOut:
     )
 
 
+def my_supplier_profile(db: Session, user: User) -> SupplierProfileOut:
+    supplier = supplier_service.get_application(db, user)
+    return supplier_profile(db, supplier.id)
+
+
 def _user_profile(db: Session, user: User, now: datetime) -> UserProfileOut:
     counts = rejection.user_counts(db, {user.id}, now=now)[user.id]
     return UserProfileOut(

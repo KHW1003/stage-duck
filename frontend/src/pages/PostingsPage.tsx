@@ -13,6 +13,7 @@ import { SIDO } from "../features/request/codes";
 import { usePostings } from "../features/quote/api";
 import { dateLabel, nicknameOf, stageTag, userCounts } from "../features/quote/labels";
 import styles from "../features/quote/Quote.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const SIDO_OPTIONS = [{ value: "", label: "전체 지역" }, ...SIDO.map((s) => ({ value: s, label: s }))];
 
@@ -43,6 +44,7 @@ function Row({ p }: { p: PostingSummary }) {
 }
 
 export function PostingsPage() {
+  usePageMeta("공고 목록");
   const [qs, setQs] = useSearchParams();
   const sido = qs.get("sido") ?? "";
   const postings = usePostings(sido);

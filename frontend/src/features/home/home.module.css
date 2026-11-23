@@ -296,7 +296,7 @@
 }
 
 /* 로고: logo.svg (팀 로고 이미지를 그대로 따라 그린 SVG). 높이만 정하고 너비는 비율대로 */
-.logo__img { display: block; height: 30px; width: auto; }
+.logo__img { display: block; height: var(--sd-logo-img); width: auto; }
 .footer .logo__img { height: 26px; }
 
 /* ── 디테일 정리 (안쪽 목업 v3와 맞춤, DESIGN.md 8장) ──
@@ -561,4 +561,10 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
 @media (prefers-reduced-motion: reduce) {
   .slide, .flow-tab__text small { transition: none; }
   .pv.is-active, .toast, .slider__bar span.run, .flow-tab.is-active .flow-tab__bar { animation: none; }
+}
+
+/* 모바일(560px 아래) 머리: 안쪽 머리(Gnb)와 같게 로고를 숨긴다 (11/23 해원 결정) */
+@media (max-width: 560px) {
+  .gnb .logo { display: none; }
+  .gnb__inner { grid-template-columns: minmax(0, 1fr) auto; }
 }

@@ -20,6 +20,7 @@ import { NotFound } from "../shared/layout/NotFound";
 import { Ico, type KitIconName } from "../shared/ui/Ico";
 import { KitModal } from "../shared/ui/KitModal";
 import "./tech-check.css";
+import { Select } from "../shared/ui/Select";
 
 /** 항목 글자로 고르는 아이콘 (목업과 같은 모양). 맞는 게 없으면 공구 */
 export function techIcon(item: string): KitIconName {
@@ -134,13 +135,11 @@ function AddModal({ data, onClose }: { data: TechCheckList; onClose: () => void 
         </label>
         <label className="field">
           <span className="field__label">답할 업체</span>
-          <select className="select" value={owner} onChange={(e) => setOwner(Number(e.target.value))}>
-            {data.owners.map((o) => (
-              <option key={o.supplierId} value={o.supplierId}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={String(owner)}
+            options={data.owners.map((o) => ({ value: String(o.supplierId), label: o.label }))}
+            onChange={(v) => setOwner(Number(v))}
+          />
         </label>
         {err && (
           <p className="field__error" role="alert">

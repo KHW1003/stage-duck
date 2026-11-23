@@ -1,5 +1,6 @@
 /** 한 번 더 묻는 창 (건너뛰기 책임 고지, 전부 구했어요, 공고 내리기). Esc·[취소]로 닫는다 */
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useScrollLock } from "../../shared/ui/useScrollLock";
 import { Button } from "../../shared/ui/Button";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
 import styles from "./Performance.module.css";
@@ -21,6 +22,7 @@ export function ConfirmModal({ title, children, confirmLabel, cancelLabel = "취
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => ref.current?.focus(), []);
+  useScrollLock();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !loading) onCancel();

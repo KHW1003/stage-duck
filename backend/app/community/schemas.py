@@ -106,6 +106,8 @@ class FreePostOut(FreePostSummaryOut):
     blind_reason: str | None
     prev_id: int | None
     next_id: int | None
+    prev_title: str | None = None
+    next_title: str | None = None
     is_mine: bool
     updated_at: datetime
     comments: list[CommentOut] = []

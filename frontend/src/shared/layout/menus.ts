@@ -47,8 +47,8 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
   admin: [
     { label: "업체 심사", to: "/admin/supplier/list", external: true },
     { label: "신고·제재", to: "/admin/sanction/list", external: true },
-    { label: "게시글·공간", to: "/admin", external: true }, // [주소 미정] SQLAdmin 화면이 아직 없음
-    { label: "거래 이력", to: "/admin", external: true }, // [주소 미정] SQLAdmin 화면이 아직 없음
+    { label: "게시글", to: "/admin/pr-post/list", external: true }, // SQLAdmin 업체 소개 글 (공간 관리 화면은 아직 없음)
+    { label: "거래 이력", to: "/admin/performance-history", external: true }, // SQLAdmin 거래 이력 (views.py)
     { label: "시연 도구", to: "/admin/demo", external: true },
   ],
 };
@@ -57,18 +57,19 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
 export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
   guest: [],
   user: [
-    { label: "마이페이지", to: "/mypage", icon: "user" }, // [주소 미정] 목업 mypage.html — 1번 profile
-    { label: "견적함", to: "/quotes", icon: "doc" }, // [주소 미정] 목업 inbox-list.html — 3번 묶음
+    { label: "마이페이지", to: "/mypage", icon: "user" }, // 목업 mypage.html — 1번 profile
     { label: "관심 업체", to: "/favorites", icon: "heart" }, // 목업 favorites.html — 1번 offer (#32)
-    { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정] plan.md 는 공연별 /performances/:id/sheet
-    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
+    { label: "1:1 문의", to: "/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
+    // 11/23 디자인 검수: 없는 주소(404)로 가던 두 항목을 뺐다. 견적서는 공연별 [단계별 비교], 담당표는 공연 상세의 [최종 담당표]로 들어간다.
+    // - 견적함(목업 inbox-list.html, 3번 묶음): 모든 공연의 견적서를 모아 보는 화면이 생기면 다시 넣는다
+    // - 최종 담당표: plan.md 는 공연별 /performances/:id/sheet 뿐이라 계정 메뉴에 둘 주소가 없다
   ],
   partner: [
     { label: "업체 프로필", to: "/supplier/profile", icon: "venue" },
-    { label: "내 소개 글", to: "/supplier/posts", icon: "edit" }, // [주소 미정] 목업 p-post.html
+    { label: "내 소개 글", to: "/supplier/posts", icon: "edit" }, // 목업 p-post.html
     { label: "내 예약", to: "/supplier/reservations", icon: "receipt" },
     { label: "받은 견적 요청", to: "/supplier/offers", icon: "doc" }, // #32
-    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" },
+    { label: "1:1 문의", to: "/inquiries", icon: "chat" },
   ],
   "partner-review": [],
   admin: [],

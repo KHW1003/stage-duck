@@ -31,6 +31,7 @@ import {
 import { STAGE_STATUS } from "../features/performance/labels";
 import { CONDITIONS, MUST_HAVE, VENUE_TYPES } from "../features/request/codes";
 import styles from "../features/quote/Quote.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const LIST_PATH = "/supplier/postings";
 const ORDER: StageType[] = ["VENUE", "EQUIPMENT", "ENGINEER"];
@@ -199,6 +200,7 @@ function Detail({ p }: { p: PostingDetail }) {
 }
 
 export function PostingPage() {
+  usePageMeta("공고 상세");
   const stageId = Number(useParams().stageId);
   const posting = usePosting(stageId);
   const hidden = posting.error instanceof ApiError && posting.error.status === 404;

@@ -190,7 +190,7 @@ function BillPreview() {
         </div>
         <p className={s.uiHint}>결제 금액은 공연이 끝날 때까지 STAGE DUCK이 보관해요.</p>
         <div className={s.uiFoot}>
-          <span className={s.muted}>테스트 결제 — 실제 청구되지 않습니다</span>
+          <span className={s.muted}>테스트 결제라 실제로 청구되지 않습니다</span>
           <span className={cx(s.btn, s.btnSm, s.btnPrimary)}>결제하기</span>
         </div>
       </div>

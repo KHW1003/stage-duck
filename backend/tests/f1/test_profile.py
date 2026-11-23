@@ -98,6 +98,23 @@ def test_ac_f5_15_visitor_sees_supplier_profile_without_contact(client, db):
         assert secret not in res.text
 
 
+def test_own_supplier_profile_matches_the_signed_in_supplier(client, db):
+    first = make_supplier(db, review_status="APPROVED", company_name="같은 상호")
+    second = make_supplier(db, review_status="APPROVED", company_name="같은 상호")
+    pending = make_supplier(db, review_status="PENDING")
+    url = "/api/v1/supplier/profile"
+
+    assert client.get(url).status_code == 401
+    assert login_as(client, make_user(db)).get(url).status_code == 404
+    assert login_as(client, pending.user).get(url).status_code == 404
+    for supplier in (first, second):
+        response = login_as(client, supplier.user).get(url)
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "no-store"
+        assert response.json()["id"] == supplier.id
+        assert response.json() == client.get(SUPPLIER_URL.format(supplier.id)).json()
+
+
 @pytest.mark.parametrize("review_status", ["PENDING", "REJECTED", "SUSPENDED"])
 def test_ac_f5_15_not_approved_supplier_is_404(client, db, review_status):
     s = make_supplier(db, review_status=review_status)

@@ -9,6 +9,7 @@ import { REGIONS } from "../src/features/venue/view";
 import { ageOn, localErrors } from "../src/pages/SignupPage";
 import type { Me } from "../src/shared/api/types";
 import { pickDate } from "./pickDate";
+import { optionNames, pickOption } from "./pickOption";
 
 /** 로그인·가입·비밀번호 찾기·공간 찾기·공간 상세 (목업 v4 login·signup·password·spaces·space) */
 
@@ -412,7 +413,7 @@ describe("공간 상세 (/venues/:id)", () => {
     });
     renderAt("/venues/3");
     const select = await screen.findByLabelText("내 공연");
-    expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual(["가을밤 밴드 공연 · 공연장 단계"]);
+    expect(await optionNames(select)).toEqual(["가을밤 밴드 공연 · 공연장 단계"]);
     await userEvent.click(screen.getByRole("button", { name: "견적 요청하기" }));
     expect(screen.getByRole("dialog", { name: "견적 요청하기" })).toHaveTextContent("업체 C에 견적을 요청할까요?");
     await userEvent.keyboard("{Escape}");
@@ -521,7 +522,7 @@ describe("현장 준비 확인 (/supplier/tech/:performanceId)", () => {
     await userEvent.click(screen.getByRole("button", { name: "항목 추가" }));
     const dialog = screen.getByRole("dialog", { name: "항목 추가" });
     await userEvent.type(within(dialog).getByLabelText("항목"), "전원 용량");
-    await userEvent.selectOptions(within(dialog).getByLabelText("답할 업체"), "3");
+    await pickOption(within(dialog).getByLabelText("답할 업체"), "업체 C (공간)");
     await userEvent.click(within(dialog).getByRole("button", { name: "추가" }));
     await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
     expect(calls.find((c) => c.method === "POST")!.body).toEqual({ item: "전원 용량", detail: "", ownerSupplierId: 3 });

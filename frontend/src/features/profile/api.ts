@@ -2,16 +2,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
 import type { MyProfileRequest, SupplierProfile, UploadedFile, UserProfile } from "../../shared/api/types";
-import { ME_KEY } from "../../shared/auth/useMe";
+import { ME_KEY, useMe } from "../../shared/auth/useMe";
 
 export const MY_PROFILE_KEY = ["profile", "me"] as const;
 
 /** AC-F5-15: 누구나. 승인 업체가 아니면 서버가 404 */
-export function useSupplierProfile(id: number) {
+export function useSupplierProfile(id: number | "me") {
+  const me = useMe().data;
   return useQuery({
-    queryKey: ["profile", "supplier", id],
-    queryFn: () => api<SupplierProfile>(`/suppliers/${id}/profile`),
-    enabled: Number.isInteger(id) && id > 0,
+    queryKey: id === "me" ? ["profile", "supplier", "me", me?.id] : ["profile", "supplier", id],
+    queryFn: () => api<SupplierProfile>(id === "me" ? "/supplier/profile" : `/suppliers/${id}/profile`),
+    enabled: id === "me" ? me?.role === "SUPPLIER" : Number.isInteger(id) && id > 0,
     retry: false,
   });
 }

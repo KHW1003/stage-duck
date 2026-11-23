@@ -25,6 +25,7 @@ import { Step1Form } from "../features/request/Step1Form";
 import { Step2Form } from "../features/request/Step2Form";
 import { STEP1_FIELDS, earliestShowDate, step1Errors, step2Errors, type Errors, type Step1Form as Form } from "../features/request/validate";
 import "../features/request/request-v4.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const EMPTY_FORM: Form = {
   title: "", form: "", lineup: [], showDate: "", rehearsalStart: "", showStart: "", showEnd: "",
@@ -88,6 +89,7 @@ function dateLabel(iso: string) {
 }
 
 export function RequestPage({ edit }: { edit?: PerformanceDetail }) {
+  usePageMeta(edit ? "요청서 고치기" : "요청서 쓰기");
   const [step, setStep] = useState<1 | 2>(1);
   const [form, setForm] = useState<Form>(edit ? toForm(edit) : EMPTY_FORM);
   const [needs, setNeeds] = useState<PerformanceNeeds>(edit ? edit.needs : EMPTY_NEEDS);

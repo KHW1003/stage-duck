@@ -424,6 +424,9 @@ export interface FreePost extends FreePostSummary {
   blindReason: string | null;
   prevId: number | null;
   nextId: number | null;
+  /** 이전·다음 글 제목 (없으면 null) */
+  prevTitle: string | null;
+  nextTitle: string | null;
   isMine: boolean;
   updatedAt: string;
   comments: FreeComment[];

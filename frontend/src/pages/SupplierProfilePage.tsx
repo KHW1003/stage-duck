@@ -62,13 +62,15 @@ function InfoTable({ s }: { s: SupplierProfile }) {
   );
 }
 
-export function SupplierProfilePage() {
+export function SupplierProfilePage({ own = false }: { own?: boolean }) {
   const id = Number(useParams().id);
-  const profile = useSupplierProfile(id);
-  const rating = useReviewSummaries([id]).get(id);
+  const profile = useSupplierProfile(own ? "me" : id);
+  const ratingId = own ? profile.data?.id : id;
+  const ratings = useReviewSummaries(ratingId === undefined ? [] : [ratingId]);
+  const rating = ratingId === undefined ? undefined : ratings.get(ratingId);
   usePageMeta(profile.data?.companyName);
 
-  if (!Number.isInteger(id) || (profile.error instanceof ApiError && profile.error.status === 404)) return <NotFound />;
+  if ((!own && !Number.isInteger(id)) || (profile.error instanceof ApiError && profile.error.status === 404)) return <NotFound />;
   if (profile.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
   if (profile.isError) {
     return (

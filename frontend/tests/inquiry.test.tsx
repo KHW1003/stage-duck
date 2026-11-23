@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import { hasContact, type InquiryDetail, type InquirySummary } from "../src/features/support/inquiry";
 import type { Me } from "../src/shared/api/types";
+import { pickOption } from "./pickOption";
 
 /** 1:1 문의 (#102, AC-F5-18~20) — 목록·쓰기·보기 (목업 v4 inquiry-list · inquiry-write · inquiry-post) */
 
@@ -88,11 +89,11 @@ describe("1:1 문의 목록 (/inquiries)", () => {
     await userEvent.click(screen.getByRole("button", { name: "답변 완료" }));
     expect(screen.queryByText("문의 3")).not.toBeInTheDocument();
     expect(screen.getByText("문의 2")).toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "문의 유형" }), "QUOTE");
+    await pickOption(screen.getByRole("combobox", { name: "문의 유형" }), "견적·확정");
     expect(screen.getByTestId("where")).toHaveTextContent("/inquiries?status=ANSWERED&category=QUOTE");
     expect(screen.getAllByRole("row").slice(1).map((r) => within(r).getByRole("link").textContent)).toEqual(["문의 1"]);
     expect(screen.getByText("전체 문의").nextSibling).toHaveTextContent("3");
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "문의 유형" }), "ETC");
+    await pickOption(screen.getByRole("combobox", { name: "문의 유형" }), "기타");
     expect(screen.getByText("조건에 맞는 문의가 없어요")).toBeInTheDocument();
   });
 
@@ -123,7 +124,7 @@ describe("문의하기 (/inquiries/new)", () => {
     await userEvent.click(await screen.findByRole("radio", { name: "결제·환불" }));
     await userEvent.type(screen.getByRole("textbox", { name: "제목" }), "하루 전 취소 위약금");
     await userEvent.type(screen.getByRole("textbox", { name: "내용" }), "공연 하루 전에 취소하면 어떻게 되나요?");
-    await userEvent.selectOptions(await screen.findByRole("combobox", { name: "관련 공연" }), "1");
+    await pickOption(await screen.findByRole("combobox", { name: "관련 공연" }), /^관련 공연: /);
     await userEvent.click(screen.getByRole("button", { name: "문의 보내기" }));
     expect(await screen.findByRole("heading", { level: 1, name: "하루 전 취소 위약금" })).toBeInTheDocument();
     expect(calls.find((c) => c.method === "POST")!.body).toEqual({

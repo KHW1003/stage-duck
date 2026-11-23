@@ -52,7 +52,7 @@ describe("공연 취소 (/performances/:id/cancel)", () => {
     expect(screen.getByText(/업체 C 350,000원 · 업체 D 945,000원/)).toBeInTheDocument();
     expect(screen.getByText("555,000원")).toBeInTheDocument();
     expect(screen.getByText("환불되지 않습니다")).toBeInTheDocument();
-    expect(screen.getByText(/테스트 결제 — 실제 청구되지 않습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/테스트 결제라 실제로 청구되지 않습니다/)).toBeInTheDocument();
   });
 
   it("AC-F5-09 결제 전에는 수수료 0원과 반려 안내", async () => {

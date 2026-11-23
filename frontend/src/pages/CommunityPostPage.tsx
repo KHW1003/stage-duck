@@ -41,7 +41,7 @@ export function CommunityPostPage() {
       <article className={styles.narrow}>
         <header className={styles.postHead}>
           <Link to="/community" className={styles.postCat}>
-            커뮤니티 · [{CATEGORY_LABEL[p.category]}]
+            커뮤니티 · {CATEGORY_LABEL[p.category]}
           </Link>
           <h1 className={styles.postTitle}>{p.title}</h1>
           <p className={styles.postMeta}>
@@ -70,39 +70,38 @@ export function CommunityPostPage() {
           {me.data ? (
             <>
               <Button
-                size="sm"
-                variant="line"
+                variant="ghost"
                 aria-pressed={p.myHelpful}
                 loading={helpful.isPending}
                 onClick={() => helpful.mutate({ targetType: "POST", targetId: p.id, on: !p.myHelpful })}
               >
                 도움 돼요 {p.helpfulCount}
               </Button>
-              <Button size="sm" variant="line" aria-pressed={p.bookmarked} loading={bookmark.isPending} onClick={() => bookmark.mutate(!p.bookmarked)}>
+              <Button variant="ghost" aria-pressed={p.bookmarked} loading={bookmark.isPending} onClick={() => bookmark.mutate(!p.bookmarked)}>
                 {p.bookmarked ? "저장됨" : "저장"}
               </Button>
               {!p.isMine && (
-                <Button size="sm" variant="ghost" onClick={() => setReporting(true)}>
+                <Button variant="ghost" className={styles.reactsEnd} onClick={() => setReporting(true)}>
                   신고
                 </Button>
               )}
             </>
           ) : (
             <>
-              <ButtonLink to={loginPath(back)} size="sm" variant="line">
+              <ButtonLink to={loginPath(back)} variant="ghost">
                 도움 돼요 {p.helpfulCount}
               </ButtonLink>
-              <ButtonLink to={loginPath(back)} size="sm" variant="line">
+              <ButtonLink to={loginPath(back)} variant="ghost">
                 저장
               </ButtonLink>
             </>
           )}
           {p.isMine && (
             <span className={styles.mineActions}>
-              <ButtonLink to={`/community/${p.id}/edit`} size="sm" variant="ghost">
+              <ButtonLink to={`/community/${p.id}/edit`} variant="ghost">
                 수정
               </ButtonLink>
-              <Button size="sm" variant="ghost" onClick={() => setAsking(true)}>
+              <Button variant="ghost" onClick={() => setAsking(true)}>
                 삭제
               </Button>
             </span>
@@ -117,13 +116,13 @@ export function CommunityPostPage() {
           {p.nextId && (
             <li>
               <span>다음 글</span>
-              <Link to={`/community/${p.nextId}`}>다음 글 보기</Link>
+              <Link to={`/community/${p.nextId}`}>{p.nextTitle ?? "다음 글 보기"}</Link>
             </li>
           )}
           {p.prevId && (
             <li>
               <span>이전 글</span>
-              <Link to={`/community/${p.prevId}`}>이전 글 보기</Link>
+              <Link to={`/community/${p.prevId}`}>{p.prevTitle ?? "이전 글 보기"}</Link>
             </li>
           )}
         </ul>

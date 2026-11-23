@@ -15,6 +15,7 @@ import { ErrorNotice, fieldErrorOf } from "../shared/ui/ErrorText";
 import { useFreePost, useSaveFreePost, useUploadPhoto } from "../features/community/api";
 import { BODY_MAX, CATEGORIES, CATEGORY_LABEL, PHOTO_MAX, TITLE_MAX } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 type Errors = Partial<Record<"category" | "title" | "body", string>>;
 
@@ -151,6 +152,7 @@ function Editor({ initial }: { initial?: FreePost }) {
 }
 
 export function CommunityWritePage() {
+  usePageMeta("글쓰기");
   const param = useParams().id;
   const id = param ? Number(param) : undefined;
   const editing = id !== undefined;

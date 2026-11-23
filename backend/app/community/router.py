@@ -54,6 +54,9 @@ def _full(db: Session, post: FreePost, me: User | None, prev_id: int | None, nex
     return dict(
         **_summary(post, author), body=post.body, photo_ids=post.photos, status=post.status,
         blind_reason=post.blind_reason, prev_id=prev_id, next_id=next_id,
+        # 이전·다음 글 제목 (화면이 "다음 글 보기" 대신 제목을 보여 준다, 11/23 디자인 검수)
+        prev_title=db.get(FreePost, prev_id).title if prev_id else None,
+        next_title=db.get(FreePost, next_id).title if next_id else None,
         is_mine=me is not None and me.id == post.author_user_id, updated_at=post.updated_at,
     )
 

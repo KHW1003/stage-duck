@@ -20,12 +20,13 @@ import { useLogout, useMe } from "../shared/auth/useMe";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice, errorMessageOf, fieldErrorOf } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const NAV = [
   { label: "내 프로필", to: "/mypage" },
   { label: "관심 업체", to: "/favorites" },
   { label: "알림", to: "/notifications" },
-  { label: "최종 담당표", to: "/sheet" },
+  // 최종 담당표는 공연별(/performances/:id/sheet)이라 여기서 뺐다 (11/23, 없는 주소 /sheet 404)
   { label: "1:1 문의", to: "/me/inquiries" },
 ];
 
@@ -67,6 +68,7 @@ function FieldError({ text }: { text?: string }) {
 }
 
 export function MyPage() {
+  usePageMeta("마이페이지");
   const me = useMe();
   const profile = useMyProfile();
   const update = useUpdateMyProfile();

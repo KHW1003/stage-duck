@@ -13,6 +13,7 @@ import { DEFAULT_PARAMS, useFreePosts, type ListParams } from "../features/commu
 import { CATEGORIES, CATEGORY_LABEL, authorLabel, loginPath, shortDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { Select } from "../shared/ui/Select";
 
 const SORTS: { value: ListParams["sort"]; label: string }[] = [
   { value: "latest", label: "최신순" },
@@ -85,16 +86,17 @@ export function CommunityPage() {
             ))}
           </div>
           <form className={styles.search} role="search" onSubmit={search}>
-            <select
+            <Select
               aria-label="검색 범위"
               className={styles.select}
               value={draft.field}
-              onChange={(e) => setDraft({ ...draft, field: e.target.value as ListParams["field"] })}
-            >
-              <option value="all">제목+내용</option>
-              <option value="title">제목</option>
-              <option value="author">글쓴이</option>
-            </select>
+              options={[
+                { value: "all", label: "제목+내용" },
+                { value: "title", label: "제목" },
+                { value: "author", label: "글쓴이" },
+              ]}
+              onChange={(v) => setDraft({ ...draft, field: v as ListParams["field"] })}
+            />
             <input
               aria-label="검색어"
               className={styles.searchInput}

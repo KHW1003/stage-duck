@@ -15,6 +15,7 @@ import { Button } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { Select } from "../shared/ui/Select";
 import styles from "../features/board/Board.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const SIDO_OPTIONS = [{ value: "", label: "전체 지역" }, ...SIDO.map((s) => ({ value: s, label: s }))];
 
@@ -58,6 +59,7 @@ function PostCard({ post, rating }: { post: PrPostItem; rating?: ReviewSummary }
 }
 
 export function BoardPage() {
+  usePageMeta("업체 찾기");
   const [qs, setQs] = useSearchParams();
   const params = readParams(qs);
   const posts = usePrPosts(params);

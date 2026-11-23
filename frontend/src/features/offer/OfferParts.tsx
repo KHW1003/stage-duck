@@ -16,6 +16,7 @@ import { dateLabel } from "../performance/labels";
 import { STAGE_LABEL } from "../request/codes";
 import { OFFER_STATUS_LABEL, useFavorites, useSendOffer, useStageOffers, useToggleFavorite } from "./api";
 import "./offer.css";
+import { Select } from "../../shared/ui/Select";
 
 const OPEN = ["OPEN", "NEGOTIATING"];
 
@@ -176,13 +177,11 @@ export function OfferPicker({ supplierId, companyName, stageTypes, next }: { sup
     <div className="offer-pick">
       <label className="field">
         <span className="field__label">내 공연</span>
-        <select className="select" value={chosen.stage.id} onChange={(e) => setPick(Number(e.target.value))}>
-          {open.map((o) => (
-            <option key={o.stage.id} value={o.stage.id}>
-              {o.perf.title} · {STAGE_LABEL[o.stage.stageType]} 단계
-            </option>
-          ))}
-        </select>
+        <Select
+          value={String(chosen.stage.id)}
+          options={open.map((o) => ({ value: String(o.stage.id), label: `${o.perf.title} · ${STAGE_LABEL[o.stage.stageType]} 단계` }))}
+          onChange={(v) => setPick(Number(v))}
+        />
       </label>
       <dl className="sum-rows mt-12">
         <div>

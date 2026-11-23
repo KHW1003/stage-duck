@@ -22,6 +22,7 @@ import { Icon } from "../shared/ui/Icon";
 import { KitModal } from "../shared/ui/KitModal";
 import { Select } from "../shared/ui/Select";
 import styles from "../features/board/Board.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const SIDO_OPTIONS = SIDO.map((s) => ({ value: s, label: s }));
 
@@ -91,6 +92,7 @@ function monthDayTime(iso: string): string {
 }
 
 export function MyPostPage() {
+  usePageMeta("내 소개 글");
   const application = useApplication();
   const mine = useMyPrPosts();
   const [picked, setPicked] = useState<PrCategory | null>(null);
