@@ -3,8 +3,8 @@
 | 항목 | 내용 |
 |---|---|
 | 버전 | 0.3 (초안) |
-| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07·FR-AUTH-09, AC 107개; 0.5: 2026-11-18 — 채팅 상단 고정 D-56, AC 108개) |
-| 목적 | spec.md의 **모든 수용 기준(108개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
+| 작성일 | 2026-11-12 (0.3: 2026-11-17 — D-43·44·47~49 반영, AC 93 → 103개; 0.4: 2026-11-18 — FR-CHAT-07·FR-AUTH-09, AC 107개; 0.5: 2026-11-18 — 채팅 상단 고정 D-56, AC 108개; 0.6: 2026-11-23 — 코드와 대조(spec-sync), AC 109개) |
+| 목적 | spec.md의 **모든 수용 기준(109개)** 이 API·테이블·화면·테스트에 반영됐는지 확인 |
 | 입력 | [spec.md](spec.md) · [plan.md](plan.md) · [data-model.md](data-model.md) · [api-contract.md](api-contract.md) · [user-flow.md](user-flow.md) |
 
 표기: 테스트 `BE` = pytest (`backend/tests/`), `FE` = Vitest (`frontend/tests/`), `E2E` = Playwright. 테스트 이름에 AC ID를 넣는다 (예: `test_ac_f1_01_...`).
@@ -19,13 +19,13 @@ API 경로의 `/api/v1`은 생략했다.
 | F1-01 | 필수 항목 비면 가입 안 됨 | AUTH-01 | POST /auth/signup | users | /signup | BE, FE |
 | F1-02 | 마케팅 미동의 가입 가능 | AUTH-01 | POST /auth/signup | terms_agreements | /signup | BE |
 | F1-03 | 만 14세 미만 거부 | AUTH-01 | POST /auth/signup (`UNDER_AGE`) | users.birth_date | /signup | BE |
-| F1-04 | 네이버 로그인 → 추가 정보 / 내 공연 | AUTH-02 | GET /auth/naver/start·callback | social_accounts | /login, /signup/extra | BE (OAuth 목업) |
-| F1-05 | 선택 동의 해제해도 직접 입력해 가입 | AUTH-02·04 | POST /auth/social/complete | users | /signup/extra | BE |
-| F1-06 | 소셜 값 미리 채움·수정 가능 | AUTH-04 | GET callback → signupToken | — | /signup/extra | FE |
-| F1-07 | 우리 약관 미동의 시 미완료 | AUTH-04 | POST /auth/social/complete (`TERMS_REQUIRED`) | terms_agreements | /signup/extra | BE |
-| F1-08 | 카카오 꺼짐 → 거부, 버튼 없음 | AUTH-03 | GET /auth/kakao/* → 404 | — | /login | BE, FE |
-| F1-09 | 카카오 켜면 가입·로그인 | AUTH-03 | GET /auth/kakao/callback | social_accounts | /login | BE (설정 켬) |
-| F1-10 | 같은 이메일 자동 병합 안 함 | AUTH-05 | GET /auth/naver/callback | social_accounts UNIQUE(provider, provider_user_id) | — | BE |
+| F1-04 | 네이버 로그인 → 추가 정보 / 내 공연 | AUTH-02 | GET /auth/naver/start·callback | social_accounts | /login, /signup/extra | BE (OAuth 목업) ⚠️ #25 대기 |
+| F1-05 | 선택 동의 해제해도 직접 입력해 가입 | AUTH-02·04 | POST /auth/social/complete | users | /signup/extra | BE ⚠️ #25 대기 |
+| F1-06 | 소셜 값 미리 채움·수정 가능 | AUTH-04 | GET callback → signupToken | — | /signup/extra | FE ⚠️ #25 대기 |
+| F1-07 | 우리 약관 미동의 시 미완료 | AUTH-04 | POST /auth/social/complete (`TERMS_REQUIRED`) | terms_agreements | /signup/extra | BE ⚠️ #25 대기 |
+| F1-08 | 카카오 꺼짐 → 거부, 버튼 없음 | AUTH-03 | GET /auth/kakao/* → 404 | — | /login | BE, FE ⚠️ #25 대기 |
+| F1-09 | 카카오 켜면 가입·로그인 | AUTH-03 | GET /auth/kakao/callback | social_accounts | /login | BE (설정 켬) ⚠️ #25 대기 |
+| F1-10 | 같은 이메일 자동 병합 안 함 | AUTH-05 | GET /auth/naver/callback | social_accounts UNIQUE(provider, provider_user_id) | — | BE ⚠️ #25 대기 |
 | F1-11 | 역할별 첫 화면 | AUTH-06 | POST /auth/login (`landing`), GET /me | users.role | /login | BE, FE |
 | F1-12 | 로그아웃 후 뒤로 가기 정보 안 보임 | AUTH-06 | POST /auth/logout | — | 전체 (보호 라우트, 캐시 삭제) | FE, E2E |
 | F1-13 | 남의 공연·채팅방 → 404 | AUTH-07 | GET /performances/{id}, /chat-rooms/{id}/messages | — | — | BE |
@@ -89,7 +89,7 @@ API 경로의 `/api/v1`은 생략했다.
 | F3-18 | 오퍼 응답 견적에 "내가 오퍼한 업체" | OFFER-02 | POST /stages/{id}/quotes (`offerId`) | quotes.offer_id | 견적함 | BE |
 | F3-19 | 관심 업체 → 단계 열릴 때 안내 | OFFER-03 | POST /stages/{id}/advance → notifications | favorite_suppliers, notifications | [다음 단계로] 화면 | BE |
 | F3-20 | 공연장 비교: A 풀스펙, B 경고, C 통과 | CHK, CHK-01 | GET /stages/{id}/quotes | quote_versions.setup_available_time | 비교 화면 (대표) | BE (단위 CHK-02), FE |
-| F3-21 | C+D 통과 (16:30 ≤ 17:00) | CHK-05 | GET /quotes/{id}/checks | quote_versions | 비교 화면 | BE (단위) |
+| F3-21 | C+D 통과 (16:30 ≤ 17:00) | CHK-05 | GET /stages/{id}/quotes (`checks`) | quote_versions | 비교 화면 | BE (단위) |
 | F3-22 | B+D 충돌 (90분 늦음), 컨펌 불가 | CHK-05 | GET …/checks, POST …/accept (`CHECK_CONFLICT`) | — | 비교 화면 | BE |
 | F3-23 | 엔지니어 포함 → 경고·건너뛰기 제안 | CHK-09 | GET …/checks, POST /stages/{id}/advance | quote_versions.includes_engineer | [다음 단계로] 화면 | BE |
 | F3-24 | 리허설 변경 → 충돌 → 수정 후 통과 | CHK, REQ-04 | PUT /performances/{id}, PUT /quotes/{id}, GET …/checks | performance_versions, quote_versions | 비교 화면 | BE, E2E |
@@ -152,10 +152,10 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 108개 중 API가 연결된 것 | 107개 (F2-09는 화면 동작 — FE 테스트로 확인) |
+| 수용 기준 109개 중 API가 연결된 것 | 화면 동작인 F2-09 와 소셜 로그인 7개(F1-04~10, #25 대기 — develop 에 아직 구현 없음)를 뺀 나머지 전부 |
 | 테이블이 연결된 것 | 97개 (나머지 11개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **108개 전부** (BE 103 · FE 35 · E2E 4, 한 기준에 여러 종류 가능) |
-| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys` — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
+| 테스트가 정해진 것 | **102개** (2026-11-23 대조, AC 번호가 붙은 테스트 기준). 없는 것: 소셜 로그인 F1-05·06·07·09·10 (#25 대기). F1-04·08 은 번호만 붙어 있고 기능이 없어 #25 에서 다시 붙인다 |
+| 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys`(만들지 않음 — 결제는 `payments.idempotency_key`) — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 
 ## 비기능 요구사항 연결
