@@ -396,8 +396,8 @@ erDiagram
 
 | 대상 | 값 |
 |---|---|
-| performances.status | DRAFT → PUBLISHED → ASSIGNING → AWAITING_PAYMENT → CONFIRMED → COMPLETED · 중간 어디서나 CANCELLED / WITHDRAWN(공고 내림) · 결제 전 업체 취소 시 AWAITING_PAYMENT → ASSIGNING (D-57) |
-| stages.status | WAITING → OPEN → NEGOTIATING → CONFIRMED (→ RECHECK → CONFIRMED) · WAITING → SKIPPED · 결제 전 업체 취소 시 그 단계만 CONFIRMED → OPEN, `confirmed_quote_version_id` 비움 (D-57). 다른 확정 단계는 공연장 단계가 다시 열려도 CONFIRMED 그대로 두고, 새 공연장과의 호환은 현장 준비 확인(tech_checks)으로 본다 (11/23 해원 결정) |
+| performances.status | DRAFT → PUBLISHED → ASSIGNING → AWAITING_PAYMENT → CONFIRMED → COMPLETED · 중간 어디서나 CANCELLED / WITHDRAWN(공고 내림) · 업체 사정 취소로 다시 모집하면 결제 전 AWAITING_PAYMENT → ASSIGNING (D-57), **결제 후 CONFIRMED → ASSIGNING** (D-37·AC-F5-10, #252) |
+| stages.status | WAITING → OPEN → NEGOTIATING → CONFIRMED (→ RECHECK → CONFIRMED) · WAITING → SKIPPED · 업체 사정 취소(결제 전·후) 시 그 단계만 CONFIRMED → OPEN, `confirmed_quote_version_id` 비움 (D-37·D-57). **한 번에 한 단계만 연다** (#252): 앞 단계가 아직 안 끝났거나 취소한 업체가 뒤 단계도 맡았으면 그 단계는 CONFIRMED → WAITING, 뒤 단계가 모집·조율 중이면 OPEN·NEGOTIATING → WAITING (받은 견적서는 남음) 으로 돌려 공연장 → 장비 → 엔지니어 순서로 다시 연다. 다른 확정 단계는 공연장 단계가 다시 열려도 CONFIRMED 그대로 두고, 새 공연장과의 호환은 현장 준비 확인(tech_checks)으로 본다 (11/23 해원 결정) |
 | quotes.status | SENT → CONFIRMED / CLOSED / WITHDRAWN / EXPIRED |
 | confirm_requests.status | PENDING → CONFIRMED / RENEGOTIATE / EXPIRED / INVALIDATED |
 | offers.status | PENDING → QUOTED / DECLINED / EXPIRED |
