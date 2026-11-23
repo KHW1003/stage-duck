@@ -7,11 +7,15 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
+from app.core import scheduler
 from app.core.db import SessionLocal
 from app.main import app
+from app.models.notification import Notification
 from app.models.payment import LedgerEntry, Order, Payment
 from app.models.request import Performance
+from app.models.supplier import Supplier
 from app.payment import service
+from app.payment.router import get_now
 from tests.conftest import make_user
 from tests.f2.test_quotes import _as
 from tests.f5.test_order import _fixed_now, _fixed_today, _ready  # noqa: F401 (픽스처)
@@ -128,6 +132,44 @@ def test_ac_f5_07_settlement_scheduled_after_show_ends(client, db):
     assert [ln["ledgerState"] for ln in o["lines"]] == ["SETTLE_SCHEDULED", "SETTLE_SCHEDULED"]
     assert _ledger(db, order_id)[-2:] == [(c, "SETTLE_SCHEDULED", 500000), (d, "SETTLE_SCHEDULED", 1350000)]
     assert service.settle_completed_orders(db, now=end) == 0  # 두 번 돌려도 한 번만
+
+
+def test_ac_f5_07_scheduler_settles_once_and_notifies_each_supplier(client, db):
+    """스케줄러가 실제로 부른다. 업체마다 자기 금액으로 알림 한 번, 끝난 뒤에는 같은 날이라도 취소할 수 없다."""
+    user, perf_id, order_id, (c, d) = _order(client, db)
+    _pay(user, order_id)
+    perf = db.get(Performance, perf_id)
+    end = datetime.combine(perf.show_date, perf.show_end)
+    db.rollback()
+
+    scheduler.run_once(end - timedelta(minutes=1))
+    db.expire_all()
+    assert db.get(Order, order_id).status == "PAID"
+    db.rollback()
+    scheduler.run_once(end)
+    scheduler.run_once(end + timedelta(minutes=1))
+
+    db.expire_all()
+    assert db.get(Order, order_id).status == "SETTLEMENT_SCHEDULED"
+    assert [e for e in _ledger(db, order_id) if e[1] == "SETTLE_SCHEDULED"] == [
+        (c, "SETTLE_SCHEDULED", 500000), (d, "SETTLE_SCHEDULED", 1350000)]
+    notes = {n.user_id: n.body for n in db.scalars(select(Notification).where(Notification.type == "SETTLEMENT_SCHEDULED"))}
+    assert notes == {db.get(Supplier, s).user_id: f"{perf.title} · {won}원" for s, won in ((c, "500,000"), (d, "1,350,000"))}
+
+    app.dependency_overrides[get_now] = lambda: end + timedelta(minutes=2)
+    assert user.get(f"/api/v1/performances/{perf_id}/cancel-quote").status_code == 409
+    assert user.post(f"/api/v1/performances/{perf_id}/cancel").status_code == 409
+    db.expire_all()
+    assert db.get(Performance, perf_id).status == "CONFIRMED"
+
+
+def test_ac_f5_07_cancelled_order_is_not_settled(client, db):
+    user, perf_id, order_id, _ = _order(client, db)
+    _pay(user, order_id)
+    assert user.post(f"/api/v1/performances/{perf_id}/cancel").status_code == 200
+    perf = db.get(Performance, perf_id)
+    assert service.settle_completed_orders(db, now=datetime.combine(perf.show_date, perf.show_end)) == 0
+    assert db.scalars(select(Notification).where(Notification.type == "SETTLEMENT_SCHEDULED")).all() == []
 
 
 def test_ac_f5_05_other_people_cannot_pay(client, db):

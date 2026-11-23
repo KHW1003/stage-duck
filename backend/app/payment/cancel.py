@@ -56,6 +56,8 @@ def _quote(db: Session, perf: Performance, order: Order | None, phase: str) -> C
 
 
 def _user_phase(perf: Performance, order: Order | None, now: datetime) -> str:
+    if now >= datetime.combine(perf.show_date, perf.show_end):  # 당일이라도 공연이 끝났으면 (정산 예정) 취소하지 않는다
+        raise ValueError("공연이 끝난 뒤에는 취소하지 않는다")
     paid_at = order.paid_at if order is not None and order.status in PAID_STATUSES else None
     return calc.cancel_phase(perf.show_date, now, paid_at=paid_at)
 
