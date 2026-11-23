@@ -5,6 +5,7 @@
  */
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Select } from "../../shared/ui/Select";
 import { useVenues, type VenueListItem } from "../venue/api";
 import { TYPE_LABEL, cardSpecs, shortSido, venuePhotos, won } from "../venue/view";
 import { SEARCH_OPTIONS, SPACES, type SpaceSample } from "./content";
@@ -31,14 +32,16 @@ export function SpaceSearch() {
   return (
     <form className={s.search} onSubmit={submit} role="search">
       {(Object.keys(SEARCH_OPTIONS) as Field[]).map((f) => (
-        <label key={f} className={s.searchField}>
-          <span>{LABELS[f]}</span>
-          <select value={picked[f]} onChange={(e) => setPicked((p) => ({ ...p, [f]: e.target.value }))}>
-            {SEARCH_OPTIONS[f].map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </label>
+        <div key={f} className={s.searchField}>
+          <span aria-hidden="true">{LABELS[f]}</span>
+          <Select
+            className={s.searchSelect}
+            aria-label={LABELS[f]}
+            value={picked[f]}
+            options={SEARCH_OPTIONS[f].map((o) => ({ value: o, label: o }))}
+            onChange={(v) => setPicked((p) => ({ ...p, [f]: v }))}
+          />
+        </div>
       ))}
       <button className={cx(s.btn, s.btnPrimary, s.searchBtn)} type="submit">
         공간 찾기

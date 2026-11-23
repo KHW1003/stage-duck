@@ -139,8 +139,6 @@
 .search__field { display: flex; flex-direction: column; padding: 2px 28px; border-right: 1px solid var(--sd-line); cursor: pointer; }
 .search__field:nth-child(3) { border-right: 0; }
 .search__field span { font-size: var(--sd-text-small); color: var(--sd-muted); }
-.search__field select { appearance: none; border: 0; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23202e3d' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right center / 18px no-repeat; font-size: 16px; font-weight: 600; padding: 4px 26px 4px 0; cursor: pointer; }
-.search__field select:focus { outline: none; }
 .search__field:focus-within { background: var(--sd-soft); border-radius: var(--sd-r-input); }
 .search__btn { min-height: 56px; padding: 0 30px; font-size: 15px; }
 .list-head { display: flex; justify-content: space-between; margin: 34px 0 14px; font-size: var(--sd-text-body); }
@@ -539,3 +537,28 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
 .now--empty { aspect-ratio: auto; min-height: 520px; padding-top: 30px; padding-bottom: 30px; }
 @media (max-width: 1023px) { .now--empty { min-height: 0; } }
 @media (max-width: 560px) { .now__preview-icon { display: none; } .now__preview .step-row { grid-template-columns: 30px 1fr; } .now__cta { align-self: stretch; } }
+
+/* ── 디자인 검수 반영 (2026-11-23, design-reviewer 1-사용자.md 메인) ──
+   - 검색줄 고르기 칸은 공통 Select (CLAUDE.md 4장). 칸 안에 들어가니 테두리·바탕만 걷어 낸다
+   - 누르는 곳은 모두 44px 이상 (--sd-touch)
+   - 알약 모양 모서리 없음, 움직임은 0.2초 안 + 떠오르기 없음, 움직임 줄이기 설정이면 멈춤 */
+.search__field .search__select { height: var(--sd-touch); padding: 0; border: 0; background: transparent; font-size: var(--sd-text-nav); font-weight: 600; }
+.search__field .search__select:focus-visible { outline: 0; }
+.hero__actions .btn { min-height: var(--sd-button-lg); }
+.pill { height: var(--sd-touch); }
+.chip, .slider__ctrl { border-radius: var(--sd-r-box); }
+.now__progress { border-radius: var(--sd-r-tag); }
+.slider__btn, .icon-btn, .sns a { width: var(--sd-touch); height: var(--sd-touch); }
+.slider__pause { border-radius: 0 var(--sd-r-box) var(--sd-r-box) 0; }
+.slider__btn { border-radius: var(--sd-r-box); }
+.more, .footer__legal a { display: inline-flex; align-items: center; min-height: var(--sd-touch); }
+.footer__cols a { display: flex; align-items: center; min-height: var(--sd-touch); padding: 0; }
+.slide { transition-duration: .2s; }
+.flow-tab__text small { transition-duration: .2s; }
+@keyframes sd-fade { from { opacity: 0; } to { opacity: 1; } }
+.pv.is-active { animation: sd-fade .2s ease; }
+.toast { animation: sd-fade .2s .3s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .slide, .flow-tab__text small { transition: none; }
+  .pv.is-active, .toast, .slider__bar span.run, .flow-tab.is-active .flow-tab__bar { animation: none; }
+}
