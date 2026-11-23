@@ -54,8 +54,8 @@ describe("내 예약 — 업체 사정 취소", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "업체 사정 취소" }));
     const dialog = within(screen.getByRole("dialog"));
-    expect(dialog.getByText(/결제 마감이 48시간 늘어나요/)).toBeInTheDocument();
-    expect(dialog.getByText(/경고 1회로 기록돼요/)).toBeInTheDocument();
+    expect(dialog.getByText(/결제 마감이 48시간 늘어납니다/)).toBeInTheDocument();
+    expect(dialog.getByText(/경고 1회로 기록됩니다/)).toBeInTheDocument();
     expect(dialog.getByRole("button", { name: "취소하기" })).toBeDisabled(); // 사유 필수
     await userEvent.type(dialog.getByRole("textbox"), "장비 고장");
     await userEvent.click(dialog.getByRole("button", { name: "취소하기" }));
@@ -70,7 +70,7 @@ describe("내 예약 — 업체 사정 취소", () => {
     renderAt("/supplier/reservations");
 
     await userEvent.click(await screen.findByRole("button", { name: "업체 사정 취소" }));
-    expect(within(screen.getByRole("dialog")).getByText(/전액 환불돼요/)).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByText(/전액 환불됩니다/)).toBeInTheDocument();
   });
 
   it("공연이 끝났거나 취소된 예약에는 버튼이 없다", async () => {

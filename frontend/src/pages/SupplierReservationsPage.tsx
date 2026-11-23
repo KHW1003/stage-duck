@@ -41,17 +41,18 @@ function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierRe
         </>
       }
     >
-      <p className="modal__lead">{reservation.title} 예약을 취소할까요?</p>
+      <p className="modal__lead">{reservation.title} 예약을 취소하시겠습니까?</p>
       <ul className="bullets mt-8">
         {paid ? (
-          <li>공연팀에게 플랫폼 이용료까지 전액 환불돼요.</li>
+          <li>공연팀에게 플랫폼 이용료까지 전액 환불됩니다.</li>
         ) : (
           <>
-            <li>맡은 단계만 다시 모집하고, 공연팀의 결제 마감이 48시간 늘어나요.</li>
-            <li>다른 업체의 예약은 그대로예요.</li>
+            <li>맡은 단계만 다시 모집하고, 공연팀의 결제 마감이 48시간 늘어납니다.</li>
+            <li>다른 업체의 예약은 그대로 유지됩니다.</li>
           </>
         )}
-        <li>업체 사정 취소는 경고 1회로 기록돼요. 경고가 3회 쌓이면 이용이 정지돼요.</li>
+        <li>업체 사정 취소는 경고 1회로 기록됩니다. 경고가 3회 쌓이면 이용이 정지됩니다.</li>
+        <li>테스트 결제라 실제로 청구되지 않습니다.</li>
       </ul>
       <label className="field mt-16">
         <span className="field__label">취소 사유<span className="req">*</span></span>

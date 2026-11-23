@@ -225,7 +225,7 @@ def reopen_stage(db: Session, stage_id: int, *, actor_id: int | None) -> None:
         raise not_found()
     stages = _stages_of(db, stage.performance_id, lock=True)
     if stage.status != "CONFIRMED" or any(s.status in ("OPEN", "NEGOTIATING") for s in stages if s.id != stage.id):
-        raise invalid_state("지금은 이 단계를 다시 열 수 없어요. 다른 단계 모집이 끝난 뒤에 다시 시도해 주세요.")
+        raise invalid_state("지금은 이 단계를 다시 열 수 없습니다. 다른 단계 모집이 끝난 뒤에 다시 시도해 주세요.")
     _move_stage(db, stage, "OPEN", actor_id, reason="결제 전 업체 취소 — 다시 모집")
     stage.confirmed_quote_version_id = None
     perf = db.get(Performance, stage.performance_id, with_for_update=True)
