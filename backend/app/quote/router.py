@@ -1,4 +1,6 @@
 """견적서 API (api-contract.md 3.3): 보내기·고치기·보기."""
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -12,15 +14,21 @@ router = APIRouter(prefix="/quotes", tags=["quote"])
 stage_quote_router = APIRouter(prefix="/stages", tags=["quote"])
 
 
+def get_now() -> datetime:
+    """지금 시각 (견적 요청 만료 판단). 테스트는 dependency_overrides 로 고정한다."""
+    return datetime.now()
+
+
 @stage_quote_router.post("/{stage_id}/quotes", response_model=QuoteSentOut, status_code=status.HTTP_201_CREATED)
 def send_quote(
     stage_id: int,
     body: QuoteIn,
     user: User = Depends(require_role("SUPPLIER")),
     db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
 ) -> QuoteSentOut:
     """AC-F2-15~19: 견적서 보내기 (v1)."""
-    quote, row, checks, room_id = service.send_quote(db, user, stage_id, body)
+    quote, row, checks, room_id = service.send_quote(db, user, stage_id, body, now=now)
     return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 

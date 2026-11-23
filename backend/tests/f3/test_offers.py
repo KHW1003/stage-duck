@@ -8,6 +8,7 @@ from app.main import app
 from app.models.offer import Offer
 from app.models.quote import Quote
 from app.offer.router import get_now
+from app.quote.router import get_now as quote_now
 from app.request import service as request_service
 from app.request.router import get_today
 from tests.conftest import make_supplier, make_user
@@ -22,9 +23,11 @@ NOW = datetime(2026, 11, 19, 10, 0)
 def _fixed_time():
     app.dependency_overrides[get_today] = lambda: TODAY
     app.dependency_overrides[get_now] = lambda: NOW
+    app.dependency_overrides[quote_now] = lambda: NOW  # 견적서 보내기도 같은 시각 (요청 만료 판단)
     yield
     app.dependency_overrides.pop(get_today, None)
     app.dependency_overrides.pop(get_now, None)
+    app.dependency_overrides.pop(quote_now, None)
 
 
 def _venue_open(client, db):

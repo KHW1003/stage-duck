@@ -163,7 +163,9 @@ def _checks(db: Session, quote: Quote, row: QuoteVersion) -> list[dict]:
     return [asdict(r) for r in results]
 
 
-def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
+def send_quote(
+    db: Session, user: User, stage_id: int, body: QuoteIn, *, now: datetime | None = None
+) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-15·16·17·18·19: 열린 단계 공고에 견적서 v1을 보낸다. 같은 단계에 label 이 다른 견적서 여러 개 가능 (D-6).
 
     검사 순서: 업체 승인·정지(403) → 내 부문 × 열린 단계(409 STAGE_NOT_OPEN) → 공간 견적서 칸(409·400)
@@ -179,7 +181,7 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     require_review(db, user)
 
     # 견적 요청(1번 #32)을 받은 업체면 그 요청에 답한 것으로 (AC-F3-18 "내가 요청한 업체")
-    offer_id = offer_service.link_quote(db, stage_id=stage_id, supplier_id=supplier.id, now=datetime.now())
+    offer_id = offer_service.link_quote(db, stage_id=stage_id, supplier_id=supplier.id, now=now or datetime.now())
     quote = Quote(
         stage_id=stage_id,
         supplier_id=supplier.id,
