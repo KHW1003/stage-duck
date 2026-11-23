@@ -5,6 +5,7 @@
 - 마감이 지나도록 결제하지 않으면: 청구서 취소 + 취소 기록(SYSTEM, 0원) + 채팅을 시작했으면 반려 +1 + 공연 CANCELLED
   + 사용자·확정 업체 모두에게 HOLD_EXPIRED. 결제와 겹치면 청구서 행 잠금으로 결제가 먼저다 (이미 PAID 면 건너뜀)
 - 1분마다 run_due() 를 부른다 (app/main.py 의 스케줄러 스레드). 결제 요청 때도 마감을 다시 본다 (pay_order).
+- 결제 후 업체 사정 취소로 다시 모집하면 처음 컨펌 대신 그 취소 시각부터 센다 (AC-F5-10).
 - 결제 전 업체 사정 취소 한 번마다 마감을 48시간 늘린다 (D-57). 공연 5일 전 0시는 그대로 넘지 않는다.
 """
 from datetime import date, datetime, time, timedelta
@@ -30,12 +31,16 @@ def is_imminent(first_confirm: datetime, show_date: date) -> bool:
     return (show_date - first_confirm.date()).days <= IMMINENT_DAYS
 
 
+def deadline_cap(show_date: date) -> datetime:
+    """공연 5일 전 0시 — 어떤 마감도 넘지 않는다."""
+    return datetime.combine(show_date - timedelta(days=LAST_DAY_BEFORE_SHOW), time(0, 0))
+
+
 def calc_deadline(first_confirm: datetime, show_date: date, *, supplier_cancels: int = 0) -> datetime:
     """순수 함수: 처음 컨펌 시각과 공연일로 결제 마감 (KST). 결제 전 업체 취소 한 번마다 +48시간 (D-57)."""
     hours = IMMINENT_HOURS if is_imminent(first_confirm, show_date) else NORMAL_HOURS
     hours += SUPPLIER_CANCEL_EXTRA_HOURS * supplier_cancels
-    cap = datetime.combine(show_date - timedelta(days=LAST_DAY_BEFORE_SHOW), time(0, 0))
-    return min(first_confirm + timedelta(hours=hours), cap)
+    return min(first_confirm + timedelta(hours=hours), deadline_cap(show_date))
 
 
 def reminder_hours(first_confirm: datetime, show_date: date) -> tuple[int, int]:
@@ -48,14 +53,26 @@ def first_confirmed_at(db: Session, performance_id: int) -> datetime | None:
     )
 
 
+def paid_supplier_cancel(db: Session, performance_id: int) -> Cancellation | None:
+    """가장 최근의 결제 후 업체 사정 취소. 있으면 그 시각부터 마감을 다시 센다."""
+    return db.scalar(
+        select(Cancellation)
+        .where(Cancellation.performance_id == performance_id, Cancellation.requested_by == "SUPPLIER",
+               Cancellation.order_id.is_not(None))
+        .order_by(Cancellation.id.desc()).limit(1)
+    )
+
+
 def deadline_for(db: Session, perf: Performance) -> datetime | None:
     if perf.status not in WAITING_PERF:
         return None
-    first = first_confirmed_at(db, perf.id)
+    restart = paid_supplier_cancel(db, perf.id)
+    first = restart.created_at if restart else first_confirmed_at(db, perf.id)
     if first is None:
         return None
     cancels = db.scalar(select(func.count()).select_from(Cancellation).where(
         Cancellation.performance_id == perf.id, Cancellation.requested_by == "SUPPLIER", Cancellation.order_id.is_(None),
+        Cancellation.id > (restart.id if restart else 0),
     ))
     return calc_deadline(first, perf.show_date, supplier_cancels=cancels or 0)
 
@@ -64,14 +81,17 @@ def label(dt: datetime) -> str:
     return f"{dt.month}월 {dt.day}일 {dt.hour:02d}:{dt.minute:02d}"
 
 
-def _sent_rounds(db: Session, user_id: int, performance_id: int) -> set[int]:
+def _sent_rounds(db: Session, user_id: int, performance_id: int, restart_id: int | None) -> set[int]:
     rows = db.scalars(select(Notification.payload).where(Notification.user_id == user_id, Notification.type == "PAYMENT_REMINDER"))
-    return {p.get("round") for p in rows if p and p.get("performanceId") == performance_id}
+    return {p.get("round") for p in rows if p and p.get("performanceId") == performance_id
+            and p.get("restartId") == restart_id}
 
 
 def _remind(db: Session, perf: Performance, deadline: datetime, now: datetime) -> int:
-    first = first_confirmed_at(db, perf.id)
-    sent = _sent_rounds(db, perf.user_id, perf.id)
+    restart = paid_supplier_cancel(db, perf.id)
+    restart_id = restart.id if restart else None  # 다시 모집하면 리마인드도 첫 회차부터
+    first = restart.created_at if restart else first_confirmed_at(db, perf.id)
+    sent = _sent_rounds(db, perf.user_id, perf.id, restart_id)
     count = 0
     for rnd, hours in enumerate(reminder_hours(first, perf.show_date), start=1):
         if now >= deadline - timedelta(hours=hours) and rnd not in sent:
@@ -83,7 +103,7 @@ def _remind(db: Session, perf: Performance, deadline: datetime, now: datetime) -
                 link=f"/performances/{perf.id}/order" if done else f"/performances/{perf.id}",
                 params={"left": left_text, "title": perf.title, "deadline": label(deadline),
                         "what": "결제" if done else "남은 업체 선택과 결제"},
-                payload={"performanceId": perf.id, "round": rnd},
+                payload={"performanceId": perf.id, "round": rnd, "restartId": restart_id},
             )
             sent.add(rnd)
             count += 1
@@ -106,7 +126,7 @@ def expire(db: Session, perf: Performance, now: datetime) -> bool:
     supplier_users = list(db.scalars(select(Supplier.user_id).where(Supplier.id.in_(supplier_ids))))
     q = cancel._quote(db, perf, order, "BEFORE_PAYMENT")
     rejection.record_rejection(db, perf.id, now=now)
-    cancel._record(db, perf, order, q, requested_by="SYSTEM", fault_supplier_id=None, actor_id=None)
+    cancel._record(db, perf, order, q, requested_by="SYSTEM", fault_supplier_id=None, actor_id=None, now=now)
     request_service.performance_cancelled(db, perf.id, actor_id=None)
     notification.notify(db, perf.user_id, "HOLD_EXPIRED", link=f"/performances/{perf.id}", params={"title": perf.title},
                         payload={"performanceId": perf.id})

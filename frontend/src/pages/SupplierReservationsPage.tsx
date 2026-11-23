@@ -59,7 +59,11 @@ function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierRe
       <p className="modal__lead">{reservation.title} 예약을 취소하시겠습니까?</p>
       <ul className="bullets mt-8">
         {paid ? (
-          <li>공연팀에게 플랫폼 이용료까지 전액 환불됩니다.</li>
+          <>
+            <li>공연팀에게 플랫폼 이용료까지 전액 환불됩니다.</li>
+            <li>맡은 단계만 다시 모집하고, 다른 업체의 예약은 그대로 유지됩니다.</li>
+            <li>공연 5일 전 0시부터는 다시 모집할 수 없어 공연이 취소됩니다.</li>
+          </>
         ) : (
           <>
             <li>맡은 단계만 다시 모집하고, 공연팀의 결제 마감이 48시간 늘어납니다.</li>

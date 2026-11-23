@@ -96,3 +96,31 @@
 .formActionsSplit { justify-content: space-between; } /* 목업 p-post.html: 왼쪽 [글 내리기], 오른쪽 [저장] */
 .bumpSummary { --cols: 2; margin-bottom: 28px; } /* 마지막 끌어올리기 · [끌어올리기] (조회·관심 저장 수는 서버가 주지 않아 뺐다) */
 .bumpCell { display: flex; align-items: center; }
+
+/* ── 상세 화면 본문 위치 맞춤 (11/23 해원 결정) ──
+   커뮤니티 글 상세는 본문(--sd-doc-width)을 가운데에 둔다. 소개 글 상세는 오른쪽 칸을 그대로 두고,
+   경로·본문의 왼쪽 선만 커뮤니티 본문 왼쪽 선에 맞춰 가운데 쪽으로 들인다 (오른쪽 칸은 침범하지 않는다).
+   들이는 폭 = (칸 안쪽 폭 - 문서 폭) / 2. 칸 안쪽 폭은 컨테이너 쿼리 단위(cqw)로 잰다 */
+.detail { container-type: inline-size; }
+.detail > .crumb, .detail .withAside > article { margin-left: max(0px, calc((100cqw - var(--sd-doc-width)) / 2)); }
+@media (max-width: 760px) {
+  .detail > .crumb, .detail .withAside > article { margin-left: 0; }
+}
+
+/* ── 상세 화면 상자 + 양쪽 광고 (11/23 해원: 주변에 붕 떠 보여서) ──
+   본문을 아주 옅은 선 상자로, 왼쪽 여백에 세로 광고, 오른쪽은 업체 칸 아래 네모 광고 (시연용 더미) */
+.detailCard { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
+.adLeft { right: calc(100% + var(--sd-ad-gap)); }
+.adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
+.sideAd { margin-top: 16px; }
+/* 광고는 칸 밖 여백(페이지 좌우 여백 포함)까지 쓴다. 본문 상자 바깥 여백 = (화면 폭 - 880) / 2 가 광고 180 + 간격 20 + 끝 여백 16 보다 좁으면 숨김 → 1312px 미만 (미디어 쿼리는 변수를 못 써서 숫자) */
+@media (max-width: 1311px) { .adRail { display: none; } }
+@media (max-width: 760px) {
+  .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
+}
+/* 오른쪽 칸: 업체 상자만 따라오고(원래대로) 그 아래 네모 광고는 따라오지 않는다 (11/23 해원).
+   칸을 본문 높이만큼 늘려 상자가 그 안에서 붙어 있게, 광고는 상자 뒤로 지나간다 */
+.sideCol { align-self: stretch; }
+.sideCol > .side { position: sticky; z-index: 1; background: var(--sd-bg); }
+@media (max-width: 760px) { .sideCol > .side { position: static; } }

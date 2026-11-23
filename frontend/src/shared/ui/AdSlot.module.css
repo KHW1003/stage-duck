@@ -1,0 +1,104 @@
+/* 시연용 광고 배너 (AdSlot.tsx). 가상 업체 6곳, 사진 배경 + 업체마다 다른 꾸밈.
+   광고는 남의 콘텐츠라 사이트 규칙(그라데이션·그림자·강조색 하나) 예외로 둔다 (11/23 해원). 색은 tokens.css 의 --sd-ad-* 만 */
+.ad { position: relative; display: block; overflow: hidden; border-radius: var(--sd-r-box); background: var(--sd-ad-ink); color: var(--sd-on-blue); isolation: isolate; }
+.bg { position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center; }
+.shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in srgb, var(--sd-ad-ink) 20%, transparent) 0%, color-mix(in srgb, var(--sd-ad-ink) 55%, transparent) 45%, color-mix(in srgb, var(--sd-ad-ink) 92%, transparent) 100%); }
+.body { position: relative; display: flex; flex-direction: column; height: 100%; gap: 10px; }
+
+.tag { position: absolute; top: -16px; right: -6px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--sd-on-blue) 60%, transparent); border-radius: var(--sd-r-tag); font-size: var(--sd-text-tiny); line-height: 15px; opacity: .85; }
+.brand { align-self: flex-start; padding: 3px 8px; border-radius: var(--sd-r-tag); background: var(--sd-on-blue); color: var(--sd-ad-ink); font-size: var(--sd-text-small); font-weight: 900; letter-spacing: .02em; }
+.head { font-weight: 900; line-height: 1.2; letter-spacing: -.03em; white-space: pre-line; word-break: keep-all; }
+.sub { margin: 0; font-size: var(--sd-text-small); line-height: 1.5; white-space: pre-line; word-break: keep-all; opacity: .9; }
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 2px; height: 38px; padding: 0 12px; border-radius: var(--sd-r-btn); background: var(--sd-on-blue); color: var(--sd-ad-ink); font-size: var(--sd-text-small); font-weight: 800; }
+.head > span, .sub > span { display: block; }
+.note { margin: 0; font-size: var(--sd-text-tiny); line-height: 1.4; opacity: .65; word-break: keep-all; }
+
+/* 세로 배너 140×600 */
+.sky { width: var(--sd-ad-sky); height: 600px; padding: 24px 16px 16px; }
+.sky .head { margin-top: auto; font-size: 26px; }
+.sky .cta { margin-top: 6px; }
+/* 네모 배너 320×250: 왼쪽에 글, 사진은 오른쪽이 보이게 */
+.rect { width: 100%; height: 250px; padding: 20px 20px 14px; }
+.rect .shade { background: linear-gradient(90deg, color-mix(in srgb, var(--sd-ad-ink) 92%, transparent) 0%, color-mix(in srgb, var(--sd-ad-ink) 70%, transparent) 55%, color-mix(in srgb, var(--sd-ad-ink) 10%, transparent) 100%); }
+.rect .body { gap: 6px; }
+.rect .head { margin-top: 4px; max-width: 70%; font-size: 21px; }
+.rect .sub { max-width: 60%; }
+.rect .cta { align-self: flex-start; margin-top: auto; }
+
+/* ── 업체별 꾸밈 ── */
+/* 소리창고: 노란 큰 영문, 비스듬한 원형 스티커 */
+.sound .head { color: var(--sd-ad-yellow); letter-spacing: .02em; }
+.sound .cta { background: var(--sd-ad-yellow); }
+.sticker { position: absolute; top: 46px; right: -2px; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: var(--sd-ad-red); color: var(--sd-on-blue); font-size: var(--sd-text-small); font-weight: 900; line-height: 1.15; text-align: center; transform: rotate(14deg); box-shadow: 0 0 0 3px var(--sd-ad-ink); }
+
+/* 합주곳간: 민트 강조, 점선으로 자른 쿠폰 */
+.room .head::first-line { color: var(--sd-ad-mint); }
+.room .cta { background: var(--sd-ad-mint); }
+.coupon { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 14px; padding: 8px 6px; border: 2px dashed var(--sd-ad-mint); border-radius: var(--sd-r-box); color: var(--sd-ad-mint); text-align: center; }
+.coupon small { font-size: var(--sd-text-tiny); opacity: .9; }
+.coupon b { font-size: var(--sd-text-body); font-weight: 900; }
+.rect .coupon { position: absolute; top: 18px; right: 18px; margin: 0; background: color-mix(in srgb, var(--sd-ad-ink) 70%, transparent); }
+
+/* 포스터공방: 분홍 네온 */
+.poster .head { text-shadow: 0 0 6px var(--sd-ad-pink), 0 0 16px var(--sd-ad-pink); }
+.poster .brand { background: var(--sd-ad-pink); color: var(--sd-on-blue); }
+.poster .cta { border: 1px solid var(--sd-ad-pink); background: transparent; color: var(--sd-on-blue); box-shadow: 0 0 10px color-mix(in srgb, var(--sd-ad-pink) 70%, transparent); }
+.neonTag { align-self: flex-start; padding: 0 6px; border: 1px solid var(--sd-ad-pink); border-radius: var(--sd-r-tag); color: var(--sd-ad-pink); font-size: var(--sd-text-tiny); font-weight: 900; letter-spacing: .1em; text-shadow: 0 0 6px var(--sd-ad-pink); }
+
+/* 무대기록: 녹화 화면처럼 REC 표시 + 네 모서리 틀 */
+.rec { display: inline-flex; align-items: center; gap: 5px; font-size: var(--sd-text-tiny); font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.rec i { width: 8px; height: 8px; border-radius: 50%; background: var(--sd-ad-red); animation: ad-blink 1.2s steps(2, start) infinite; }
+.rec em { font-style: normal; opacity: .8; }
+.frame { position: absolute; inset: 52px 0 130px; pointer-events: none; opacity: .85;
+  background:
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) top left / 16px 2px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) top left / 2px 16px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) top right / 16px 2px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) top right / 2px 16px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) bottom left / 16px 2px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) bottom left / 2px 16px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) bottom right / 16px 2px no-repeat,
+    linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) bottom right / 2px 16px no-repeat; }
+.rect .frame { inset: 14px 14px 14px 55%; }
+.film .cta { background: var(--sd-ad-red); color: var(--sd-on-blue); }
+@keyframes ad-blink { to { visibility: hidden; } }
+
+/* 든든행사보험: 남색 판 + 체크 목록 */
+.insure .shade { background: linear-gradient(180deg, color-mix(in srgb, var(--sd-ad-navy) 30%, transparent) 0%, color-mix(in srgb, var(--sd-ad-navy) 92%, transparent) 60%); }
+.insure .brand { background: var(--sd-ad-cream); color: var(--sd-ad-navy); }
+.insure .head { color: var(--sd-ad-cream); }
+.insure .cta { background: var(--sd-ad-cream); color: var(--sd-ad-navy); }
+.checks { display: flex; flex-direction: column; gap: 4px; margin: auto 0 0; padding: 0; list-style: none; font-size: var(--sd-text-small); font-weight: 700; }
+.checks li { display: flex; align-items: center; gap: 4px; }
+.checks :global(.icon) { color: var(--sd-ad-mint); }
+.sky.insure .head { margin-top: 10px; }
+.rect .checks { position: absolute; top: 20px; right: 0; margin: 0; padding: 8px 10px; border-radius: var(--sd-r-box); background: color-mix(in srgb, var(--sd-ad-navy) 80%, transparent); }
+
+/* 마이크하우스: 빈티지 크림·금색, 비스듬한 띠 */
+.mic .shade { background: linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--sd-ad-ink) 95%, transparent) 85%); }
+.mic .brand { background: var(--sd-ad-gold); color: var(--sd-ad-ink); font-style: italic; }
+.mic .head { color: var(--sd-ad-cream); font-style: italic; }
+.mic .cta { border: 1px solid var(--sd-ad-gold); background: transparent; color: var(--sd-ad-gold); }
+.ribbon { position: absolute; top: 14px; right: -38px; width: 140px; padding: 3px 0; background: var(--sd-ad-gold); color: var(--sd-ad-ink); font-size: var(--sd-text-tiny); font-weight: 900; letter-spacing: .12em; text-align: center; transform: rotate(35deg); }
+.sky .ribbon { top: 40px; right: -42px; }
+
+/* 어반룸 레코딩: 빨간 ON AIR 등 */
+.onAir { align-self: flex-start; padding: 2px 8px; border: 2px solid var(--sd-ad-red); border-radius: var(--sd-r-tag); color: var(--sd-ad-red); font-size: var(--sd-text-tiny); font-weight: 900; letter-spacing: .14em; box-shadow: 0 0 10px color-mix(in srgb, var(--sd-ad-red) 70%, transparent), inset 0 0 8px color-mix(in srgb, var(--sd-ad-red) 50%, transparent); }
+.studio .head { color: var(--sd-on-blue); }
+.studio .cta { background: var(--sd-ad-red); color: var(--sd-on-blue); }
+.rect .onAir { position: absolute; top: 20px; right: 20px; }
+
+/* 줄과건반 레슨: 아래쪽 크림 종이 + 둥근 도장 */
+.lesson .shade { background: linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--sd-ad-cream) 96%, transparent) 62%); }
+.lesson { color: var(--sd-ad-ink); }
+.lesson .tag { border-color: color-mix(in srgb, var(--sd-ad-ink) 40%, transparent); color: var(--sd-on-blue); }
+.lesson .brand { background: var(--sd-ad-ink); color: var(--sd-ad-cream); }
+.lesson .cta { background: var(--sd-ad-ink); color: var(--sd-ad-cream); }
+.lesson .note { opacity: .55; }
+.stamp { position: absolute; top: 60px; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; margin-left: -27px; border: 3px double var(--sd-ad-red); border-radius: 50%; color: var(--sd-ad-red); font-size: var(--sd-text-sub); font-weight: 900; transform: rotate(-12deg); background: color-mix(in srgb, var(--sd-ad-cream) 85%, transparent); }
+.rect.lesson .shade { background: linear-gradient(90deg, color-mix(in srgb, var(--sd-ad-cream) 96%, transparent) 0%, color-mix(in srgb, var(--sd-ad-cream) 85%, transparent) 55%, transparent 100%); }
+.rect .stamp { top: auto; bottom: 20px; left: auto; right: 24px; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rec i { animation: none; }
+}

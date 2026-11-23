@@ -17,6 +17,7 @@ import { NotFound } from "../shared/layout/NotFound";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import styles from "../features/board/Board.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { AdSlot } from "../shared/ui/AdSlot";
 
 function Gallery({ post }: { post: PrPost }) {
   const [current, setCurrent] = useState(0);
@@ -73,7 +74,7 @@ export function PostPage() {
   const p = post.data;
   const label = PR_CATEGORY_LABEL[p.category];
   return (
-    <div className={`sd-container ${styles.wrap}`}>
+    <div className={`sd-container ${styles.wrap} ${styles.detail}`}>
       <ol className={styles.crumb} aria-label="현재 위치">
         <li>
           <Link to="/board">업체 찾기</Link>
@@ -83,7 +84,11 @@ export function PostPage() {
         </li>
       </ol>
       <div className={styles.withAside}>
-        <article>
+        <article className={styles.detailCard}>
+          {/* 왼쪽 여백의 세로 광고 (시연용 더미, 여백이 모자라면 숨김). 오른쪽은 업체 칸 아래 네모 광고 */}
+          <div className={`${styles.adRail} ${styles.adLeft}`}>
+            <AdSlot kind="sky" seed={p.id} className={styles.adSticky} />
+          </div>
           <div className={styles.postHead}>
             <h1>
               <span className={styles.prefix}>{label}</span>
@@ -113,6 +118,7 @@ export function PostPage() {
           <Gallery post={p} />
           <div className={styles.postBody}>{p.body}</div>
         </article>
+        <div className={styles.sideCol}>
         <aside className={styles.side} aria-label="업체">
           <div className={styles.sideSec}>
             <div className={styles.who}>
@@ -136,6 +142,8 @@ export function PostPage() {
             <p>게시글에는 전화번호·계좌번호·외부 링크를 쓸 수 없어요. 연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>
           </div>
         </aside>
+          <AdSlot kind="rect" seed={p.id + 2} className={styles.sideAd} />
+        </div>
       </div>
       {reporting && <ReportDialog postId={p.id} onClose={() => setReporting(false)} />}
     </div>

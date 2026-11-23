@@ -32,7 +32,14 @@ def _quoted_suppliers(db: Session, performance_id: int) -> list[int]:
 
 
 def record_rejection(db: Session, performance_id: int, *, now: datetime) -> RejectionEvent | None:
-    """[약속 2 → 4] 반려 한 줄을 쌓는다. 견적서를 하나도 받지 않은 공연이면 반려가 아니라 None. 커밋하지 않는다."""
+    """[약속 2 → 4] 반려 한 줄을 쌓는다. 견적서를 하나도 받지 않은 공연이면 반려가 아니라 None. 커밋하지 않는다.
+
+    결제 후 업체 사정 취소로 다시 모집하던 공연이면 사용자 잘못이 아니라 쌓지 않는다 (AC-F5-10).
+    """
+    from app.payment.deadline import paid_supplier_cancel  # 4번 → 2번 순환 import 를 피한다
+
+    if paid_supplier_cancel(db, performance_id) is not None:
+        return None
     suppliers = _quoted_suppliers(db, performance_id)
     if not suppliers:
         return None

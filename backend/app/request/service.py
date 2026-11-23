@@ -215,21 +215,35 @@ def performance_cancelled(db: Session, performance_id: int, *, actor_id: int | N
 
 
 def reopen_stage(db: Session, stage_id: int, *, actor_id: int | None) -> None:
-    """[약속 4 → 2] 결제 전에 확정 업체가 취소하면 4번(payment.cancel)이 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
+    """[약속 4 → 2] 확정 업체가 자기 사정으로 취소하면 4번(payment.cancel)이 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
 
-    그 단계만 다시 모집한다 (요구사항 명세서 D-57): CONFIRMED → OPEN, 확정 견적서 연결을 지운다.
-    공연이 결제 대기였으면 섭외 중(ASSIGNING)으로 되돌린다. 다른 단계가 이미 모집·조율 중이면 409 (한 번에 한 단계만 열림).
+    그 단계만 다시 모집한다 (결제 전 D-57, 결제 후 D-37·AC-F5-10): CONFIRMED → OPEN, 확정 견적서 연결을 지운다.
+    같은 업체가 맡은 뒤 단계는 대기(WAITING)로 돌려 앞 단계를 확정한 뒤 차례로 연다.
+    공연이 결제 대기·섭외 확정이었으면 섭외 중(ASSIGNING)으로 되돌린다. 한 번에 한 단계만 연다: 앞 단계가
+    아직 안 끝났으면 이 단계는 대기(WAITING), 뒤 단계가 모집·조율 중이면 그 단계를 대기로 되돌린다 (받은 견적서는 남는다).
     """
     stage = db.get(Stage, stage_id, with_for_update=True)
     if stage is None:
         raise not_found()
     stages = _stages_of(db, stage.performance_id, lock=True)
-    if stage.status != "CONFIRMED" or any(s.status in ("OPEN", "NEGOTIATING") for s in stages if s.id != stage.id):
-        raise invalid_state("지금은 이 단계를 다시 열 수 없습니다. 다른 단계 모집이 끝난 뒤에 다시 시도해 주세요.")
-    _move_stage(db, stage, "OPEN", actor_id, reason="결제 전 업체 취소 — 다시 모집")
+    for s in stages:
+        db.refresh(s, with_for_update=True)  # 동시에 취소해도 잠근 뒤의 값으로 본다
+    if stage.status != "CONFIRMED":
+        raise invalid_state("이미 다시 모집 중인 단계예요. 화면을 새로 고쳐 주세요.")
+    owners = {ln.stage_id: ln.supplier_id for ln in confirmed_lines(db, stage.performance_id)}
+    for s in stages:
+        if s.seq > stage.seq and s.id in owners and owners[s.id] == owners.get(stage.id):
+            _move_stage(db, s, "WAITING", actor_id, reason="업체 사정 취소 — 앞 단계 뒤 다시 모집")
+            s.confirmed_quote_version_id = None
+        elif s.seq > stage.seq and s.status in OPEN_STATUSES:
+            _move_stage(db, s, "WAITING", actor_id, reason="앞 단계 업체 취소 — 앞 단계 뒤 다시 모집")
+            invalidate_pending_cards(db, s.id)
+    db.flush()  # 열린 단계는 하나만(uq_stages_open_guard) — 먼저 닫고 연다
+    blocked = any(s.seq < stage.seq and s.status in ("WAITING", *OPEN_STATUSES) for s in stages)
+    _move_stage(db, stage, "WAITING" if blocked else "OPEN", actor_id, reason="업체 사정 취소 — 다시 모집")
     stage.confirmed_quote_version_id = None
     perf = db.get(Performance, stage.performance_id, with_for_update=True)
-    if perf.status == "AWAITING_PAYMENT":
+    if perf.status in ("AWAITING_PAYMENT", "CONFIRMED"):
         _move_performance(db, perf, "ASSIGNING", actor_id)
 
 
@@ -265,6 +279,7 @@ _ALLOWED = {
     ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
     ("AWAITING_PAYMENT", "CONFIRMED"),  # 테스트 결제 성공 (4번 #51 → performance_paid)
     ("AWAITING_PAYMENT", "ASSIGNING"),  # 결제 전 업체 취소로 한 단계를 다시 모집 (4번 #52 → reopen_stage, D-57)
+    ("CONFIRMED", "ASSIGNING"),  # 결제 후 업체 사정 취소로 다시 모집 (reopen_stage, D-37·AC-F5-10)
     # 취소 (4번 #52 → performance_cancelled): 사용자 취소·결제 마감 자동 취소
     ("PUBLISHED", "CANCELLED"),
     ("ASSIGNING", "CANCELLED"),
@@ -279,7 +294,10 @@ _STAGE_ALLOWED = {  # data-model.md 11장 stages.status
     ("CONFIRMED", "RECHECK"),
     ("RECHECK", "CONFIRMED"),
     ("WAITING", "SKIPPED"),
-    ("CONFIRMED", "OPEN"),  # 결제 전 업체가 확정을 취소 → 그 단계만 다시 모집 (요구사항 명세서 D-57, reopen_stage)
+    ("CONFIRMED", "OPEN"),  # 업체 사정 취소(결제 전·후) → 그 단계만 다시 모집 (D-37·D-57, reopen_stage)
+    ("CONFIRMED", "WAITING"),  # 취소한 업체가 뒤 단계도 맡았거나 앞 단계가 안 끝났으면 차례를 기다린다 (reopen_stage)
+    ("OPEN", "WAITING"),  # 앞 단계 업체가 취소하면 뒤 단계 모집을 멈추고 기다린다 (reopen_stage)
+    ("NEGOTIATING", "WAITING"),
 }
 DONE_STATUSES = ("CONFIRMED", "SKIPPED")
 SKIP_ACK = "STAGE_SKIP_OWNED"  # 건너뛰기 책임 고지 동의 값 (api-contract.md 4.3, FR-ASSIGN-03)
