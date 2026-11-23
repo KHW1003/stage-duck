@@ -35,7 +35,7 @@ function columns(partner: boolean): Col[] {
         { label: "입점 신청", to: partner ? "/signup/supplier" : "/partner" },
         { label: "업체 이용 가이드", to: "/guide/supplier" },
         { label: "정산 안내", to: "/guide/supplier" },
-        { label: partner ? "이용료 안내" : "수수료 안내", to: "/faq" },
+        { label: partner ? "이용료 안내" : "플랫폼 이용료 안내", to: "/faq" },
       ],
     },
     {

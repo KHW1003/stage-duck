@@ -5,7 +5,7 @@
 - 마감이 지나도록 결제하지 않으면: 청구서 취소 + 취소 기록(SYSTEM, 0원) + 채팅을 시작했으면 반려 +1 + 공연 CANCELLED
   + 사용자·확정 업체 모두에게 HOLD_EXPIRED. 결제와 겹치면 청구서 행 잠금으로 결제가 먼저다 (이미 PAID 면 건너뜀)
 - 1분마다 run_due() 를 부른다 (app/main.py 의 스케줄러 스레드). 결제 요청 때도 마감을 다시 본다 (pay_order).
-결제 전 업체 사정 취소로 늘어나는 48시간(D-57)은 그 기능을 만들 때 더한다.
+- 결제 전 업체 사정 취소 한 번마다 마감을 48시간 늘린다 (D-57). 공연 5일 전 0시는 그대로 넘지 않는다.
 """
 from datetime import date, datetime, time, timedelta
 
@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.notification import Notification
-from app.models.payment import Order
+from app.models.payment import Cancellation, Order
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.notification import service as notification
@@ -22,6 +22,7 @@ NORMAL_HOURS = 168
 IMMINENT_HOURS = 48
 IMMINENT_DAYS = 13
 LAST_DAY_BEFORE_SHOW = 5
+SUPPLIER_CANCEL_EXTRA_HOURS = 48
 WAITING_PERF = ("ASSIGNING", "AWAITING_PAYMENT")  # 처음 컨펌 뒤 결제 전
 
 
@@ -29,9 +30,10 @@ def is_imminent(first_confirm: datetime, show_date: date) -> bool:
     return (show_date - first_confirm.date()).days <= IMMINENT_DAYS
 
 
-def calc_deadline(first_confirm: datetime, show_date: date) -> datetime:
-    """순수 함수: 처음 컨펌 시각과 공연일로 결제 마감 (KST)."""
+def calc_deadline(first_confirm: datetime, show_date: date, *, supplier_cancels: int = 0) -> datetime:
+    """순수 함수: 처음 컨펌 시각과 공연일로 결제 마감 (KST). 결제 전 업체 취소 한 번마다 +48시간 (D-57)."""
     hours = IMMINENT_HOURS if is_imminent(first_confirm, show_date) else NORMAL_HOURS
+    hours += SUPPLIER_CANCEL_EXTRA_HOURS * supplier_cancels
     cap = datetime.combine(show_date - timedelta(days=LAST_DAY_BEFORE_SHOW), time(0, 0))
     return min(first_confirm + timedelta(hours=hours), cap)
 
@@ -50,7 +52,12 @@ def deadline_for(db: Session, perf: Performance) -> datetime | None:
     if perf.status not in WAITING_PERF:
         return None
     first = first_confirmed_at(db, perf.id)
-    return calc_deadline(first, perf.show_date) if first else None
+    if first is None:
+        return None
+    cancels = db.scalar(select(func.count()).select_from(Cancellation).where(
+        Cancellation.performance_id == perf.id, Cancellation.requested_by == "SUPPLIER", Cancellation.order_id.is_(None),
+    ))
+    return calc_deadline(first, perf.show_date, supplier_cancels=cancels or 0)
 
 
 def label(dt: datetime) -> str:

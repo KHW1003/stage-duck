@@ -281,3 +281,17 @@ def invalidate_for_quote(db: Session, quote_id: int, *, now: datetime) -> None:
     for card in cards:
         card.status, card.decided_at = "INVALIDATED", now
         _publish(db, db.get(ChatRoom, card.room_id), card)
+
+
+def invalidate_for_stage(db: Session, stage_id: int, *, now: datetime) -> None:
+    """[3번 안] 요청서가 새 버전이 되면 그 단계의 대기 카드를 INVALIDATED 로 (AC-F2-13, CLAUDE.md 3장 6). 커밋하지 않는다.
+
+    now 는 decided_at 기록용이다. 만료·비교에는 쓰지 않는다 (EXPIRED 등 PENDING 이 아닌 카드는 그대로).
+    """
+    cards = db.scalars(
+        select(ConfirmRequest).join(ChatRoom, ChatRoom.id == ConfirmRequest.room_id)
+        .where(ChatRoom.stage_id == stage_id, ConfirmRequest.status == "PENDING")
+    ).all()
+    for card in cards:
+        card.status, card.decided_at = "INVALIDATED", now
+        _publish(db, db.get(ChatRoom, card.room_id), card)

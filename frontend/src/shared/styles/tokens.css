@@ -49,7 +49,7 @@
   --sd-font: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
   /* 글자 크기 */
-  --sd-text-hero: 36px;
+  --sd-text-hero: 44px;  /* 메인 첫 화면 제목 (11/23 결정: 목업 v1 home.css 와 같은 44px) */
   --sd-text-section: 24px;
   --sd-text-page: 24px;   /* 안쪽 화면 제목 (v3) */
   --sd-text-sub: 18px;    /* 구역 제목 (v3) */
