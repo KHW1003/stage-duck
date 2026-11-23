@@ -91,6 +91,8 @@ export function useOrder(performanceId: number) {
         throw e;
       }
     },
+    // 서버가 거절(4xx)한 것은 다시 보내도 같다 — 안내를 바로 보여 준다
+    retry: (count, e) => count < 3 && !(e instanceof ApiError && e.status < 500),
   });
 }
 

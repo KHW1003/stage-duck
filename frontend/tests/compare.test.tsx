@@ -70,6 +70,15 @@ function renderAt(path: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("단계별 견적 비교 (/performances/:id/compare)", () => {
+  it("항목 이름이 겹쳐도(수용 인원) React key 경고가 없다", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockServer({ "/api/v1/me": USER, "/api/v1/performances/5": PERF, "/api/v1/stages/1/quotes": QUOTES });
+    renderAt("/performances/5/compare");
+    await screen.findByRole("table");
+    expect(error.mock.calls.filter(([m]) => String(m).includes("same key"))).toEqual([]);
+    error.mockRestore();
+  });
+
   it("AC-F3-20 A 풀스펙, B 설치 시간 0분 경고, C 통과를 나란히 보여 준다", async () => {
     mockServer({ "/api/v1/me": USER, "/api/v1/performances/5": PERF, "/api/v1/stages/1/quotes": QUOTES });
     renderAt("/performances/5/compare");
