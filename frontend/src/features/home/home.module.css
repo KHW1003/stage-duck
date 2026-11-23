@@ -296,7 +296,7 @@
 }
 
 /* 로고: logo.svg (팀 로고 이미지를 그대로 따라 그린 SVG). 높이만 정하고 너비는 비율대로 */
-.logo__img { display: block; height: 30px; width: auto; }
+.logo__img { display: block; height: var(--sd-logo-img); width: auto; }
 .footer .logo__img { height: 26px; }
 
 /* ── 디테일 정리 (안쪽 목업 v3와 맞춤, DESIGN.md 8장) ──

@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { Me } from "../src/shared/api/types";
 import { pickDate } from "./pickDate";
+import { pickOption } from "./pickOption";
 
 /** 요청서 STEP1·STEP2·게시 화면 (/performances/new, #36) — AC-F2-04, AC-F2-08, AC-F2-09, AC-F2-10 */
 
@@ -73,7 +74,7 @@ async function fillStep1(user: ReturnType<typeof userEvent.setup>, audience = "8
   setValue(screen.getByLabelText(/^공연 종료/), "21:00");
   await user.clear(screen.getByLabelText(/^예상 관객/));
   await user.type(screen.getByLabelText(/^예상 관객/), audience);
-  await user.selectOptions(screen.getByLabelText(/^시·도/), "광주광역시");
+  await pickOption(screen.getByRole("combobox", { name: "시·도" }), "광주광역시");
   await user.type(screen.getByLabelText(/^시·군·구/), "동구");
 }
 

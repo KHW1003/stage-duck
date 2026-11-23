@@ -105,6 +105,7 @@
   --sd-icon-photo: 26px;
   --sd-photo-ratio: 1.7;
   --sd-logo-mark: 28px;
+  --sd-logo-img: 30px;   /* 머리 로고 이미지 높이 — 메인(HomeGnb)과 안쪽(Gnb)이 같은 값 (11/23: 화면을 옮기면 헤더가 줄어 보이던 문제) */
   --sd-avatar: 48px;
   --sd-aside: 320px;
 
