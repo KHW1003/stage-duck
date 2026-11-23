@@ -120,7 +120,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(logo.closest("a")).toHaveAttribute("href", "/");
   });
 
-  it("사용자 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (견적함은 계정 메뉴로)", async () => {
+  it("사용자 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (없는 주소로 가는 견적함·최종 담당표는 뺐다)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/");
     await screen.findByRole("button", { name: /광주밴드/ });
@@ -128,7 +128,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["내 공연", "채팅", "공간 찾기", "업체 찾기", "커뮤니티"]);
     expect(screen.getByRole("button", { name: "알림" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /광주밴드/ }));
-    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "견적함", "관심 업체", "최종 담당표", "1:1 문의", "알림", "로그아웃"]);
+    expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "관심 업체", "1:1 문의", "알림", "로그아웃"]);
     expect(screen.getByRole("menuitem", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries");
     expect(screen.getByText("사용자 계정")).toBeInTheDocument();
   });
