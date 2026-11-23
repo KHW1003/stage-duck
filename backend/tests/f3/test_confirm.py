@@ -261,3 +261,77 @@ def test_first_confirm_sets_payment_deadline_and_notifies_user(client, db):
     types = list(db.scalars(select(Notification.type).where(Notification.user_id == owner)))
     assert "PAYMENT_DEADLINE_SET" in types and "PAYMENT_READY" in types
     assert user.get(f"{API}/performances/{perf_id}").json()["paymentDeadline"] is not None
+
+
+# ---------- CLAUDE.md 3장 6 / AC-F2-13 요청서가 새 버전이 되면 대기 카드 무효 ----------
+# invalidate_pending_cards 는 decided_at 에 실제 시각을 적는다 — 그 값은 비교하지 않는다 (날짜에 따라 깨지지 않게).
+
+
+def _edit_request(user, perf_id):
+    from tests.f2.test_posting import _body as perf_body
+
+    res = user.put(f"{API}/performances/{perf_id}", json=perf_body(rehearsalStart="16:00"))
+    assert res.status_code == 200, res.text
+
+
+def test_ac_f2_13_new_request_version_invalidates_pending_card(client, db):
+    user, d, room_id, perf_id, supplier = _room(client, db)
+    quote_id = _quote_id(db, supplier)
+    card = _card(d, quote_id)
+    user.post(f"{API}/confirm-requests/{card['id']}/view")
+
+    _edit_request(user, perf_id)
+
+    assert user.get(f"{API}/confirm-requests/{card['id']}").json()["status"] == "INVALIDATED"
+    res = user.post(f"{API}/confirm-requests/{card['id']}/accept", headers=KEY)
+    assert res.status_code == 422 and res.json()["code"] == "CONFIRM_REQUEST_STALE"
+    assert _card(d, quote_id)["status"] == "PENDING"  # 업체는 새 최종 견적을 다시 보낼 수 있다
+
+
+def test_ac_f2_13_only_pending_cards_of_that_stage_change(client, db):
+    from app.chat import service as chat_service
+
+    user, d, room_id, perf_id, supplier = _room(client, db)
+    pending = _card(d, _quote_id(db, supplier))["id"]
+    version_id = db.get(ConfirmRequest, pending).quote_version_id
+    others = {}
+    for status in ("CONFIRMED", "EXPIRED", "RENEGOTIATE"):
+        row = ConfirmRequest(room_id=room_id, quote_version_id=version_id, status=status, expires_at=NOW, created_at=NOW)
+        db.add(row)
+        db.flush()
+        others[row.id] = status
+    db.commit()
+
+    venue_stage = db.scalar(select(Stage.id).where(Stage.performance_id == perf_id, Stage.stage_type == "VENUE"))
+    chat_service.invalidate_pending_cards(db, venue_stage)  # 다른 단계 → 장비 단계 카드는 그대로
+    db.commit()
+    db.expire_all()
+    assert db.get(ConfirmRequest, pending).status == "PENDING"
+
+    _edit_request(user, perf_id)
+    db.expire_all()
+    assert db.get(ConfirmRequest, pending).status == "INVALIDATED"
+    assert db.get(ConfirmRequest, pending).decided_at is not None  # 시각 값은 비교하지 않는다
+    assert {i: db.get(ConfirmRequest, i).status for i in others} == others
+
+
+def test_ac_f2_13_no_cards_is_noop(client, db):
+    user, d, room_id, perf_id, supplier = _room(client, db)
+    _edit_request(user, perf_id)
+    assert db.scalar(select(func.count()).select_from(ConfirmRequest)) == 0
+
+
+def test_ac_f2_13_publishes_confirm_updated_to_both_after_commit(client, db, monkeypatch):
+    from app.chat import realtime
+
+    user, d, room_id, perf_id, supplier = _room(client, db)
+    card = _card(d, _quote_id(db, supplier))
+    sent: list[tuple[int, str, dict]] = []
+    monkeypatch.setattr(realtime, "send_to_user", lambda uid, t, data: sent.append((uid, t, data)))
+
+    _edit_request(user, perf_id)
+
+    owner = user.get(f"{API}/me").json()["id"]
+    got = {uid: data for uid, t, data in sent if t == "confirm.updated"}
+    assert set(got) == {owner, supplier.user_id}
+    assert got[owner] == {"roomId": room_id, "confirmRequestId": card["id"], "status": "INVALIDATED"}
