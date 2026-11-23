@@ -8,6 +8,7 @@
 .tab { position: relative; display: inline-flex; align-items: center; height: 54px; padding: 0 22px; border: 0; background: transparent; color: var(--sd-muted); font-size: var(--sd-text-card); font-weight: 600; white-space: nowrap; cursor: pointer; }
 .tab:hover { color: var(--sd-ink); }
 .tab[aria-selected="true"] { color: var(--sd-ink); font-weight: 700; }
+.tab[aria-disabled="true"], .tab[aria-disabled="true"]:hover { color: var(--sd-photo-text); cursor: not-allowed; } /* 승인 안 된 부문 (목업 ui.css .tabs [aria-disabled]) */
 .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sd-ink); }
 
 /* 지역 + 개수 줄 */
@@ -92,6 +93,9 @@
 .photoAdd input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .photoAdd:focus-within { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 .formActions { display: flex; justify-content: flex-end; margin-top: 40px; }
+.formActionsSplit { justify-content: space-between; } /* 목업 p-post.html: 왼쪽 [글 내리기], 오른쪽 [저장] */
+.bumpSummary { --cols: 2; margin-bottom: 28px; } /* 마지막 끌어올리기 · [끌어올리기] (조회·관심 저장 수는 서버가 주지 않아 뺐다) */
+.bumpCell { display: flex; align-items: center; }
 
 /* ── 상세 화면 본문 위치 맞춤 (11/23 해원 결정) ──
    커뮤니티 글 상세는 본문(--sd-doc-width)을 가운데에 둔다. 소개 글 상세는 오른쪽 칸을 그대로 두고,

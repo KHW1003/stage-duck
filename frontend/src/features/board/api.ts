@@ -1,9 +1,10 @@
 /** 업체 찾기 API (api-contract.md 5장 /pr-posts, #30). 서버 데이터는 TanStack Query 로만 다룬다 (CLAUDE.md 6.2). */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { PrCategory, PrPost, PrPostPage, PrPostRequest, PrPostSaved, UploadedFile } from "../../shared/api/types";
+import type { MyPrPostList, PrCategory, PrPost, PrPostPage, PrPostRequest, PrPostSaved, UploadedFile } from "../../shared/api/types";
 
 export const PR_POSTS_KEY = ["pr-posts"] as const;
+export const MY_PR_POSTS_KEY = ["pr-posts", "mine"] as const;
 
 export interface BoardParams {
   category: PrCategory | "";
@@ -38,6 +39,38 @@ export function useCreatePrPost() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: PrPostRequest) => api<PrPostSaved>("/pr-posts", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
+  });
+}
+
+/** FR-BOARD-02·03: 내 소개 글 (가려진 글·사유 포함, 내린 글 제외). 끌어올리기 가능 여부는 서버가 준다 */
+export function useMyPrPosts() {
+  return useQuery({ queryKey: MY_PR_POSTS_KEY, queryFn: () => api<MyPrPostList>("/pr-posts/mine") });
+}
+
+/** AC-F4-03·10: 고치기 (말머리는 못 바꿈). 블라인드 중이면 서버가 409 */
+export function useUpdatePrPost(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Omit<PrPostRequest, "category">) => api<PrPostSaved>(`/pr-posts/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
+  });
+}
+
+/** FR-BOARD-02: [글 내리기]. 내리면 그 부문에 새 글을 쓸 수 있다 */
+export function useDeletePrPost(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<void>(`/pr-posts/${id}`, { method: "DELETE" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
+  });
+}
+
+/** FR-BOARD-03: 끌어올리기 7일에 1회. 7일이 안 됐으면 서버가 429 BUMP_TOO_SOON */
+export function useBumpPrPost(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<PrPost>(`/pr-posts/${id}/bump`, { method: "POST" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
   });
 }

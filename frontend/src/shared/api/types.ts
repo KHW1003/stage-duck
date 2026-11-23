@@ -506,6 +506,18 @@ export interface PrPostSaved extends PrPost {
   contactWarning: boolean;
 }
 
+/** GET /pr-posts/mine 한 줄 (FR-BOARD-02·03): 본인에게만 상태·블라인드 사유·끌어올리기 가능 여부를 준다. 계약서 반영 대기 (11/23) */
+export interface MyPrPost extends PrPost {
+  status: "ACTIVE" | "BLINDED" | "HIDDEN";
+  blindReason: string | null;
+  canBump: boolean;
+  nextBumpAt: string;
+}
+
+export interface MyPrPostList {
+  items: MyPrPost[];
+}
+
 /** POST /pr-posts (FR-BOARD-02). 사진은 먼저 POST /files (purpose PR_POST, 최대 10장) */
 export interface PrPostRequest {
   category: PrCategory | "";
