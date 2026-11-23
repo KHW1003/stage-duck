@@ -145,7 +145,8 @@ export function SupplierSignupPage() {
           type={reading.type}
           label={reading.label}
           onClose={() => setReading(null)}
-          onAgree={() => setForm((f) => ({ ...f, [reading.key]: true }))}
+          agreed={form[reading.key]}
+          onAgreeChange={(on) => setForm((f) => ({ ...f, [reading.key]: on }))}
         />
       )}
     </>
