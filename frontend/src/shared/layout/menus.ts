@@ -61,14 +61,14 @@ export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
     { label: "견적함", to: "/quotes", icon: "doc" }, // [주소 미정] 목업 inbox-list.html — 3번 묶음
     { label: "관심 업체", to: "/favorites", icon: "heart" }, // 목업 favorites.html — 1번 offer (#32)
     { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정] plan.md 는 공연별 /performances/:id/sheet
-    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
+    { label: "1:1 문의", to: "/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
   ],
   partner: [
     { label: "업체 프로필", to: "/supplier/profile", icon: "venue" },
     { label: "내 소개 글", to: "/supplier/posts", icon: "edit" }, // [주소 미정] 목업 p-post.html
     { label: "내 예약", to: "/supplier/reservations", icon: "receipt" },
     { label: "받은 견적 요청", to: "/supplier/offers", icon: "doc" }, // #32
-    { label: "1:1 문의", to: "/me/inquiries", icon: "chat" },
+    { label: "1:1 문의", to: "/inquiries", icon: "chat" },
   ],
   "partner-review": [],
   admin: [],
