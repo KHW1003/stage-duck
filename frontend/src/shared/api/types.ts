@@ -73,6 +73,17 @@ export interface SupplierApplication {
   appliedAt: string;
 }
 
+/** GET /supplier/venues — 내 공간 목록 (backend supplier VenueOut). 견적서 공간 고르기에 쓰는 칸만 적는다 */
+export interface MyVenue {
+  id: number;
+  name: string;
+  sido: string;
+  sigungu: string;
+  maxCapacity: number;
+  /** venues.status — HIDDEN 은 관리자가 숨긴 공간 */
+  status: "ACTIVE" | "HIDDEN";
+}
+
 // ---- 공연 요청서 (api-contract.md 3.2, 묶음 2) ----
 export type PerformanceForm = "BAND" | "THEATER" | "TALK_EVENT" | "RELIGIOUS" | "ETC";
 export type PerformanceStatus =
@@ -196,6 +207,8 @@ export interface PerformanceDetail extends PerformanceSummary {
   needs: PerformanceNeeds;
   hasContactPhone: boolean;
   publishedAt: string | null;
+  /** D-57 처음 컨펌 뒤 결제 전이면 결제 마감 */
+  paymentDeadline?: string | null;
 }
 
 export interface AdvanceResult {
@@ -353,6 +366,13 @@ export interface QuoteOut {
   currentVersion: number;
   current: QuoteVersionOut;
   versions: QuoteVersionOut[];
+  /** 내역서 화면(문서·인쇄)용 읽기 전용 칸 */
+  stageType: StageType;
+  performanceId: number;
+  performanceTitle: string;
+  showDate: string | null;
+  companyName: string;
+  checks: QuoteCheck[];
 }
 
 /** 201 응답 (PUT 고치기도 같은 모양) */
@@ -537,6 +557,8 @@ export interface Order {
   totalAmount: number;
   issuedAt: string;
   paidAt: string | null;
+  /** D-57 결제 마감 (결제 전만). 지나면 자동 취소 */
+  paymentDeadline?: string | null;
   lines: OrderLine[];
 }
 
@@ -575,6 +597,63 @@ export interface PaymentResult {
   amount: number;
   orderStatus: OrderStatus;
 }
+
+// ---- 채팅 (#42, api-contract.md 채팅·7장 WebSocket) ----
+export type ChatMessageType = "TEXT" | "IMAGE" | "FILE" | "QUOTE" | "CONFIRM_REQUEST" | "CONFIRMED" | "NOTICE";
+
+/** GET /chat-rooms 한 줄. partnerName 은 업체 상호 또는 사용자 닉네임 (실명 아님) */
+export interface ChatRoom {
+  roomId: number;
+  stageId: number;
+  stageType: StageType;
+  performanceId: number;
+  partnerName: string;
+  startedAt: string | null;
+  pinnedAt: string | null;
+  unreadCount: number;
+  lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string } | null;
+}
+
+/** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */
+export interface ChatMessageOut {
+  id: number;
+  type: ChatMessageType;
+  body: string | null;
+  senderUserId: number | null;
+  refId: number | null;
+  contactWarning: boolean;
+  createdAt: string;
+  attachmentUrl?: string | null;
+}
+
+export interface ChatMessagesOut {
+  messages: ChatMessageOut[];
+  partnerLastReadMessageId: number | null;
+}
+
+export interface ChatMessageIn {
+  type: "TEXT" | "IMAGE" | "FILE";
+  body?: string | null;
+  fileId?: number | null;
+}
+
+/** WebSocket message.created 의 message (REST 와 달리 보낸 사람이 senderId) */
+export interface WsChatMessage {
+  id: number;
+  type: ChatMessageType;
+  body: string | null;
+  attachmentUrl?: string | null;
+  refId: number | null;
+  senderId: number | null;
+  contactWarning: boolean;
+  createdAt: string;
+}
+
+/** GET /ws 받기 전용 이벤트 가운데 채팅 위젯이 쓰는 것 */
+export type WsChatEvent =
+  | { type: "message.created"; data: { roomId: number; message: WsChatMessage } }
+  | { type: "message.read"; data: { roomId: number; userId: number; lastMessageId: number } }
+  | { type: "quote.updated"; data: { roomId: number; quoteId: number; version: number; changed: string[] } };
 
 /* ---- 프로필 (api-contract.md 5장 /suppliers/{id}/profile · /users/{id}/profile · /me/profile, #33) ---- */
 

@@ -151,6 +151,26 @@ describe("커뮤니티 댓글 (#101)", () => {
     expect(calls.find((c) => c.url === "/api/v1/reports")!.body).toEqual({ targetType: "FREE_COMMENT", targetId: 31, reason: "업체 홍보" });
   });
 
+  it("내 댓글 [삭제]는 확인 창에서 한 번 더 물은 뒤 지운다 (취소하면 보내지 않는다)", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({
+      ...ME,
+      "GET /api/v1/free-posts/9": { status: 200, body: post({ comments: [comment({ isMine: true })] }) },
+      "DELETE /api/v1/free-comments/31": { status: 204 },
+    });
+    renderAt("/community/9");
+    await user.click(await screen.findByRole("button", { name: "삭제" }));
+    let dialog = screen.getByRole("dialog", { name: "댓글을 지울까요?" });
+    await user.click(within(dialog).getByRole("button", { name: "취소" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(calls.some((c) => c.method === "DELETE")).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "삭제" }));
+    dialog = screen.getByRole("dialog", { name: "댓글을 지울까요?" });
+    await user.click(within(dialog).getByRole("button", { name: "지우기" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "DELETE" && c.url === "/api/v1/free-comments/31")).toBe(true));
+  });
+
   it("방문자는 댓글을 읽고, 쓰기는 로그인으로 간다. 삭제된 댓글은 자리만 남는다", async () => {
     mockServer({
       ...GUEST,

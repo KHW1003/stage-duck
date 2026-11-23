@@ -13,9 +13,10 @@ interface Props {
   children: ReactNode;
   foot?: ReactNode;
   busy?: boolean;
+  focusableBody?: boolean;
 }
 
-export function KitModal({ title, onClose, children, foot, busy = false }: Props) {
+export function KitModal({ title, onClose, children, foot, busy = false, focusableBody = false }: Props) {
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
 
@@ -45,7 +46,7 @@ export function KitModal({ title, onClose, children, foot, busy = false }: Props
             <Ico name="x" />
           </button>
         </div>
-        <div className="modal__body">{children}</div>
+        <div className="modal__body" tabIndex={focusableBody ? 0 : undefined}>{children}</div>
         {foot && <div className="modal__foot">{foot}</div>}
       </div>
     </div>

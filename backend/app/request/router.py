@@ -9,6 +9,7 @@ from app.core.db import get_db
 from app.core.errors import AppError
 from app.models.request import Performance
 from app.models.user import User
+from app.payment import service as payment_service
 from app.request import rejection, service
 from app.request.schemas import (
     AdvanceIn,
@@ -168,6 +169,7 @@ def get_my_performance(
     return PerformanceDetailOut(
         **_summary_fields(view), lineup=snapshot.get("lineup", []), needs=perf.needs,
         has_contact_phone=bool(perf.contact_phone), published_at=perf.published_at,
+        payment_deadline=payment_service.payment_deadline(db, perf.id),
     )
 
 

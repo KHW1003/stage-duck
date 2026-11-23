@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
 from app.board import service
-from app.board.schemas import PrCategory, PrPostIn, PrPostListOut, PrPostOut
+from app.board.schemas import PrCategory, PrPostIn, PrPostListOut, PrPostOut, PrPostSavedOut
 from app.core.db import get_db
 from app.models.user import User
 
@@ -36,12 +36,24 @@ def get_post(post_id: int, db: Session = Depends(get_db)) -> PrPostOut:
     return service.get_post(db, post_id)
 
 
-@router.post("", response_model=PrPostOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PrPostSavedOut, status_code=status.HTTP_201_CREATED)
 def create_post(
     body: PrPostIn,
     user: User = Depends(require_role("SUPPLIER")),
     db: Session = Depends(get_db),
     now: datetime = Depends(get_now),
-) -> PrPostOut:
-    """AC-F4-01·02: 승인 부문 말머리만, 부문당 활성 글 1개."""
+) -> PrPostSavedOut:
+    """AC-F4-01·02·03: 승인 부문 말머리만, 부문당 활성 글 1개, 연락처 경고."""
     return service.create_post(db, user, body, now=now)
+
+
+@router.put("/{post_id}", response_model=PrPostSavedOut)
+def update_post(
+    post_id: int,
+    body: PrPostIn,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> PrPostSavedOut:
+    """AC-F4-10: 본인 글 수정 (블라인드 중 409, 말머리 고정, 남의 글 404). AC-F4-03 연락처 경고."""
+    return service.update_post(db, user, post_id, body, now=now)

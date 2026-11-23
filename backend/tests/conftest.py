@@ -13,6 +13,9 @@ os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or f"sqlite:///
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("ADMIN_SESSION_SECRET", "test-secret")
 os.environ.setdefault("UPLOAD_DIR", (_tmp / "uploads").as_posix())  # 업로드 파일은 임시 폴더에
+# 내 backend/.env 가 MAIL_BACKEND=smtp 여도 테스트는 진짜 메일을 보내지 않는다 (smtp 는 test_mail.py 가 가짜로 켠다)
+os.environ["MAIL_BACKEND"] = "console"
+os.environ["SCHEDULER_ENABLED"] = "false"  # 테스트는 run_due 를 직접 부른다
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -23,6 +26,7 @@ from app.core.db import Base, SessionLocal, engine  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Supplier, SupplierCategory, User  # noqa: E402
+from app.supplier.terms import TERMS_VERSION, confirm_review  # noqa: E402
 
 ADMIN_PASSWORD = "admin-pass-1234"
 
@@ -95,7 +99,9 @@ def make_user(db: Session, *, role: str = "USER", password: str | None = None, *
     return user
 
 
-def make_supplier(db: Session, *, review_status: str = "PENDING", categories=("EQUIPMENT",), **kw) -> Supplier:
+def make_supplier(
+    db: Session, *, review_status: str = "PENDING", categories=("EQUIPMENT",), terms_reviewed: bool = True, **kw,
+) -> Supplier:
     user = make_user(db, role="SUPPLIER")
     supplier = Supplier(
         user_id=user.id,
@@ -109,6 +115,8 @@ def make_supplier(db: Session, *, review_status: str = "PENDING", categories=("E
     supplier.categories = [SupplierCategory(category=c) for c in categories]
     db.add(supplier)
     db.commit()
+    if review_status == "APPROVED" and terms_reviewed:
+        confirm_review(db, user, TERMS_VERSION)
     return supplier
 
 

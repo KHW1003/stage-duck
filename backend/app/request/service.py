@@ -17,7 +17,7 @@ from app.check.calc import PerformanceInput
 from app.core.history import record_transition
 from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, PerformanceVersion, Stage
-from app.models.supplier import Supplier
+from app.models.supplier import Supplier, SupplierCategory
 from app.models.user import User
 from app.request import calc, rejection
 from app.request.schemas import PerformanceIn
@@ -110,7 +110,7 @@ def stage_confirmed(db: Session, stage_id: int, quote_version_id: int, *, actor_
         raise AppError(409, "STAGE_ALREADY_CONFIRMED", "이 단계는 이미 다른 견적서로 정해졌어요.")
     _move_stage(db, stage, "CONFIRMED", actor_id)
     stage.confirmed_quote_version_id = quote_version_id
-    stage.confirmed_at = func.now()
+    stage.confirmed_at = datetime.now()  # 앱 시각(KST). DB now() 는 SQLite 에서 UTC 라 결제 마감(D-57)이 어긋난다
     perf = db.get(Performance, stage.performance_id)
     if perf.status == "PUBLISHED":
         _move_performance(db, perf, "ASSIGNING", actor_id)
@@ -123,6 +123,7 @@ def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfir
     """[약속 2 → 3] 컨펌 직후 다음 할 일 (AC-F3-05 풀스펙 건너뛰기 제안, AC-F3-14 [통합 결제하기]).
 
     full_spec: 확정한 견적서가 풀스펙(장비·엔지니어 포함)인지 — 견적서는 3번 것이라 부르는 쪽이 넘긴다.
+    장비 견적서는 장비를 늘 포함하므로, full_spec 이면 엔지니어가 포함된 것이다 (AC-F3-23).
     """
     stage = db.get(Stage, stage_id)
     stages = _stages_of(db, stage.performance_id)
@@ -130,7 +131,8 @@ def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfir
     done = all(s.status in DONE_STATUSES for s in stages)
     return AfterConfirm(
         next_stage_type=remaining[0].stage_type if remaining else None,
-        suggest_skip=full_spec and stage.stage_type == "VENUE" and bool(remaining),
+        # 풀스펙 공연장(AC-F3-05) 또는 엔지니어를 포함한 장비 견적서(AC-F3-23, CHK-09)면 남은 단계 건너뛰기를 제안
+        suggest_skip=full_spec and stage.stage_type in ("VENUE", "EQUIPMENT") and bool(remaining),
         checkout_available=not remaining and done,
     )
 
@@ -140,8 +142,13 @@ def is_related(db: Session, user_id: int, supplier_id: int) -> bool:
 
     - 견적서: 사용자 공연의 어느 단계에든 이 업체가 견적서를 보냈다 (상태 상관없이)
     - 채팅: 사용자 공연의 어느 단계에서든 이 업체와 채팅이 시작됐다 (3번 chat_started)
-    오퍼(1번 #32)는 offers 표가 생기면 여기에 더한다. 커밋하지 않는다.
+    - 견적 요청(1번 #32): 이 사용자가 이 업체에 견적을 요청했다
+    커밋하지 않는다.
     """
+    from app.offer.service import has_offer  # 1번 → 2번 순환 import 를 피한다
+
+    if has_offer(db, user_id, supplier_id):
+        return True
     perf_ids = list(db.scalars(select(Performance.id).where(Performance.user_id == user_id)))
     if not perf_ids:
         return False
@@ -194,6 +201,19 @@ def performance_paid(db: Session, performance_id: int, *, actor_id: int | None) 
     _move_performance(db, perf, "CONFIRMED", actor_id)
 
 
+def performance_cancelled(db: Session, performance_id: int, *, actor_id: int | None) -> None:
+    """[약속 4 → 2] 사용자 취소·결제 마감 자동 취소 때 4번이 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
+
+    공연을 CANCELLED 로 바꾸고 상태 이력을 남긴다. 이미 CANCELLED 면 아무것도 하지 않는다.
+    """
+    perf = db.get(Performance, performance_id, with_for_update=True)
+    if perf is None:
+        raise not_found()
+    if perf.status == "CANCELLED":
+        return
+    _move_performance(db, perf, "CANCELLED", actor_id)
+
+
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     """[약속 2·3 → 4] 확정된 단계마다 한 줄. 건너뛴 단계는 넣지 않는다. 순서는 배정 순서(공연장 → 장비 → 엔지니어).
 
@@ -225,6 +245,11 @@ _ALLOWED = {
     ("PUBLISHED", "ASSIGNING"),  # 첫 단계 확정 (#38)
     ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
     ("AWAITING_PAYMENT", "CONFIRMED"),  # 테스트 결제 성공 (4번 #51 → performance_paid)
+    # 취소 (4번 #52 → performance_cancelled): 사용자 취소·결제 마감 자동 취소
+    ("PUBLISHED", "CANCELLED"),
+    ("ASSIGNING", "CANCELLED"),
+    ("AWAITING_PAYMENT", "CANCELLED"),
+    ("CONFIRMED", "CANCELLED"),
 }
 _STAGE_ALLOWED = {  # data-model.md 11장 stages.status
     ("WAITING", "OPEN"),
@@ -242,6 +267,27 @@ POSTED = ("PUBLISHED", "ASSIGNING")  # 업체에게 공고가 보이는 요청�
 OPEN_STATUSES = ("OPEN", "NEGOTIATING")
 # 업체 부문 → 볼 수 있는 단계. 설치·철수(INSTALL)는 장비 단계 견적에 들어간다 (#37에서 정함)
 CATEGORY_STAGE = {"VENUE": "VENUE", "EQUIPMENT": "EQUIPMENT", "INSTALL": "EQUIPMENT", "ENGINEER": "ENGINEER"}
+
+
+def _notify_posting_opened(db: Session, perf: Performance, stage: Stage) -> None:
+    """#45 단계가 열리면 그 부문의 승인·정상 업체에게 POSTING_OPENED (notifications.md 3.1). 커밋하지 않는다.
+
+    업체 활동 지역 칸이 아직 없어 지역으로는 거르지 않는다. 함수 안 import — 2번 → 3번 순환을 피한다.
+    """
+    from app.notification import service as notification
+
+    categories = [c for c, t in CATEGORY_STAGE.items() if t == stage.stage_type]
+    user_ids = db.scalars(
+        select(Supplier.user_id).distinct()
+        .join(SupplierCategory, SupplierCategory.supplier_id == Supplier.id)
+        .join(User, User.id == Supplier.user_id)
+        .where(SupplierCategory.category.in_(categories), Supplier.review_status == "APPROVED", User.status == "ACTIVE")
+    ).all()
+    notification.notify_many(
+        db, user_ids, "POSTING_OPENED", link=f"/supplier/postings/{stage.id}",
+        params={"title": perf.title, "date": notification.month_day(perf.show_date), "stage": notification.stage_label(stage.stage_type)},
+        payload={"stageId": stage.id, "performanceId": perf.id},
+    )
 
 
 def _fill(perf: Performance, body: PerformanceIn, data: dict) -> None:
@@ -356,6 +402,8 @@ def publish(db: Session, user: User, performance_id: int, *, now: datetime) -> P
         record_transition(
             db, entity_type="stage", entity_id=stage.id, from_status=None, to_status=status, actor_user_id=user.id
         )
+        if status == "OPEN":
+            _notify_posting_opened(db, perf, stage)
     record_transition(
         db, entity_type="performance", entity_id=perf.id, from_status=perf.status, to_status="PUBLISHED",
         actor_user_id=user.id,
@@ -529,6 +577,7 @@ def advance(
     else:
         _move_stage(db, nxt, "OPEN", user.id)
         nxt.opened_at = now
+        _notify_posting_opened(db, perf, nxt)
     db.flush()
     _sync_performance(db, perf, user.id)
     db.commit()

@@ -1,10 +1,10 @@
 """비밀번호 찾기 (FR-AUTH-09, D-55 · AC-F1-21·22·23). 시간은 인자로 받는다 (CLAUDE.md 6.1).
 
 - 요청: 가입 여부·소셜 계정 여부와 상관없이 같은 응답. 링크는 이메일로 가입한(비밀번호가 있는) 계정만 만든다.
-- 메일: MAIL_BACKEND=console 이면 링크를 서버 로그에 남긴다. 테스트 환경이면 화면에 시연용 링크도 돌려준다.
+- 메일: MAIL_BACKEND=smtp 면 실제로 보낸다 (app/core/mail.py). console 이면 서버 로그에 남기고,
+  테스트 환경(APP_ENV=test)이면 화면에 시연용 링크도 돌려준다 (smtp 일 때는 화면에 링크를 주지 않는다).
 - 확인: 30분 안·처음 쓰는 링크만. 바꾸면 그 계정의 다른 링크도 모두 쓴 것으로 하고, 이전 Refresh 를 끊는다.
 """
-import logging
 import secrets
 from datetime import datetime, timedelta
 
@@ -13,13 +13,13 @@ from sqlalchemy.orm import Session
 
 from app.auth import calc
 from app.auth.service import normalize_email
+from app.core import mail
 from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import hash_password
 from app.models.password_reset import PasswordResetRequest, PasswordResetToken
 from app.models.user import User
 
-log = logging.getLogger("stageduck.mail")
 RESET_PATH = "/password/reset"
 
 
@@ -67,11 +67,27 @@ def request_reset(db: Session, email: str, *, now: datetime) -> str | None:
     return _send(email, token)
 
 
+RESET_SUBJECT = "[STAGE DUCK] 비밀번호 재설정 링크"
+
+
+def reset_mail_text(link: str) -> str:
+    lines = [
+        "안녕하세요, STAGE DUCK입니다.",
+        "",
+        f"아래 링크에서 새 비밀번호를 설정해 주십시오. 링크는 {calc.RESET_TOKEN_MINUTES}분 동안 한 번만 사용할 수 있습니다.",
+        "",
+        link,
+        "",
+        "비밀번호 찾기를 요청하지 않으셨다면 이 메일은 삭제해 주십시오. 비밀번호는 변경되지 않습니다.",
+        "본 메일은 발신 전용입니다.",
+    ]
+    return chr(10).join(lines)
+
+
 def _send(email: str, token: str) -> str | None:
     settings = get_settings()
     path = f"{RESET_PATH}?token={token}"
-    if settings.mail_backend == "console":
-        log.warning("[메일 대신 로그] 비밀번호 재설정 링크 → %s : %s%s", email, settings.public_base_url, path)
+    mail.send_mail(email, RESET_SUBJECT, reset_mail_text(f"{settings.public_base_url}{path}"))
     return path if settings.is_test_env and settings.mail_backend == "console" else None
 
 

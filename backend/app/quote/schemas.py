@@ -158,6 +158,13 @@ class QuoteOut(BaseModel):
     current_version: int
     current: QuoteVersionOut
     versions: list[QuoteVersionOut]
+    # 내역서 화면(문서·인쇄)에 쓰는 읽기 전용 칸 — 연락처·실명은 넣지 않는다 (CLAUDE.md 20)
+    stage_type: str = ""
+    performance_id: int = 0
+    performance_title: str = ""
+    show_date: date | None = None
+    company_name: str = ""
+    checks: list[dict] = Field(default_factory=list)  # 현재 버전의 자동 검사 (api-contract.md 4.1 checks[])
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /**
  * 완료 안내 (mockup-v4/pages/done.html): 결과 아이콘 + 한 문장 + 요약표 + 다음에 할 일 버튼.
- * 서버가 성공을 확인한 뒤에만 보여 준다. 가입·요청서 게시·오퍼·컨펌·결제·취소에서 같은 틀로 쓴다.
+ * 서버가 성공을 확인한 뒤에만 보여 준다. 가입·요청서 게시·견적 요청·컨펌·결제·취소에서 같은 틀로 쓴다.
  */
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";

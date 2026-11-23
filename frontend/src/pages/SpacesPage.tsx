@@ -12,6 +12,7 @@ import { CONDITIONS, DEFAULT_COND, SORTS, condFromQuery, condSummary, filterVenu
 import { REGIONS, TILE_TYPES, TYPE_LABEL, cardSpecs, shortSido, venuePhotos, won } from "../features/venue/view";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { KitPageTop } from "../shared/layout/KitPageTop";
+import { DateField, yearsFromNow } from "../shared/ui/DateField";
 import { Ico, type KitIconName } from "../shared/ui/Ico";
 import "./spaces.css";
 
@@ -144,7 +145,7 @@ export function SpacesPage() {
               <div>
                 <span className="cond__th">공연 날짜</span>
                 <span className="cond__td">
-                  <input className="input cond__date" type="date" aria-label="공연 날짜" value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+                  <DateField aria-label="공연 날짜" value={draft.date} onChange={(v) => setDraft((d) => ({ ...d, date: v }))} min={yearsFromNow(0)} max={yearsFromNow(2)} />
                   <span className="field__hint">날짜를 넣어도 업체 확인 전이에요.</span>
                 </span>
               </div>

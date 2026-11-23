@@ -1,9 +1,7 @@
 /** 공고 목록·상세·견적서 보내기 API (backend quote/router.py). 서버 데이터는 TanStack Query 로만 (CLAUDE.md 6.2) */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { PostingDetail, PostingSummary, QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn } from "../../shared/api/types";
-import { useApplication } from "../supplier/api";
-import type { VenuePage } from "../venue/api";
+import type { MyVenue, PostingDetail, PostingSummary, QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn } from "../../shared/api/types";
 
 export const POSTINGS_KEY = ["postings"] as const;
 
@@ -31,10 +29,20 @@ export function useSendQuote(stageId: number) {
 }
 
 /** AC-F2-20: 내 견적서 + 현재 버전 + 이력. 남의 견적서는 서버가 404 */
-export function useQuote(quoteId: number) {
+export function useQuote(quoteId: number, enabled = true) {
   return useQuery({
     queryKey: ["quotes", quoteId],
     queryFn: () => api<QuoteOut>(`/quotes/${quoteId}`),
+    enabled: enabled && Number.isInteger(quoteId) && quoteId > 0,
+  });
+}
+
+/** 채팅 견적서 카드(refId = 견적서 버전 번호)의 [내역서 보기] */
+export function useQuoteByVersion(versionId: number, enabled = true) {
+  return useQuery({
+    queryKey: ["quotes", "by-version", versionId],
+    queryFn: () => api<QuoteOut>(`/quotes/by-version/${versionId}`),
+    enabled: enabled && Number.isInteger(versionId) && versionId > 0,
   });
 }
 
@@ -47,18 +55,12 @@ export function useUpdateQuote(quoteId: number) {
   });
 }
 
-/**
- * AC-F2-18: 공연장 견적서에 고를 내 공간 목록.
- * 임시: GET /supplier/venues 생기면 교체 — 지금은 내 업체 상호(GET /supplier/application)와
- * 공개 공간 목록(GET /venues)의 companyName 이 같은 것만 고른다. 시연 데이터의 가상 상호는 겹치지 않는다.
- */
+/** AC-F2-18: 공연장 견적서에 고를 내 공간 목록 (GET /supplier/venues). 관리자가 숨긴 공간(HIDDEN)은 뺀다 */
 export function useMyVenues(enabled: boolean) {
-  const application = useApplication();
-  const companyName = application.data?.companyName;
   return useQuery({
-    queryKey: ["venues", "mine", companyName],
-    queryFn: () => api<VenuePage>("/venues?size=50"),
-    enabled: enabled && Boolean(companyName),
-    select: (page) => page.items.filter((v) => v.companyName === companyName),
+    queryKey: ["supplier", "venues"],
+    queryFn: () => api<MyVenue[]>("/supplier/venues"),
+    enabled,
+    select: (venues) => venues.filter((v) => v.status !== "HIDDEN"),
   });
 }

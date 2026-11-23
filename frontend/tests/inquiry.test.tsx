@@ -196,6 +196,18 @@ describe("문의 보기 (/inquiries/:id)", () => {
     expect(screen.queryByRole("link", { name: "고치기" })).not.toBeInTheDocument();
   });
 
+  it("답변 상태는 유형 옆에 무채색, 첨부 사진은 눌러서 크게 보고 [닫기]로 닫는다", async () => {
+    mockServer({ "GET /api/v1/inquiries/7": { status: 200, body: detail({ photos: [{ id: 41, url: "/api/v1/files/41" }] }) } });
+    renderAt("/inquiries/7");
+    const state = await screen.findByText("답변 대기", { selector: ".iq-state" });
+    expect(state.previousElementSibling).toHaveTextContent("결제·환불");
+    await userEvent.click(screen.getByRole("button", { name: "첨부 사진 1 크게 보기" }));
+    const dialog = screen.getByRole("dialog", { name: "첨부 사진 1 / 1" });
+    expect(within(dialog).getByRole("img", { name: "첨부 사진 1" })).toHaveAttribute("src", "/api/v1/files/41");
+    await userEvent.click(within(dialog).getAllByRole("button", { name: "닫기" }).at(-1)!);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("AC-F5-20 남의 문의(404)는 찾을 수 없다고 보인다", async () => {
     mockServer({});
     renderAt("/inquiries/99");

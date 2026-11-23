@@ -2,16 +2,41 @@
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
 from app.core.db import get_db
 from app.models.supplier import Supplier
 from app.models.user import User
-from app.supplier import service
+from app.supplier import service, terms
 from app.supplier.schemas import ApplicationIn, ApplicationOut, VenueIn, VenueListItem, VenueOut, VenuePage, VenuePublicOut
 
 router = APIRouter(prefix="/supplier", tags=["supplier"])
+
+
+class TermsReviewIn(BaseModel):
+    version: str
+
+
+class TermsReviewOut(BaseModel):
+    version: str
+    reviewed: bool
+
+
+@router.get("/terms-review", response_model=TermsReviewOut)
+def get_terms_review(user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db)) -> TermsReviewOut:
+    terms.require_approved(db, user)
+    return TermsReviewOut(version=terms.TERMS_VERSION, reviewed=terms.review_status(db, user))
+
+
+@router.put("/terms-review", response_model=TermsReviewOut)
+def put_terms_review(
+    body: TermsReviewIn, user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db),
+) -> TermsReviewOut:
+    terms.require_approved(db, user)
+    terms.confirm_review(db, user, body.version)
+    return TermsReviewOut(version=terms.TERMS_VERSION, reviewed=True)
 
 
 def _out(s: Supplier) -> ApplicationOut:

@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { VenueDetail, VenueListItem } from "../src/features/venue/api";
 import { DEFAULT_COND, condFromQuery, filterVenues, toQuery } from "../src/features/venue/filter";
+import { REGIONS } from "../src/features/venue/view";
 import { ageOn, localErrors } from "../src/pages/SignupPage";
 import type { Me } from "../src/shared/api/types";
+import { pickDate } from "./pickDate";
 
 /** 로그인·가입·비밀번호 찾기·공간 찾기·공간 상세 (목업 v4 login·signup·password·spaces·space) */
 
@@ -59,6 +61,27 @@ afterEach(() => {
 const err = (code: string, message: string, fieldErrors: { field: string; reason: string }[] = []) => ({ code, message, fieldErrors });
 
 describe("로그인 (/login)", () => {
+  it("빈 칸이나 이메일 모양이 틀리면 보내지 않고 이유를 보인다", async () => {
+    const calls = mockServer({});
+    renderAt("/login");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByText("이메일을 적어 주세요.")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("이메일"), "abc");
+    await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByText("이메일 형식을 확인해 주세요.")).toBeInTheDocument();
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
+  });
+
+  it("서버와 연결되지 않으면 그 안내를 보인다", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    renderAt("/login");
+    await userEvent.type(screen.getByLabelText("이메일"), "a@stageduck.test");
+    await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(await screen.findByText("서버와 연결되지 않았어요. 잠시 뒤 다시 시도해 주세요.")).toBeInTheDocument();
+  });
+
   it("AC-F1-11 로그인하면 서버가 정한 첫 화면으로 간다", async () => {
     const calls = mockServer({ "POST /api/v1/auth/login": { status: 200, body: { id: 3, role: "USER", nickname: "가을밤밴드", landing: "/community" } } });
     renderAt("/login");
@@ -78,7 +101,7 @@ describe("로그인 (/login)", () => {
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/community"));
   });
 
-  it("AC-F1-04 비밀번호가 틀리면 서버 문구가 입력칸 아래에, AC-F1-08 5회 실패는 안내 상자로 보인다", async () => {
+  it("FR-AUTH-06 비밀번호가 틀리면 서버 문구가 입력칸 아래에, 5회 실패는 안내 상자로 보인다", async () => {
     mockServer({ "POST /api/v1/auth/login": { status: 401, body: err("UNAUTHENTICATED", "이메일이나 비밀번호가 맞지 않아요.") } });
     renderAt("/login");
     await userEvent.type(screen.getByLabelText("이메일"), "a@stageduck.test");
@@ -107,6 +130,47 @@ describe("로그인 (/login)", () => {
 });
 
 describe("사용자 가입 (/signup)", () => {
+  it("약관 [보기]는 화면을 옮기지 않고 A4 모달로 열고, 넣은 값은 그대로 남는다 · [동의하고 닫기]는 체크해 준다", async () => {
+    mockServer({});
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("이름"), "김공연");
+    await userEvent.type(screen.getByLabelText("이메일"), "host@stageduck.test");
+    const [, privacyView] = screen.getAllByRole("button", { name: "보기" });
+    await userEvent.click(privacyView);
+    const dialog = screen.getByRole("dialog", { name: "STAGE DUCK 개인정보 처리방침" });
+    expect(screen.getByTestId("where")).toHaveTextContent("/signup"); // 화면을 옮기지 않는다
+    await userEvent.click(within(dialog).getByRole("button", { name: "개인정보 수집·이용 (필수)에 동의하고 닫기" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("이름")).toHaveValue("김공연");
+    expect(screen.getByLabelText("이메일")).toHaveValue("host@stageduck.test");
+    expect(screen.getByRole("checkbox", { name: /개인정보 수집·이용/ })).toBeChecked();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "보기" })[0]);
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /이용약관/ })).not.toBeChecked(); // 그냥 닫으면 체크하지 않는다
+  });
+
+  it("[중복 확인]을 누르는 즉시 이메일이 이미 있는지 알려 주고, 칸을 고치면 문구가 사라진다", async () => {
+    const calls = mockServer({ "POST /api/v1/auth/check-available": { status: 200, body: { available: false, message: "이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요." } } });
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("이메일"), "host@stageduck.test");
+    await userEvent.click(screen.getByRole("button", { name: "이메일 중복 확인" }));
+    expect(await screen.findByText("이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요.")).toBeInTheDocument();
+    expect(calls.find((c) => c.url.endsWith("/check-available"))!.body).toEqual({ field: "email", value: "host@stageduck.test" });
+    expect(screen.getByLabelText("이메일")).toHaveAttribute("aria-invalid", "true");
+    await userEvent.type(screen.getByLabelText("이메일"), "x");
+    expect(screen.queryByText("이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요.")).not.toBeInTheDocument();
+  });
+
+  it("[중복 확인]에서 쓸 수 있는 닉네임이면 바로 초록 안내가 보인다", async () => {
+    mockServer({ "POST /api/v1/auth/check-available": { status: 200, body: { available: true, message: "쓸 수 있는 닉네임이에요." } } });
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("닉네임"), "가을밤밴드");
+    await userEvent.click(screen.getByRole("button", { name: "닉네임 중복 확인" }));
+    expect(await screen.findByText("쓸 수 있는 닉네임이에요.")).toBeInTheDocument();
+  });
+
   it("만 14세는 생일이 지나야 된다", () => {
     expect(ageOn("2012-11-18", new Date(2026, 10, 18))).toBe(14);
     expect(ageOn("2012-11-19", new Date(2026, 10, 18))).toBe(13);
@@ -127,7 +191,7 @@ describe("사용자 가입 (/signup)", () => {
     await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
     await userEvent.type(screen.getByLabelText("비밀번호 확인"), "password1");
     await userEvent.type(screen.getByLabelText("전화번호"), "010-0000-0001");
-    await userEvent.type(screen.getByLabelText("생년월일"), "1995-03-02");
+    pickDate(screen.getByLabelText(/^생년월일/), "1995-03-02");
     await userEvent.click(screen.getByRole("button", { name: "가입하기" }));
     expect(screen.getByText("필수 약관에 동의해 주세요.")).toBeInTheDocument();
     expect(calls.filter((c) => c.method === "POST")).toHaveLength(0);
@@ -143,9 +207,10 @@ describe("사용자 가입 (/signup)", () => {
   it("서버가 돌려준 칸 오류(닉네임 중복)는 그 칸 아래에 보인다", async () => {
     mockServer({ "POST /api/v1/auth/signup": { status: 409, body: err("NICKNAME_TAKEN", "이미 쓰는 닉네임이에요.", [{ field: "nickname", reason: "이미 쓰는 닉네임이에요." }]) } });
     renderAt("/signup");
-    for (const [label, v] of [["이름", "김공연"], ["닉네임", "가을밤밴드"], ["이메일", "h@stageduck.test"], ["비밀번호", "password1"], ["비밀번호 확인", "password1"], ["전화번호", "01000000001"], ["생년월일", "1995-03-02"]]) {
+    for (const [label, v] of [["이름", "김공연"], ["닉네임", "가을밤밴드"], ["이메일", "h@stageduck.test"], ["비밀번호", "password1"], ["비밀번호 확인", "password1"], ["전화번호", "01000000001"]]) {
       await userEvent.type(screen.getByLabelText(label), v);
     }
+    pickDate(screen.getByLabelText(/^생년월일/), "1995-03-02");
     await userEvent.click(screen.getByLabelText("전체 동의"));
     await userEvent.click(screen.getByRole("button", { name: "가입하기" }));
     expect(await screen.findByText("이미 쓰는 닉네임이에요.")).toBeInTheDocument();
@@ -264,7 +329,8 @@ function mockVenues(extra: Record<string, { status: number; body?: unknown }> = 
 
 describe("공간 찾기 (/venues)", () => {
   it("서버에는 지역·관객 수·밴드·정렬을 보내고, 유형 여러 개·나머지 조건은 받은 목록에서 거른다", () => {
-    expect(toQuery({ ...DEFAULT_COND, audience: "80", conditions: ["밴드 공연 가능", "주차"] }, "price")).toEqual({
+    expect(DEFAULT_COND.region).toBe("서울"); // 처음 지역은 서울 (11/19)
+    expect(toQuery({ ...DEFAULT_COND, region: "광주", audience: "80", conditions: ["밴드 공연 가능", "주차"] }, "price")).toEqual({
       sido: "광주광역시", minCapacity: 80, bandAllowed: true, sort: "fee",
     });
     expect(toQuery({ ...DEFAULT_COND, region: "전체" }, "capacity")).toEqual({ sido: undefined, minCapacity: undefined, bandAllowed: undefined, sort: "capacity" });
@@ -277,26 +343,28 @@ describe("공간 찾기 (/venues)", () => {
     expect(c).toMatchObject({ region: "광주", types: ["ROOFTOP"], audience: "150" });
   });
 
-  it("AC-F5-01 처음엔 광주·대관료 낮은 순(B → C → A), 카드에 입실 시각과 업체가 보인다", async () => {
+  it("AC-F5-01 처음엔 서울·대관료 낮은 순(B → C → A), 카드에 입실 시각과 업체가 보인다", async () => {
     const urls = mockVenues();
     renderAt("/venues");
     const cards = await screen.findAllByRole("link", { name: /공간 [ABC]/ });
     expect(cards.map((a) => a.getAttribute("href"))).toEqual(["/venues/2", "/venues/3", "/venues/1"]);
     expect(within(cards[0]).getByText("17:00 입실")).toBeInTheDocument();
     expect(within(cards[2]).getByText("풀스펙")).toBeInTheDocument();
-    expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).toContain("sido=%EA%B4%91%EC%A3%BC%EA%B4%91%EC%97%AD%EC%8B%9C");
+    expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).toContain(`sido=${encodeURIComponent("서울특별시")}`);
   });
 
   it("조건은 [공간 찾기]를 눌러야 바뀌고, 결과가 없으면 [조건 초기화]로 돌아간다", async () => {
+    // 지역 버튼이 17개라 화면 전체를 역할로 찾으면 느리다 → 결과 칸(.grid)의 카드 링크만 센다
+    const cards = () => document.querySelectorAll('.grid a[href^="/venues/"]').length;
     mockVenues();
     renderAt("/venues");
-    expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    await waitFor(() => expect(cards()).toBe(3));
     await userEvent.type(screen.getByLabelText("관객 수"), "300");
-    expect(screen.getAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    expect(cards()).toBe(3);
     await userEvent.click(screen.getByRole("button", { name: "공간 찾기" }));
     expect(await screen.findByText("조건에 맞는 공간이 없어요")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "조건 초기화" }));
-    expect(await screen.findAllByRole("link", { name: /공간 [ABC]/ })).toHaveLength(3);
+    await waitFor(() => expect(cards()).toBe(3));
   });
 
   it("유형 타일을 누르면 바로 그 유형만 보인다", async () => {
@@ -325,14 +393,14 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(await screen.findByText(/찾을 수 없/)).toBeInTheDocument();
   });
 
-  it("방문자에게 오퍼 상자는 로그인으로 안내한다 (돌아올 주소 포함)", async () => {
+  it("방문자에게 견적 요청 상자는 로그인으로 안내한다 (돌아올 주소 포함)", async () => {
     mockVenues();
     renderAt("/venues/3");
-    const box = await screen.findByRole("complementary", { name: "오퍼 보내기" });
+    const box = await screen.findByRole("complementary", { name: "견적 요청하기" });
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
   });
 
-  it("사용자는 공연장 단계가 열린 내 공연만 고르고, 오퍼 창을 열고 Esc 로 닫는다", async () => {
+  it("사용자는 공연장 단계가 열린 내 공연만 고르고, 견적 요청 창을 열고 Esc 로 닫는다", async () => {
     const perf = (id: number, title: string, status: string) => ({
       id, title, form: "BAND", status: "PUBLISHED", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00", showEnd: "21:00:00",
       audience: 80, sido: "광주", sigungu: "동구", currentVersion: 1, nextAction: "WAIT_QUOTES", nextStageId: 1,
@@ -345,8 +413,8 @@ describe("공간 상세 (/venues/:id)", () => {
     renderAt("/venues/3");
     const select = await screen.findByLabelText("내 공연");
     expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual(["가을밤 밴드 공연 · 공연장 단계"]);
-    await userEvent.click(screen.getByRole("button", { name: "오퍼 보내기" }));
-    expect(screen.getByRole("dialog", { name: "오퍼 보내기" })).toHaveTextContent("업체 C에 오퍼를 보낼까요?");
+    await userEvent.click(screen.getByRole("button", { name: "견적 요청하기" }));
+    expect(screen.getByRole("dialog", { name: "견적 요청하기" })).toHaveTextContent("업체 C에 견적을 요청할까요?");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -405,7 +473,7 @@ describe("다음 단계로 (/performances/:id/next)", () => {
   });
 });
 
-describe("기술 확인 (/supplier/tech/:performanceId)", () => {
+describe("현장 준비 확인 (/supplier/tech/:performanceId)", () => {
   const SUP = { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" };
   const row = (id: number, item: string, mine: boolean, answer: string, memo: string | null) => ({
     id, item, detail: null, ownerSupplierId: mine ? 7 : 3, ownerLabel: mine ? "업체 D" : "업체 C (공간)", mine, answer, memo, answeredAt: null,
@@ -421,11 +489,12 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
   it("AC-F3-25 내 항목에만 답할 수 있고, 남의 항목은 그 업체만 답한다고 보인다", async () => {
     const calls = mockServer({
       "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
       "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
       "PUT /api/v1/tech-checks/4": { status: 200, body: {} },
     });
     renderAt("/supplier/tech/5");
-    expect(await screen.findByRole("heading", { level: 1, name: "기술 확인" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "현장 준비 확인" })).toBeInTheDocument();
     expect(screen.getByText("업체 C만 답할 수 있어요")).toBeInTheDocument();
     expect(screen.queryByLabelText("음량 제한 시각 답변")).not.toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("FOH 믹서 자리 답변"), "객석 맨 뒤 중앙");
@@ -441,11 +510,12 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
   it("요약 칸은 전체·답변 완료·내가 답할 항목 수, 항목 추가는 담당 업체를 골라 보낸다", async () => {
     const calls = mockServer({
       "GET /api/v1/me": { status: 200, body: SUP },
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { version: "1.0:1.0", reviewed: true } },
       "GET /api/v1/performances/5/tech-checks": { status: 200, body: LIST },
       "POST /api/v1/performances/5/tech-checks": { status: 201, body: {} },
     });
     renderAt("/supplier/tech/5");
-    await screen.findByRole("heading", { level: 1, name: "기술 확인" });
+    await screen.findByRole("heading", { level: 1, name: "현장 준비 확인" });
     const nums = [...document.querySelectorAll(".summary b")].map((b) => b.textContent);
     expect(nums).toEqual(["4개", "2개", "1개"]);
     await userEvent.click(screen.getByRole("button", { name: "항목 추가" }));
@@ -462,4 +532,8 @@ describe("기술 확인 (/supplier/tech/:performanceId)", () => {
     renderAt("/supplier/tech/9");
     expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();
   });
+});
+
+it("지역은 전체 → 서울 → 시·도 표준 순서, 17개 모두 (11/19 피드백)", () => {
+  expect(REGIONS.map((r) => r.label)).toEqual(["전체", "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"]);
 });

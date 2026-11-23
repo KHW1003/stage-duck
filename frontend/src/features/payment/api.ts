@@ -1,7 +1,7 @@
 /** 통합 청구서·테스트 결제 API (#50·#51). 서버 데이터는 TanStack Query 로만 다룬다 (CLAUDE.md 6.2). */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../../shared/api/client";
-import type { CancelQuote, Order, PaymentResult, Sheet } from "../../shared/api/types";
+import type { CancelQuote, Order, PaymentResult, Sheet, StageType } from "../../shared/api/types";
 
 /** 지금 취소하면 내는 금액 미리보기 (#52) */
 export function useCancelQuote(performanceId: number) {
@@ -11,11 +11,37 @@ export function useCancelQuote(performanceId: number) {
   });
 }
 
+type CancelConfirmation = Pick<CancelQuote, "phase" | "ratePercent" | "paid" | "penaltyTotal" | "feeRefunded" | "refundTotal">;
+
 export function useCancel(performanceId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => api<CancelQuote>(`/performances/${performanceId}/cancel`, { method: "POST" }),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["performances", performanceId] }),
+    mutationFn: (confirmation: CancelConfirmation) => api<CancelQuote>(`/performances/${performanceId}/cancel`, {
+      method: "POST",
+      body: JSON.stringify(confirmation),
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["performances", performanceId] }),
+  });
+}
+
+export interface SupplierReservation {
+  performanceId: number;
+  title: string;
+  showDate: string;
+  showStart: string;
+  showEnd: string;
+  sido: string;
+  sigungu: string;
+  status: "ASSIGNING" | "AWAITING_PAYMENT" | "PAID" | "COMPLETED" | "NEEDS_REVIEW" | "CANCELLED";
+  stageTypes: StageType[];
+  amount: number;
+}
+
+export function useSupplierReservations(supplierUserId: number | undefined) {
+  return useQuery({
+    queryKey: ["supplier", supplierUserId, "reservations"],
+    enabled: supplierUserId !== undefined,
+    queryFn: () => api<SupplierReservation[]>("/supplier/reservations"),
   });
 }
 

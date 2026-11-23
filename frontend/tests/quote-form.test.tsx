@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
@@ -29,19 +29,17 @@ const EQUIPMENT_POSTING: PostingDetail = {
 
 const VENUE_POSTING: PostingDetail = { ...EQUIPMENT_POSTING, stageId: 1, stageType: "VENUE" };
 
-const APPLICATION = { companyName: "업체 C", categories: ["VENUE"] };
+/** GET /supplier/venues (VenueOut 배열). 서버가 내 공간만 준다. 관리자가 숨긴 공간(HIDDEN)도 들어 있다 */
 const VENUE_ROW = {
-  sido: "광주광역시", sigungu: "동구", venueType: "CULTURE_SPACE", maxCapacity: 120, rentalFee: 500000,
-  hasResidentEngineer: false, bandAllowed: true, checkinTime: "15:00", externalEquipmentAllowed: true,
-  externalEngineerAllowed: true, hasWaitingRoom: null, hasParking: null,
+  sido: "광주광역시", sigungu: "동구", address: "가상로 1", venueType: "CULTURE_SPACE", maxCapacity: 120,
+  checkinTime: "15:00", checkoutTime: "23:00", rentalFee: 500000, hasResidentEngineer: false, bandAllowed: true,
+  externalEquipmentAllowed: true, externalEngineerAllowed: true, hasWaitingRoom: null, hasStagePlatform: null,
+  hasParking: null, hallRegistered: null, equipment: [],
 };
-const VENUES = {
-  items: [
-    { ...VENUE_ROW, id: 3, name: "공간 C", companyName: "업체 C" },
-    { ...VENUE_ROW, id: 1, name: "공간 A", companyName: "업체 A" },
-  ],
-  page: 1, size: 50, total: 2,
-};
+const MY_VENUES = [
+  { ...VENUE_ROW, id: 3, name: "공간 C", status: "ACTIVE" },
+  { ...VENUE_ROW, id: 4, name: "공간 D", status: "HIDDEN" },
+];
 
 type Reply = { status: number; body?: unknown };
 type Call = { key: string; body: unknown };
@@ -83,13 +81,16 @@ function renderAt(path: string) {
   );
 }
 
-const ME = { "GET /api/v1/me": { status: 200, body: SUPPLIER } };
+const REVIEW = { version: "1.0:1.0", reviewed: true };
+const ME = {
+  "GET /api/v1/me": { status: 200, body: SUPPLIER },
+  "GET /api/v1/supplier/terms-review": { status: 200, body: REVIEW },
+};
 const EQUIP = { ...ME, "GET /api/v1/postings/2": { status: 200, body: EQUIPMENT_POSTING } };
 const VENUE = {
   ...ME,
   "GET /api/v1/postings/1": { status: 200, body: VENUE_POSTING },
-  "GET /api/v1/supplier/application": { status: 200, body: APPLICATION },
-  "GET /api/v1/venues?size=50": { status: 200, body: VENUES },
+  "GET /api/v1/supplier/venues": { status: 200, body: MY_VENUES },
 };
 const SENT = { quoteId: 77, version: 1, chatRoomId: 31, checks: [] };
 
@@ -120,6 +121,45 @@ afterEach(() => {
 });
 
 describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
+  it("약관 전문을 차례로 확인하기 전에는 견적을 보내지 않는다", async () => {
+    let reachEnd = () => {};
+    vi.stubGlobal("IntersectionObserver", class {
+      constructor(callback: IntersectionObserverCallback) {
+        reachEnd = () => callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+      observe() {}
+      disconnect() {}
+    });
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer({
+      ...EQUIP,
+      "GET /api/v1/supplier/terms-review": { status: 200, body: { ...REVIEW, reviewed: false } },
+      "PUT /api/v1/supplier/terms-review": { status: 200, body: REVIEW },
+      "POST /api/v1/stages/2/quotes": { status: 201, body: SENT },
+    });
+    renderAt("/supplier/postings/2/quote");
+    await fillExample(user);
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "본문 닫기" }));
+    expect(screen.getByLabelText(/견적서 이름/)).toHaveValue("기본형");
+    expect(calls.filter(({ key }) => /^(PUT|POST)/.test(key))).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    for (const title of ["입점·견적·이행 및 정산", "업체 취소 및 이용 규칙", "개인정보 처리방침"]) {
+      const dialog = within(screen.getByRole("dialog", { name: title }));
+      const next = dialog.getByRole("button", {
+        name: title === "개인정보 처리방침" ? "확인하고 견적 보내기" : "확인하고 다음",
+      });
+      expect(next).toBeDisabled();
+      act(() => reachEnd());
+      await user.click(next);
+    }
+    expect(await screen.findByRole("heading", { name: "견적서를 보냈어요" })).toBeInTheDocument();
+    expect(calls.filter(({ key }) => /^(PUT|POST)/.test(key)).map(({ key }) => key)).toEqual([
+      "PUT /api/v1/supplier/terms-review", "POST /api/v1/stages/2/quotes",
+    ]);
+  });
+
   it("AC-F2-15 예시 값으로 보내면 본문이 계약서 모양(camelCase, 정수 금액)이고, 완료 안내와 [채팅방으로]·[공고 목록으로]가 보인다", async () => {
     const user = userEvent.setup({ delay: null });
     const calls = mockServer({ ...EQUIP, "POST /api/v1/stages/2/quotes": { status: 201, body: SENT } });
@@ -261,9 +301,13 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     expect(await screen.findAllByText("공연장 견적서에는 꼭 입력해 주세요.")).toHaveLength(3);
     expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
 
-    // 내 공간만 보인다 (다른 업체 공간 A 는 없다)
+    // GET /supplier/venues 가 준 내 공간만 보인다 (다른 업체 공간 A 는 없고, 숨긴 공간 D 도 뺀다)
+    expect(calls.some((c) => c.key === "GET /api/v1/supplier/venues")).toBe(true);
+    expect(calls.some((c) => c.key.startsWith("GET /api/v1/venues"))).toBe(false);
     await user.click(venue);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([expect.stringContaining("공간 C")]);
     expect(screen.queryByRole("option", { name: /공간 A/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /공간 D/ })).not.toBeInTheDocument();
     await user.click(await screen.findByRole("option", { name: /공간 C/ }));
     await typeIn(user, /^입실 시각/, "15:00");
     await typeIn(user, /^설치 가능 시각/, "15:30");
@@ -272,6 +316,13 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });
     const body = calls.find((c) => c.key === "POST /api/v1/stages/1/quotes")?.body as Record<string, unknown>;
     expect(body).toMatchObject({ venueId: 3, checkinTime: "15:00", setupAvailableTime: "15:30", totalAmount: 500000 });
+  });
+
+  it("AC-F2-18 등록한 공간이 없으면 공간을 먼저 등록하라고 안내한다", async () => {
+    mockServer({ ...VENUE, "GET /api/v1/supplier/venues": { status: 200, body: [] } });
+    renderAt("/supplier/postings/1/quote");
+
+    expect(await screen.findByText("먼저 공간을 등록해 주세요.")).toBeInTheDocument();
   });
 
   it("AC-F2-18 공연장 단계가 아니면 공간·입실·설치 가능 시각 칸이 없다", async () => {

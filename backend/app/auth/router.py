@@ -10,6 +10,8 @@ from app.auth import calc, reset, service, social
 from app.auth.deps import current_user, unauthenticated
 from app.auth.schemas import (
     AuthOut,
+    AvailabilityIn,
+    AvailabilityOut,
     LoginIn,
     MeOut,
     PasswordResetConfirmIn,
@@ -51,6 +53,13 @@ def get_now() -> datetime:
 
 def _auth_out(db: Session, user: User) -> AuthOut:
     return AuthOut(id=user.id, role=user.role, nickname=user.nickname, landing=service.landing(db, user))
+
+
+@router.post("/check-available", response_model=AvailabilityOut)
+def check_available(body: AvailabilityIn, db: Session = Depends(get_db)) -> AvailabilityOut:
+    """가입 화면 [중복 확인] — 누르는 즉시 이메일·닉네임을 쓸 수 있는지 알려 준다."""
+    available, message = service.check_available(db, body.field, body.value)
+    return AvailabilityOut(available=available, message=message)
 
 
 @router.post("/signup", response_model=AuthOut, status_code=status.HTTP_201_CREATED)

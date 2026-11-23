@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { Me } from "../src/shared/api/types";
+import { pickDate } from "./pickDate";
 
 /** 요청서 STEP1·STEP2·게시 화면 (/performances/new, #36) — AC-F2-04, AC-F2-08, AC-F2-09, AC-F2-10 */
 
@@ -66,7 +67,7 @@ const setValue = (el: HTMLElement, value: string) => fireEvent.change(el, { targ
 async function fillStep1(user: ReturnType<typeof userEvent.setup>, audience = "80") {
   await user.type(await screen.findByLabelText(/^공연명/), "가을밤 밴드 공연");
   await user.click(screen.getByRole("radio", { name: "밴드" }));
-  setValue(screen.getByLabelText(/^공연 날짜/), "2026-11-28");
+  pickDate(screen.getByLabelText(/^공연 날짜/), "2026-11-28");
   setValue(screen.getByLabelText(/^리허설 시작/), "17:00");
   setValue(screen.getByLabelText(/^공연 시작/), "19:00");
   setValue(screen.getByLabelText(/^공연 종료/), "21:00");

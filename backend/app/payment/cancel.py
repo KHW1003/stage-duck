@@ -11,13 +11,15 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import invalid_state, not_found
 from app.models.payment import Cancellation, LedgerEntry, Order
-from app.models.request import Performance
+from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
 from app.payment import calc
 from app.payment.service import _move_order, supplier_names
 from app.policy import service as policy_service
 from app.request import rejection
+from app.request import service as request_service
 
 PAID_STATUSES = ("PAID",)  # 정산 예정(공연 끝) 뒤에는 취소하지 않는다
 CANCELABLE_PERF = ("PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT", "CONFIRMED")
@@ -64,7 +66,7 @@ def cancel_quote(db: Session, user: User, performance_id: int, *, now: datetime)
     try:
         phase = _user_phase(perf, order, now)
     except ValueError:
-        raise invalid_state("공연 날짜가 지나서 취소할 수 없어요.") from None
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
     return _quote(db, perf, order, phase)
 
 
@@ -94,23 +96,43 @@ def _user_cancelled(db: Session, performance_id: int) -> bool:
     return db.scalar(stmt.limit(1)) is not None
 
 
-def cancel_by_user(db: Session, user: User, performance_id: int, *, now: datetime) -> tuple[Cancellation, CancelQuote]:
+def cancel_by_user(
+    db: Session, user: User, performance_id: int, *, now: datetime, expected: dict[str, int | str] | None = None,
+) -> tuple[Cancellation, CancelQuote]:
     """AC-F5-08·09: 사용자 취소. 결제 전이면 0원 + (견적서를 받은 공연이면) 반려 기록 (D-53·D-57),
     결제 후면 시점별 위약금을 업체 금액 비율로 나누고 나머지를 환불 예정으로 장부에 남긴다."""
     perf = _owned(db, user, performance_id, lock=True)
     if perf.status not in CANCELABLE_PERF or _user_cancelled(db, perf.id):
-        raise invalid_state("지금 상태에서는 취소할 수 없어요. 공연 상태를 다시 확인해 주세요.")
+        raise invalid_state("지금 상태에서는 취소할 수 없습니다. 공연 상태를 다시 확인해 주십시오.")
     order = _live_order(db, perf.id, lock=True)
     try:
         phase = _user_phase(perf, order, now)
     except ValueError:
-        raise invalid_state("공연 날짜가 지나서 취소할 수 없어요.") from None
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
     q = _quote(db, perf, order, phase)
+    if expected is not None and any(getattr(q.amounts, field) != value for field, value in expected.items()):
+        raise invalid_state("취소 금액이 변경되었습니다. 새 위약금과 환불 예정액을 확인해 주십시오.")
     if phase == "BEFORE_PAYMENT":
         rejection.record_rejection(db, perf.id, now=now)
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id)
+    request_service.performance_cancelled(db, perf.id, actor_id=user.id)  # 공연도 취소로 (2번 약속)
+    _notify_user_cancel(db, perf, q)
     db.commit()
     return c, q
+
+
+def _notify_user_cancel(db: Session, perf: Performance, q: "CancelQuote") -> None:
+    """#45 확정 업체 모두에게 CANCELLED_BY_USER. 위약금은 그 업체 몫만 (0원 구간이면 "위약금은 없어요", D-57)."""
+    penalty: dict[int, int] = {}
+    for sid, _, share in q.by_supplier:  # 한 업체가 여러 단계를 맡았으면 합친다
+        penalty[sid] = penalty.get(sid, 0) + share
+    for supplier_id, user_id in db.execute(select(Supplier.id, Supplier.user_id).where(Supplier.id.in_(penalty))).all():
+        share = penalty[supplier_id]
+        notification.notify(
+            db, user_id, "CANCELLED_BY_USER", link="/supplier/reservations",
+            params={"title": perf.title, "penalty": f"위약금 {notification.won(share)}원 정산 예정" if share else "위약금은 없습니다"},
+            payload={"performanceId": perf.id},
+        )
 
 
 def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: str, now: datetime) -> tuple[Cancellation, CancelQuote]:
@@ -122,9 +144,16 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     if perf is None or supplier is None or order is None or supplier.id not in {ln.supplier_id for ln in order.lines}:
         raise not_found()
     if order.status not in PAID_STATUSES:
-        raise invalid_state("결제가 끝난 공연만 업체 사정으로 취소할 수 있어요.")
+        raise invalid_state("결제가 완료된 공연만 업체 사정으로 취소할 수 있습니다.")
     q = _quote(db, perf, order, "SUPPLIER_FAULT")
     policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
     c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
+    # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
+    stage_types = sorted({db.get(Stage, ln.stage_id).stage_type for ln in order.lines if ln.supplier_id == supplier.id})
+    notification.notify(
+        db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types)},
+        payload={"performanceId": perf.id},
+    )
     db.commit()
     return c, q

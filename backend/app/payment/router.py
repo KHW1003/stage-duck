@@ -1,5 +1,5 @@
 """통합 청구서 API (api-contract.md 6.1, T4-05 #50, AC-F5-03·04). 사용자 본인 공연만."""
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Response, status
@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import not_found
 from app.models.user import User
-from app.payment import cancel, service, sheet
+from app.payment import cancel, reservations, service, sheet
 from app.request.router import require_idempotency_key
 
 router = APIRouter(prefix="/performances", tags=["payment"])
@@ -49,6 +49,7 @@ class OrderOut(BaseModel):
     total_amount: int
     issued_at: datetime
     paid_at: datetime | None
+    payment_deadline: datetime | None = None  # D-57 결제 마감 (결제 전만)
     lines: list[OrderLineOut]
 
 
@@ -59,6 +60,7 @@ def _out(db: Session, user: User, performance_id: int) -> OrderOut:
     return OrderOut(
         id=order.id, performance_id=order.performance_id, status=order.status, items_total=order.items_total,
         platform_fee=order.platform_fee, total_amount=order.total_amount, issued_at=order.issued_at, paid_at=order.paid_at,
+        payment_deadline=service.payment_deadline(db, order.performance_id) if order.status == "ISSUED" else None,
         lines=[OrderLineOut(stage_id=line.stage_id, stage_type=stage_types[line.stage_id], supplier_id=line.supplier_id,
                             company_name=names.get(line.supplier_id, ""),
                             quote_version_id=line.quote_version_id, amount=line.amount,
@@ -118,6 +120,17 @@ def _cancel_out(q: cancel.CancelQuote, cancellation_id: int | None = None) -> Ca
     )
 
 
+class UserCancelIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+
+    phase: str
+    rate_percent: int = Field(ge=0, le=100)
+    paid: int = Field(ge=0)
+    penalty_total: int = Field(ge=0)
+    fee_refunded: int = Field(ge=0)
+    refund_total: int = Field(ge=0)
+
+
 class SupplierCancelIn(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel, str_strip_whitespace=True)
 
@@ -135,11 +148,12 @@ def get_cancel_quote(
 
 @router.post("/{performance_id}/cancel", response_model=CancelQuoteOut)
 def cancel_performance(
-    performance_id: int, user: User = Depends(require_role("USER")), db: Session = Depends(get_db),
-    now: datetime = Depends(get_now),
+    performance_id: int, body: UserCancelIn | None = None, user: User = Depends(require_role("USER")),
+    db: Session = Depends(get_db), now: datetime = Depends(get_now),
 ) -> CancelQuoteOut:
-    """AC-F5-08·09: 사용자 취소 (테스트 결제 — 실제 환불되지 않습니다)."""
-    c, q = cancel.cancel_by_user(db, user, performance_id, now=now)
+    """모의 취소. 확인받은 금액을 보냈다면 접수 직전 계산값과 비교한다."""
+    expected = body.model_dump() if body is not None else None
+    c, q = cancel.cancel_by_user(db, user, performance_id, now=now, expected=expected)
     return _cancel_out(q, c.id)
 
 
@@ -218,6 +232,28 @@ def get_sheet(
 
 # ---- 테스트 결제 (T4-06 #51, AC-F5-05·06) ----
 payment_router = APIRouter(tags=["payment"])
+
+
+class SupplierReservationOut(BaseModel):
+    model_config = _OUT
+
+    performance_id: int
+    title: str
+    show_date: date
+    show_start: time
+    show_end: time
+    sido: str
+    sigungu: str
+    status: str
+    stage_types: list[str]
+    amount: int
+
+
+@payment_router.get("/supplier/reservations", response_model=list[SupplierReservationOut])
+def list_supplier_reservations(
+    user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db),
+) -> list[reservations.Reservation]:
+    return reservations.list_reservations(db, user)
 
 
 class PaymentIn(BaseModel):

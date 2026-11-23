@@ -10,6 +10,7 @@ from app.core.history import record_transition
 from app.models.board import PrPost
 from app.models.policy import REPORT_TARGET_TYPES, WARNINGS_BEFORE_SUSPENSION, Report, Sanction
 from app.models.user import User
+from app.notification import service as notification
 from app.supplier.service import _require_reason
 
 
@@ -33,11 +34,15 @@ def _warn(db: Session, user_id: int, *, actor_id: int | None, reason: str | None
 
     user.warning_count += 1
     db.add(Sanction(user_id=user.id, type="WARNING", reason=reason, report_id=report_id, created_by=actor_id))
+    # #45 운영 알림은 정지된 계정에도 간다 (notifications.md 1장 규칙 5). 3회째면 정지 알림까지 두 개
+    notification.notify(db, user.id, "WARNING_ISSUED", link="/inquiries/new",
+                        params={"count": min(user.warning_count, WARNINGS_BEFORE_SUSPENSION), "reason": reason})
 
     if user.warning_count >= WARNINGS_BEFORE_SUSPENSION:
         user.status = "SUSPENDED"
         auto_reason = f"경고 {user.warning_count}회 누적"
         db.add(Sanction(user_id=user.id, type="SUSPENSION", reason=auto_reason, report_id=report_id, created_by=actor_id))
+        notification.notify(db, user.id, "ACCOUNT_SUSPENDED", link="/inquiries/new")
         record_transition(
             db,
             entity_type="user",
@@ -140,6 +145,8 @@ def blind_post(db: Session, post_id: int, *, actor_id: int, reason: str | None) 
     record_transition(db, entity_type="pr_post", entity_id=post.id, from_status="ACTIVE", to_status="BLINDED",
                       actor_user_id=actor_id, reason=reason)
     post.status, post.blind_reason = "BLINDED", reason
+    notification.notify(db, post.supplier.user_id, "POST_BLINDED", link=f"/board/{post.id}",
+                        params={"board": "업체 찾기", "reason": reason}, payload={"postId": post.id})
     _warn(db, post.supplier.user_id, actor_id=actor_id, reason=f"업체 찾기 소개 글 블라인드: {reason}", report_id=None)
     db.commit()
 

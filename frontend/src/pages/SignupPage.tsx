@@ -9,15 +9,19 @@
 import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSignup, type SignupRequest } from "../features/auth/api";
+import { emailError, nicknameError, passwordError, phoneError } from "../features/auth/rules";
+import { useDupCheck, type DupField } from "../features/auth/useDupCheck";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import { KitPageTop } from "../shared/layout/KitPageTop";
+import { DateField, yearsFromNow } from "../shared/ui/DateField";
 import { DoneView } from "../shared/ui/DoneView";
 import { Ico } from "../shared/ui/Ico";
+import { TermsModal } from "../features/support/TermsModal";
+import type { TermsType } from "../features/support/terms";
 import "./signup.css";
 
 const PURPOSES = ["밴드 공연", "연극·뮤지컬", "강연·행사", "종교 행사", "기타"];
-const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/;
 
 type Form = { name: string; nickname: string; email: string; password: string; password2: string; phone: string; birthDate: string; purpose: string };
 type Field = keyof Form;
@@ -34,13 +38,14 @@ export function ageOn(birth: string, today = new Date()): number {
 export function localErrors(f: Form, today = new Date()): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
   if (!f.name.trim()) e.name = "이름을 적어 주세요.";
-  if (!f.nickname.trim()) e.nickname = "닉네임을 적어 주세요.";
-  if (!f.email.trim()) e.email = "이메일을 적어 주세요.";
-  if (!PASSWORD_RE.test(f.password)) e.password = "8자 이상, 영문과 숫자를 함께 써 주세요.";
+  e.nickname = nicknameError(f.nickname);
+  e.email = emailError(f.email);
+  e.password = passwordError(f.password);
   if (f.password2 !== f.password) e.password2 = "비밀번호가 서로 달라요.";
-  if (!/^\d{9,11}$/.test(f.phone.replace(/-/g, ""))) e.phone = "전화번호는 숫자 9~11자리로 적어 주세요.";
+  e.phone = phoneError(f.phone);
   if (!f.birthDate) e.birthDate = "생년월일을 적어 주세요.";
   else if (ageOn(f.birthDate, today) < 14) e.birthDate = "만 14세 이상만 가입할 수 있어요.";
+  for (const k of Object.keys(e) as Field[]) if (!e[k]) delete e[k];
   return e;
 }
 
@@ -75,7 +80,9 @@ export function SignupPage() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [tried, setTried] = useState(false);
   const [terms, setTerms] = useState({ service: false, privacy: false, marketing: false });
-  const [nickNote, setNickNote] = useState(false);
+  const dupCheck = useDupCheck();
+  /** 약관 [보기]: 화면을 옮기지 않고 모달로 (옮기면 입력이 지워진다) */
+  const [reading, setReading] = useState<{ type: TermsType; label: string; key: "service" | "privacy" | "marketing" } | null>(null);
   const [done, setDone] = useState<{ nickname: string; email: string } | null>(null);
 
   const set = (k: Field) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -85,7 +92,19 @@ export function SignupPage() {
     if (signup.error instanceof ApiError) for (const fe of signup.error.body.fieldErrors) out[SERVER_FIELD[fe.field] ?? "name"] = fe.reason;
     return out;
   }, [signup.error]);
-  const err = (k: Field) => local[k] ?? server[k];
+  /** [중복 확인] 결과 — 그 뒤로 칸을 고치면 지운다 */
+  const dup = (k: DupField) => dupCheck.result(k, form[k]);
+  const err = (k: Field) => local[k] ?? server[k] ?? (k === "email" || k === "nickname" ? (dup(k)?.ok === false ? dup(k)!.msg : undefined) : undefined);
+  const check = (k: DupField) => dupCheck.check(k, form[k]);
+  const checking = dupCheck.checking;
+  const okHint = (k: DupField, fallback?: ReactNode) =>
+    dup(k)?.ok ? (
+      <span style={{ color: "var(--sd-pass-text)" }}>
+        <Ico name="check" sm /> {dup(k)!.msg}
+      </span>
+    ) : (
+      fallback
+    );
   const all = terms.service && terms.privacy && terms.marketing;
   const required = terms.service && terms.privacy;
   const generalError = signup.error instanceof ApiError && signup.error.body.fieldErrors.length === 0 ? signup.error.body.message : null;
@@ -217,16 +236,21 @@ export function SignupPage() {
               <Row label="이름" error={err("name")}>
                 <input className="input" value={form.name} onChange={set("name")} placeholder="이름" aria-label="이름" aria-invalid={!!err("name")} autoComplete="name" />
               </Row>
-              <Row label="닉네임" error={err("nickname")} hint={nickNote ? "같은 닉네임이 있으면 [가입하기]를 누를 때 알려 드려요." : "업체에게는 닉네임만 보여요."}>
+              <Row label="닉네임" error={err("nickname")} hint={okHint("nickname", "업체에게는 닉네임만 보여요.")}>
                 <span className="form-table__inline">
                   <input className="input signup__short" value={form.nickname} onChange={set("nickname")} aria-label="닉네임" aria-invalid={!!err("nickname")} />
-                  <button className="btn btn--sm" type="button" onClick={() => setNickNote(true)}>
-                    중복 확인
+                  <button className="btn btn--sm" type="button" onClick={() => check("nickname")} disabled={checking === "nickname"} aria-label="닉네임 중복 확인">
+                    {checking === "nickname" ? "확인 중…" : "중복 확인"}
                   </button>
                 </span>
               </Row>
-              <Row label="이메일" error={err("email")}>
-                <input className="input" type="email" value={form.email} onChange={set("email")} aria-label="이메일" aria-invalid={!!err("email")} autoComplete="email" />
+              <Row label="이메일" error={err("email")} hint={okHint("email")}>
+                <span className="form-table__inline">
+                  <input className="input signup__email" type="email" value={form.email} onChange={set("email")} aria-label="이메일" aria-invalid={!!err("email")} autoComplete="email" />
+                  <button className="btn btn--sm" type="button" onClick={() => check("email")} disabled={checking === "email"} aria-label="이메일 중복 확인">
+                    {checking === "email" ? "확인 중…" : "중복 확인"}
+                  </button>
+                </span>
               </Row>
               <Row label="비밀번호" error={err("password")} hint="8자 이상, 영문과 숫자를 함께 써 주세요.">
                 <input className="input" type="password" value={form.password} onChange={set("password")} aria-label="비밀번호" aria-invalid={!!err("password")} autoComplete="new-password" />
@@ -238,7 +262,16 @@ export function SignupPage() {
                 <input className="input" inputMode="tel" value={form.phone} onChange={set("phone")} placeholder="010-0000-0000" aria-label="전화번호" aria-invalid={!!err("phone")} autoComplete="tel" />
               </Row>
               <Row label="생년월일" error={err("birthDate")}>
-                <input className="input signup__date" type="date" value={form.birthDate} onChange={set("birthDate")} aria-label="생년월일" aria-invalid={!!err("birthDate")} />
+                <DateField
+                  value={form.birthDate}
+                  onChange={(v) => setForm((f) => ({ ...f, birthDate: v }))}
+                  min={yearsFromNow(-100)}
+                  max={yearsFromNow(0)}
+                  initialMonth={yearsFromNow(-25)}
+                  placeholder="생년월일을 골라 주세요"
+                  aria-label="생년월일"
+                  aria-invalid={!!err("birthDate")}
+                />
               </Row>
               <Row label="가입 목적" req={false}>
                 <select className="select signup__short" value={form.purpose} onChange={set("purpose")} aria-label="가입 목적">
@@ -270,9 +303,9 @@ export function SignupPage() {
                   <input type="checkbox" checked={terms.service} onChange={(e) => setTerms((t) => ({ ...t, service: e.target.checked }))} />
                   STAGE DUCK 이용약관 (필수)
                 </label>
-                <Link className="link" to="/terms/service">
+                <button className="link" type="button" onClick={() => setReading({ type: "service", label: "STAGE DUCK 이용약관 (필수)", key: "service" })}>
                   보기
-                </Link>
+                </button>
               </div>
               <div className="list__item">
                 <label className="check">
@@ -282,18 +315,18 @@ export function SignupPage() {
                     <small>이름, 전화번호, 이메일, 생년월일, 닉네임. 주소는 받지 않아요.</small>
                   </span>
                 </label>
-                <Link className="link" to="/terms/privacy">
+                <button className="link" type="button" onClick={() => setReading({ type: "privacy", label: "개인정보 수집·이용 (필수)", key: "privacy" })}>
                   보기
-                </Link>
+                </button>
               </div>
               <div className="list__item">
                 <label className="check">
                   <input type="checkbox" checked={terms.marketing} onChange={(e) => setTerms((t) => ({ ...t, marketing: e.target.checked }))} />
                   마케팅 정보 받기 (선택)
                 </label>
-                <Link className="link" to="/terms/service">
+                <button className="link" type="button" onClick={() => setReading({ type: "service", label: "마케팅 정보 받기 (선택)", key: "marketing" })}>
                   보기
-                </Link>
+                </button>
               </div>
             </div>
             {tried && !required && (
@@ -320,6 +353,14 @@ export function SignupPage() {
           </div>
         </form>
       </main>
+      {reading && (
+        <TermsModal
+          type={reading.type}
+          label={reading.label}
+          onClose={() => setReading(null)}
+          onAgree={() => setTerms((t) => ({ ...t, [reading.key]: true }))}
+        />
+      )}
     </>
   );
 }

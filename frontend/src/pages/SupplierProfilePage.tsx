@@ -18,6 +18,9 @@ import type { SupplierProfile } from "../shared/api/types";
 import { NotFound } from "../shared/layout/NotFound";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
+import { SupplierReviews } from "../features/review/SupplierReviews";
+import { useReviewSummaries } from "../features/review/api";
+import { RatingBadge } from "../features/review/Stars";
 
 const UNKNOWN = "미확인";
 const unit = (n: number | null, u: string) => (n == null ? UNKNOWN : `${n}${u}`);
@@ -62,6 +65,7 @@ function InfoTable({ s }: { s: SupplierProfile }) {
 export function SupplierProfilePage() {
   const id = Number(useParams().id);
   const profile = useSupplierProfile(id);
+  const rating = useReviewSummaries([id]).get(id);
   usePageMeta(profile.data?.companyName);
 
   if (!Number.isInteger(id) || (profile.error instanceof ApiError && profile.error.status === 404)) return <NotFound />;
@@ -100,6 +104,13 @@ export function SupplierProfilePage() {
               <div className="page-top__meta">
                 <span>{categoriesLabel(s.categories)}</span>
                 <span>{yearMonth(s.joinedAt)} 입점</span>
+                {rating && (
+                  <span>
+                    <a href="#supplier-reviews">
+                      <RatingBadge average={rating.average} count={rating.count} />
+                    </a>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -128,6 +139,7 @@ export function SupplierProfilePage() {
           <InfoTable s={s} />
           <p className="field__hint mt-8">전화번호와 사업자 서류는 공개하지 않아요.</p>
         </section>
+        <SupplierReviews supplierId={s.id} />
         {s.posts.length > 0 && (
           <section className="sec">
             <div className="sec-head">
