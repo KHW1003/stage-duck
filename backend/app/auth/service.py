@@ -6,10 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import calc
-from app.auth.schemas import AgreementsIn, SignupIn, SupplierSignupIn
+from app.auth.schemas import AgreementsIn, SignupIn, SocialCompleteIn, SupplierSignupIn
+from app.auth.social import SocialProfile
 from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import hash_password, verify_password
+from app.models.social import SocialAccount
 from app.models.supplier import Supplier
 from app.models.terms import TermsAgreement
 from app.models.user import User
@@ -79,19 +81,78 @@ def check_available(db: Session, field: str, value: str) -> tuple[bool, str]:
 
 def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
     """AC-F1-01·02·03: 칸 검사 → 만 14세 → 필수 약관 → 중복 → 저장 (약관 4종을 버전·일시와 함께)."""
+    user = _add_user(db, body, password=body.password, social=False, now=now)
+    db.commit()
+    return user
+
+
+def social_user(db: Session, profile: SocialProfile) -> User | None:
+    """AC-F1-04·10: 소셜 연결은 (provider, 고유 식별값)으로만 찾는다. 같은 이메일 계정이 있어도 합치지 않는다.
+
+    연결이 없으면 None (→ 추가 정보 화면). 탈퇴 계정은 이메일 로그인과 같은 401, 정지 계정은 403.
+    연결이 없는데 같은 이메일로 가입한 계정이 있으면 EMAIL_TAKEN — 콜백은 /login?social=failed 로 보낸다 (계약서 2.1).
+    """
+    user = db.scalar(
+        select(User)
+        .join(SocialAccount, SocialAccount.user_id == User.id)
+        .where(SocialAccount.provider == profile.provider, SocialAccount.provider_user_id == profile.provider_user_id)
+    )
+    if user is None:
+        if profile.email and db.scalar(select(User.id).where(User.email == normalize_email(profile.email))) is not None:
+            raise _email_taken()
+        return None
+    if user.status == "WITHDRAWN":
+        raise _bad_login()
+    if user.status == "SUSPENDED":
+        raise _suspended()
+    return user
+
+
+def social_complete(db: Session, profile: SocialProfile, body: SocialCompleteIn, *, now: datetime) -> User:
+    """AC-F1-05·06·07·10: 추가 정보(화면에서 고친 값) + 우리 약관 동의 → 사용자 가입 + 소셜 연결.
+
+    비밀번호는 받지 않는다(FR-AUTH-04). 업체는 소셜로 가입하지 않으므로 역할은 언제나 USER (Q-37).
+    같은 이메일 계정이 있으면 EMAIL_TAKEN — 기존 계정에 붙이지 않는다 (AC-F1-10).
+    """
+    linked = select(SocialAccount.id).where(
+        SocialAccount.provider == profile.provider, SocialAccount.provider_user_id == profile.provider_user_id
+    )
+    if db.scalar(linked) is not None:
+        raise _already_linked()
+    user = _add_user(db, body, password=None, social=True, now=now)
+    db.add(
+        SocialAccount(
+            user_id=user.id, provider=profile.provider, provider_user_id=profile.provider_user_id, connected_at=now
+        )
+    )
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()  # 같은 소셜 계정으로 두 번 동시에 완료한 경우 — UNIQUE(provider, provider_user_id)
+        raise _already_linked() from None
+    db.commit()
+    return user
+
+
+def _already_linked() -> AppError:
+    return AppError(409, "SOCIAL_ALREADY_LINKED", "이미 가입된 소셜 계정이에요. 다시 로그인해 주세요.")
+
+
+def _add_user(db: Session, body: SocialCompleteIn, *, password: str | None, social: bool, now: datetime) -> User:
+    """이메일 가입·소셜 가입이 같이 쓰는 칸 검사·저장 (커밋하지 않는다). 소셜 가입은 비밀번호 없이 저장한다."""
     data = calc.SignupInput(
         name=body.name,
         phone=body.phone,
         email=body.email,
         birth_date=body.birth_date,
         nickname=body.nickname,
-        password=body.password,
+        password=password,
         signup_purpose=body.signup_purpose,
         musician_type=body.musician_type,
         signup_channel=body.signup_channel,
     )
     today: date = now.date()
-    errors = calc.signup_field_errors(data, today)
+    errors = calc.signup_field_errors(data, today, password_required=not social)
     if errors:
         raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", errors)
     if calc.is_under_age(body.birth_date, today):
@@ -110,7 +171,7 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
     user = User(
         role="USER",
         email=email,
-        password_hash=hash_password(body.password),
+        password_hash=None if social else hash_password(password),
         name=body.name.strip(),
         phone=body.phone.strip(),
         birth_date=body.birth_date,
@@ -130,7 +191,6 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
         raise _nickname_taken() from None
 
     _save_terms(db, user.id, body.agreements, now)
-    db.commit()
     return user
 
 

@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     scheduler_enabled: bool = True  # 1분마다 결제 마감 처리 (app/core/scheduler.py). 테스트에서는 끈다
     upload_dir: str = "uploads"  # 업로드 파일 저장 폴더 (uploads.md, Docker 에서는 /uploads 볼륨)
 
+    # 소셜 로그인 (FR-AUTH-02·03, plan.md 4장). 키 값은 backend/.env 에만 둔다
+    naver_client_id: str = ""
+    naver_client_secret: str = ""
+    kakao_login_enabled: bool = False  # 기본 꺼짐. 꺼져 있으면 /auth/kakao/* 가 404 (CLAUDE.md 28)
+    kakao_client_id: str = ""  # 카카오 REST API 키
+
     # 검색·공유 노출 (specs/seo.md 8장)
     frontend_dist: str = "../frontend/dist"  # 빌드된 화면 폴더 (Docker 에서는 /app/frontend/dist)
     public_base_url: str = "http://localhost:8000"  # canonical·og:url·sitemap 절대 주소
