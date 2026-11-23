@@ -22,6 +22,8 @@ interface Props {
   onPin: (roomId: number, pin: boolean) => void;
   onRead: (roomId: number, lastMessageId: number) => void;
   onClose: () => void;
+  /** 목록을 불러오지 못했을 때 (빈 목록과 구분해서 알린다) */
+  loadError?: boolean;
 }
 
 function Hit({ text, q }: { text: string; q: string }) {
@@ -45,7 +47,7 @@ const NOTE = {
   SUPPLIER: "공고에 견적서를 보내면 그 사용자와의 대화가 여기에 생겨요.",
 };
 
-export function ChatList({ rooms, role, filter, onFilter, searching, onSearching, onOpen, onPin, onRead, onClose }: Props) {
+export function ChatList({ rooms, role, filter, onFilter, searching, onSearching, onOpen, onPin, onRead, onClose, loadError }: Props) {
   const [menu, setMenu] = useState<{ roomId: number; x: number; y: number } | null>(null);
   const q = searching ? filter.q : "";
   const shown = listRooms(rooms, { ...filter, q });
@@ -60,7 +62,8 @@ export function ChatList({ rooms, role, filter, onFilter, searching, onSearching
 
   let empty: [string, string] | null = null;
   if (shown.length === 0) {
-    if (q.trim()) empty = [`‘${q.trim()}’에 맞는 대화가 없어요`, "이름이나 메시지에 있는 말로 찾아 보세요."];
+    if (loadError) empty = ["대화 목록을 불러오지 못했어요", "인터넷 연결을 확인하고 채팅 창을 다시 열어 주세요."];
+    else if (q.trim()) empty = [`‘${q.trim()}’에 맞는 대화가 없어요`, "이름이나 메시지에 있는 말로 찾아 보세요."];
     else if (filter.unreadOnly) empty = ["안 읽은 대화가 없어요", "새 메시지가 오면 여기에 보여요."];
     else empty = ["채팅이 아직 없어요", role === "USER" ? "앞 단계를 확정하면 다음 단계 업체의 견적서를 받을 수 있어요." : "공고 목록에서 견적서를 보내 보세요."];
   }

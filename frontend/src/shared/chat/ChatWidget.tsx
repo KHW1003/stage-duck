@@ -106,6 +106,7 @@ export function ChatWidget({ me }: { me: Me }) {
           {roomId === null ? (
             <ChatList
               rooms={list}
+              loadError={rooms.isError}
               role={role}
               filter={filter}
               onFilter={setFilter}

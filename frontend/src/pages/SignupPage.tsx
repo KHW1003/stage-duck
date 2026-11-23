@@ -8,7 +8,9 @@
  */
 import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { checkAvailable, useSignup, type SignupRequest } from "../features/auth/api";
+import { useSignup, type SignupRequest } from "../features/auth/api";
+import { emailError, nicknameError, passwordError, phoneError } from "../features/auth/rules";
+import { useDupCheck, type DupField } from "../features/auth/useDupCheck";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import { KitPageTop } from "../shared/layout/KitPageTop";
@@ -18,7 +20,6 @@ import { Ico } from "../shared/ui/Ico";
 import "./signup.css";
 
 const PURPOSES = ["밴드 공연", "연극·뮤지컬", "강연·행사", "종교 행사", "기타"];
-const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/;
 
 type Form = { name: string; nickname: string; email: string; password: string; password2: string; phone: string; birthDate: string; purpose: string };
 type Field = keyof Form;
@@ -35,13 +36,14 @@ export function ageOn(birth: string, today = new Date()): number {
 export function localErrors(f: Form, today = new Date()): Partial<Record<Field, string>> {
   const e: Partial<Record<Field, string>> = {};
   if (!f.name.trim()) e.name = "이름을 적어 주세요.";
-  if (!f.nickname.trim()) e.nickname = "닉네임을 적어 주세요.";
-  if (!f.email.trim()) e.email = "이메일을 적어 주세요.";
-  if (!PASSWORD_RE.test(f.password)) e.password = "8자 이상, 영문과 숫자를 함께 써 주세요.";
+  e.nickname = nicknameError(f.nickname);
+  e.email = emailError(f.email);
+  e.password = passwordError(f.password);
   if (f.password2 !== f.password) e.password2 = "비밀번호가 서로 달라요.";
-  if (!/^\d{9,11}$/.test(f.phone.replace(/-/g, ""))) e.phone = "전화번호는 숫자 9~11자리로 적어 주세요.";
+  e.phone = phoneError(f.phone);
   if (!f.birthDate) e.birthDate = "생년월일을 적어 주세요.";
   else if (ageOn(f.birthDate, today) < 14) e.birthDate = "만 14세 이상만 가입할 수 있어요.";
+  for (const k of Object.keys(e) as Field[]) if (!e[k]) delete e[k];
   return e;
 }
 
@@ -76,9 +78,7 @@ export function SignupPage() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [tried, setTried] = useState(false);
   const [terms, setTerms] = useState({ service: false, privacy: false, marketing: false });
-  type Dup = "email" | "nickname";
-  const [avail, setAvail] = useState<Partial<Record<Dup, { value: string; ok: boolean; msg: string }>>>({});
-  const [checking, setChecking] = useState<Dup | null>(null);
+  const dupCheck = useDupCheck();
   const [done, setDone] = useState<{ nickname: string; email: string } | null>(null);
 
   const set = (k: Field) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -89,22 +89,11 @@ export function SignupPage() {
     return out;
   }, [signup.error]);
   /** [중복 확인] 결과 — 그 뒤로 칸을 고치면 지운다 */
-  const dup = (k: Dup) => (avail[k]?.value === form[k].trim() ? avail[k] : undefined);
+  const dup = (k: DupField) => dupCheck.result(k, form[k]);
   const err = (k: Field) => local[k] ?? server[k] ?? (k === "email" || k === "nickname" ? (dup(k)?.ok === false ? dup(k)!.msg : undefined) : undefined);
-  const check = async (k: Dup) => {
-    const value = form[k].trim();
-    setChecking(k);
-    try {
-      const r = await checkAvailable(k, value);
-      setAvail((a) => ({ ...a, [k]: { value, ok: r.available, msg: r.message } }));
-    } catch (e) {
-      const msg = e instanceof ApiError ? (e.body.fieldErrors[0]?.reason ?? e.body.message) : "확인하지 못했어요. 잠시 뒤 다시 눌러 주세요.";
-      setAvail((a) => ({ ...a, [k]: { value, ok: false, msg } }));
-    } finally {
-      setChecking(null);
-    }
-  };
-  const okHint = (k: Dup, fallback?: ReactNode) =>
+  const check = (k: DupField) => dupCheck.check(k, form[k]);
+  const checking = dupCheck.checking;
+  const okHint = (k: DupField, fallback?: ReactNode) =>
     dup(k)?.ok ? (
       <span style={{ color: "var(--sd-pass-text)" }}>
         <Ico name="check" sm /> {dup(k)!.msg}

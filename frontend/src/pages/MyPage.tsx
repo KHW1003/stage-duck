@@ -3,13 +3,16 @@
  * - "업체에게 이렇게 보여요": GET /me/profile 을 UserProfileCard 로 (업체가 보는 것과 같은 모양)
  * - 프로필: 닉네임·사진. 사진은 고르는 순간 올리고(PROFILE) 저장할 때 번호만 보낸다. 중복 닉네임은 저장할 때 서버가 409
  * - 계정 정보: GET /me (나만 보인다)
- * 목업과 다르게 정한 것: [중복 확인] 없음(저장 때 칸 아래 문구), [비밀번호 바꾸기]·[탈퇴]·마케팅 수신 뺌,
+ * - [중복 확인]: 누르는 즉시 서버에 묻는다(지금 내 닉네임이면 묻지 않음). 저장할 때도 서버가 다시 본다(409)
+ * 목업과 다르게 정한 것: [비밀번호 바꾸기]·[탈퇴]·마케팅 수신 뺌,
  * 생년월일·로그인 방식은 GET /me 에 없어 뺌, 메뉴 옆 숫자는 서버 값이 없어 뺌.
  */
 import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useMyProfile, useUpdateMyProfile, useUploadProfilePhoto } from "../features/profile/api";
 import { initialOf } from "../features/profile/labels";
+import { nicknameError } from "../features/auth/rules";
+import { useDupCheck } from "../features/auth/useDupCheck";
 import "../features/profile/profile.css";
 import { UserProfileCard } from "../features/profile/UserProfileCard";
 import type { MyProfileRequest, UploadedFile } from "../shared/api/types";
@@ -73,13 +76,22 @@ export function MyPage() {
   const [photo, setPhoto] = useState<UploadedFile | null>(null);
 
   const saved = profile.data;
-  const nickError = fieldErrorOf(update.error, "nickname");
+  const dup = useDupCheck();
+  const [tried, setTried] = useState(false);
+  const nickValue = nickname ?? saved?.nickname ?? "";
+  const nickDup = dup.result("nickname", nickValue);
+  const nickError =
+    (tried && nickname !== null ? nicknameError(nickname) : undefined) ??
+    fieldErrorOf(update.error, "nickname") ??
+    (nickDup?.ok === false ? nickDup.msg : undefined);
   const photoUrl = photo?.thumbUrl ?? saved?.profileImageUrl ?? null;
 
   function save() {
     if (!saved) return;
     const body: MyProfileRequest = {};
-    if (nickname !== null && nickname !== saved.nickname) body.nickname = nickname;
+    setTried(true);
+    if (nickname !== null && nicknameError(nickname)) return;
+    if (nickname !== null && nickname.trim() !== saved.nickname) body.nickname = nickname.trim();
     if (photo) body.profileFileId = photo.id;
     if (Object.keys(body).length === 0) return;
     update.mutate(body, {
@@ -133,8 +145,22 @@ export function MyPage() {
                         aria-invalid={nickError ? true : undefined}
                         onChange={(e) => setNickname(e.target.value)}
                       />
+                      <button
+                        className="btn btn--sm"
+                        type="button"
+                        disabled={dup.checking === "nickname" || !saved}
+                        onClick={() => dup.check("nickname", nickValue, saved?.nickname ?? undefined)}
+                        aria-label="닉네임 중복 확인"
+                      >
+                        {dup.checking === "nickname" ? "확인 중…" : "중복 확인"}
+                      </button>
                     </span>
                     <FieldError text={nickError} />
+                    {!nickError && nickDup?.ok && (
+                      <p className="field__hint" style={{ color: "var(--sd-pass-text)" }}>
+                        <Ico name="check" sm /> {nickDup.msg}
+                      </p>
+                    )}
                   </span>
                 </div>
                 <div>
