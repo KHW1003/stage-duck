@@ -89,6 +89,14 @@ describe("내 예약 — 업체 사정 취소", () => {
     expect(within(screen.getByRole("dialog")).getByText(/전액 환불됩니다/)).toBeInTheDocument();
   });
 
+  it("최종 담당표는 결제 뒤에만 — 결제 전 예약에는 [담당표 보기]가 없다", async () => {
+    mockServer("AWAITING_PAYMENT");
+    renderAt("/supplier/reservations");
+
+    expect(await screen.findByRole("button", { name: "업체 사정 취소" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "담당표 보기" })).not.toBeInTheDocument();
+  });
+
   it("공연이 끝났거나 취소된 예약에는 버튼이 없다", async () => {
     mockServer("COMPLETED");
     renderAt("/supplier/reservations");

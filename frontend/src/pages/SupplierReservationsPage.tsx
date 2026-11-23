@@ -20,6 +20,8 @@ const STATUS: Record<SupplierReservation["status"], string> = {
 };
 
 const CANCELABLE: SupplierReservation["status"][] = ["ASSIGNING", "AWAITING_PAYMENT", "PAID"];
+/** 최종 담당표는 결제 뒤에만 연락처와 함께 열린다 (#53, CLAUDE.md 20) */
+const SHEET_READY: SupplierReservation["status"][] = ["PAID", "COMPLETED"];
 
 /** 업체 사정 취소 확인 창. 결제 전·후에 따라 결과 안내가 다르다 (D-57, AC-F5-10). 경고 1회는 둘 다 */
 function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierReservation; onClose: () => void }) {
@@ -102,7 +104,9 @@ function ReservationCard({ reservation }: { reservation: SupplierReservation }) 
           {status !== "COMPLETED" && (
             <Link className="btn btn--sm" to={"/supplier/tech/" + performanceId}>현장 준비 확인</Link>
           )}
-          <Link className="btn btn--sm btn--primary" to={"/performances/" + performanceId + "/sheet"}>담당표 보기</Link>
+          {SHEET_READY.includes(status) && (
+            <Link className="btn btn--sm btn--primary" to={"/performances/" + performanceId + "/sheet"}>담당표 보기</Link>
+          )}
           {CANCELABLE.includes(status) && (
             <button className="btn btn--sm btn--ghost" type="button" onClick={() => setAsking(true)}>업체 사정 취소</button>
           )}
