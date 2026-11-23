@@ -11,6 +11,7 @@ from app.auth.deps import require_role
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import not_found
+from app.models.policy import WARNINGS_BEFORE_SUSPENSION
 from app.models.user import User
 from app.payment import cancel, reservations, service, sheet
 from app.request.router import require_idempotency_key
@@ -254,6 +255,19 @@ def list_supplier_reservations(
     user: User = Depends(require_role("SUPPLIER")), db: Session = Depends(get_db),
 ) -> list[reservations.Reservation]:
     return reservations.list_reservations(db, user)
+
+
+class SupplierWarningsOut(BaseModel):
+    model_config = _OUT
+
+    warning_count: int
+    suspend_at: int
+
+
+@payment_router.get("/supplier/warnings", response_model=SupplierWarningsOut)
+def get_supplier_warnings(user: User = Depends(require_role("SUPPLIER"))) -> SupplierWarningsOut:
+    """AC-F5-10: 업체 사정 취소 확인 창이 "이번 취소로 정지돼요"를 미리 알리도록 지금 경고 수를 준다 (3회째 자동 정지)."""
+    return SupplierWarningsOut(warning_count=user.warning_count, suspend_at=WARNINGS_BEFORE_SUSPENSION)
 
 
 class PaymentIn(BaseModel):

@@ -5,6 +5,7 @@
  * - AC-F2-17: 합계 = 항목 합 − 업체할인. 할인 > 항목 합, 합계 < 10,000원이면 보내기 전에 막는다
  * - AC-F2-18: 공연장 단계만 내 공간·입실·설치 가능 시각 칸이 있고 필수다
  * - AC-F2-19: 장비·엔지니어 포함을 둘 다 고르면 "풀스펙"
+ * - 공연장 단계는 품목 표·운반·설치·인건비·기타 대신 "대관료" 한 칸 (amounts.items = 대관료, 품목 한 줄로 보냄)
  * - AC-F2-20: 고치기 모드(mode="edit")는 현재 버전 값으로 채우고, 이름(label)은 읽기 전용, 보내는 본문에 label 이 없다
  * 화면 합계는 입력 미리보기와 보내는 본문 값(totalAmount)으로만 쓴다. 최종 판정은 서버 검사(TOTAL_MISMATCH 등)를 따른다.
  */
@@ -51,6 +52,8 @@ interface FormState {
   setupMinutes: Money;
   teardownMinutes: Money;
   lines: Line[];
+  /** 공연장 단계의 대관료 (amounts.items) */
+  rentalFee: Money;
   transport: Money;
   install: Money;
   labor: Money;
@@ -76,6 +79,7 @@ function initial(stageType: PostingDetail["stageType"]): FormState {
     setupMinutes: null,
     teardownMinutes: null,
     lines: [{ ...EMPTY_LINE }],
+    rentalFee: null,
     transport: null,
     install: null,
     labor: null,
@@ -102,6 +106,7 @@ function fromVersion(v: QuoteVersionOut, label: string): FormState {
     setupStart: v.setupStart ?? "",
     setupMinutes: v.setupMinutes,
     teardownMinutes: v.teardownMinutes,
+    rentalFee: blankZero(v.amountItems),
     lines: v.items.length > 0 ? v.items.map((i) => ({ name: i.name, category: i.category, qty: i.qty, unitPrice: i.unitPrice })) : [{ ...EMPTY_LINE }],
     transport: blankZero(v.amountTransport),
     install: blankZero(v.amountInstall),
@@ -154,8 +159,13 @@ function NumberInput({ value, onChange, money = false, maxDigits = 5, ...rest }:
 const lineAmount = (l: Line) => (l.qty ?? 0) * (l.unitPrice ?? 0);
 const orNull = (s: string) => (s.trim() === "" ? null : s.trim());
 
-/** 화면 미리보기용 합계. 서버가 같은 식으로 다시 검사한다 */
-function totals(f: FormState) {
+/** 화면 미리보기용 합계. 서버가 같은 식으로 다시 검사한다. 공연장 단계는 대관료만 */
+function totals(f: FormState, isVenue: boolean) {
+  if (isVenue) {
+    const items = f.rentalFee ?? 0;
+    const discount = f.discount ?? 0;
+    return { items, subtotal: items, discount, total: items - discount };
+  }
   const items = f.lines.reduce((s, l) => s + lineAmount(l), 0);
   const subtotal = items + (f.transport ?? 0) + (f.install ?? 0) + (f.labor ?? 0) + (f.etc ?? 0);
   const discount = f.discount ?? 0;
@@ -171,36 +181,42 @@ function validate(f: FormState, isVenue: boolean): Errors {
     if (!f.venueId) e.venueId = MSG_VENUE_REQUIRED;
     if (!f.checkinTime) e.checkinTime = MSG_VENUE_REQUIRED;
     if (!f.setupAvailableTime) e.setupAvailableTime = MSG_VENUE_REQUIRED;
+  } else {
+    f.lines.forEach((l, i) => {
+      if (!l.name.trim()) e[`items.${i}.name`] = "품목 이름을 적어 주세요.";
+      if (!l.category.trim()) e[`items.${i}.category`] = "분류를 적어 주세요.";
+      if (!l.qty) e[`items.${i}.qty`] = "수량은 1 이상이어야 해요.";
+    });
   }
-  f.lines.forEach((l, i) => {
-    if (!l.name.trim()) e[`items.${i}.name`] = "품목 이름을 적어 주세요.";
-    if (!l.category.trim()) e[`items.${i}.category`] = "분류를 적어 주세요.";
-    if (!l.qty) e[`items.${i}.qty`] = "수량은 1 이상이어야 해요.";
-  });
-  const t = totals(f);
+  const t = totals(f, isVenue);
   if (t.discount > t.subtotal) e.discountAmount = MSG_DISCOUNT;
   else if (t.total < MIN_TOTAL) e.totalAmount = MSG_MIN_TOTAL;
   return e;
 }
 
 function toBody(f: FormState, isVenue: boolean): QuoteIn {
-  const t = totals(f);
+  const t = totals(f, isVenue);
   const body: QuoteIn = {
     label: f.label.trim(),
     venueId: isVenue ? Number(f.venueId) : null,
-    items: f.lines.map((l) => ({
-      name: l.name.trim(),
-      category: l.category.trim(),
-      qty: l.qty ?? 0,
-      unitPrice: l.unitPrice ?? 0,
-      amount: lineAmount(l),
-    })),
+    // 공연장: 내역서에 대관료 줄이 보이도록 품목 한 줄로 보낸다
+    items: isVenue
+      ? [{ name: "대관료", category: "대관", qty: 1, unitPrice: t.items, amount: t.items }]
+      : f.lines.map((l) => ({
+          name: l.name.trim(),
+          category: l.category.trim(),
+          qty: l.qty ?? 0,
+          unitPrice: l.unitPrice ?? 0,
+          amount: lineAmount(l),
+        })),
     staff: f.staff,
     setupStart: f.setupStart || null,
     setupMinutes: f.setupMinutes,
     teardownMinutes: f.teardownMinutes,
     includes: f.includes,
-    amounts: { items: t.items, transport: f.transport ?? 0, install: f.install ?? 0, labor: f.labor ?? 0, etc: f.etc ?? 0 },
+    amounts: isVenue
+      ? { items: t.items, transport: 0, install: 0, labor: 0, etc: 0 }
+      : { items: t.items, transport: f.transport ?? 0, install: f.install ?? 0, labor: f.labor ?? 0, etc: f.etc ?? 0 },
     discountAmount: t.discount,
     totalAmount: t.total,
     extraCostNote: orNull(f.extraCostNote),
@@ -259,7 +275,7 @@ export function QuoteForm(props: Props) {
   const totalError = errors.totalAmount ?? (apiCode && TOTAL_CODES.has(apiCode) ? (error as ApiError).body.message : fieldErrorOf(error, "totalAmount"));
   const shownByField = apiCode !== undefined && TOTAL_CODES.has(apiCode);
 
-  const t = totals(f);
+  const t = totals(f, isVenue);
   const fullSpec = f.includes.equipment && f.includes.engineer;
 
   function submit(e: FormEvent) {
@@ -329,14 +345,14 @@ export function QuoteForm(props: Props) {
                 <Field label="입실 시각" required error={errorOf("checkinTime")}>
                   {(c) => <Input {...c} type="time" step={60} value={f.checkinTime} onChange={(e) => set({ checkinTime: e.target.value })} />}
                 </Field>
-                <Field label="설치 가능 시각" required error={errorOf("setupAvailableTime")}>
+                <Field label="설치 가능 시각" required hint="이 시각부터 장비를 들여와도 돼요" error={errorOf("setupAvailableTime")}>
                   {(c) => <Input {...c} type="time" step={60} value={f.setupAvailableTime} onChange={(e) => set({ setupAvailableTime: e.target.value })} />}
                 </Field>
               </div>
             )}
 
             <div className={styles.row3}>
-              <Field label="설치 시작" error={errorOf("setupStart")}>
+              <Field label="설치 시작" hint={posting.stageType === "EQUIPMENT" ? "이 시각에 설치를 시작해요" : undefined} error={errorOf("setupStart")}>
                 {(c) => <Input {...c} type="time" step={60} value={f.setupStart} onChange={(e) => set({ setupStart: e.target.value })} />}
               </Field>
               <Field label="설치 걸리는 시간 (분)" error={errorOf("setupMinutes")}>
@@ -352,89 +368,99 @@ export function QuoteForm(props: Props) {
           </div>
         </section>
 
-        <section className={styles.sec} aria-labelledby="quote-lines">
-          <h2 id="quote-lines" className={styles.secTitle}>
-            품목
-          </h2>
-          <p className={styles.hint}>금액은 부가세 포함 원 단위로 적어요. 금액 = 수량 × 단가.</p>
-          <div className={styles.tableBox}>
-            <table className={styles.lines}>
-              <thead>
-                <tr>
-                  <th>품목</th>
-                  <th>분류</th>
-                  <th className={styles.r}>수량</th>
-                  <th className={styles.r}>단가</th>
-                  <th className={styles.r}>금액</th>
-                  <th>
-                    <span className="sd-sr-only">지우기</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {f.lines.map((l, i) => {
-                  const no = i + 1;
-                  const lineErr = errorOf(`items.${i}.name`) ?? errorOf(`items.${i}.category`) ?? errorOf(`items.${i}.qty`) ?? errorOf(`items.${i}.unitPrice`);
-                  return (
-                    <tr key={i}>
-                      <td>
-                        <Input aria-label={`${no}번 품목 이름`} maxLength={100} value={l.name} onChange={(e) => setLine(i, { name: e.target.value })} />
-                        {lineErr && <p className={styles.fieldError}>{lineErr}</p>}
-                      </td>
-                      <td>
-                        <Input aria-label={`${no}번 분류`} maxLength={20} placeholder="예: 음향" value={l.category} onChange={(e) => setLine(i, { category: e.target.value })} />
-                      </td>
-                      <td>
-                        <NumberInput aria-label={`${no}번 수량`} value={l.qty} onChange={(qty) => setLine(i, { qty })} />
-                      </td>
-                      <td>
-                        <NumberInput aria-label={`${no}번 단가`} money value={l.unitPrice} onChange={(unitPrice) => setLine(i, { unitPrice })} />
-                      </td>
-                      <td className={`${styles.r} sd-num`}>
-                        <MoneyText value={lineAmount(l)} />
-                      </td>
-                      <td>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`${no}번 품목 지우기`}
-                          disabled={f.lines.length === 1}
-                          onClick={() => set({ lines: f.lines.filter((_, j) => j !== i) })}
-                        >
-                          지우기
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={4}>품목 합계</td>
-                  <td className={`${styles.r} sd-num`}>
-                    <MoneyText value={t.items} />
-                  </td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          <Button size="sm" className={styles.mt12} onClick={() => set({ lines: [...f.lines, { ...EMPTY_LINE }] })}>
-            품목 추가
-          </Button>
-        </section>
+        {!isVenue && (
+          <section className={styles.sec} aria-labelledby="quote-lines">
+            <h2 id="quote-lines" className={styles.secTitle}>
+              품목
+            </h2>
+            <p className={styles.hint}>금액은 부가세 포함 원 단위로 적어요. 금액 = 수량 × 단가.</p>
+            <div className={styles.tableBox}>
+              <table className={styles.lines}>
+                <thead>
+                  <tr>
+                    <th>품목</th>
+                    <th>분류</th>
+                    <th className={styles.r}>수량</th>
+                    <th className={styles.r}>단가</th>
+                    <th className={styles.r}>금액</th>
+                    <th>
+                      <span className="sd-sr-only">지우기</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {f.lines.map((l, i) => {
+                    const no = i + 1;
+                    const lineErr = errorOf(`items.${i}.name`) ?? errorOf(`items.${i}.category`) ?? errorOf(`items.${i}.qty`) ?? errorOf(`items.${i}.unitPrice`);
+                    return (
+                      <tr key={i}>
+                        <td>
+                          <Input aria-label={`${no}번 품목 이름`} maxLength={100} value={l.name} onChange={(e) => setLine(i, { name: e.target.value })} />
+                          {lineErr && <p className={styles.fieldError}>{lineErr}</p>}
+                        </td>
+                        <td>
+                          <Input aria-label={`${no}번 분류`} maxLength={20} placeholder="예: 음향" value={l.category} onChange={(e) => setLine(i, { category: e.target.value })} />
+                        </td>
+                        <td>
+                          <NumberInput aria-label={`${no}번 수량`} value={l.qty} onChange={(qty) => setLine(i, { qty })} />
+                        </td>
+                        <td>
+                          <NumberInput aria-label={`${no}번 단가`} money value={l.unitPrice} onChange={(unitPrice) => setLine(i, { unitPrice })} />
+                        </td>
+                        <td className={`${styles.r} sd-num`}>
+                          <MoneyText value={lineAmount(l)} />
+                        </td>
+                        <td>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`${no}번 품목 지우기`}
+                            disabled={f.lines.length === 1}
+                            onClick={() => set({ lines: f.lines.filter((_, j) => j !== i) })}
+                          >
+                            지우기
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={4}>품목 합계</td>
+                    <td className={`${styles.r} sd-num`}>
+                      <MoneyText value={t.items} />
+                    </td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <Button size="sm" className={styles.mt12} onClick={() => set({ lines: [...f.lines, { ...EMPTY_LINE }] })}>
+              품목 추가
+            </Button>
+          </section>
+        )}
 
         <section className={styles.sec} aria-labelledby="quote-amounts">
           <h2 id="quote-amounts" className={styles.secTitle}>
             금액
           </h2>
-          <div className={styles.row4}>
-            {AMOUNT_FIELDS.map((a) => (
-              <Field key={a.key} label={a.label} error={errorOf(`amounts.${a.key}`)}>
-                {(c) => <NumberInput {...c} money value={f[a.key]} onChange={(v) => set({ [a.key]: v })} />}
+          {isVenue ? (
+            <div className={styles.row4}>
+              <Field label="대관료" hint="부가세 포함 원 단위로 적어요." error={errorOf("amounts.items")}>
+                {(c) => <NumberInput {...c} money value={f.rentalFee} onChange={(rentalFee) => set({ rentalFee })} />}
               </Field>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className={styles.row4}>
+              {AMOUNT_FIELDS.map((a) => (
+                <Field key={a.key} label={a.label} error={errorOf(`amounts.${a.key}`)}>
+                  {(c) => <NumberInput {...c} money value={f[a.key]} onChange={(v) => set({ [a.key]: v })} />}
+                </Field>
+              ))}
+            </div>
+          )}
           <div className={styles.row4}>
             <Field label="업체할인" hint="항목 합계보다 클 수 없어요. 사용자에게는 − 금액으로 보여요." error={errorOf("discountAmount")}>
               {(c) => <NumberInput {...c} money value={f.discount} onChange={(discount) => set({ discount })} />}

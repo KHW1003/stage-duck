@@ -140,7 +140,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
         body: [{
           performanceId: 5, title: "가을밤 밴드 공연", showDate: "2026-11-28",
           showStart: "19:00:00", showEnd: "21:00:00", sido: "광주", sigungu: "동구",
-          status: "AWAITING_PAYMENT", stageTypes: ["EQUIPMENT"], amount: 420000,
+          status: "PAID", stageTypes: ["EQUIPMENT"], amount: 420000, // 담당표는 결제 뒤에만 보인다
         }],
       },
     });
@@ -152,7 +152,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     await userEvent.click(reservationLink);
     expect(await screen.findByRole("heading", { name: "가을밤 밴드 공연" })).toBeInTheDocument();
     const reservations = within(screen.getByRole("list", { name: "맡은 공연" }));
-    expect(reservations.getByText("결제 대기")).toBeInTheDocument();
+    expect(reservations.getByText("결제 완료")).toBeInTheDocument();
     expect(reservations.getByText("420,000원")).toBeInTheDocument();
     expect(reservations.getByRole("link", { name: "담당표 보기" })).toHaveAttribute("href", "/performances/5/sheet");
     expect(reservations.getByRole("link", { name: "현장 준비 확인" })).toHaveAttribute("href", "/supplier/tech/5");

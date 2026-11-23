@@ -274,6 +274,8 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
   }
 
   const partnerRead = thread.data?.partnerLastReadMessageId ?? 0;
+  // 머리줄 아래 [견적서 보기]: 불러온 메시지 가운데 가장 최근 QUOTE 의 refId(견적서 버전). 없으면 숨긴다
+  const latestQuoteVersion = messages.reduce<number | null>((found, m) => (m.type === "QUOTE" && m.refId ? m.refId : found), null);
   const started = room.startedAt !== null;
   let lastDay = "";
 
@@ -308,6 +310,13 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
         </span>
         {close}
       </div>
+      {latestQuoteVersion !== null && (
+        <div className="chat-panel__quote">
+          <Link to={`/quotes/by-version/${latestQuoteVersion}`} onClick={onClose}>
+            견적서 보기
+          </Link>
+        </div>
+      )}
       <div className="chat-panel__body">
         <div className="room__msgs" ref={listRef}>
           {messages.map((m) => {

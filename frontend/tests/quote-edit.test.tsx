@@ -157,6 +157,45 @@ describe("견적서 고치기 (/supplier/quotes/:quoteId/edit)", () => {
     expect(put?.body).not.toHaveProperty("label");
   });
 
+  it("AC-F2-20 공연장 견적서를 고치면 amountItems 가 대관료 칸에 채워지고, 고친 대관료로 다시 보낸다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const venueV1: QuoteVersionOut = {
+      ...V1, venueId: 3, checkinTime: "15:00", setupAvailableTime: "15:30", setupStart: null, setupMinutes: null,
+      items: [{ name: "대관료", category: "대관", qty: 1, unitPrice: 500000, amount: 500000 }],
+      includesEquipment: false, includesEngineer: false, includesInstall: false,
+      amountItems: 500000, amountTransport: 0, amountInstall: 0, amountLabor: 0, amountEtc: 0, totalAmount: 500000,
+    };
+    const venueQuote: QuoteOut = { ...QUOTE_V1, stageId: 1, stageType: "VENUE", isFullSpec: false, companyName: "업체 C", current: venueV1, versions: [venueV1] };
+    const calls = mockServer({
+      ...BASE,
+      "GET /api/v1/postings/1": { status: 200, body: { ...POSTING, stageId: 1, stageType: "VENUE" } },
+      "GET /api/v1/supplier/venues": { status: 200, body: [{ id: 3, name: "공간 C", status: "ACTIVE", sido: "광주광역시", sigungu: "동구", maxCapacity: 120 }] },
+      "GET /api/v1/quotes/77": { status: 200, body: venueQuote },
+      "PUT /api/v1/quotes/77": { status: 200, body: SENT_V2 },
+    });
+    renderAt(PATH);
+
+    expect(await screen.findByLabelText(/^대관료/)).toHaveValue("500,000");
+    expect(screen.queryByLabelText("1번 품목 이름")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("운반비")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^대관료/), { target: { value: "550000" } });
+    expect(screen.getByTestId("quote-total")).toHaveTextContent("550,000원");
+    await user.click(screen.getByRole("button", { name: "고친 견적서 보내기" }));
+
+    await screen.findByRole("heading", { name: "v2로 고쳤어요" });
+    const put = calls.find((c) => c.key === "PUT /api/v1/quotes/77")?.body as Record<string, unknown>;
+    expect(put).toMatchObject({
+      version: 1,
+      venueId: 3,
+      checkinTime: "15:00",
+      setupAvailableTime: "15:30",
+      items: [{ name: "대관료", category: "대관", qty: 1, unitPrice: 550000, amount: 550000 }],
+      amounts: { items: 550000, transport: 0, install: 0, labor: 0, etc: 0 },
+      totalAmount: 550000,
+    });
+  });
+
   it("AC-F2-20 버전 이력이 v1 1,250,000원 · v2 1,350,000원으로 남아 보인다", async () => {
     mockServer({ ...BASE, "GET /api/v1/quotes/77": { status: 200, body: QUOTE_V2 } });
     renderAt(PATH);

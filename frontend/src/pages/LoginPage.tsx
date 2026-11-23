@@ -4,12 +4,15 @@
  *   (next 는 이 사이트 안 주소만 받는다 — "/"로 시작하고 "//"가 아닌 것)
  * - 비밀번호 틀림(UNAUTHENTICATED)은 입력칸 아래, 5회 실패(LOGIN_LOCKED)는 안내 상자로 서버 문구를 보여 준다
  * - [이메일 저장]은 이 브라우저에만 남긴다 (localStorage, 비밀번호는 저장하지 않는다)
- * - 네이버 로그인·시연 계정 전환은 1번 묶음 API 가 생기면 붙인다
+ * - [네이버로 로그인]은 서버의 /auth/naver/start 로 이동한다 (AC-F1-04). 처음이면 서버가 추가 정보 화면(/signup/extra)으로 보낸다
+ * - 카카오 버튼은 VITE_KAKAO_LOGIN_ENABLED=true 일 때만 그린다 (AC-F1-08·09)
+ * - 소셜 로그인을 마치지 못하고 돌아오면(?social=failed) 안내를 보여 준다
+ * - 시연 계정 전환은 1번 묶음 API 가 생기면 붙인다
  */
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthSplit } from "../features/auth/AuthSplit";
-import { useLogin } from "../features/auth/api";
+import { SOCIAL_START, kakaoLoginEnabled, useLogin } from "../features/auth/api";
 import { emailError } from "../features/auth/rules";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
@@ -38,13 +41,14 @@ function writeSaved(email: string | null) {
 export function LoginPage() {
   usePageMeta("로그인");
   const navigate = useNavigate();
-  const nextParam = useSearchParams()[0].get("next");
+  const [params] = useSearchParams();
+  const nextParam = params.get("next");
+  const socialFailed = params.get("social") === "failed";
   const from = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
   const login = useLogin();
   const [email, setEmail] = useState(readSaved);
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(() => readSaved() !== "");
-  const [naverNote, setNaverNote] = useState(false);
 
   const [blank, setBlank] = useState<string | null>(null);
   // 서버 답이 없는 실패(연결 끊김 등)도 칸 아래에 보인다
@@ -127,11 +131,22 @@ export function LoginPage() {
           </button>
         </form>
         <div className="login__or">간편 로그인</div>
-        <button className="naver" type="button" onClick={() => setNaverNote(true)}>
+        {socialFailed && (
+          <div className="notice notice--conflict mb-16" role="alert">
+            <Ico name="warn" />
+            <div>간편 로그인을 마치지 못했어요. 다시 시도하거나 이메일로 로그인해 주세요.</div>
+          </div>
+        )}
+        <a className="naver" href={SOCIAL_START.naver}>
           <span>N</span>네이버로 로그인
-        </button>
-        <p className="field__hint mt-8" style={{ textAlign: "center" }} aria-live="polite">
-          {naverNote ? "네이버 로그인은 준비 중이에요. 이메일로 로그인해 주세요." : "처음이면 추가 정보 화면으로 이어져요."}
+        </a>
+        {kakaoLoginEnabled() && (
+          <a className="kakao" href={SOCIAL_START.kakao}>
+            <span>K</span>카카오로 로그인
+          </a>
+        )}
+        <p className="field__hint mt-8" style={{ textAlign: "center" }}>
+          처음이면 추가 정보 화면으로 이어져요.
         </p>
         <div className="login__links">
           <Link to="/signup">사용자 가입</Link>
