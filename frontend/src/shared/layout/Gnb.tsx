@@ -75,6 +75,16 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
           </Link>
         )}
         <nav id="gnb-menu" className={`${styles.menu} ${navOpen ? styles.menuOpen : ""}`} aria-label="주 메뉴">
+          {/* 모바일(560px 아래)은 로고를 숨기니 메뉴 맨 위에 홈을 둔다 (11/23) */}
+          {kind === "admin" ? (
+            <a className={styles.homeLink} href={HOME.admin}>
+              홈
+            </a>
+          ) : (
+            <Link className={styles.homeLink} to={LOGO_HOME[kind]} onClick={() => setNavOpen(false)}>
+              홈
+            </Link>
+          )}
           {MENUS[kind].map((m) => (
             <MenuLink key={m.label} item={m} />
           ))}
