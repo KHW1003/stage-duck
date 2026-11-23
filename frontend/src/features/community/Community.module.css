@@ -3,7 +3,7 @@
 .narrow { max-width: 880px; margin: 0 auto; } /* 글·문서 화면 폭 (DESIGN.md 5장) */
 
 /* 말머리 탭 + 도구 줄 */
-.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--sd-rule); }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--sd-line); } /* 진한 선은 아래 표 머리 하나만 (11/23: 탭 선과 표 선이 둘 다 진해 지저분했다) */
 .tab { min-height: var(--sd-touch); padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
 .tab[aria-selected="true"] { border-bottom-color: var(--sd-ink); color: var(--sd-ink); font-weight: 700; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 0; }
