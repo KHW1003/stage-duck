@@ -2,9 +2,12 @@
 
 공연 2026-11-28, 업체 C 500,000 + D 1,350,000 = 1,850,000, 이용료 92,500, 결제 1,942,500 (2026-11-20 10:00 결제).
 """
+import os
+import threading
 from datetime import date, datetime
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
 from app.main import app
@@ -215,19 +218,17 @@ def test_ac_f5_22_deadline_extension_capped(first, cancels, deadline):
     assert calc_deadline(first, SHOW, supplier_cancels=cancels) == deadline
 
 
-def test_ac_f5_22_supplier_cancel_blocked_while_another_stage_is_open(client, db):
-    """한 번에 한 단계만 모집 — 다른 단계가 이미 열려 있으면 다시 열지 않고, 아무것도 바뀌지 않는다."""
+def test_ac_f5_22_supplier_cancel_pauses_later_open_stage(client, db):
+    """한 번에 한 단계만 모집 — 뒤 단계가 열려 있으면 그 단계를 대기로 되돌리고 앞 단계부터 다시 연다."""
     user, perf_id, (c, _) = _ready(client, db, engineer="OPEN")
     supplier_c = db.get(Supplier, c)
     warnings = db.get(User, supplier_c.user_id).warning_count
 
     res = _as(db, supplier_c.user).post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "사정"})
 
-    assert (res.status_code, res.json()["code"]) == (409, "INVALID_STATE")
-    db.expire_all()
-    assert db.scalar(select(Stage.status).where(Stage.performance_id == perf_id, Stage.stage_type == "VENUE")) == "CONFIRMED"
-    assert db.get(User, supplier_c.user_id).warning_count == warnings
-    assert db.scalars(select(Cancellation).where(Cancellation.performance_id == perf_id)).all() == []
+    assert res.status_code == 200, res.text
+    assert _stage_status(db, perf_id) == {"VENUE": ("OPEN", False), "EQUIPMENT": ("CONFIRMED", True), "ENGINEER": ("WAITING", False)}
+    assert db.get(User, supplier_c.user_id).warning_count == warnings + 1
 
 
 def test_ac_f5_08_permissions_and_after_show(client, db):
@@ -312,14 +313,16 @@ def test_ac_f5_10_supplier_with_two_stages_reopens_in_order(client, db, paid):
     (datetime(2026, 11, 23, 0, 0), "CANCELLED", "CONFIRMED"),  # 공연 5일 전 0시부터는 다시 모집할 시간이 없다
 ])
 def test_ac_f5_10_paid_supplier_cancel_at_five_days_before_show(client, db, when, perf_status, stage_status):
-    user, perf_id, order_id, (c, _) = _paid(client, db)
+    user, perf_id, order_id, (c, d) = _paid(client, db)
     _at(when)
     assert _supplier_cancel(db, perf_id, c).json()["refundTotal"] == TOTAL
     assert db.get(Performance, perf_id).status == perf_status
     assert _stage_status(db, perf_id)["VENUE"][0] == stage_status
     assert db.get(Order, order_id).status == "CANCELLED"
     assert user.post(f"/api/v1/performances/{perf_id}/order").status_code == 409
-    note = db.scalar(select(Notification).where(Notification.type == "CANCELLED_BY_SUPPLIER"))
+    notes = {n.user_id: n for n in db.scalars(select(Notification).where(Notification.type == "CANCELLED_BY_SUPPLIER"))}
+    note = notes.pop(db.get(Performance, perf_id).user_id)
+    assert set(notes) == ({db.get(Supplier, d).user_id} if perf_status == "CANCELLED" else set())  # 남은 업체
     assert ("다시 모집하실 수 있습니다" in note.body) == (perf_status == "ASSIGNING")
 
 
@@ -339,3 +342,122 @@ def test_ac_f5_10_no_rejection_for_user_after_paid_supplier_cancel(client, db, h
     db.expire_all()
     assert db.get(Performance, perf_id).status == ("WITHDRAWN" if how == "withdraw" else "CANCELLED")
     assert db.scalar(select(func.count()).select_from(RejectionEvent)) == 0
+
+
+@pytest.mark.parametrize("order", [(0, 1), (1, 0)])
+@pytest.mark.parametrize("status", ["OPEN", "NEGOTIATING"])
+def test_ac_f5_10_both_suppliers_cancel_one_after_another(client, db, order, status):
+    """모집 중에 다른 업체까지 취소해도 앞 단계(공연장)만 열리고 장비는 차례를 기다린다. 끝까지 다시 결제된다."""
+    user, perf_id, _, suppliers = _paid(client, db)
+    assert _supplier_cancel(db, perf_id, suppliers[order[0]]).status_code == 200
+    for s in db.scalars(select(Stage).where(Stage.performance_id == perf_id, Stage.status == "OPEN")):
+        s.status = status
+    db.commit()
+
+    assert _supplier_cancel(db, perf_id, suppliers[order[1]]).status_code == 200
+
+    venue_status = status if order == (0, 1) else "OPEN"
+    assert _stage_status(db, perf_id) == {"VENUE": (venue_status, False), "EQUIPMENT": ("WAITING", False), "ENGINEER": ("SKIPPED", False)}
+    _confirm(db, perf_id, "VENUE", 500000)
+    venue = db.scalar(select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == "VENUE"))
+    assert user.post(f"/api/v1/stages/{venue.id}/advance", json={"action": "OPEN_NEXT"},
+                     headers={"Idempotency-Key": "n"}).status_code == 200
+    _confirm(db, perf_id, "EQUIPMENT", 1350000)
+    db.get(Performance, perf_id).status = "AWAITING_PAYMENT"
+    db.commit()
+    again = user.post(f"/api/v1/performances/{perf_id}/order").json()
+    assert not {ln["supplierId"] for ln in again["lines"]} & set(suppliers)
+    assert user.post(f"/api/v1/orders/{again['id']}/payments", json={"amount": TOTAL},
+                     headers={"Idempotency-Key": "k2"}).json()["status"] == "SUCCEEDED"
+
+
+def test_ac_f5_10_cancelled_stage_waits_behind_waiting_stage(client, db):
+    """앞 단계가 아직 대기면 뒤 단계를 먼저 열지 않는다 (공연장 → 장비 → 엔지니어)."""
+    _, perf_id, (c, d) = _ready(client, db)
+    e = _confirm(db, perf_id, "ENGINEER", 300000)
+    equip = db.scalar(select(Stage).where(Stage.performance_id == perf_id, Stage.stage_type == "EQUIPMENT"))
+    equip.status, equip.confirmed_quote_version_id = "WAITING", None
+    db.get(Performance, perf_id).status = "ASSIGNING"
+    db.commit()
+    assert _supplier_cancel(db, perf_id, e).status_code == 200
+    assert _stage_status(db, perf_id)["ENGINEER"] == ("WAITING", False)
+
+
+def _race(db, calls):
+    results = []
+    gate = threading.Barrier(len(calls))
+
+    def run(call):
+        gate.wait()
+        results.append(call().status_code)
+
+    threads = [threading.Thread(target=run, args=(c,)) for c in calls]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    db.rollback()
+    db.expire_all()
+    return sorted(results)
+
+
+def _copy(client):
+    c = TestClient(app, raise_server_exceptions=False)
+    c.cookies.update(dict(client.cookies))
+    c.headers.update(client.headers)
+    return c
+
+
+mariadb_only = pytest.mark.skipif(not os.environ.get("TEST_DATABASE_URL"), reason="MariaDB에서만")
+
+
+@mariadb_only
+def test_ac_f5_10_concurrent_same_supplier_cancels_once(client, db):
+    _, perf_id, _, (c, _) = _paid(client, db)
+    sup = _as(db, db.get(Supplier, c).user)
+    url = f"/api/v1/performances/{perf_id}/cancel-by-supplier"
+    got = _race(db, [lambda x=x: x.post(url, json={"reason": "사정"}) for x in (_copy(sup), _copy(sup))])
+    assert got in ([200, 404], [200, 409])
+    assert db.get(User, db.get(Supplier, c).user_id).warning_count == 1
+    assert db.scalar(select(func.count()).select_from(Cancellation)) == 1
+
+
+@mariadb_only
+def test_ac_f5_10_concurrent_two_suppliers_cancel(client, db):
+    _, perf_id, _, suppliers = _paid(client, db)
+    url = f"/api/v1/performances/{perf_id}/cancel-by-supplier"
+    clients = [_copy(_as(db, db.get(Supplier, s).user)) for s in suppliers]
+    assert _race(db, [lambda x=x: x.post(url, json={"reason": "사정"}) for x in clients]) == [200, 200]
+    assert _stage_status(db, perf_id) == {"VENUE": ("OPEN", False), "EQUIPMENT": ("WAITING", False), "ENGINEER": ("SKIPPED", False)}
+    assert db.scalar(select(func.count()).select_from(LedgerEntry).where(LedgerEntry.entry_type == "REFUND")) == 1
+
+
+@mariadb_only
+def test_ac_f5_10_concurrent_pay_and_supplier_cancel(client, db):
+    """결제와 업체 취소가 겹쳐도 둘 중 하나의 순서로 끝난다 — 취소한 업체가 든 유효 청구서가 남지 않는다."""
+    user, perf_id, (c, _) = _ready(client, db)
+    order_id = user.post(f"/api/v1/performances/{perf_id}/order").json()["id"]
+    sup = _copy(_as(db, db.get(Supplier, c).user))
+    payer = _copy(user)
+    got = _race(db, [
+        lambda: payer.post(f"/api/v1/orders/{order_id}/payments", json={"amount": TOTAL}, headers={"Idempotency-Key": "r"}),
+        lambda: sup.post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "사정"}),
+    ])
+    assert got in ([200, 200], [200, 409])
+    assert db.get(Performance, perf_id).status == "ASSIGNING"
+    assert db.get(Order, order_id).status == "CANCELLED"
+    refunds = db.scalar(select(func.count()).select_from(LedgerEntry).where(LedgerEntry.entry_type == "REFUND"))
+    assert refunds == (1 if got == [200, 200] else 0)
+
+
+@mariadb_only
+def test_ac_f5_10_concurrent_invoice_and_supplier_cancel(client, db):
+    user, perf_id, (c, _) = _ready(client, db)
+    sup = _copy(_as(db, db.get(Supplier, c).user))
+    payer = _copy(user)
+    got = _race(db, [
+        lambda: payer.post(f"/api/v1/performances/{perf_id}/order"),
+        lambda: sup.post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "사정"}),
+    ])
+    assert got in ([200, 201], [200, 409])
+    assert db.scalar(select(func.count()).select_from(Order).where(Order.status != "CANCELLED")) == 0

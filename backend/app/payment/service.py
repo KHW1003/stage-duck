@@ -70,9 +70,9 @@ def issue_order(db: Session, user: User, performance_id: int, *, now: datetime) 
     existing = _active_order(db, perf.id)
     if existing is not None:
         return existing, False
-    if perf.status not in ("ASSIGNING", "AWAITING_PAYMENT"):  # 섭외 확정·취소 공연에 청구서를 또 만들지 않는다 (AC-F5-10)
+    if perf.status in ("CONFIRMED", "COMPLETED", "CANCELLED"):  # 끝난 공연에 청구서를 또 만들지 않는다 (AC-F5-10)
         raise invalid_state("지금은 청구서를 만들 수 없습니다. 공연 상태를 다시 확인해 주십시오.")
-    if not perf.stages or any(s.status not in DONE_STAGE_STATUSES for s in perf.stages):
+    if perf.status != "AWAITING_PAYMENT" or not perf.stages or any(s.status not in DONE_STAGE_STATUSES for s in perf.stages):
         raise invalid_state("아직 확정하지 않은 단계가 있습니다. 모든 단계를 확정하거나 건너뛴 후 청구서를 볼 수 있습니다.")
     lines = request_service.confirmed_lines(db, perf.id)
     if not lines:
@@ -169,6 +169,10 @@ def pay_order(
     """AC-F5-05·06: 테스트 결제. 금액은 서버 계산값과 같아야 하고(400 AMOUNT_MISMATCH),
     같은 Idempotency-Key 로 다시 오면 처음 결과를 그대로 돌려준다. 다른 키로 두 번 눌러도 청구서 행 잠금으로 한 번만 결제된다.
     """
+    # 공연 → 청구서 순서로 잠근다 (업체 사정 취소와 같은 순서 — 겹쳐도 교착되지 않는다)
+    perf_id = db.scalar(select(Order.performance_id).where(Order.id == order_id))
+    if perf_id is not None:
+        db.get(Performance, perf_id, with_for_update=True)
     order = db.get(Order, order_id, with_for_update=True)
     if order is None or db.get(Performance, order.performance_id).user_id != user.id:
         raise not_found()

@@ -148,6 +148,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     perf = db.get(Performance, performance_id, with_for_update=True)
     if perf is None or supplier is None:
         raise not_found()
+    told: list[int] = []  # 공연이 통째로 취소될 때 알릴 남은 확정 업체
     order = _live_order(db, performance_id, lock=True)
     if order is not None and order.status in PAID_STATUSES:
         if supplier.id not in {ln.supplier_id for ln in order.lines}:
@@ -163,6 +164,8 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
         else:
             request_service.performance_cancelled(db, perf.id, actor_id=user.id)
             refund = "전액 환불 예정 · 공연까지 남은 날이 적어 다시 모집할 수 없으므로 공연이 취소되었습니다"
+            told = list(db.scalars(select(Supplier.user_id).where(
+                Supplier.id.in_({ln.supplier_id for ln in order.lines} - {supplier.id}))))
     else:
         mine = sorted((ln for ln in request_service.confirmed_lines(db, perf.id) if ln.supplier_id == supplier.id),
                       key=lambda ln: db.get(Stage, ln.stage_id).seq)
@@ -183,6 +186,12 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     notification.notify(
         db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
         params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types), "refund": refund},
+        payload={"performanceId": perf.id},
+    )
+    notification.notify_many(
+        db, told, "CANCELLED_BY_SUPPLIER", link="/supplier/reservations",
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types),
+                "refund": f"{perf.title} · 공연이 취소되었습니다"},
         payload={"performanceId": perf.id},
     )
     db.commit()
