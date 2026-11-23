@@ -282,6 +282,9 @@ describe("업체 찾기 머리 메뉴", () => {
     await user.click(await screen.findByRole("button", { name: /업체D담당/ }));
     const menu = screen.getByRole("menuitem", { name: "내 소개 글" });
     expect(menu).toHaveAttribute("href", "/supplier/posts");
-    expect(within(screen.getByRole("navigation", { name: "주 메뉴" })).getByRole("link", { name: "업체 찾기" })).toHaveAttribute("aria-current", "page");
+    const nav = within(screen.getByRole("navigation", { name: "주 메뉴" }));
+    // 머리 메뉴: 내 예약 추가, 채팅·공간 찾기·업체 찾기 유지 (11/19 팀 결정). 내 소개 글은 계정 메뉴에만
+    expect(nav.queryByRole("link", { name: "내 소개 글" })).not.toBeInTheDocument();
+    expect(nav.getByRole("link", { name: "업체 찾기" })).toHaveAttribute("href", "/board");
   });
 });

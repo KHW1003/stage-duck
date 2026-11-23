@@ -1,5 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { ErrorToast, showErrorToast } from "./shared/ui/ErrorToast";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
 import { CommunitySavedPage } from "./pages/CommunitySavedPage";
@@ -18,7 +19,8 @@ import { InquiryListPage, InquiryPostPage, InquiryWritePage } from "./pages/Inqu
 import { NoticeDetailPage, NoticeListPage } from "./pages/NoticePages";
 import { SupplierGuidePage } from "./pages/SupplierGuidePage";
 import { TermsPage } from "./pages/TermsPage";
-import { TechCheckIndexPage, TechCheckPage } from "./pages/TechCheckPage";
+import { SupplierReservationsPage } from "./pages/SupplierReservationsPage";
+import { TechCheckPage } from "./pages/TechCheckPage";
 import { ComparePage } from "./pages/ComparePage";
 import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
@@ -28,12 +30,16 @@ import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
 import { MyPage } from "./pages/MyPage";
+import { FavoritesPage } from "./pages/FavoritesPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
+import { SupplierOffersPage } from "./pages/SupplierOffersPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { PostPage } from "./pages/PostPage";
 import { PostingPage } from "./pages/PostingPage";
 import { PostingsPage } from "./pages/PostingsPage";
 import { QuotePage } from "./pages/QuotePage";
 import { QuoteEditPage } from "./pages/QuoteEditPage";
+import { QuoteSheetPage } from "./pages/QuoteSheetPage";
 import { RequestEditPage } from "./pages/RequestEditPage";
 import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
@@ -66,6 +72,7 @@ export function AppRoutes() {
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
           <Route path="/community/write" element={<CommunityWritePage />} />
           <Route path="/community/saved" element={<CommunitySavedPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/community/:id/edit" element={<CommunityWritePage />} />
         </Route>
         <Route path="/community/:id" element={<CommunityPostPage />} />
@@ -86,6 +93,8 @@ export function AppRoutes() {
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
           <Route path="/performances/:id/sheet" element={<SheetPage />} />
+          <Route path="/quotes/:quoteId" element={<QuoteSheetPage />} />
+          <Route path="/quotes/by-version/:versionId" element={<QuoteSheetPage />} />
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} />}>
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
@@ -96,13 +105,16 @@ export function AppRoutes() {
           <Route path="/supplier/postings/:stageId" element={<PostingPage />} />
           <Route path="/supplier/postings/:stageId/quote" element={<QuotePage />} />
           <Route path="/supplier/quotes/:quoteId/edit" element={<QuoteEditPage />} />
-          <Route path="/supplier/tech" element={<TechCheckIndexPage />} />
+          <Route path="/supplier/reservations" element={<SupplierReservationsPage />} />
+          <Route path="/supplier/offers" element={<SupplierOffersPage />} />
+          <Route path="/supplier/tech" element={<Navigate replace to="/supplier/reservations" />} />
           <Route path="/supplier/tech/:performanceId" element={<TechCheckPage />} />
         </Route>
         <Route element={<RequireAuth roles={["USER"]} />}>
           <Route path="/performances/new" element={<RequestPage />} />
           <Route path="/me/performances" element={<MyPerformancesPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/performances/:id" element={<PerformancePage />} />
           <Route path="/performances/:id/edit" element={<RequestEditPage />} />
           <Route path="/performances/:id/next" element={<NextStagePage />} />
@@ -117,13 +129,21 @@ export function AppRoutes() {
   );
 }
 
-const queryClient = new QueryClient();
+/** meta.errorToast 가 붙은 동작이 실패하면 화면 아래 알림으로 (ErrorToast.tsx) */
+const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, _v, _c, mutation) => {
+      if (mutation.options.meta?.errorToast) showErrorToast(error);
+    },
+  }),
+});
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppRoutes />
+        <ErrorToast />
       </BrowserRouter>
     </QueryClientProvider>
   );

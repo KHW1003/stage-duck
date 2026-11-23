@@ -56,6 +56,29 @@ def landing(db: Session, user: User) -> str:
     return calc.landing_for(user.role, supplier_review_status(db, user))
 
 
+def check_available(db: Session, field: str, value: str) -> tuple[bool, str]:
+    """가입 화면 [중복 확인]: 모양이 틀리면 400, 이미 있으면 (False, 이유), 쓸 수 있으면 (True, 안내).
+    가입할 때도 같은 검사를 다시 한다 (확인과 가입 사이에 다른 사람이 먼저 가입할 수 있어서)."""
+    value = (value or "").strip()
+    if field == "email":
+        if not value:
+            reason = "이메일을 입력해 주세요"
+        elif len(value) > 255 or not calc.EMAIL_RE.fullmatch(value):
+            reason = "이메일 형식을 확인해 주세요"
+        else:
+            taken = db.scalar(select(User.id).where(User.email == normalize_email(value))) is not None
+            return (False, _email_taken().message) if taken else (True, "쓸 수 있는 이메일이에요.")
+    else:
+        if not value:
+            reason = "닉네임을 입력해 주세요"
+        elif len(value) > 30:
+            reason = "닉네임은 30자까지 입력할 수 있어요"
+        else:
+            taken = db.scalar(select(User.id).where(User.nickname == value)) is not None
+            return (False, _nickname_taken().message) if taken else (True, "쓸 수 있는 닉네임이에요.")
+    raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": field, "reason": reason}])
+
+
 def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
     """AC-F1-01·02·03: 칸 검사 → 만 14세 → 필수 약관 → 중복 → 저장 (약관 4종을 버전·일시와 함께)."""
     user = _add_user(db, body, password=body.password, social=False, now=now)
@@ -67,6 +90,7 @@ def social_user(db: Session, profile: SocialProfile) -> User | None:
     """AC-F1-04·10: 소셜 연결은 (provider, 고유 식별값)으로만 찾는다. 같은 이메일 계정이 있어도 합치지 않는다.
 
     연결이 없으면 None (→ 추가 정보 화면). 탈퇴 계정은 이메일 로그인과 같은 401, 정지 계정은 403.
+    연결이 없는데 같은 이메일로 가입한 계정이 있으면 EMAIL_TAKEN — 콜백은 /login?social=failed 로 보낸다 (계약서 2.1).
     """
     user = db.scalar(
         select(User)
@@ -74,6 +98,8 @@ def social_user(db: Session, profile: SocialProfile) -> User | None:
         .where(SocialAccount.provider == profile.provider, SocialAccount.provider_user_id == profile.provider_user_id)
     )
     if user is None:
+        if profile.email and db.scalar(select(User.id).where(User.email == normalize_email(profile.email))) is not None:
+            raise _email_taken()
         return None
     if user.status == "WITHDRAWN":
         raise _bad_login()
@@ -109,7 +135,7 @@ def social_complete(db: Session, profile: SocialProfile, body: SocialCompleteIn,
 
 
 def _already_linked() -> AppError:
-    return AppError(409, "INVALID_STATE", "이미 가입된 소셜 계정이에요. 다시 로그인해 주세요.")
+    return AppError(409, "SOCIAL_ALREADY_LINKED", "이미 가입된 소셜 계정이에요. 다시 로그인해 주세요.")
 
 
 def _add_user(db: Session, body: SocialCompleteIn, *, password: str | None, social: bool, now: datetime) -> User:

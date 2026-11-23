@@ -245,6 +245,18 @@ def test_ac_f3_05_full_spec_venue_suggests_skip(client, db, full_spec, suggest):
     assert (step.next_stage_type, step.suggest_skip, step.checkout_available) == ("EQUIPMENT", suggest, False)
 
 
+@pytest.mark.parametrize("with_engineer, suggest", [(True, True), (False, False)])
+def test_ac_f3_23_equipment_quote_with_engineer_suggests_skip(client, db, with_engineer, suggest):
+    """CHK-09: 장비 견적서에 엔지니어가 포함되면 엔지니어 단계 건너뛰기를 제안한다."""
+    user, perf_id = _published(client, db)
+    _advance(user, _confirm(db, perf_id, "VENUE")[0])
+    equipment_id, _ = _confirm(db, perf_id, "EQUIPMENT")
+
+    step = service.after_confirm(db, equipment_id, full_spec=with_engineer)
+
+    assert (step.next_stage_type, step.suggest_skip, step.checkout_available) == ("ENGINEER", suggest, False)
+
+
 def test_ac_f3_14_last_stage_confirmed_offers_checkout(client, db):
     user, perf_id = _published(client, db)
     _advance(user, _confirm(db, perf_id, "VENUE")[0])

@@ -3,6 +3,7 @@
 가입 칸은 일부러 모두 비어도 받는다 — 빈 칸 검사는 서비스(calc.signup_field_errors)가 하고, 칸마다 한국어 이유를 돌려준다 (AC-F1-01).
 """
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -65,6 +66,22 @@ class PasswordResetIn(BaseModel):
     model_config = _IN
 
     email: str = Field(min_length=1, max_length=255)
+
+
+class AvailabilityIn(BaseModel):
+    """가입 화면 [중복 확인] — 이메일 또는 닉네임 하나씩."""
+
+    model_config = _IN
+
+    field: Literal["email", "nickname"]
+    value: str = Field(max_length=255)
+
+
+class AvailabilityOut(BaseModel):
+    model_config = _OUT
+
+    available: bool
+    message: str
 
 
 class PasswordResetOut(BaseModel):

@@ -11,12 +11,15 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { PerformanceDetail, StageSummary } from "../shared/api/types";
 import { ErrorNotice } from "../shared/ui/ErrorText";
+import { DeadlineNotice } from "../shared/ui/DeadlineNotice";
 import { Ico } from "../shared/ui/Ico";
 import { useStageQuotes } from "../features/compare/api";
 import { usePerformance, useWithdraw } from "../features/performance/api";
 import { ConfirmModal } from "../features/performance/ConfirmModal";
 import { dateLabel, hm, nextActionText, STAGE_NAME, STAGE_STATUS } from "../features/performance/labels";
 import { NextStagePanel } from "../features/performance/NextStagePanel";
+import { FavoriteSuggest } from "../features/offer/FavoriteSuggest";
+import { PerformanceReviews } from "../features/review/PerformanceReviews";
 import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
 import { CONDITIONS, FORMS, SERVICES, TASKS, VENUE_TYPES } from "../features/request/codes";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -133,6 +136,7 @@ function StepRow({ p, s, index, last }: { p: PerformanceDetail; s: StageSummary;
                 <p className="muted mt-12" style={{ fontSize: 13 }}>
                   한 단계에서 여러 업체와 채팅할 수 있지만, 확정은 한 업체만 할 수 있어요.
                 </p>
+                {(s.status === "OPEN" || s.status === "NEGOTIATING") && <FavoriteSuggest stage={s} title={p.title} />}
               </>
             )}
             {state === "done" && isNext && p.nextAction === "OPEN_NEXT" && (
@@ -271,6 +275,8 @@ export function PerformancePage() {
       </div>
 
       <main className="container main">
+        <DeadlineNotice deadline={p.paymentDeadline} what={p.status === "AWAITING_PAYMENT" ? "결제" : "남은 업체 선택과 결제"} />
+        {(p.status === "CONFIRMED" || p.status === "COMPLETED") && <PerformanceReviews performanceId={p.id} />}
         <section className="sec">
           <div className="sec-head">
             <h2>

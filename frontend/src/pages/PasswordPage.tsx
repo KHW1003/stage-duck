@@ -9,6 +9,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AuthSplit } from "../features/auth/AuthSplit";
 import { useConfirmPasswordReset, useRequestPasswordReset } from "../features/auth/api";
+import { emailError } from "../features/auth/rules";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import { Ico } from "../shared/ui/Ico";
@@ -28,29 +29,36 @@ function ErrorLine({ children }: { children: string }) {
 function Forgot({ onSent }: { onSent: (email: string, demoLink: string | null) => void }) {
   const [email, setEmail] = useState("");
   const send = useRequestPasswordReset();
+  const [bad, setBad] = useState<string | null>(null);
   const error = send.error instanceof ApiError ? send.error.body.message : send.error ? "잠시 뒤 다시 시도해 주세요." : null;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const value = email.trim();
-    if (!value || send.isPending) return;
+    const bad = emailError(value);
+    setBad(bad ?? null);
+    if (bad || send.isPending) return;
     send.mutate(value, { onSuccess: (res) => onSent(value, res.demoLink) });
   };
   return (
     <div className="pw">
       <h1>비밀번호 찾기</h1>
       <p>가입한 이메일을 넣으면 비밀번호를 바꿀 수 있는 링크를 보내 드려요.</p>
-      <form className="pw__form stack" style={{ ["--gap" as string]: "14px" }} onSubmit={submit}>
+      <form className="pw__form stack" style={{ ["--gap" as string]: "14px" }} onSubmit={submit} noValidate>
         <input
           className="input login__input"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setBad(null);
+          }}
           aria-label="이메일"
+          aria-invalid={!!bad || undefined}
           placeholder="이메일"
           autoComplete="email"
           required
         />
-        {error && <ErrorLine>{error}</ErrorLine>}
+        {bad ? <ErrorLine>{bad}</ErrorLine> : error && <ErrorLine>{error}</ErrorLine>}
         <button className="btn btn--primary btn--lg btn--block" type="submit" disabled={!email.trim() || send.isPending}>
           링크 보내기
         </button>

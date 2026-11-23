@@ -179,6 +179,17 @@ def start_chat(db: Session, user: User, room_id: int, *, now: datetime) -> ChatR
         raise not_found()
     if room.started_at is None:
         room.started_at = _ms(now)
+        # #45 업체에게 CHAT_STARTED (처음 한 번만). 닉네임만, 실명·연락처 없음
+        from app.notification import service as notification  # 3번 안, 순환 import 피함
+
+        stage = db.get(Stage, room.stage_id)
+        supplier_user_id = db.scalar(select(Supplier.user_id).where(Supplier.id == room.supplier_id))
+        notification.notify(
+            db, supplier_user_id, "CHAT_STARTED", link=f"/chats/{room.id}",
+            params={"nickname": user.nickname or "사용자", "title": stage.performance.title,
+                    "stage": notification.stage_label(stage.stage_type)},
+            payload={"roomId": room.id}, actor_id=user.id,
+        )
     db.commit()
     return room
 

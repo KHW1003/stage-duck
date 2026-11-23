@@ -161,7 +161,7 @@ def delete_inquiry(db: Session, user: User, inquiry_id: int) -> None:
 def answer_inquiry(db: Session, inquiry_id: int, *, actor_id: int, reason: str, now: datetime | None = None) -> Inquiry:
     """AC-F5-19 (FR-ADMIN-06): 관리자가 SQLAdmin 에서 답변 → 답변 완료. reason = 답변 글 (사유 입력 화면을 같이 쓴다).
 
-    shortcut: 사이트 안 알림 INQUIRY_ANSWERED 는 3번 notify()(#45)가 들어오면 여기서 부른다.
+    문의한 회원에게 INQUIRY_ANSWERED (#45, 정지 계정에도 간다).
     """
     answer = (reason or "").strip()
     if not answer:
@@ -175,5 +175,9 @@ def answer_inquiry(db: Session, inquiry_id: int, *, actor_id: int, reason: str, 
                       actor_user_id=actor_id)
     inquiry.status, inquiry.answer, inquiry.answered_by = "ANSWERED", answer, actor_id
     inquiry.answered_at = now or datetime.now()
+    from app.notification import service as notification  # 3번 → 함수 안 import
+
+    notification.notify(db, inquiry.user_id, "INQUIRY_ANSWERED", link=f"/inquiries/{inquiry.id}",
+                        params={"title": notification.snippet(inquiry.title, 30)}, payload={"inquiryId": inquiry.id})
     db.commit()
     return inquiry

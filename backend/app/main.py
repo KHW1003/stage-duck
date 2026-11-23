@@ -30,7 +30,14 @@ from app.support.router import inquiry_router
 from app.support.router import router as notice_router
 from app.check.router import router as compare_router
 from app.payment.router import payment_router
+from app.offer.router import router as offer_router
+from app.notification.router import router as notification_router
+from app.confirm.router import router as confirm_router
+from app.review.router import router as review_router
 from app.payment.router import router as order_router
+
+
+from app.core import scheduler  # noqa: E402
 
 
 def create_app() -> FastAPI:
@@ -67,6 +74,10 @@ def create_app() -> FastAPI:
     api.include_router(compare_router)  # #48 견적 비교
     api.include_router(order_router)  # #50 통합 청구서
     api.include_router(payment_router)  # #51 테스트 결제
+    api.include_router(offer_router)  # #32 견적 요청·관심 업체
+    api.include_router(notification_router)  # #45 사이트 안 알림
+    api.include_router(confirm_router)  # #43 최종 견적·확정
+    api.include_router(review_router)  # 공연 후기·평점
     if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
         api.include_router(dev_router)
     app.include_router(api)
@@ -77,6 +88,15 @@ def create_app() -> FastAPI:
     # 화면: 빌드된 JS·CSS, 그리고 나머지 주소는 head 를 채운 index.html (specs/seo.md 1장). 반드시 맨 마지막
     app.mount("/assets", StaticFiles(directory=Path(get_settings().frontend_dist) / "assets", check_dir=False), name="assets")
     app.include_router(seo_router)
+
+    @app.on_event("startup")
+    def _start_scheduler() -> None:  # 결제 마감 리마인드·자동 취소 (D-57), 1분마다
+        scheduler.start()
+
+    @app.on_event("shutdown")
+    def _stop_scheduler() -> None:
+        scheduler.stop()
+
     return app
 
 

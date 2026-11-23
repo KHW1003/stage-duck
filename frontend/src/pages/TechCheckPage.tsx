@@ -4,13 +4,16 @@
  * - 항목은 엔지니어(또는 엔지니어 포함 업체)가 정하고, 각 업체는 자기 담당 항목에만 답한다 (서버가 mine 으로 알려 준다)
  * - 내 항목: 답변 전이면 바로 입력칸(작성 중), 답변했으면 [고치기]로 다시 연다. 남의 항목은 "업체 C만 답할 수 있어요"
  * - 자동 판정 없음 — 답변은 참고용
- * /supplier/tech (공연 번호 없음)는 공고 목록에서 들어오라는 안내. 서버: backend/app/tech (#49)
+ * 업체는 내 예약에서 공연을 골라 들어온다. 서버: backend/app/tech (#49)
  */
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAddTechCheck, useAnswerTechCheck, useTechChecks, type TechCheckItem, type TechCheckList } from "../features/tech/api";
 import { dateLabel } from "../features/performance/labels";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { useSupplierTermsReview } from "../features/supplier/termsReview";
+import { SupplierTermsPanel } from "./SupplierTermsReview";
+import { ErrorNotice } from "../shared/ui/ErrorText";
 import { ApiError } from "../shared/api/client";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { NotFound } from "../shared/layout/NotFound";
@@ -158,8 +161,9 @@ export function TechCheckView({ data }: { data: TechCheckList }) {
   return (
     <>
       <KitPageTop
-        title="기술 확인"
-        crumbs={[{ label: "기술 확인" }]}
+        title="현장 준비 확인"
+        crumbs={[{ label: "내 예약", to: "/supplier/reservations" }, { label: "현장 준비 확인" }]}
+        desc="전원, 장비 반입, 설치 등 공연 전에 맞춰야 할 사항을 확인해요."
         meta={[data.performance.title, dateLabel(data.performance.showDate), data.performance.statusLabel, `항목 담당: ${data.creator?.name ?? "엔지니어 확정 전"}`]}
         actions={
           data.canAdd && (
@@ -264,30 +268,34 @@ export function TechCheckView({ data }: { data: TechCheckList }) {
 }
 
 export function TechCheckPage() {
-  usePageMeta("기술 확인");
+  usePageMeta("현장 준비 확인");
   const id = Number(useParams().performanceId);
   const list = useTechChecks(id);
+  const review = useSupplierTermsReview();
   if (!Number.isInteger(id) || (list.error instanceof ApiError && list.error.status === 404)) return <NotFound />;
-  if (!list.data) return <p className="sd-sr-only">불러오는 중이에요</p>;
-  return <TechCheckView data={list.data} />;
-}
-
-/** /supplier/tech: 공연을 고르지 않고 들어왔을 때 */
-export function TechCheckIndexPage() {
-  usePageMeta("기술 확인");
-  return (
-    <>
-      <KitPageTop title="기술 확인" crumbs={[{ label: "기술 확인" }]} />
+  if (list.isError || review.isError) {
+    return (
       <main className="container main">
-        <div className="empty">
-          <Ico name="tool" />
-          <b>공연을 먼저 골라 주세요</b>
-          <p>컨펌한 공고의 상세에서 [기술 확인]으로 들어오면 그 공연의 확인 항목이 보여요.</p>
-          <Link className="btn btn--sm" to="/supplier/postings">
-            공고 목록
-          </Link>
-        </div>
+        <ErrorNotice error={list.error ?? review.error} />
+        <button className="btn btn--sm" type="button" onClick={() => {
+          if (list.isError) void list.refetch();
+          if (review.isError) void review.refetch();
+        }}>다시 불러오기</button>
       </main>
-    </>
-  );
+    );
+  }
+  if (!list.data || !review.data) return <p className="sd-sr-only">불러오는 중이에요</p>;
+  if (!review.data.reviewed) {
+    return (
+      <>
+        <KitPageTop
+          title="현장 준비 확인"
+          crumbs={[{ label: "내 예약", to: "/supplier/reservations" }, { label: "현장 준비 확인" }]}
+          meta={[list.data.performance.title]}
+        />
+        <main className="container main"><SupplierTermsPanel /></main>
+      </>
+    );
+  }
+  return <TechCheckView data={list.data} />;
 }

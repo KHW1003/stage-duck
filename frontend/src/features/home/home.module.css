@@ -522,3 +522,20 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
 @media (max-width: 560px) {
   .gnb__right--member { gap: 6px; } /* 알림·아바타·메뉴 세 개가 375px 에 들어가게 */
 }
+
+/* 로그인 · 진행 중인 공연이 없을 때 (11/19 피드백): 진행 순서 미리보기 + 은은한 배경 */
+.now--empty { position: relative; overflow: hidden; justify-content: center; gap: 0; background:
+  radial-gradient(circle at 100% 0%, var(--sd-accent) 0, transparent 42%),
+  radial-gradient(circle at 0% 100%, var(--sd-info-soft) 0, transparent 38%),
+  var(--sd-soft); }
+.now--empty > * { position: relative; }
+.now__preview { margin-top: 22px; counter-reset: step; }
+.now__preview .step-row { position: relative; padding: 14px 18px; background: color-mix(in srgb, var(--sd-bg) 88%, transparent); border-style: dashed; }
+.now__preview .step-row + .step-row::before { content: ""; position: absolute; left: 33px; top: -11px; height: 10px; border-left: 2px dotted var(--sd-line-strong); }
+.now__preview-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--sd-soft); color: var(--sd-muted); }
+.now__preview-icon svg { width: 18px; height: 18px; }
+.now__cta { align-self: flex-start; margin-top: 22px; min-height: 48px; padding: 0 22px; }
+/* 슬라이드 비율(1.12)보다 내용이 길어 비율을 풀고, 최소 높이만 슬라이드와 비슷하게 */
+.now--empty { aspect-ratio: auto; min-height: 520px; padding-top: 30px; padding-bottom: 30px; }
+@media (max-width: 1023px) { .now--empty { min-height: 0; } }
+@media (max-width: 560px) { .now__preview-icon { display: none; } .now__preview .step-row { grid-template-columns: 30px 1fr; } .now__cta { align-self: stretch; } }

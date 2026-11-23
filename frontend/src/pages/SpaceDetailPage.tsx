@@ -1,24 +1,27 @@
 /**
  * 공간 상세 (/venues/:id). 목업: mockup-v4/pages/space.html · FR-SPACE-01·03 · FR-OFFER-01 · AC-F3-16
- * 사진(큰 사진 + 작은 사진 줄) · 요약표 · 오른쪽 오퍼 상자(스크롤을 따라옴) · 탭(공간 조건 / 기본 장비·인력 / 소개 / 이용 안내).
+ * 사진(큰 사진 + 작은 사진 줄) · 요약표 · 오른쪽 견적 요청 상자(스크롤을 따라옴) · 탭(공간 조건 / 기본 장비·인력 / 소개 / 이용 안내).
  * - 작은 사진을 누르면 큰 사진이 바뀐다
  * - 탭을 누르면 그 구역으로 내려가고, 스크롤하면 지금 보이는 구역의 탭에 표시가 옮겨 간다
- * - 오퍼 상자: 로그인한 사용자의 공연 중 공연장 단계가 열린 공연만 고를 수 있다 (내 공연 API).
- *   오퍼 보내기·신고(공간)는 서버 API 가 아직 없어 창까지만 연다
+ * - 견적 요청 상자: 로그인한 사용자의 공연 중 공연장 단계가 열린 공연만 고를 수 있다 (내 공연 API).
+ *   [견적 요청하기]는 POST /stages/{id}/offers (#32). 신고(공간)는 서버 API 가 아직 없어 창까지만 연다
  * 연락처는 보이지 않는다. 서버 GET /venues/{id} — 조건의 null 은 "미확인". 사진은 공간 유형별 기본 사진 (features/venue/view).
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useMyPerformances } from "../features/performance/api";
-import { dateLabel } from "../features/performance/labels";
+import { FavoriteButton, OfferPicker } from "../features/offer/OfferParts";
+import { useReviewSummaries } from "../features/review/api";
+import { RatingBadge } from "../features/review/Stars";
+import type { StageType } from "../shared/api/types";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { useVenue, type VenueDetail } from "../features/venue/api";
 import { TYPE_LABEL, hm, shortSido, venuePhotos, won, yesNo } from "../features/venue/view";
 import { ApiError } from "../shared/api/client";
-import { layoutKindOf, useMe } from "../shared/auth/useMe";
 import { NotFound } from "../shared/layout/NotFound";
 import { Ico } from "../shared/ui/Ico";
 import { KitModal } from "../shared/ui/KitModal";
+
+const VENUE_STAGE: StageType[] = ["VENUE"];
 import "./space-detail.css";
 
 const TABS = [
@@ -74,113 +77,17 @@ function useActiveSection(ids: string[]): string {
   return active;
 }
 
-function OfferBox({ v, onOffer }: { v: VenueDetail; onOffer: (title: string) => void }) {
-  const me = useMe();
-  const user = layoutKindOf(me.data) === "user";
-  const mine = useMyPerformances();
-  const open = useMemo(
-    () => (user ? (mine.data?.active ?? []).filter((p) => p.stages.some((s) => s.stageType === "VENUE" && (s.status === "OPEN" || s.status === "NEGOTIATING"))) : []),
-    [user, mine.data],
-  );
-  const [pick, setPick] = useState<number | null>(null);
-  const perf = open.find((p) => p.id === pick) ?? open[0];
-
+function OfferBox({ v }: { v: VenueDetail }) {
   return (
-    <aside className="side-box offer-fixed" aria-label="오퍼 보내기">
+    <aside className="side-box offer-fixed" aria-label="견적 요청하기">
       <div className="side-box__sec">
-        <p className="side-box__title">이 업체에 오퍼 보내기</p>
+        <p className="side-box__title">이 업체에 견적 요청하기</p>
         <p className="small muted">내 공고를 먼저 보여 줘요. 업체는 48시간 안에 견적서를 보내거나 거절해요.</p>
       </div>
-      {!user ? (
-        <div className="side-box__sec">
-          <p className="small muted">공연을 준비하는 사용자로 로그인하면 오퍼를 보낼 수 있어요.</p>
-          <Link className="btn btn--primary btn--lg btn--block mt-12" to={`/login?next=/venues/${v.id}`}>
-            로그인
-          </Link>
-        </div>
-      ) : open.length === 0 ? (
-        <div className="side-box__sec">
-          <p className="small muted">공연장 단계가 열린 공연이 없어요. 요청서를 먼저 올려 주세요.</p>
-          <Link className="btn btn--primary btn--lg btn--block mt-12" to="/performances/new">
-            요청서 쓰기
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div className="side-box__sec">
-            <label className="field">
-              <span className="field__label">내 공연</span>
-              <select className="select" value={perf?.id} onChange={(e) => setPick(Number(e.target.value))}>
-                {open.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title} · 공연장 단계
-                  </option>
-                ))}
-              </select>
-            </label>
-            {perf && (
-              <dl className="sum-rows mt-12">
-                <div>
-                  <dt>공연 날짜</dt>
-                  <dd>{dateLabel(perf.showDate)}</dd>
-                </div>
-                <div>
-                  <dt>관객</dt>
-                  <dd>{perf.audience}명</dd>
-                </div>
-                <div>
-                  <dt>이 단계 오퍼</dt>
-                  <dd>0 / 10곳</dd>
-                </div>
-              </dl>
-            )}
-          </div>
-          <div className="side-box__sec">
-            <button className="btn btn--primary btn--lg btn--block" type="button" onClick={() => perf && onOffer(perf.title)}>
-              오퍼 보내기
-            </button>
-            <p className="field__hint mt-8">연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>
-          </div>
-        </>
-      )}
+      <div className="side-box__sec">
+        <OfferPicker supplierId={v.supplierId} companyName={v.companyName} stageTypes={VENUE_STAGE} next={`/venues/${v.id}`} />
+      </div>
     </aside>
-  );
-}
-
-function OfferModal({ v, title, onClose }: { v: VenueDetail; title: string; onClose: () => void }) {
-  const [note, setNote] = useState("");
-  const [tried, setTried] = useState(false);
-  return (
-    <KitModal
-      title="오퍼 보내기"
-      onClose={onClose}
-      foot={
-        <>
-          <button className="btn" type="button" onClick={onClose}>
-            취소
-          </button>
-          <button className="btn btn--primary" type="button" onClick={() => setTried(true)}>
-            오퍼 보내기
-          </button>
-        </>
-      }
-    >
-      <p className="modal__lead">{v.companyName}에 오퍼를 보낼까요?</p>
-      <p>{title} · 공연장 단계 · 응답 기한 48시간</p>
-      <label className="field mt-16">
-        <span className="field__label">
-          한마디<span className="opt">선택</span>
-        </span>
-        <textarea className="textarea" placeholder="예: 리허설 17시부터 가능한지 궁금해요." value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
-        <span className="field__hint">전화번호·계좌번호는 적을 수 없어요.</span>
-      </label>
-      {tried && (
-        <div className="notice mt-12" role="status">
-          <Ico name="info" />
-          <div>오퍼 보내기는 곧 열려요. 지금은 요청서를 올리면 업체가 공고를 보고 견적서를 보내요.</div>
-        </div>
-      )}
-    </KitModal>
   );
 }
 
@@ -238,8 +145,7 @@ export function SpaceDetailPage() {
   const v = venue.data;
   usePageMeta(v ? `${v.name} · ${v.sigungu} ${v.maxCapacity}명 공연 공간` : null);
   const active = useActiveSection(useMemo(() => TABS.map((t) => t.id), []));
-  const [modal, setModal] = useState<{ kind: "offer"; title: string } | { kind: "report" } | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [modal, setModal] = useState<{ kind: "report" } | null>(null);
   if (!Number.isInteger(id) || (venue.error instanceof ApiError && venue.error.status === 404)) return <NotFound />;
   if (!v) return <p className="sd-sr-only">불러오는 중이에요</p>;
   const photos = venuePhotos(v);
@@ -303,7 +209,10 @@ export function SpaceDetailPage() {
                   <tr>
                     <th>업체</th>
                     <td>
-                      <span className="link link--point">{v.companyName}</span>
+                      <Link className="link link--point" to={`/suppliers/${v.supplierId}`}>
+                        {v.companyName}
+                      </Link>
+                      <SupplierRating supplierId={v.supplierId} />
                     </td>
                   </tr>
                   <tr>
@@ -323,10 +232,7 @@ export function SpaceDetailPage() {
                 </tbody>
               </table>
               <div className="btns mt-16">
-                <button className="btn btn--sm" type="button" aria-pressed={saved} onClick={() => setSaved((s) => !s)}>
-                  <Ico name="heart" sm />
-                  {saved ? "관심 업체 저장됨" : "관심 업체 저장"}
-                </button>
+                <FavoriteButton supplierId={v.supplierId} next={`/venues/${v.id}`} />
                 <button className="btn btn--sm btn--ghost" type="button" onClick={() => setModal({ kind: "report" })}>
                   <Ico name="flag" sm />
                   신고
@@ -446,11 +352,21 @@ export function SpaceDetailPage() {
           </section>
         </div>
         <div className="offer-col">
-          <OfferBox v={v} onOffer={(title) => setModal({ kind: "offer", title })} />
+          <OfferBox v={v} />
         </div>
       </div>
-      {modal?.kind === "offer" && <OfferModal v={v} title={modal.title} onClose={() => setModal(null)} />}
       {modal?.kind === "report" && <ReportModal onClose={() => setModal(null)} />}
     </div>
   );
+}
+
+/** 공간 업체의 별점 (후기가 있을 때만, specs/reviews.md) */
+function SupplierRating({ supplierId }: { supplierId: number }) {
+  const r = useReviewSummaries([supplierId]).get(supplierId);
+  return r ? (
+    <>
+      {" "}
+      <RatingBadge average={r.average} count={r.count} />
+    </>
+  ) : null;
 }

@@ -57,6 +57,29 @@ def test_ac_f5_08_d1_user_cancel_70_percent_split_by_amount(client, db):
     assert (row.requested_by, row.phase, row.rate_percent, row.penalty_total, row.refund_total) == ("USER", "D1", 70, 1295000, 555000)
 
 
+def test_cancel_rejects_stale_confirmation_without_changes(client, db):
+    user, perf_id, order_id, _ = _paid(client, db)
+    url = f"/api/v1/performances/{perf_id}"
+    fields = ("phase", "ratePercent", "paid", "penaltyTotal", "feeRefunded", "refundTotal")
+    _at(datetime(2026, 11, 27, 23, 59))
+    preview = user.get(f"{url}/cancel-quote").json()
+    before = _ledger(db, order_id)
+
+    _at(datetime(2026, 11, 28, 0, 0))
+    stale = user.post(f"{url}/cancel", json={key: preview[key] for key in fields})
+    assert stale.status_code == 409, stale.text
+    assert "취소 금액이 변경되었습니다" in stale.json()["message"]
+    assert _ledger(db, order_id) == before
+    assert db.get(Order, order_id).status == "PAID"
+    assert db.scalar(select(Cancellation).where(Cancellation.performance_id == perf_id)) is None
+
+    updated = user.get(f"{url}/cancel-quote").json()
+    accepted = user.post(f"{url}/cancel", json={key: updated[key] for key in fields})
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["penaltyTotal"] == 1850000
+    assert accepted.json()["refundTotal"] == 0
+
+
 @pytest.mark.parametrize(("when", "phase", "refund"), [
     (datetime(2026, 11, 20, 21, 59), "GRACE_12H", TOTAL),  # 결제 후 11시간 59분 — 이용료까지
     (datetime(2026, 11, 21, 10, 0), "D7_D2", 925000),  # 결제 후 24시간, D-7 → 50%

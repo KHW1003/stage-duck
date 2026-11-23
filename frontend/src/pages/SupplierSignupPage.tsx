@@ -3,13 +3,17 @@
  * 가입되면 바로 로그인되고, 서버가 준 첫 화면(입점 신청)으로 간다.
  */
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageTop } from "../shared/layout/PageTop";
 import { Button, ButtonLink } from "../shared/ui/Button";
 import { ApiError } from "../shared/api/client";
 import { ErrorNotice, fieldErrorOf } from "../shared/ui/ErrorText";
 import { Field, Input } from "../shared/ui/Field";
 import { useSupplierSignup } from "../features/supplier/api";
+import { emailError, passwordError, phoneError } from "../features/auth/rules";
+import { useDupCheck } from "../features/auth/useDupCheck";
+import { TermsModal } from "../features/support/TermsModal";
+import type { TermsType } from "../features/support/terms";
 import { Steps } from "../features/supplier/Steps";
 import styles from "../features/supplier/Supplier.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -29,7 +33,13 @@ export function SupplierSignupPage() {
   const signup = useSupplierSignup();
   const [form, setForm] = useState(EMPTY);
   const [checked, setChecked] = useState(false);
-  const err = (field: string) => fieldErrorOf(signup.error, field);
+  const dup = useDupCheck();
+  /** 약관 [보기]: 화면을 옮기지 않고 모달로 (옮기면 입력이 지워진다) */
+  const [reading, setReading] = useState<{ type: TermsType; label: string; key: BoxKey } | null>(null);
+  const local = checked ? localErrors(form) : {};
+  const emailDup = dup.result("email", form.email);
+  const err = (field: string) =>
+    local[field as keyof typeof local] ?? fieldErrorOf(signup.error, field) ?? (field === "email" && emailDup?.ok === false ? emailDup.msg : undefined);
   const mismatch = checked && form.passwordCheck !== form.password;
   const text = (key: TextKey) => ({ value: form[key], onChange: (e: Change) => setForm({ ...form, [key]: e.target.value }) });
   const box = (key: BoxKey) => ({ checked: form[key], onChange: (e: Change) => setForm({ ...form, [key]: e.target.checked }) });
@@ -37,7 +47,7 @@ export function SupplierSignupPage() {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setChecked(true);
-    if (form.passwordCheck !== form.password) return;
+    if (form.passwordCheck !== form.password || Object.keys(localErrors(form)).length) return;
     const { email, password, name, phone, service, privacy, marketing } = form;
     signup.mutate(
       { email, password, name, phone, agreements: { service, privacyRequired: privacy, privacyOptional: false, marketing } },
@@ -56,9 +66,19 @@ export function SupplierSignupPage() {
         <Steps now={0} />
         <form className={styles.form} onSubmit={onSubmit} noValidate>
           <section className={styles.section}>
-            <Field label="회사 이메일" required hint="담당자가 바뀌어도 쓸 수 있는 회사 공용 이메일을 권해요." error={err("email")}>
+            <Field
+              label="회사 이메일"
+              required
+              hint={emailDup?.ok ? `✓ ${emailDup.msg}` : "담당자가 바뀌어도 쓸 수 있는 회사 공용 이메일을 권해요."}
+              error={err("email")}
+            >
               {(c) => (
-                <Input {...c} type="email" autoComplete="email" {...text("email")} />
+                <span className={styles.withButton}>
+                  <Input {...c} type="email" autoComplete="email" {...text("email")} />
+                  <Button type="button" loading={dup.checking === "email"} onClick={() => dup.check("email", form.email)} aria-label="이메일 중복 확인">
+                    중복 확인
+                  </Button>
+                </span>
               )}
             </Field>
             <div className={styles.row2}>
@@ -92,12 +112,16 @@ export function SupplierSignupPage() {
             <label className={styles.check}>
               <input type="checkbox" {...box("service")} />
               STAGE DUCK 이용약관 (필수)
-              <Link to="/terms/supplier">보기</Link>
+              <button className="link" type="button" onClick={() => setReading({ type: "supplier", label: "STAGE DUCK 이용약관 (필수)", key: "service" })}>
+                보기
+              </button>
             </label>
             <label className={styles.check}>
               <input type="checkbox" {...box("privacy")} />
               개인정보 수집·이용 (필수)
-              <Link to="/terms/privacy">보기</Link>
+              <button className="link" type="button" onClick={() => setReading({ type: "privacy", label: "개인정보 수집·이용 (필수)", key: "privacy" })}>
+                보기
+              </button>
             </label>
             <label className={styles.check}>
               <input type="checkbox" {...box("marketing")} />
@@ -116,8 +140,22 @@ export function SupplierSignupPage() {
           </div>
         </form>
       </div>
+      {reading && (
+        <TermsModal
+          type={reading.type}
+          label={reading.label}
+          onClose={() => setReading(null)}
+          onAgree={() => setForm((f) => ({ ...f, [reading.key]: true }))}
+        />
+      )}
     </>
   );
+}
+
+/** 화면에서 먼저 보는 칸 규칙 (서버와 같은 문구). 약관은 서버가 TERMS_REQUIRED 로 알려 준다 */
+function localErrors(f: typeof EMPTY): Partial<Record<"email" | "password" | "name" | "phone", string>> {
+  const e = { email: emailError(f.email), password: passwordError(f.password), name: f.name.trim() ? undefined : "담당자 이름을 적어 주세요.", phone: phoneError(f.phone) };
+  return Object.fromEntries(Object.entries(e).filter(([, v]) => v)) as Partial<Record<"email" | "password" | "name" | "phone", string>>;
 }
 
 /** 이 화면의 칸 아래에 이미 보이는 오류뿐이면 위쪽 안내는 띄우지 않는다 (약관 같은 칸 밖 오류는 안내로 보인다) */

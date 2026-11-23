@@ -7,6 +7,7 @@
  * - 409 STAGE_NOT_OPEN: 보낼 수 없는 공고 안내 + [공고 목록으로]
  * [채팅방으로]는 지금 화면 주소에 ?chat=<roomId> 를 붙인다. 떠 있는 채팅 위젯 연결은 다음 PR.
  */
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ApiError } from "../shared/api/client";
 import type { PostingDetail, QuoteIn, QuoteSentOut } from "../shared/api/types";
@@ -19,6 +20,8 @@ import { MoneyText } from "../shared/ui/MoneyText";
 import { usePosting, useSendQuote } from "../features/quote/api";
 import { dateLabel, hm, nicknameOf, stageTag, userCounts } from "../features/quote/labels";
 import { QuoteForm } from "../features/quote/QuoteForm";
+import { useSupplierTermsReview } from "../features/supplier/termsReview";
+import { SupplierTermsFlow } from "./SupplierTermsReview";
 import styles from "../features/quote/Quote.module.css";
 
 const LIST_PATH = "/supplier/postings";
@@ -91,6 +94,23 @@ function Sent({ p, body, result, again }: { p: PostingDetail; body: QuoteIn; res
 function Writer({ stageId, again }: { stageId: number; again: string }) {
   const posting = usePosting(stageId);
   const send = useSendQuote(stageId);
+  const review = useSupplierTermsReview();
+  const [draftToSend, setDraftToSend] = useState<QuoteIn | null>(null);
+
+  function sendQuote(body: QuoteIn) {
+    send.mutate(body, {
+      onError: (error) => {
+        if (error instanceof ApiError && error.body.code === "SUPPLIER_TERMS_REVIEW_REQUIRED") {
+          setDraftToSend(body);
+        }
+      },
+    });
+  }
+
+  function submit(body: QuoteIn) {
+    if (review.data?.reviewed) sendQuote(body);
+    else setDraftToSend(body);
+  }
   const p = posting.data;
   const crumbs = [{ label: "공고 목록", to: LIST_PATH }, { label: "공고 상세", to: `${LIST_PATH}/${stageId}` }, { label: "견적서" }];
 
@@ -124,8 +144,18 @@ function Writer({ stageId, again }: { stageId: number; again: string }) {
         {hidden && <Notice title="볼 수 없는 공고예요" desc="마감됐거나, 내 부문·지역의 공고가 아니거나, 아직 내 단계가 열리지 않았어요." />}
         {!hidden && <ErrorNotice error={posting.error} />}
         {notOpen && <Notice title="지금은 견적서를 보낼 수 없는 공고예요" desc={(send.error as ApiError).body.message} />}
-        {p && !notOpen && <QuoteForm posting={p} sending={send.isPending} error={send.error} onSubmit={(body) => send.mutate(body)} />}
+        {p && !notOpen && <QuoteForm posting={p} sending={send.isPending} error={send.error} onSubmit={submit} />}
       </div>
+      {draftToSend && (
+        <SupplierTermsFlow
+          completeLabel="확인하고 견적 보내기"
+          onClose={() => setDraftToSend(null)}
+          onComplete={() => {
+            setDraftToSend(null);
+            sendQuote(draftToSend);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -134,5 +164,5 @@ export function QuotePage() {
   const stageId = Number(useParams().stageId);
   const again = useSearchParams()[0].get("new") ?? "";
   // [다른 견적서 쓰기]로 ?new= 가 바뀌면 양식·보낸 결과를 새로 시작한다 (?chat= 은 그대로 둔다)
-  return <Writer key={again} stageId={stageId} again={again} />;
+  return <Writer key={stageId + ":" + again} stageId={stageId} again={again} />;
 }

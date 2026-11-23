@@ -67,6 +67,11 @@ export function useSignup() {
   });
 }
 
+/** 가입 화면 [중복 확인] — 누르는 즉시 이메일·닉네임을 쓸 수 있는지 (모양이 틀리면 400 + fieldErrors) */
+export function checkAvailable(field: "email" | "nickname", value: string) {
+  return api<{ available: boolean; message: string }>("/auth/check-available", { method: "POST", body: JSON.stringify({ field, value }) });
+}
+
 /** 비밀번호 찾기 (AC-F1-21·23). 가입 여부와 상관없이 항상 202. demoLink 는 시연 서버에서만 (D-55) */
 export function useRequestPasswordReset() {
   return useMutation({

@@ -3,9 +3,8 @@
 공연장 C 컨펌 → [다음 단계로] → 장비 D 컨펌 → 엔지니어 건너뛰기 → 통합 청구서 → 테스트 결제 → 최종 담당표.
 세 묶음이 만나는 곳(3번 컨펌 ↔ 2번 다음 단계 ↔ 4번 검사·청구서)을 **API만으로** 끝까지 지나간다.
 
-- 지금은 API가 없어서 실패한다 → `xfail`. 각 묶음이 자기 API를 만들면 이 테스트가 점점 더 멀리 간다.
-  실패한 줄을 보면 "다음에 막힌 곳"이 어디인지 알 수 있다: `pytest tests/scenario -rx`.
-- **모두 통과하면(XPASS) `xfail` 표시를 지운다** — 그때부터 이 테스트가 시연 시나리오를 지킨다.
+- 2026-11-23 처음부터 끝까지 통과해서 `xfail` 표시를 지웠다 — 이제 이 테스트가 시연 시나리오를 지킨다.
+  실패하면 실패한 줄이 "시연이 깨진 곳"이다.
 - 요청 본문은 api-contract.md 를 따랐다. 계약서에 예시가 없는 곳(로그인·공간 등록·청구서 응답 등)은
   `# 계약 예시 없음` 으로 표시했다 — 그 API를 만드는 묶음이 실제 모양에 맞춰 이 테스트를 고친다.
 - 값은 docs/guides/시연_예시값.md (공연장 C 500,000 + 장비 D 1,350,000 = 1,850,000, 이용료 5% 92,500, 합계 1,942,500).
@@ -13,7 +12,6 @@
 import uuid
 from datetime import date, timedelta
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.core.security import hash_password
@@ -22,7 +20,6 @@ from app.models import Supplier, SupplierCategory
 from tests.conftest import make_user
 
 PASSWORD = "scenario-pass-1234"
-pytestmark = pytest.mark.xfail(reason="대표 시나리오 — 각 묶음 API가 모두 생기면 통과한다 (이슈 #35)", strict=False)
 
 
 class Actor:
@@ -73,6 +70,11 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     b_email = _approved_supplier(db, "공연장 B 라이브홀", "VENUE")  # 견적을 보내지 않는 업체 — 담당표를 못 봐야 한다
     d_email = _approved_supplier(db, "장비 D 사운드", "EQUIPMENT")
     user, c, b, d = (Actor(e).login() for e in (user_email, c_email, b_email, d_email))
+    # 업체는 거래 약관을 확인해야 견적서를 보낸다 (#206)
+    for s in (c, b, d):
+        version = s.get("/supplier/terms-review")["version"]
+        res = s.c.put("/api/v1/supplier/terms-review", json={"version": version}, headers=s._headers(False))
+        assert res.status_code == 200, res.text
 
     # 공연장 C의 공간 등록 (1번 T1-06) — 계약 예시 없음, 칸 이름은 data-model.md venues
     venue = c.post("/supplier/venues", {
@@ -147,12 +149,12 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     assert accepted_d["next"]["suggestSkip"] is True  # CHK-09: 앞 단계 견적에 엔지니어 포함
     skipped = user.post(f"/stages/{eq_stage}/advance",
                         {"action": "SKIP_NEXT", "acknowledgement": "STAGE_SKIP_OWNED", "noticeVersion": "1"}, idem=True)
-    assert skipped["checkoutAvailable"] is True  # 계약 예시 없음 (AC-F3-14)
+    assert skipped["performanceStatus"] == "AWAITING_PAYMENT"  # 모든 단계 확정·건너뜀 → 결제 가능 (AC-F3-14)
 
     # ---- 11. 통합 청구서 → 테스트 결제 (중복 응답 포함) (4번 T4-05·06) ------------------------------
     order = user.post(f"/performances/{perf_id}/order", expect=201)  # 계약 예시 없음
     assert order["itemsTotal"] == 1_850_000
-    assert order["feeAmount"] == 92_500  # 5%, 원 미만 버림 (D-39)
+    assert order["platformFee"] == 92_500  # 5%, 원 미만 버림 (D-39)
     assert order["totalAmount"] == 1_942_500
     key = {"Idempotency-Key": uuid.uuid4().hex}
     first = user.post(f"/orders/{order['id']}/payments", {"amount": 1_942_500, "mockResult": "SUCCESS"}, headers=key)

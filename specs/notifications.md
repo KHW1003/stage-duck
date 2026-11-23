@@ -1,8 +1,8 @@
 # 사이트 안 알림 설계 (notifications.md)
 
-> 초안 (2026-11-17, 해원). 결정 D-52. 팀 검토 전.
+> 초안 (2026-11-17, 해원). 결정 D-52. 팀 검토 전. 구현 상태는 9장.
 > 알림 모듈은 plan.md 3장대로 **3번 `app/notification/`**. 다른 묶음은 `notification.service.notify(...)`만 부른다.
-> 메일·문자 알림은 MVP에서 하지 않는다 (요구사항 명세서 범위 밖). 목업: `mockup-v4/pages/notifications.html`, 머리 종 아이콘 패널.
+> 중요 알림은 메일로도 보낸다 (10장, 11/20 추가). 문자·푸시 알림은 하지 않는다. 목업: `mockup-v4/pages/notifications.html`, 머리 종 아이콘 패널.
 
 ---
 
@@ -160,4 +160,40 @@ WebSocket `notification` 이벤트 payload를 `{ id, type, category, title, body
 
 ## 8. 하지 않는 것 (후속)
 
-메일·문자·푸시 알림, 알림 끄기 설정(종류별), 같은 글 댓글 묶어 보이기, 공연 전날 알림.
+문자·푸시 알림, 종류별 알림 끄기 설정(메일은 전체 켜기·끄기만, 10장), 같은 글 댓글 묶어 보이기, 공연 전날 알림.
+
+## 9. 구현 상태 (#45, 2026-11-19)
+
+| 묶음 | 지금 보내는 알림 | 부르는 곳 |
+|---|---|---|
+| 1 | `SUPPLIER_APPROVED` · `SUPPLIER_REJECTED` · `OFFER_RECEIVED` · `OFFER_DECLINED` · `OFFER_EXPIRED` · `POST_BLINDED` | supplier/service approve·reject, offer/service, policy/service blind_post |
+| 2 | `POSTING_OPENED` (게시·다음 단계 열기) · `INQUIRY_ANSWERED` · `COMMUNITY_COMMENT` · `COMMUNITY_REPLY` | request/service publish·advance, support/service, community/service |
+| 3 | `QUOTE_RECEIVED` · `QUOTE_UPDATED`(채팅 시작한 사이만) · `CHAT_STARTED` · `CONFIRM_REQUESTED` · `CONFIRMED` · `NOT_SELECTED` · `CONFIRM_EXPIRED` | quote/service, chat/service start_chat, confirm/service (#43) |
+| 4 | `PAID` · `CANCELLED_BY_USER` · `CANCELLED_BY_SUPPLIER` · `WARNING_ISSUED` · `ACCOUNT_SUSPENDED` · `PAYMENT_DEADLINE_SET` · `PAYMENT_READY` · `PAYMENT_REMINDER` · `HOLD_EXPIRED` | payment/service·cancel·deadline (1분 스케줄러 `core/scheduler.py`), confirm/service, policy/service _warn |
+
+- 아직 없는 기능에 딸린 알림은 그 기능을 만들 때 붙인다: 최종 견적 기한 6시간 전(`CONFIRM_EXPIRING`, 스케줄러), 정산(`SETTLEMENT_SCHEDULED`), 공고 수정·내리기(`POSTING_UPDATED`·`POSTING_CLOSED`), 정지 해제(`ACCOUNT_UNSUSPENDED`).
+- `INVOICE_READY`는 보내지 않는다. 청구서는 사용자가 직접 [청구서 보기]를 눌러 만들므로 1장 규칙 2(내가 한 일)에 걸린다.
+- 화면 문구는 "견적 요청" (11/19 팀 결정). 탭 이름도 "견적 요청".
+- `QUOTE_RECEIVED` 이동 주소는 실제 라우트 `/performances/{id}/compare`.
+- 업체 활동 지역 칸이 아직 없어 `POSTING_OPENED`는 부문만 맞춰 보낸다.
+- 90일 지난 알림은 스케줄러 대신 목록을 볼 때 지운다. 정지 계정은 로그인을 막으므로 알림은 쌓이고, 풀린 뒤 볼 수 있다.
+
+## 10. 메일 알림 (11/20 추가)
+
+비밀번호 찾기 메일(SMTP, `app/core/mail.py`)이 생겨서, 놓치면 일정·돈이 걸리는 알림은 메일로도 보낸다.
+
+- **보내는 종류** (`app/notification/mailer.py` `MAIL_TYPES`)
+  - 업체 입점·제재: SUPPLIER_APPROVED·REJECTED, WARNING_ISSUED, ACCOUNT_SUSPENDED·UNSUSPENDED
+  - 견적: OFFER_RECEIVED, QUOTE_RECEIVED, CONFIRM_REQUESTED, CONFIRM_EXPIRING
+  - 결제: INVOICE_READY, PAYMENT_DEADLINE_SET, PAYMENT_READY, PAYMENT_REMINDER, HOLD_EXPIRED, PAID, CANCELLED_BY_USER·SUPPLIER
+  - 문의: INQUIRY_ANSWERED
+  - 공고·커뮤니티·채팅처럼 자주 오는 알림은 사이트 알림만 보낸다.
+- **때:** 사이트 알림과 같은 트랜잭션에서 만들고, 커밋된 뒤에만 보낸다. 롤백되면 보내지 않는다.
+- **문구:** 사이트 알림 제목·본문 그대로(연락처를 이미 가린 문구)에 [자세히 보기] 주소(`PUBLIC_BASE_URL` + link)를 붙인다. 제목은 `[STAGE DUCK] {알림 제목}`, 틀은 합니다체다.
+- **받지 않는 경우**
+  - [알림] 화면 아래 "중요한 알림은 메일로도 받기"를 끈 사람 (`notification_settings.email_enabled`, 줄이 없으면 켬)
+  - 탈퇴한 사람
+  - 실제 발송(`MAIL_BACKEND=smtp`)일 때 `.test` 주소 (시연 계정은 메일함이 없다)
+- **API:** `GET·PUT /me/notifications/settings` `{ emailEnabled, email }` (api-contract.md 7장)
+- **테스트:** `tests/f3/test_notification_mail.py`, `frontend/tests/notification.test.tsx` "메일로도 받기"
+

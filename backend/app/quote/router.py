@@ -1,4 +1,6 @@
 """견적서 API (api-contract.md 3.3): 보내기·고치기·보기."""
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -12,15 +14,21 @@ router = APIRouter(prefix="/quotes", tags=["quote"])
 stage_quote_router = APIRouter(prefix="/stages", tags=["quote"])
 
 
+def get_now() -> datetime:
+    """지금 시각 (견적 요청 만료 판단). 테스트는 dependency_overrides 로 고정한다."""
+    return datetime.now()
+
+
 @stage_quote_router.post("/{stage_id}/quotes", response_model=QuoteSentOut, status_code=status.HTTP_201_CREATED)
 def send_quote(
     stage_id: int,
     body: QuoteIn,
     user: User = Depends(require_role("SUPPLIER")),
     db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
 ) -> QuoteSentOut:
     """AC-F2-15~19: 견적서 보내기 (v1)."""
-    quote, row, checks, room_id = service.send_quote(db, user, stage_id, body)
+    quote, row, checks, room_id = service.send_quote(db, user, stage_id, body, now=now)
     return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 
@@ -36,20 +44,33 @@ def update_quote(
     return QuoteSentOut(quote_id=quote.id, version=row.version, chat_room_id=room_id, checks=checks)
 
 
+def _quote_out(db: Session, quote) -> QuoteOut:
+    current = next(v for v in quote.versions if v.version == quote.current_version)
+    return QuoteOut(
+        quote_id=quote.id, stage_id=quote.stage_id, supplier_id=quote.supplier_id, label=quote.label,
+        status=quote.status, is_full_spec=quote.is_full_spec, current_version=quote.current_version,
+        current=current, versions=quote.versions, **service.sheet_extra(db, quote),
+    )
+
+
+@router.get("/by-version/{version_id}", response_model=QuoteOut)
+def get_quote_by_version(
+    version_id: int,
+    user: User = Depends(require_role("USER", "SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> QuoteOut:
+    """채팅 견적서 카드의 [내역서 보기] (메시지 refId = quote_version_id). 권한은 GET /quotes/{quoteId} 와 같다."""
+    return _quote_out(db, service.get_quote_by_version(db, user, version_id))
+
+
 @router.get("/{quote_id}", response_model=QuoteOut)
 def get_quote(
     quote_id: int,
     user: User = Depends(require_role("USER", "SUPPLIER")),
     db: Session = Depends(get_db),
 ) -> QuoteOut:
-    """AC-F2-14: 견적서 보기 (현재 버전 + 이력). 다른 업체·다른 사용자는 404."""
-    quote = service.get_quote(db, user, quote_id)
-    current = next(v for v in quote.versions if v.version == quote.current_version)
-    return QuoteOut(
-        quote_id=quote.id, stage_id=quote.stage_id, supplier_id=quote.supplier_id, label=quote.label,
-        status=quote.status, is_full_spec=quote.is_full_spec, current_version=quote.current_version,
-        current=current, versions=quote.versions,
-    )
+    """AC-F2-14: 견적서 보기 (현재 버전 + 이력 + 내역서 머리·자동 검사). 다른 업체·다른 사용자는 404."""
+    return _quote_out(db, service.get_quote(db, user, quote_id))
 
 
 postings_router = APIRouter(prefix="/postings", tags=["quote"])

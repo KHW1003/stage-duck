@@ -174,7 +174,7 @@ describe("약관·정책 (/terms/:type)", () => {
     expect(within(screen.getByRole("navigation", { name: "약관 종류" })).getByRole("link", { name: "개인정보 처리방침" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("heading", { level: 2, name: "STAGE DUCK 개인정보 처리방침" })).toBeInTheDocument();
     expect(screen.getByText("시행일 2026년 11월 17일 · 버전 1.0")).toBeInTheDocument();
-    expect(screen.getByText(/포트폴리오 시연용 요약본이에요/)).toBeInTheDocument();
+    expect(screen.getByText(/포트폴리오 시연용 요약본입니다/)).toBeInTheDocument();
   });
 
   it("탭을 누르면 그 문서로 바뀌고, 이용약관에는 위약금 표가 있다", async () => {
@@ -183,6 +183,10 @@ describe("약관·정책 (/terms/:type)", () => {
     expect(screen.getByTestId("where")).toHaveTextContent(/^\/terms\/service$/);
     expect(screen.getByRole("heading", { level: 2, name: "STAGE DUCK 이용약관" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "공연 당일" })).toBeInTheDocument();
+    const payment = document.getElementById("service-6")!;
+    expect(within(payment).getByText(/플랫폼 밖에서 직접 결제한 거래에는/)).toBeInTheDocument();
+    const conduct = document.getElementById("service-8")!;
+    expect(within(conduct).queryByText(/계좌이체로 거래하는 일/)).not.toBeInTheDocument();
   });
 
   it("모르는 종류나 /terms 는 이용약관으로 보낸다", () => {

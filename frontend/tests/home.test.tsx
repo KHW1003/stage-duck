@@ -129,10 +129,19 @@ describe("메인 (/)", () => {
     expect(screen.queryByLabelText("STAGE DUCK 소개")).not.toBeInTheDocument();
   });
 
-  it("진행 중인 공연이 없으면 요청서 쓰기로 안내한다", async () => {
+  it("처음 가입했거나 진행 중인 공연이 없으면 '시작' 문구와 진행 순서 미리보기, 요청서 쓰기로 안내한다 (11/19 피드백)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER }, "GET /api/v1/performances?mine=true": { status: 200, body: { active: [], draft: [], past: [] } } });
     renderAt("/");
     expect(await screen.findByText("아직 준비 중인 공연이 없어요")).toBeInTheDocument();
+    expect(screen.getByText("가을밤밴드님, 반가워요")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("공연 준비,시작해 볼까요?");
+    expect(screen.queryByRole("link", { name: "받은 견적 비교하기" })).not.toBeInTheDocument();
+    const preview = within(screen.getByRole("list", { name: "요청서를 쓰면 진행되는 순서" }));
+    expect(preview.getAllByRole("listitem").map((li) => li.querySelector("b")?.textContent)).toEqual(["공연장", "장비", "엔지니어", "통합 결제"]);
+    const writes = screen.getAllByRole("link", { name: /새 공연 요청서 쓰기/ });
+    expect(writes.length).toBeGreaterThanOrEqual(2);
+    writes.forEach((a) => expect(a).toHaveAttribute("href", "/performances/new"));
+    expect(screen.getByRole("link", { name: /업체 먼저 둘러보기/ })).toHaveAttribute("href", "/board");
   });
 });
 
@@ -155,13 +164,13 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByText("11월 12일 14:20")).toBeInTheDocument();
   });
 
-  it("승인 업체는 첫 화면을 보고, 공고 필터를 누르면 받은 오퍼만 남는다", async () => {
+  it("승인 업체는 첫 화면을 보고, 공고 필터를 누르면 받은 견적 요청만 남는다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     renderAt("/partner");
     expect(await screen.findByRole("heading", { level: 1, name: /업체 D님, 오늘 확인할 일이/ })).toBeInTheDocument();
     const filter = screen.getByRole("tablist", { name: "공고 필터" });
     expect(screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"))).toHaveLength(3);
-    await userEvent.click(within(filter).getByRole("tab", { name: /받은 오퍼/ }));
+    await userEvent.click(within(filter).getByRole("tab", { name: /받은 견적 요청/ }));
     const titles = screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"));
     expect(titles.map((h) => h.textContent)).toEqual(["연말 합동 공연 · 광주 북구 · 관객 120명"]);
   });

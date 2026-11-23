@@ -137,8 +137,9 @@ erDiagram
 | 테이블 | 컬럼 | 제약 |
 |---|---|---|
 | supplier_categories | supplier_id, category VARCHAR(20) CHECK IN ('VENUE','EQUIPMENT','INSTALL','ENGINEER') | PK (supplier_id, category) |
-| supplier_regions | supplier_id, sido VARCHAR(20) | PK (supplier_id, sido) |
-| supplier_equipment | id PK, supplier_id FK, category CHECK IN ('SOUND','VIDEO','INSTRUMENT','LIGHTING'), name VARCHAR(100), quantity SMALLINT NULL | 자유 입력 (표준 품목 없음) |
+| supplier_terms_reviews | user_id FK → users, version VARCHAR(30), reviewed_at | PK (user_id, version). 업체가 현재 거래 약관을 확인한 기록 (0021). 확인 전에는 견적서를 보낼 수 없다 (`GET·PUT /supplier/terms-review`) |
+| supplier_regions | supplier_id, sido VARCHAR(20) | PK (supplier_id, sido). ⚠️ 아직 코드에 없음 — 담당 확인 (11/23 spec-sync) (1번 세환, `PUT /supplier/profile` 과 같이) |
+| supplier_equipment | id PK, supplier_id FK, category CHECK IN ('SOUND','VIDEO','INSTRUMENT','LIGHTING'), name VARCHAR(100), quantity SMALLINT NULL | 자유 입력 (표준 품목 없음). ⚠️ 아직 코드에 없음 — 담당 확인 (11/23 spec-sync) (1번 세환, `PUT /supplier/equipment` 와 같이) |
 
 ---
 
@@ -251,7 +252,7 @@ erDiagram
 
 | 테이블 | 컬럼 | 제약 |
 |---|---|---|
-| offers | id PK, stage_id FK, user_id FK, supplier_id FK, status CHECK IN ('PENDING','QUOTED','DECLINED','EXPIRED'), decline_reason, expires_at | **UNIQUE (stage_id, supplier_id)**. 단계당 10개 제한은 서비스에서 `SELECT COUNT … FOR UPDATE` (AC-F3-17) |
+| offers | id PK, stage_id FK, user_id FK, supplier_id FK, status CHECK IN ('PENDING','QUOTED','DECLINED','EXPIRED'), message VARCHAR(300) NULL (사용자 한마디, 연락처 불가), decline_reason, expires_at, created_at | **UNIQUE (stage_id, supplier_id)**. 단계당 10개 제한은 서비스에서 `SELECT COUNT … FOR UPDATE` (AC-F3-17) |
 | favorite_suppliers | user_id, supplier_id | PK (user_id, supplier_id) |
 
 ## 6. 채팅·컨펌 (F3)
@@ -291,7 +292,7 @@ erDiagram
 | expires_at | DATETIME(3) | NOT NULL | 보낸 시각 + 48시간 |
 | viewed_at | DATETIME(3) | NULL | 내역서 열람 — NULL이면 컨펌 불가 (AC-F3-10) |
 | decided_at | DATETIME(3) | NULL | |
-| **pending_guard** | BIGINT UNSIGNED | PERSISTENT = IF(status='PENDING', room_id, NULL), UNIQUE | 방당 대기 카드 1장 |
+| **pending_guard** | BIGINT UNSIGNED | PERSISTENT = IF(status='PENDING', room_id, NULL), UNIQUE | 방당 대기 카드 1장 — #43 구현은 생성 칸 대신 방 행을 잠그고 서비스에서 검사 (SQLite 테스트와 같게) |
 
 > 단계당 컨펌 1개는 `stages` 행 잠금 + `stages.status` 검사로 보장한다 (plan.md 5.3).
 
@@ -382,10 +383,12 @@ erDiagram
 | inquiries | id, user_id FK, category CHECK IN ('PAYMENT','QUOTE','SUPPLIER','ACCOUNT','ETC'), performance_id NULL FK, title VARCHAR(50), body TEXT (2,000자), status CHECK IN ('WAITING','ANSWERED'), answer TEXT NULL, answered_by NULL FK → users, attachments JSON [file_id] (이미지 최대 3장, 한 장 5MB), answered_at NULL, created_at, updated_at | 1:1 문의 (D-48). 본인·관리자만 조회. ANSWERED면 회원 수정·삭제 불가 |
 | notices | id, category CHECK IN ('GUIDE','MAINTENANCE','POLICY'), title VARCHAR(100), body TEXT, is_pinned BOOLEAN DEFAULT FALSE, published_at, created_by FK → users NULL | 공지사항. 정렬 is_pinned DESC, published_at DESC. created_by 는 SQLAdmin 에서 쓴 관리자 (NULL 허용 — 관리자 계정을 지워도 공지는 남는다) |
 | files | id, owner_user_id, purpose, visibility (PUBLIC·PRIVATE), status (TEMP·ATTACHED·DELETED), storage_key UNIQUE, thumb_key, original_name, mime_type, size_bytes, width, height, created_at, attached_at | 업로드 파일 메타 (D-51). 인덱스 (status, created_at). 다른 테이블의 사진·서류 칸은 `file_id`를 가리킨다 — 상세는 [uploads.md](uploads.md) 5장 |
-| venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신 |
-| idempotency_keys | key PK, user_id, endpoint, response JSON, created_at | 컨펌 등 결제 외 멱등 요청 (선택) |
+| venue_photos | venue_id, file_id, sort | 공간 사진 여러 장 (최대 10). `venues.photo_url` 대신. ⚠️ 아직 코드에 없음 — 담당 확인 (11/23 spec-sync) (4번 목산 — 지금 화면은 공간 유형별 기본 사진) |
+| ~~idempotency_keys~~ | | 따로 두지 않았다 (선택이었음). 결제는 `payments.idempotency_key` 로 같은 키 요청을 처음 결과로 돌려준다. 컨펌·다음 단계의 중복 방지는 각 서비스의 상태 검사로 한다 |
 | password_reset_tokens | id, user_id FK, token_hash CHAR(64) UNIQUE, expires_at, used_at NULL, created_at | 비밀번호 찾기 링크 (D-55). 원문 토큰은 저장하지 않고 SHA-256만. 30분, 1회용 |
 | password_reset_requests | id, email_hash CHAR(64), requested_at · INDEX(email_hash, requested_at) | 비밀번호 찾기 요청 기록 (같은 이메일 10분 3회). 가입 안 한 이메일도 같이 세야 429 로 가입 여부가 드러나지 않아 user_id 대신 이메일 SHA-256 |
+| notification_settings | user_id PK FK → users, email_enabled BOOLEAN DEFAULT TRUE, updated_at | 중요 알림을 메일로도 받을지 (0025). 줄이 없으면 켬 — [notifications.md](notifications.md) 10장 |
+| reviews | id, performance_id FK, stage_id FK **UNIQUE**, supplier_id FK, user_id FK, rating SMALLINT CHECK 1~5, content VARCHAR(500), created_at · INDEX (supplier_id, id) | 공연 후기·평점 (0026). 결제하고 공연을 마친 주인 사용자만, 확정 단계마다 한 번 — [reviews.md](reviews.md) |
 
 ---
 

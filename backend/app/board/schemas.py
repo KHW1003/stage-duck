@@ -67,6 +67,12 @@ class PrPostOut(BaseModel):
     created_at: datetime
 
 
+class PrPostSavedOut(PrPostOut):
+    """POST·PUT /pr-posts 응답 (AC-F4-03): 연락처·계좌·외부 링크가 있으면 저장은 하고 경고만."""
+
+    contact_warning: bool
+
+
 class PrPostListOut(BaseModel):
     model_config = _OUT
 

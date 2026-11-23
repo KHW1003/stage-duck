@@ -28,6 +28,7 @@ LANDING_USER = "/me/performances"
 EXTRA = "/signup/extra"
 PENDING = "/api/v1/auth/social/pending"
 COMPLETE = "/api/v1/auth/social/complete"
+FAILED = "/login?social=failed"
 
 
 def _profile(provider: str = "NAVER", provider_user_id: str = NAVER_ID, **over) -> social.SocialProfile:
@@ -171,7 +172,8 @@ def test_ac_f1_04_complete_creates_user_then_next_login_goes_in(client, db, prov
     assert _count(db, TermsAgreement) == 4
     assert SIGNUP_COOKIE not in client.cookies  # 한 번 쓰면 지운다
 
-    assert client.post(COMPLETE, json=_extra()).status_code == 401  # 같은 토큰으로 두 번 가입되지 않는다
+    res = client.post(COMPLETE, json=_extra())  # 같은 토큰으로 두 번 가입되지 않는다
+    assert res.status_code == 401 and res.json()["code"] == "SOCIAL_SIGNUP_EXPIRED"
     res = _callback(client)
     assert res.headers["location"] == LANDING_USER
     assert read_access_token(res.cookies[ACCESS_COOKIE]) == user.id
@@ -228,7 +230,8 @@ def test_ac_f1_05_optional_items_typed_in_extra_info(client, db, provider_return
 
 
 def test_ac_f1_06_pending_returns_prefill_only_to_token_holder(client, provider_returns):
-    assert client.get(PENDING).status_code == 401  # 토큰 없으면 아무것도 주지 않는다
+    res = client.get(PENDING)  # 토큰 없으면 아무것도 주지 않는다
+    assert res.status_code == 401 and res.json()["code"] == "SOCIAL_SIGNUP_EXPIRED"
 
     provider_returns(_profile())
     _callback(client)
@@ -279,7 +282,7 @@ def test_ac_f1_07_complete_needs_valid_signup_token(client, db, token):
         client.cookies.set(SIGNUP_COOKIE, token)
     res = client.post(COMPLETE, json=_extra())
     assert res.status_code == 401, res.text
-    assert res.json()["code"] == "UNAUTHENTICATED"
+    assert res.json()["code"] == "SOCIAL_SIGNUP_EXPIRED"
     assert _count(db, User) == 0
 
 
@@ -325,14 +328,24 @@ def test_ac_f1_09_kakao_enabled_signup_then_login(client, db, provider_returns, 
 # ---------- AC-F1-10 같은 이메일이라도 기존 계정에 자동으로 들어가지 않는다 ----------
 
 
-def test_ac_f1_10_same_email_is_not_merged(client, db, provider_returns):
-    existing = make_user(db, email="same@stageduck.test", password="duck1234")
-    provider_returns(_profile(email="same@stageduck.test"))
+@pytest.mark.parametrize("naver_email", ["same@stageduck.test", "SAME@stageduck.test"])
+def test_ac_f1_10_same_email_is_not_merged(client, db, provider_returns, naver_email):
+    """계약서 2.1: 같은 이메일로 가입한 계정이 있으면 콜백에서 바로 /login?social=failed (자동 연결·로그인 없음)."""
+    make_user(db, email="same@stageduck.test", password="duck1234")
+    provider_returns(_profile(email=naver_email))
 
     res = _callback(client)
-    assert res.headers["location"] == EXTRA  # 기존 계정으로 로그인하지 않는다
-    assert ACCESS_COOKIE not in res.cookies
-    assert _count(db, SocialAccount) == 0
+    assert res.status_code == 302, res.text
+    assert res.headers["location"] == FAILED
+    assert ACCESS_COOKIE not in res.cookies and SIGNUP_COOKIE not in res.cookies
+    assert _count(db, SocialAccount) == 0 and _count(db, User) == 1
+
+
+def test_ac_f1_10_extra_info_email_taken_is_refused(client, db, provider_returns):
+    """추가 정보 화면에서 이메일을 이미 가입된 것으로 고치면 409 EMAIL_TAKEN, 다른 이메일이면 새 계정으로 가입된다."""
+    existing = make_user(db, email="same@stageduck.test", password="duck1234")
+    provider_returns(_profile())
+    assert _callback(client).headers["location"] == EXTRA
 
     res = client.post(COMPLETE, json=_extra(email="same@stageduck.test"))
     assert res.status_code == 409, res.text
@@ -343,6 +356,21 @@ def test_ac_f1_10_same_email_is_not_merged(client, db, provider_returns):
     assert res.status_code == 201, res.text
     assert res.json()["id"] != existing.id
     assert db.scalar(select(SocialAccount.user_id)) == res.json()["id"]
+
+
+def test_ac_f1_10_same_social_account_twice_is_already_linked(client, db, provider_returns):
+    """계약서 2.1: 다른 탭에서 먼저 가입을 마친 뒤 같은 signup_token 으로 다시 보내면 409 SOCIAL_ALREADY_LINKED."""
+    provider_returns(_profile())
+    _callback(client)
+    token = client.cookies[SIGNUP_COOKIE]
+    assert client.post(COMPLETE, json=_extra()).status_code == 201
+
+    client.cookies.clear()
+    client.cookies.set(SIGNUP_COOKIE, token)
+    res = client.post(COMPLETE, json=_extra(email="other@stageduck.test", nickname="다른닉네임"))
+    assert res.status_code == 409, res.text
+    assert res.json()["code"] == "SOCIAL_ALREADY_LINKED"
+    assert _count(db, User) == 1 and _count(db, SocialAccount) == 1
 
 
 def test_ac_f1_10_provider_user_id_is_unique(db):

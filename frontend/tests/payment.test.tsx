@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
+import { TERMS } from "../src/features/support/terms";
 import type { Me, Order, PerformanceDetail } from "../src/shared/api/types";
 
 /** 통합 청구서·테스트 결제 화면 (#50·#51) — AC-F5-03·05·06·07. 금액은 서버가 준 그대로 */
@@ -82,7 +83,20 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     expect(screen.getByText("업체 C")).toBeInTheDocument();
     expect(screen.getByText("건너뜀")).toBeInTheDocument();
     expect(screen.getByText("테스트 결제 — 실제 청구되지 않습니다")).toBeInTheDocument();
+    const penaltyTable = screen.getByRole("table", { name: "취소 시점별 위약금" });
+    expect(within(penaltyTable).getByRole("row", { name: /공연 1일 전 70%/ })).toBeInTheDocument();
+    expect(within(penaltyTable).getByRole("row", { name: /결제 전.*없음/ })).toBeInTheDocument();
     expect(calls.map((c) => `${c.method} ${c.url}`)).toContain("POST /api/v1/performances/5/order");
+  });
+
+  it("AC-F5-22 결제 전이면 결제 마감과 자동 취소 안내가 보인다", async () => {
+    const soon = new Date(Date.now() + 26.5 * 3600000);
+    mockServer({ ...BASE, "GET /api/v1/performances/5/order": { status: 200, body: { ...order(), paymentDeadline: soon.toISOString() } } });
+    renderAt("/performances/5/order");
+    const note = await screen.findByRole("note", { name: "결제 마감" });
+    expect(note).toHaveTextContent(`${soon.getMonth() + 1}월 ${soon.getDate()}일`);
+    expect(note).toHaveTextContent("결제를 마쳐 주십시오 · 1일 2시간 남음");
+    expect(note).toHaveTextContent("공연이 자동 취소됩니다");
   });
 
   it("AC-F5-03 필수 동의 두 개를 해야 [결제하기]가 열린다", async () => {
@@ -90,8 +104,54 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     renderAt("/performances/5/order");
 
     expect(await screen.findByRole("button", { name: "결제하기" })).toBeDisabled();
-    await userEvent.click(screen.getByLabelText(/위약금 규정 확인/));
-    await userEvent.click(screen.getByLabelText(/보관에 동의/));
+    const [transactionCheckbox, cancellationCheckbox] = screen.getAllByRole("checkbox");
+    expect(transactionCheckbox).toHaveAccessibleName("서비스 이용·예약·결제 조건 동의 (필수)");
+    expect(cancellationCheckbox).toHaveAccessibleName("취소·환불 및 분쟁 문의 확인 (필수)");
+    const terms = screen.getByRole("button", { name: "취소·환불 및 분쟁 문의" });
+    await userEvent.click(terms);
+    const dialog = screen.getByRole("dialog", { name: "취소·환불 및 분쟁 문의" });
+    const cancellation = within(dialog);
+    const cancellationArticles = cancellation.getAllByRole("article").map((article) => article.id);
+    expect(cancellationArticles).toEqual(["service-7", "service-11"]);
+    expect(cancellation.getByRole("heading", { name: "부칙" })).toBeInTheDocument();
+    expect(cancellation.getByRole("heading", { name: "제7조 (취소와 위약금)" })).toBeInTheDocument();
+    expect(cancellation.getByRole("table", { name: "취소 시점별 위약금" })).toBeInTheDocument();
+    expect(cancellation.getByText(/다른 업체의 예약은 유지되고/)).toBeInTheDocument();
+    expect(cancellation.queryByRole("heading", { name: "제6조 (결제와 보관)" })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(dialog).not.toBeInTheDocument();
+    expect(terms).toHaveFocus();
+    const rulesConsent = screen.getByRole("checkbox", { name: /취소·환불 및 분쟁 문의 확인/ });
+    expect(rulesConsent).not.toBeChecked();
+    await userEvent.click(rulesConsent);
+    expect(rulesConsent).not.toBeChecked();
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "이 항목에 동의" }));
+    expect(rulesConsent).toBeChecked();
+    const paymentConsent = screen.getByRole("checkbox", { name: /서비스 이용·예약·결제 조건 동의/ });
+    await userEvent.click(paymentConsent);
+    const paymentDialog = screen.getByRole("dialog", { name: "서비스 이용·예약·결제 조건" });
+    const payment = within(paymentDialog);
+    const paymentArticles = payment.getAllByRole("article").map((article) => article.id);
+    expect([...paymentArticles, ...cancellationArticles].sort()).toEqual(
+      TERMS.service.chapters.flatMap((chapter) => chapter.articles.map((article) => article.id)).sort(),
+    );
+    expect(payment.getByRole("heading", { name: "제8조 (하면 안 되는 일)" })).toBeInTheDocument();
+    expect(payment.getByRole("heading", { name: "제10조 (게시물)" })).toBeInTheDocument();
+    expect(payment.getByRole("heading", { name: "제5조 (요청과 결제 기한)" })).toBeInTheDocument();
+    expect(payment.getByRole("heading", { name: "제6조 (결제와 보관)" })).toBeInTheDocument();
+    expect(payment.getByText(/공연이 끝나면 업체별로 정산합니다/)).toBeInTheDocument();
+    expect(payment.queryByRole("table", { name: "취소 시점별 위약금" })).not.toBeInTheDocument();
+    await userEvent.click(within(paymentDialog).getByRole("button", { name: "본문 닫기" }));
+    expect(paymentConsent).toHaveFocus();
+    expect(paymentConsent).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "결제하기" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "개인정보 처리방침 보기" }));
+    const privacy = within(screen.getByRole("dialog", { name: "개인정보 처리방침" }));
+    expect(privacy.getAllByRole("article")).toHaveLength(TERMS.privacy.chapters.flatMap((chapter) => chapter.articles).length);
+    expect(privacy.queryByRole("button", { name: "이 항목에 동의" })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(paymentConsent);
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "이 항목에 동의" }));
     await userEvent.click(screen.getByRole("link", { name: "결제하기" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/performances/5/pay");
   });

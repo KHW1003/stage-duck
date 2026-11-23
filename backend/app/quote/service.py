@@ -19,11 +19,14 @@ from app.models.quote import Quote, QuoteVersion
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
 from app.models.user import User
+from app.notification import service as notification
+from app.offer import service as offer_service
 from app.quote import calc
 from app.quote.schemas import QuoteBody, QuoteIn, QuoteUpdateIn
 from app.request import rejection
 from app.request import service as request_service
 from app.supplier import service as supplier_service
+from app.supplier.terms import require_review
 
 VENUE_FIELDS = ("venue_id", "checkin_time", "setup_available_time")
 
@@ -160,7 +163,9 @@ def _checks(db: Session, quote: Quote, row: QuoteVersion) -> list[dict]:
     return [asdict(r) for r in results]
 
 
-def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Quote, QuoteVersion, list[dict], int]:
+def send_quote(
+    db: Session, user: User, stage_id: int, body: QuoteIn, *, now: datetime | None = None
+) -> tuple[Quote, QuoteVersion, list[dict], int]:
     """AC-F2-15·16·17·18·19: 열린 단계 공고에 견적서 v1을 보낸다. 같은 단계에 label 이 다른 견적서 여러 개 가능 (D-6).
 
     검사 순서: 업체 승인·정지(403) → 내 부문 × 열린 단계(409 STAGE_NOT_OPEN) → 공간 견적서 칸(409·400)
@@ -173,10 +178,14 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     stage = db.get(Stage, stage_id)  # 읽기 전용 참조 (2번 stages·performances)
     _venue_fields(stage.stage_type, body)
     calc.verify_total(body.amounts, body.total_amount, body.discount_amount)
+    require_review(db, user)
 
+    # 견적 요청(1번 #32)을 받은 업체면 그 요청에 답한 것으로 (AC-F3-18 "내가 요청한 업체")
+    offer_id = offer_service.link_quote(db, stage_id=stage_id, supplier_id=supplier.id, now=now or datetime.now())
     quote = Quote(
         stage_id=stage_id,
         supplier_id=supplier.id,
+        offer_id=offer_id,
         label=body.label,
         current_version=1,
         status="SENT",
@@ -194,7 +203,13 @@ def send_quote(db: Session, user: User, stage_id: int, body: QuoteIn) -> tuple[Q
     room_id = chat_service.post_quote_message(
         db, stage_id=stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
-    # #45에서 QUOTE_RECEIVED 알림 (사용자 견적함 도착 알림)
+    # #45 사용자에게 QUOTE_RECEIVED (견적 요청을 받은 업체가 보낸 것도 이 알림 하나, notifications.md 3.3)
+    perf = stage.performance
+    notification.notify(
+        db, perf.user_id, "QUOTE_RECEIVED", link=f"/performances/{perf.id}/compare",
+        params={"company": supplier.company_name, "stage": notification.stage_label(stage.stage_type), "amount": notification.won(row.total_amount)},
+        payload={"performanceId": perf.id, "stageId": stage_id, "quoteId": quote.id, "roomId": room_id},
+    )
     db.commit()
     return quote, row, checks, room_id
 
@@ -216,6 +231,7 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
     stage = quote.stage  # 읽기 전용 참조 (2번 stages·performances)
     _venue_fields(stage.stage_type, body)
     calc.verify_total(body.amounts, body.total_amount, body.discount_amount)
+    require_review(db, user)
 
     quote.current_version += 1
     quote.is_full_spec = body.includes.equipment and body.includes.engineer
@@ -227,10 +243,45 @@ def update_quote(db: Session, user: User, quote_id: int, body: QuoteUpdateIn) ->
         db, stage_id=quote.stage_id, supplier_id=supplier.id, user_id=stage.performance.user_id, quote_version_id=row.id
     )
     chat_service.notify_quote_updated(db, room_id=room_id, quote_id=quote.id, version=quote.current_version)
-    # #43에서 이 단계의 대기 중인 최종 견적 카드를 INVALIDATED 로 (AC-F3-09)
+    # #45 채팅을 시작한 사이에만 QUOTE_UPDATED (notifications.md 3.2)
+    if chat_service.chat_started(db, stage.performance_id, supplier.id):
+        notification.notify(
+            db, stage.performance.user_id, "QUOTE_UPDATED", link=f"/chats/{room_id}",
+            params={"company": supplier.company_name, "version": quote.current_version,
+                    "stage": notification.stage_label(stage.stage_type), "amount": notification.won(row.total_amount)},
+            payload={"roomId": room_id, "quoteId": quote.id},
+        )
+    # AC-F3-09: 이 견적서의 대기 중인 최종 견적 카드는 INVALIDATED ("새 견적이 있어요")
+    from app.confirm.service import invalidate_for_quote  # 3번 안 (순환 import 피함)
+
+    invalidate_for_quote(db, quote.id, now=datetime.now())
     db.commit()
     db.refresh(quote)
     return quote, row, checks, room_id
+
+
+def get_quote_by_version(db: Session, user: User, version_id: int) -> Quote:
+    """채팅 견적서 카드(refId = quote_version_id)의 [내역서 보기]: 버전 번호로 견적서를 찾는다. 권한은 get_quote 와 같다."""
+    row = db.get(QuoteVersion, version_id)
+    if row is None:
+        raise not_found()
+    return get_quote(db, user, row.quote_id)
+
+
+def sheet_extra(db: Session, quote: Quote) -> dict:
+    """내역서 머리(단계·공연·업체 상호)와 현재 버전의 자동 검사. 읽기 전용 참조 (2번 stages·performances, 1번 suppliers)."""
+    stage = quote.stage
+    perf = stage.performance
+    supplier = db.get(Supplier, quote.supplier_id)
+    current = next(v for v in quote.versions if v.version == quote.current_version)
+    return {
+        "stage_type": stage.stage_type,
+        "performance_id": perf.id,
+        "performance_title": perf.title,
+        "show_date": perf.show_date,
+        "company_name": supplier.company_name if supplier else "",
+        "checks": _checks(db, quote, current),
+    }
 
 
 def get_quote(db: Session, user: User, quote_id: int) -> Quote:

@@ -8,6 +8,7 @@ import { Link, useParams } from "react-router-dom";
 import { useCancel, useCancelQuote } from "../features/payment/api";
 import { usePerformance } from "../features/performance/api";
 import { dateLabel } from "../features/performance/labels";
+import { ApiError } from "../shared/api/client";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import type { CancelQuote } from "../shared/api/types";
 import { KitPageTop } from "../shared/layout/KitPageTop";
@@ -15,6 +16,7 @@ import { ErrorNotice } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
 import { KitModal } from "../shared/ui/KitModal";
 import { formatWon } from "../shared/ui/MoneyText";
+import "./payment.css";
 
 /** 취소 시점별 위약금 눈금 (FR-PAY-03 표). 지금 구간은 서버가 준 phase 로 고른다 */
 const SCALE: { phases: CancelQuote["phase"][]; label: string; rate: string }[] = [
@@ -34,12 +36,49 @@ export function CancelPage() {
   const perf = usePerformance(id);
   const quote = useCancelQuote(id);
   const cancel = useCancel(id);
-  const [asking, setAsking] = useState(false);
+  const [step, setStep] = useState<"review" | "final" | null>(null);
+  const [finalQuote, setFinalQuote] = useState<CancelQuote | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [reviewError, setReviewError] = useState<Error | null>(null);
   usePageMeta("공연 취소");
 
   const p = perf.data;
   const q = quote.data;
   const done = cancel.data;
+
+  function closeConfirmation() {
+    setStep(null);
+    setReviewError(null);
+    cancel.reset();
+  }
+
+  async function showFinalConfirmation() {
+    setChecking(true);
+    setReviewError(null);
+    const refreshed = await quote.refetch();
+    setChecking(false);
+    if (refreshed.isError || !refreshed.data) {
+      setReviewError(refreshed.error ?? new Error());
+      return;
+    }
+    cancel.reset();
+    setFinalQuote(refreshed.data);
+    setStep("final");
+  }
+
+  function confirmCancellation() {
+    if (!finalQuote || cancel.isPending) return;
+    const { phase, ratePercent, paid, penaltyTotal, feeRefunded, refundTotal } = finalQuote;
+    cancel.mutate({ phase, ratePercent, paid, penaltyTotal, feeRefunded, refundTotal }, {
+      onSuccess: () => setStep(null),
+      onError: (error) => {
+        if (error instanceof ApiError && error.status === 409) {
+          setReviewError(error);
+          setStep("review");
+        }
+      },
+    });
+  }
 
   return (
     <>
@@ -49,22 +88,22 @@ export function CancelPage() {
         meta={p ? [p.title, dateLabel(p.showDate)] : undefined}
       />
       <main className="container container--narrow main">
-        <p className="test-pay"><Ico name="info" sm />테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리돼요.</p>
-        {quote.isError ? (
-          <div className="mt-24"><ErrorNotice error={quote.error} /></div>
-        ) : !q ? (
-          <p className="muted mt-24">불러오는 중이에요.</p>
-        ) : done ? (
+        <p className="test-pay"><Ico name="info" sm />테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리됩니다.</p>
+        {done ? (
           <section className="result mt-40" role="status">
             <span className="result__icon"><Ico name="pass" /></span>
-            <h2>취소했어요</h2>
-            <p>{done.refundTotal ? `환불 예정액 ${won(done.refundTotal)}` : "낸 돈이 없어 환불할 금액이 없어요."}</p>
+            <h2>취소되었습니다</h2>
+            <p>{done.paid ? `환불 예정액 ${won(done.refundTotal)}` : "결제한 금액이 없어 환불할 금액이 없습니다."}</p>
             <div className="btns btns--center mt-24"><Link className="btn btn--lg" to="/me/performances">내 공연으로</Link></div>
           </section>
+        ) : quote.isError && !q ? (
+          <div className="mt-24"><ErrorNotice error={quote.error} /></div>
+        ) : !q ? (
+          <p className="muted mt-24">불러오는 중입니다.</p>
         ) : (
           <>
             <section className="sec mt-40">
-              <div className="sec-head"><h2><Ico name="calendar" />취소 시점별 위약금</h2><p>업체 금액 기준이에요.</p></div>
+              <div className="sec-head"><h2><Ico name="calendar" />취소 시점별 위약금</h2><p>업체 금액 기준입니다.</p></div>
               <ol className="penalty" aria-label="취소 시점별 위약금">
                 {SCALE.map((s) => {
                   const now = s.phases.includes(q.phase);
@@ -81,9 +120,9 @@ export function CancelPage() {
               {q.phase === "BEFORE_PAYMENT" ? (
                 <>
                   <table className="info-table"><tbody>
-                    <tr><th>취소 수수료</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았어요</span></td></tr>
+                    <tr><th>취소 수수료</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았습니다</span></td></tr>
                   </tbody></table>
-                  <p className="field__hint mt-8">채팅을 시작한 공연을 취소하면 반려 1회로 기록돼요. 반려가 5회 쌓이면 새 공고는 24시간 뒤에 올릴 수 있어요.</p>
+                  <p className="field__hint mt-8">채팅을 시작한 공연을 취소하면 반려 1회로 기록됩니다. 반려가 5회 쌓이면 새 공고는 24시간 후에 올릴 수 있습니다.</p>
                 </>
               ) : (
                 <table className="info-table"><tbody>
@@ -100,7 +139,7 @@ export function CancelPage() {
                   </tr>
                   <tr>
                     <th>플랫폼 이용료</th>
-                    <td className="num">{q.feeRefunded ? `${won(q.feeRefunded)} · 돌려 드려요` : <>환불하지 않아요</>}</td>
+                    <td className="num">{q.feeRefunded ? `${won(q.feeRefunded)} · 환불됩니다` : <>환불되지 않습니다</>}</td>
                   </tr>
                   <tr><th>환불 예정액</th><td className="num"><b className="strong">{won(q.refundTotal)}</b></td></tr>
                 </tbody></table>
@@ -108,37 +147,70 @@ export function CancelPage() {
             </section>
             <section className="sec">
               <ul className="bullets">
-                <li>업체 사정으로 취소되면 플랫폼 이용료까지 전액 환불되고, 그 단계만 다시 모집할 수 있어요.</li>
-                <li>결제 후 12시간 안이나 공연 30일 전 이전에 취소하면 위약금이 없고 플랫폼 이용료도 돌려 드려요.</li>
-                <li>원 단위 나머지는 금액이 가장 큰 업체에 붙어요.</li>
+                <li>업체 사정으로 취소되면 플랫폼 이용료까지 전액 환불되며, 해당 단계만 다시 모집할 수 있습니다.</li>
+                <li>결제 후 12시간 이내 또는 공연 30일 전까지 취소하면 위약금이 없으며 플랫폼 이용료도 환불됩니다.</li>
+                <li>원 단위 나머지는 금액이 가장 큰 업체에 더해집니다.</li>
               </ul>
             </section>
             <div className="btns btns--center mt-40">
               <Link className="btn btn--lg" to={`/performances/${id}/order`}>돌아가기</Link>
-              <button className="btn btn--primary btn--lg" type="button" onClick={() => setAsking(true)}>취소 요청</button>
+              <button className="btn btn--primary btn--lg" type="button" onClick={() => setStep("review")}>취소 요청</button>
             </div>
           </>
         )}
       </main>
-      {asking && q && !done && (
+      {step === "review" && q && !done && (
         <KitModal
           title="취소 요청"
-          busy={cancel.isPending}
-          onClose={() => setAsking(false)}
+          busy={checking}
+          onClose={closeConfirmation}
           foot={
             <>
-              <button className="btn" type="button" onClick={() => setAsking(false)} disabled={cancel.isPending}>돌아가기</button>
-              <button className="btn btn--primary" type="button" disabled={cancel.isPending}
-                onClick={() => cancel.mutate(undefined, { onSettled: () => setAsking(false) })}>취소 요청</button>
+              <button className="btn" type="button" onClick={closeConfirmation} disabled={checking}>예약 유지</button>
+              <button className="btn btn--primary" type="button" disabled={checking} onClick={showFinalConfirmation}>
+                {checking ? "금액 확인 중…" : "다음 · 금액 최종 확인"}
+              </button>
             </>
           }
         >
-          <p className="modal__lead">정말 공연을 취소할까요?</p>
-          <p>되돌릴 수 없어요.</p>
+          <p className="modal__lead">이 공연의 예약을 취소하시겠습니까?</p>
+          <p>{p ? `${p.title} · ${dateLabel(p.showDate)}` : "취소할 예약과 예상 환불 내역을 확인해 주십시오."}</p>
           <dl className="sum-rows mt-16">
             <div><dt>위약금</dt><dd>{won(q.penaltyTotal)}</dd></div>
             <div><dt>환불 예정액</dt><dd className="strong">{won(q.refundTotal)}</dd></div>
           </dl>
+          {reviewError && <div className="mt-16"><ErrorNotice error={reviewError} /></div>}
+        </KitModal>
+      )}
+      {step === "final" && finalQuote && !done && (
+        <KitModal
+          title="공연 취소 최종 확인"
+          busy={cancel.isPending}
+          onClose={closeConfirmation}
+          foot={
+            <>
+              <button className="btn" type="button" onClick={closeConfirmation} disabled={cancel.isPending}>예약 유지</button>
+              <button className="btn btn--primary" type="button" onClick={confirmCancellation} disabled={cancel.isPending}>
+                {cancel.isPending ? "접수 중…" : "공연 취소 확정"}
+              </button>
+            </>
+          }
+        >
+          <p className="modal__lead">
+            {finalQuote.penaltyTotal ? `위약금 ${won(finalQuote.penaltyTotal)}이 발생합니다.` : "위약금은 0원입니다."} 정말 취소하시겠습니까?
+          </p>
+          <dl className="sum-rows mt-16">
+            <div><dt>결제한 금액</dt><dd>{won(finalQuote.paid)}</dd></div>
+            <div><dt>위약금 ({finalQuote.ratePercent}%)</dt><dd>{won(finalQuote.penaltyTotal)}</dd></div>
+            <div>
+              <dt>돌려받지 못하는 플랫폼 이용료</dt>
+              <dd>{won(finalQuote.paid - finalQuote.penaltyTotal - finalQuote.refundTotal)}</dd>
+            </div>
+            <div className="cancel-final-total"><dt>환불 예정액</dt><dd>{won(finalQuote.refundTotal)}</dd></div>
+          </dl>
+          <p className="field__hint mt-16">
+            {finalQuote.paid ? "확정하면 취소가 접수됩니다. 접수된 취소는 되돌릴 수 없습니다." : "결제 전 예약입니다. 확정하면 예약이 취소되며 환불할 금액은 없습니다."}
+          </p>
           {cancel.isError && <div className="mt-16"><ErrorNotice error={cancel.error} /></div>}
         </KitModal>
       )}

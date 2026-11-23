@@ -15,7 +15,7 @@ const SIGNUP = "/signup/supplier";
 const WHY: { icon: HomeIconName; title: string; desc: string }[] = [
   { icon: "filter", title: "내 부문 공고만 도착", desc: "공연장·장비·엔지니어 중 내 부문과 활동 지역, 지금 열린 단계에 맞는 공고만 보여요." },
   { icon: "card", title: "결제금 보관 후 정산", desc: "사용자가 결제한 금액은 STAGE DUCK이 보관하고, 공연이 끝나면 업체에 정산돼요." },
-  { icon: "house", title: "업체 찾기로 홍보", desc: "장비 목록과 현장 사진으로 업체를 소개하면, 사용자가 오퍼를 먼저 보낼 수 있어요." },
+  { icon: "house", title: "업체 찾기로 홍보", desc: "장비 목록과 현장 사진으로 업체를 소개하면, 사용자가 먼저 견적을 요청할 수 있어요." },
 ];
 
 const STEPS = [

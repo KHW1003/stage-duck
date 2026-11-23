@@ -6,3 +6,87 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 .result__icon--bad { border-color: var(--sd-conflict-text); color: var(--sd-conflict-text); }
 .pay-wait { display: grid; place-items: center; }
+
+.invoice-terms-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Keep the title and controls visible while the agreement scrolls. */
+.transaction-terms-dialog .layer {
+  padding-block: 0;
+}
+
+.transaction-terms-dialog .modal {
+  --w: 840px;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+}
+
+.transaction-terms-dialog .modal__head,
+.transaction-terms-dialog .modal__foot {
+  flex-shrink: 0;
+}
+
+.transaction-terms-dialog .modal__head {
+  min-height: 66px;
+  padding-inline: clamp(18px, 5vw, 52px);
+}
+
+.transaction-terms-dialog .modal__head h2 {
+  font-size: clamp(18px, 3vw, 25px);
+}
+
+.transaction-terms-dialog .modal__body {
+  flex: 1;
+  padding: 30px clamp(18px, 5vw, 52px);
+}
+
+.transaction-terms-dialog .modal__foot {
+  justify-content: flex-end;
+  padding: 14px clamp(18px, 5vw, 52px);
+  border-top: 1px solid var(--sd-line);
+}
+
+.transaction-terms-dialog .modal__foot > .btn {
+  flex: 0 0 auto;
+  min-width: 112px;
+}
+
+.transaction-terms-dialog .tm-ol > li {
+  margin-top: 12px;
+  font-size: 16px;
+}
+
+.cancel-final-total {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sd-line);
+}
+
+.cancel-final-total dd {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .transaction-terms-dialog .layer {
+    padding-inline: 8px;
+  }
+
+  .transaction-terms-dialog .modal__body {
+    padding-block: 22px;
+  }
+
+  .transaction-terms-dialog .modal__foot > .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

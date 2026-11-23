@@ -6,13 +6,15 @@
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--sd-rule); }
 .tab { min-height: var(--sd-touch); padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
 .tab[aria-selected="true"] { border-bottom-color: var(--sd-ink); color: var(--sd-ink); font-weight: 700; }
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 0; }
 .count { color: var(--sd-muted); font-size: var(--sd-text-desc); }
-.sorts { display: flex; gap: 4px; }
+.sorts { display: flex; gap: 4px; margin-left: auto; } /* 정렬은 오른쪽, 검색 칸 바로 앞 (11/19 피드백) */
 .sortBtn { min-height: var(--sd-touch); padding: 0 8px; border: 0; background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
 .sortBtn[aria-pressed="true"] { color: var(--sd-ink); font-weight: 700; }
 .search { display: flex; gap: 8px; align-items: center; }
 .select, .searchInput { height: var(--sd-input); padding: 0 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); background: var(--sd-bg); font-size: var(--sd-text-desc); }
+.select { padding: 0 4px; border-color: transparent; background: none; color: var(--sd-muted); cursor: pointer; } /* 검색 범위는 테두리 없이 글자만 (11/19 피드백) */
+.select:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
 
 /* 표 목록: 머리 아래 1px 선, 바탕 없음 (DESIGN.md "표 / 줄 목록") */
 .table { width: 100%; border-collapse: collapse; font-size: var(--sd-text-desc); }
@@ -23,7 +25,7 @@
 .num { width: 64px; color: var(--sd-muted); }
 .cat { width: 88px; color: var(--sd-muted); }
 .small { width: 120px; color: var(--sd-muted); }
-.comments { margin-left: 4px; color: var(--sd-blue); }
+.commentCount { margin-left: 4px; color: var(--sd-blue); } /* 목록 제목 옆 [댓글 수] — 글 화면 댓글 칸(.comments)과 이름이 겹쳐 댓글 전체가 빨갛던 것 */
 .pager { display: flex; justify-content: center; gap: 4px; padding-top: 20px; }
 .pageBtn { min-width: var(--sd-touch); min-height: var(--sd-touch); border: 0; background: none; font-size: var(--sd-text-desc); cursor: pointer; }
 .pageBtn[aria-current="page"] { font-weight: 700; text-decoration: underline; }
@@ -61,7 +63,8 @@
 .commentFormBar { display: flex; justify-content: space-between; align-items: center; }
 
 /* 글쓰기 (F 문서형: 테두리 없이 선으로만) */
-.form { display: flex; flex-direction: column; gap: 16px; }
+.form { display: flex; flex-direction: column; gap: 16px; padding: 28px 32px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-th); } /* 글쓰기 칸을 한 덩어리로 (11/19 피드백) */
+@media (max-width: 560px) { .form { padding: 20px 16px; } }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
 .chip { position: relative; display: inline-flex; align-items: center; min-height: var(--sd-touch); padding: 0 14px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); font-size: var(--sd-text-desc); cursor: pointer; }
 .chip input { position: absolute; opacity: 0; }

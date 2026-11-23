@@ -79,6 +79,16 @@ docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec api
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec api python -m app.cli create-admin --email <관리자 메일>   # 비밀번호는 입력창에서
 ```
 
+비밀번호 찾기 메일을 실제로 보내려면 `deploy/.env` 의 `MAIL_BACKEND=smtp` 와 `SMTP_*`·`MAIL_FROM` 을 채운다 (네이버·Gmail 앱 비밀번호·AWS SES, env.prod.example 주석). 비워 두면(`console`) 링크는 서버 로그(`logs api`)에 남고 시연 서버 화면에 시연용 링크가 보인다. `smtp` 일 때는 화면에 링크를 보이지 않는다.
+
+채운 뒤 서버에서 시험 메일로 확인한다 (스팸함도 볼 것):
+
+```bash
+docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env exec api python -m app.cli send-test-mail --to 받을주소
+```
+
+결제 마감 리마인드·자동 취소(D-57)는 api 안의 스케줄러가 1분마다 돈다 (`SCHEDULER_ENABLED`, 기본 켬). 그래서 api 는 `--workers 1` 로만 띄운다. 시연 계정(`@stageduck.test`)은 실제 메일함이 없으니 시연용 링크를 쓴다.
+
 브라우저에서 `https://<SITE_ADDRESS>/api/v1/health` → `{"status":"ok","env":"test",...}`.
 
 ## 5. 자동 배포 (main 머지 = 배포)

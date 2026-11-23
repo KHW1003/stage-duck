@@ -1,6 +1,6 @@
 /**
- * 머리(GNB) 메뉴·계정 메뉴. 출처: docs/design/mockup-v4/layout.js (MENU, 계정 메뉴) — 목업과 같은 항목·순서.
- * 머리 메뉴 통일 (DESIGN.md 2026-11-18): [내 일] + 공간 찾기 · 업체 찾기 · 커뮤니티. 견적함·기술 확인은 계정 메뉴로.
+ * 머리(GNB) 메뉴·계정 메뉴. 공통 화면은 목업의 머리 메뉴를 따르고 업체 업무 화면은 내 예약을 제공한다.
+ * 공연팀은 내 공연과 탐색 메뉴를, 승인 업체는 공고·예약·소개 글 메뉴를 본다.
  * 주소는 specs/plan.md 6장 라우트 표를 따른다. 표에 아직 없는 화면은 [주소 미정] 으로 표시했다 —
  * 그 화면 담당이 plan.md 에 주소를 정하면 여기만 고친다. (그 전까지 누르면 "찾을 수 없어요" 화면)
  */
@@ -12,6 +12,9 @@ export interface MenuItem {
   to: string;
   /** React 밖 주소 (서버의 SQLAdmin) — <a href> 로 이동 */
   external?: boolean;
+  /** 채팅: 화면을 옮기지 않고 지금 화면에 ?chat=list 를 붙여 오른쪽 아래 채팅 창을 연다 (목업 v4).
+   *  채팅 창이 없는 메인(HomeLayout)에서는 to(기본 화면 + ?chat=list)로 간다 */
+  chat?: boolean;
 }
 
 export interface AccountLink extends MenuItem {
@@ -26,14 +29,15 @@ export const MENUS: Record<LayoutKind, MenuItem[]> = {
   ],
   user: [
     { label: "내 공연", to: "/me/performances" },
-    { label: "채팅", to: "/chats" }, // 목업은 오른쪽 아래 채팅 창을 연다 — 채팅 창(3번)이 생기면 바꾼다
+    { label: "채팅", to: "/me/performances?chat=list", chat: true },
     { label: "공간 찾기", to: "/venues" },
     { label: "업체 찾기", to: "/board" },
     { label: "커뮤니티", to: "/community" },
   ],
   partner: [
     { label: "공고 목록", to: "/supplier/postings" },
-    { label: "채팅", to: "/chats" },
+    { label: "내 예약", to: "/supplier/reservations" },
+    { label: "채팅", to: "/supplier/postings?chat=list", chat: true },
     { label: "공간 찾기", to: "/venues" },
     { label: "업체 찾기", to: "/board" },
     { label: "커뮤니티", to: "/community" },
@@ -55,15 +59,15 @@ export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
   user: [
     { label: "마이페이지", to: "/mypage", icon: "user" }, // [주소 미정] 목업 mypage.html — 1번 profile
     { label: "견적함", to: "/quotes", icon: "doc" }, // [주소 미정] 목업 inbox-list.html — 3번 묶음
-    { label: "관심 업체", to: "/favorites", icon: "heart" }, // [주소 미정] 목업 favorites.html — 1번 offer
+    { label: "관심 업체", to: "/favorites", icon: "heart" }, // 목업 favorites.html — 1번 offer (#32)
     { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정] plan.md 는 공연별 /performances/:id/sheet
     { label: "1:1 문의", to: "/me/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
   ],
   partner: [
     { label: "업체 프로필", to: "/supplier/profile", icon: "venue" },
     { label: "내 소개 글", to: "/supplier/posts", icon: "edit" }, // [주소 미정] 목업 p-post.html
-    { label: "최종 담당표", to: "/sheet", icon: "receipt" }, // [주소 미정]
-    { label: "기술 확인", to: "/supplier/tech", icon: "tool" }, // [주소 미정] 목업 p-tech.html — 4번 묶음
+    { label: "내 예약", to: "/supplier/reservations", icon: "receipt" },
+    { label: "받은 견적 요청", to: "/supplier/offers", icon: "doc" }, // #32
     { label: "1:1 문의", to: "/me/inquiries", icon: "chat" },
   ],
   "partner-review": [],
@@ -79,5 +83,14 @@ export const HOME: Record<LayoutKind, string> = {
   user: "/me/performances",
   partner: "/supplier/postings",
   "partner-review": "/supplier/onboarding",
+  admin: "/admin",
+};
+
+/** 머리 로고를 누르면 가는 곳: 메인 (업체는 업체 메인). 내 공연·공고 목록이 아니다 (11/19 피드백) */
+export const LOGO_HOME: Record<LayoutKind, string> = {
+  guest: "/",
+  user: "/",
+  partner: "/partner",
+  "partner-review": "/partner",
   admin: "/admin",
 };

@@ -46,6 +46,11 @@
 .iq-head .list__meta { margin-top: 10px; }
 .iq-body { padding: 28px 0; font-size: 15px; line-height: 1.85; white-space: pre-line; overflow-wrap: anywhere; }
 .iq-files { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 28px; }
+/* 답변 상태: 유형 태그 바로 옆에 무채색 (11/19 피드백) */
+.iq-head__top { justify-content: flex-start; gap: 8px; }
+.iq-state { font-size: var(--sd-text-small); font-weight: 600; color: var(--sd-muted); }
+.iq-thumb { padding: 0; border: 0; background: none; cursor: zoom-in; }
+.iq-zoom { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; border-radius: var(--sd-r-tag); }
 .iq-files img { width: 120px; height: 90px; object-fit: cover; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); }
 .iq-answer { border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
 .iq-answer__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--sd-line); background: var(--sd-soft); }

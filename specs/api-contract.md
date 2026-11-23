@@ -23,6 +23,7 @@
 | 권한 | 남의 리소스는 `404 NOT_FOUND` (존재 여부 숨김) |
 | 버전 충돌 | 수정 요청 본문에 `version`(현재 버전) → 다르면 `409 VERSION_CONFLICT` |
 | 멱등 | 결제·컨펌·다음 단계 요청은 `Idempotency-Key` 헤더 필수. 같은 키 → 처음 응답 그대로 |
+| 상태 확인 | `GET /health` → `{ "status": "ok", "env", "simulation": true }` (로그인 없음, 배포 확인용) |
 
 ### 1.1 오류 응답
 
@@ -58,19 +59,23 @@
 |---|---|---|---|---|
 | POST | `/auth/signup` | 🌐 | 사용자 이메일 가입 | F1-01~03 |
 | POST | `/auth/signup/supplier` | 🌐 | 업체 1단계 (이메일·담당자·약관) | F1-17 |
+| POST | `/auth/check-available` | 🌐 | 가입 화면 [중복 확인] `{ "field": "email" \| "nickname", "value" }` → `{ "available", "message" }`. 모양이 틀리면 400 `VALIDATION_FAILED`. 가입할 때도 같은 검사를 다시 한다. CSRF 검사 예외 | F1-01 |
 | POST | `/auth/login` | 🌐 | 로그인 → 쿠키 발급, 응답에 `role`, `landing` | F1-11 |
 | POST | `/auth/logout` | 누구나 | 쿠키 삭제 (204). 로그인 쿠키가 만료됐어도 남은 쿠키를 지운다 | F1-12 |
 | POST | `/auth/refresh` | 쿠키 | Access 재발급 | |
 | GET | `/auth/naver/start` | 🌐 | 네이버 로그인 이동 (`state` 쿠키) | F1-04 |
-| GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 / 처음 → `signupToken` 발급 후 추가 정보 화면으로 | F1-04, F1-10 |
-| GET | `/auth/kakao/start` · `/auth/kakao/callback` | 🌐 | `KAKAO_LOGIN_ENABLED=false`면 404 | F1-08, F1-09 |
-| POST | `/auth/social/complete` | signupToken | 추가 정보 + 약관 동의 → 가입 완료 | F1-05~07 |
+| GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 쿠키 + 첫 화면으로 302 / 처음 → `signup_token` 쿠키(httpOnly, 10분) + `/signup/extra` 로 302 / 실패 → `/login?social=failed` 로 302 (아래 2.1) | F1-04, F1-10 |
+| GET | `/auth/kakao/start` · `/auth/kakao/callback` | 🌐 | 네이버와 같은 흐름. `KAKAO_LOGIN_ENABLED=false`면 404 | F1-08, F1-09 |
+| GET | `/auth/social/pending` | `signup_token` 쿠키 | 추가 정보 화면에 미리 채울 값 `{provider, email, name, phone, birthDate, nickname}`. 쿠키가 없거나 만료(10분)면 401 | F1-05, F1-06 |
+| POST | `/auth/social/complete` | `signup_token` 쿠키 | 추가 정보 + 약관 동의 → 가입 완료. 요청은 `/auth/signup` 에서 `password` 만 뺀 모양. CSRF 검사 예외 (아래 2.1) | F1-05~07 |
 | POST | `/auth/password-reset` | 🌐 | 재설정 링크 요청 `{email}` → 항상 202 `{demoLink}` (시연 서버 `APP_ENV=test`·`MAIL_BACKEND=console`만 `/password/reset?token=…`, 그 밖은 null). 같은 이메일 10분 3회 넘으면 429 `PASSWORD_RESET_RATE_LIMITED` (가입 안 한 이메일도 같은 규칙). CSRF 검사 예외 | F1-21, F1-23 |
 | POST | `/auth/password-reset/confirm` | 🌐 | `{token, password}` → 204 + 그 사용자 Refresh 전부 폐기(바꾼 시각 전에 발급된 refresh 는 `/auth/refresh` 401) + 이 브라우저 로그인 쿠키 지움. 만료·사용됨 → 400 `RESET_TOKEN_INVALID`, 비밀번호 규칙 → 400 `VALIDATION_FAILED`. CSRF 검사 예외 | F1-22 |
 | GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태 | F1-11 |
 | POST | `/supplier/application` | S\* | 2단계 입점 신청 (사업자 정보, 등록증 파일 id) | F1-17, F1-18 |
 | GET | `/supplier/application` | S\* | 심사 상태·반려 사유 | F1-20 |
-| PUT | `/supplier/application` | S\* | 반려 후 수정·재신청 | F1-20 |
+| PUT | `/supplier/application` | S* | 반려 후 수정·재신청 | F1-20 |
+| GET | `/supplier/terms-review` | S | 업체 약관 확인 상태 `{version, reviewed}` | |
+| PUT | `/supplier/terms-review` | S | 현재 약관 확인 `{version}` → `{version, reviewed}` | |
 | POST | `/dev/switch-account` | **T** | 시연 계정 전환 | F1-16 |
 
 **POST /auth/signup**
@@ -87,6 +92,53 @@
 // 400 — 만 14세 미만
 { "code": "UNDER_AGE", "message": "만 14세 이상만 가입할 수 있어요.", "fieldErrors": [{"field":"birthDate","reason":"만 14세 미만"}] }
 ```
+
+### 2.1 소셜 로그인 (네이버·카카오, #25)
+
+업체는 소셜 로그인을 쓰지 않는다 (Q-37). 소셜 가입은 사용자만.
+
+**콜백 (`GET /auth/{naver|kakao}/callback`)** — 응답 본문 없이 302 로 보낸다.
+
+| 경우 | 쿠키 | 이동 |
+|---|---|---|
+| 이 소셜 계정으로 가입한 회원 | 로그인 쿠키 (`/auth/login` 과 같음) | 그 역할의 첫 화면 |
+| 처음 (가입 전) | `signup_token` (httpOnly, 10분) — 소셜 식별값·받아온 값 | `/signup/extra` |
+| 같은 이메일로 이메일 가입한 계정이 이미 있음 | 없음 (자동으로 연결하지 않는다, AC-F1-10) | `/login?social=failed` |
+| `state` 불일치·사용자가 동의 취소·소셜 서버 오류 | 없음 | `/login?social=failed` |
+
+`/login?social=failed` 화면 문구: "간편 로그인을 마치지 못했어요. 다시 시도하거나 이메일로 로그인해 주세요."
+
+**GET /auth/social/pending**
+```json
+// 200 — 받아오지 못한 값은 null (예: 생일 동의를 해제하면 birthDate null, AC-F1-05)
+{ "provider": "NAVER", "email": "a@naver.com", "name": "김덕구", "phone": "01012345678", "birthDate": null, "nickname": null }
+// 401 — signup_token 쿠키가 없거나 10분이 지남 → 화면은 로그인으로 돌려보낸다
+{ "code": "SOCIAL_SIGNUP_EXPIRED", "message": "간편 가입 시간이 지났어요. 다시 로그인해 주세요.", "fieldErrors": [] }
+```
+
+**POST /auth/social/complete**
+```json
+// 요청 — /auth/signup 에서 password 만 뺀 모양. 미리 채운 값도 사용자가 고칠 수 있다 (AC-F1-06)
+{
+  "name": "김덕구", "phone": "01012345678", "email": "a@naver.com",
+  "birthDate": "1999-03-02", "nickname": "덕구밴드",
+  "signupPurpose": "PERFORMANCE", "musicianType": "BAND", "signupChannel": "SNS",
+  "agreements": { "service": true, "privacyRequired": true, "privacyOptional": false, "marketing": false }
+}
+// 201 — 가입 + 로그인 쿠키, signup_token 쿠키는 지운다
+{ "id": 13, "role": "USER", "nickname": "덕구밴드", "landing": "/me/performances" }
+```
+
+| 상태 | 코드 | 언제 |
+|---|---|---|
+| 401 | `SOCIAL_SIGNUP_EXPIRED` | `signup_token` 쿠키가 없거나 10분이 지남 |
+| 400 | `VALIDATION_FAILED` | 빈 칸·형식 (`fieldErrors`, `/auth/signup` 과 같은 규칙) |
+| 400 | `UNDER_AGE` | 만 14세 미만 |
+| 400 | `TERMS_REQUIRED` | 필수 약관 동의 없음 (AC-F1-07) |
+| 409 | `EMAIL_TAKEN` · `NICKNAME_TAKEN` | 이미 쓰는 이메일·닉네임 |
+| 409 | `SOCIAL_ALREADY_LINKED` | 그 소셜 계정으로 이미 가입함 (다른 탭에서 먼저 완료 등) |
+
+**서버 설정** (`backend/app/core/config.py`, 값은 서버 `.env` 에만): `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `KAKAO_LOGIN_ENABLED`(기본 false), `KAKAO_CLIENT_ID`. 네이버 개발자 센터에 콜백 `https://{SITE_ADDRESS}/api/v1/auth/naver/callback` 등록.
 
 **POST /supplier/application**
 ```json
@@ -106,8 +158,9 @@
 ### 3.1 업체 서비스·공간
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| PUT | `/supplier/profile` | S | 3단계: 지역, 소개, 사진, 설치·철수 시간, 엔지니어 정보, 신뢰 지표 | |
-| PUT | `/supplier/equipment` | S | 보유 장비 목록 (자유 입력, 전체 교체) | |
+| PUT | `/supplier/profile` | S | 3단계: 지역, 소개, 사진, 설치·철수 시간, 엔지니어 정보, 신뢰 지표. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환: 입점 신청 `/supplier/application` 에 합쳤는지) | |
+| PUT | `/supplier/equipment` | S | 보유 장비 목록 (자유 입력, 전체 교체). ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환) | |
+| GET | `/supplier/venues` | S(VENUE) | 내 공간 목록 (숨긴 공간 포함, 등록 순, `VenueOut` 배열). 견적서 작성에서 공간 고르기 (#192) | F2-18 |
 | POST | `/supplier/venues` | S(VENUE) | 공간 등록 | F2-01, F2-02 |
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
 | GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
@@ -159,8 +212,9 @@
 | GET | `/postings/{stageId}` | S | 공고 상세 + 앞 단계 확정 정보 (공연장 입실·기본 장비·전원 등) | F3-03 |
 | POST | `/stages/{stageId}/quotes` | S | 견적서 전송 (여러 개 가능, `label`) → 사용자 견적함 + 알림 | F2-15, F2-16, F2-18, F2-19 |
 | PUT | `/quotes/{quoteId}` | S(본인) | 견적서 수정 → 새 버전, 대기 카드 무효 | F2-20, F3-09 |
-| POST | `/quotes/{quoteId}/withdraw` | S(본인) | 철회 | |
+| POST | `/quotes/{quoteId}/withdraw` | S(본인) | 철회. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (3번 채은) | |
 | GET | `/quotes/{quoteId}` | P | 견적서 (현재 버전 + 이력) — 다른 업체는 404 | F1-14, F2-14 |
+| GET | `/quotes/by-version/{versionId}` | P | 채팅 견적서 카드의 [내역서 보기] (메시지 `refId` = 견적서 버전 id). 응답·권한은 `GET /quotes/{quoteId}` 와 같다 | F3-07 |
 
 **POST /stages/{stageId}/quotes**
 ```json
@@ -189,7 +243,7 @@
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
 | GET | `/stages/{stageId}/quotes` | U | 단계별 견적 비교: 견적서 + 자동 검사 + 풀스펙 배지 + 오퍼 여부 | F3-20~24 |
-| GET | `/quotes/{quoteId}/checks` | P | 자동 검사 결과만 | F3-21~24 |
+| ~~GET~~ | ~~`/quotes/{quoteId}/checks`~~ | | 따로 두지 않는다. 자동 검사 결과는 `GET /stages/{stageId}/quotes` 응답의 견적서마다 `checks`·`overall` 로 함께 온다 | F3-21~24 |
 
 **검사 결과 형식**
 ```json
@@ -212,12 +266,13 @@
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
 | POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true` | F3-06, F3-08, F3-15 |
 | POST | `/chat-rooms/{roomId}/read` | P | `{ "lastMessageId": 120 }` | F3-08 |
-| POST | `/chat-rooms/{roomId}/report` | P | 신고 | F4-03 |
+| POST | `/reports` | P | 채팅방 신고는 공통 신고 API 로: `{ "targetType": "CHAT_ROOM", "targetId": roomId, "reason" }` (5장) | F4-03 |
 
 ### 4.3 견적 내역 확인·컨펌·다음 단계
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| POST | `/quotes/{quoteId}/confirm-requests` | S(본인) | [견적 내역 확인] 카드 전송 (현재 버전 고정, 48시간) | F3-09, F3-12 |
+| POST | `/quotes/{quoteId}/confirm-requests` | S(본인) | [최종 견적 보내기] 카드 전송 (현재 버전 고정, 48시간). 보낸(SENT) 견적서·열린 단계만(`409 INVALID_STATE`), 채팅 시작 전 `403 CHAT_NOT_STARTED`, 방에 대기 카드가 있으면 `409 INVALID_STATE` → `201` 카드 | F3-09, F3-12 |
+| GET | `/confirm-requests/{id}` | 그 방 U·S | 카드 `{ id, roomId, quoteId, quoteVersionId, version, currentVersion, label, totalAmount, stageId, stageType, performanceId, status, expiresAt, viewedAt, decidedAt, nextStageType, checkoutAvailable }` (뒤 둘은 CONFIRMED 일 때만). 48시간 지났으면 여기서 `EXPIRED` | F3-12 |
 | POST | `/confirm-requests/{id}/view` | U | 내역서 열람 기록 (`viewedAt`) | F3-10 |
 | POST | `/confirm-requests/{id}/accept` | U | **컨펌** (`Idempotency-Key`) | F3-10, F3-11, F3-13 |
 | POST | `/confirm-requests/{id}/renegotiate` | U | [다시 조율] | |
@@ -227,8 +282,8 @@
 **POST /confirm-requests/{id}/accept**
 ```json
 // 200
-{ "stageId": 5, "stageStatus": "CONFIRMED", "confirmedQuoteVersionId": 88,
-  "next": { "stageType": "EQUIPMENT", "suggestSkip": false }, "checkoutAvailable": false }
+{ "stageId": 5, "stageStatus": "CONFIRMED", "confirmedQuoteVersionId": 88, "performanceId": 3,
+  "next": { "stageType": "EQUIPMENT", "suggestSkip": false }, "checkoutAvailable": false, "card": { /* GET 과 같은 칸 */ } }
 // 409 — 다른 탭에서 이미 컨펌
 { "code": "STAGE_ALREADY_CONFIRMED", "message": "이 단계는 이미 다른 견적서로 정해졌어요." }
 // 422 — 견적서가 수정됨
@@ -236,15 +291,22 @@
 ```
 - 검사 실패 순서: 카드 상태·만료(`422 CONFIRM_REQUEST_EXPIRED`) → 열람(`422 DETAIL_NOT_VIEWED`) → 버전(`422 CONFIRM_REQUEST_STALE`) → 자동 검사(`409 CHECK_CONFLICT`) → 단계(`409 STAGE_ALREADY_CONFIRMED`).
 - 성공하면 같은 단계 다른 견적서 `CLOSED` + 해당 채팅방에 안내 카드 (반려 이벤트 없음).
+- 같은 카드로 다시 오면(키가 달라도) 처음 결과를 그대로 돌려준다. 견적서를 고치면 그 견적서의 대기 카드는 `INVALIDATED`.
+- [다시 조율] → 카드 `RENEGOTIATE` + 채팅방 안내, 업체는 새 카드를 보낼 수 있다. 결제 마감(D-57)이 생기면 카드 만료 = min(48시간, 결제 마감).
 
-### 4.4 직접 오퍼·관심 업체
+### 4.4 직접 오퍼(화면 문구 "견적 요청")·관심 업체
+화면에는 "견적 요청하기 · 받은 견적 요청"으로 보인다 (11/19 팀 결정). 주소·코드는 offer 그대로.
+
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| POST | `/stages/{stageId}/offers` | U | `{ "supplierId": 9 }` — 열린 단계·해당 부문만, 동시 10곳 (`409 OFFER_LIMIT`) | F3-16, F3-17 |
-| GET | `/supplier/offers` | S | 받은 오퍼 | |
-| POST | `/offers/{id}/decline` | S(본인) | 거절 (사유 선택) | |
-| — | 오퍼를 받은 업체가 `POST /stages/{stageId}/quotes`에 `offerId`를 넣으면 견적서에 "내가 오퍼한 업체" 표시 | | | F3-18 |
-| POST | `/favorites` · DELETE `/favorites/{supplierId}` · GET `/favorites` | U | 관심 업체 저장 | F3-16, F3-19 |
+| POST | `/stages/{stageId}/offers` | U(본인 공연) | `{ "supplierId": 9, "message": "리허설 17시 가능할까요?" }` (message 선택, 300자, 연락처 모양이면 `400` field `message`) → `201 { offerId, supplierId, companyName, status, declineReason, expiresAt, createdAt }`. 지금 열린 단계가 아니면 `409 STAGE_NOT_OPEN`, 그 부문의 승인·정상 업체가 아니면 `400` field `supplierId`, 같은 업체에 또 보내면 `409 INVALID_STATE`, 동시(PENDING·QUOTED) 10곳이면 `409 OFFER_LIMIT` (단계 행 잠금) | F3-16, F3-17 |
+| GET | `/stages/{stageId}/offers` | U(본인 공연) | 그 단계에 보낸 요청 `{ activeCount, limit: 10, items: [위와 같은 칸] }` | F3-17 |
+| GET | `/supplier/offers` | S(승인) | 받은 요청 (최근 순) `[{ offerId, stageId, stageType, stageOpen, performanceId, title, showDate, sido, sigungu, audience, nickname, message, status, declineReason, expiresAt, createdAt }]` — 사용자는 닉네임만, 연락처 없음. 승인 전 `403 SUPPLIER_NOT_APPROVED` | |
+| POST | `/offers/{id}/decline` | S(받은 업체) | `{ "reason": "SCHEDULE" \| "CAPACITY" \| "REGION" \| "BUDGET" \| "ETC" }` → `204`. 답하기 전(PENDING)만, 아니면 `409 INVALID_STATE`, 남의 요청 `404` | |
+| — | 요청을 받은 업체가 그 단계에 `POST /stages/{stageId}/quotes`로 견적서를 보내면 서버가 요청을 찾아 `QUOTED`로 바꾸고 견적서 `offer_id`를 채운다 (본문에 `offerId`를 넣지 않아도 된다). 비교 화면 `offered: true` = "내가 요청한 업체" | | | F3-18 |
+| POST | `/favorites` `{ "supplierId" }` → `204` (이미 있으면 그대로) · DELETE `/favorites/{supplierId}` → `204` · GET `/favorites` → `[{ supplierId, companyName, categories, stageTypes }]` | U | 관심 업체. 단계가 열리지 않아도 저장 가능. 화면이 열린 단계와 `stageTypes`를 맞춰 "저장한 업체에 견적을 요청할까요?" 안내 | F3-16, F3-19 |
+
+- 48시간 안에 답이 없으면 `EXPIRED` (요청을 읽거나 셀 때 바꾼다). 알림(`OFFER_RECEIVED`·`OFFER_DECLINED`·`OFFER_EXPIRED`)은 사이트 안 알림(#45)에서 붙인다.
 
 ### 4.5 기술 확인
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -261,9 +323,10 @@
 |---|---|---|---|---|
 | GET | `/pr-posts` | 🌐 | `?category=&sido=&page=` — category 생략 시 전체, 최신순(끌어올린 시각). 정지 업체 글 제외 | F4-04, F4-09, F4-11 |
 | GET | `/pr-posts/{id}` | 🌐 | 상세 | F4-04 |
-| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`), 연락처 패턴 경고 | F4-01~03, F4-10 |
-| PUT · DELETE | `/pr-posts/{id}` | S(본인) | 수정·삭제 | |
-| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회, `429 BUMP_TOO_SOON`) | |
+| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`). 연락처·외부 링크 모양이 있으면 저장은 하고 응답 `contactWarning: true` (화면이 경고) | F4-01~03, F4-10 |
+| PUT | `/pr-posts/{id}` | S(본인) | 수정 (말머리는 못 바꿈). 응답에 `contactWarning`. 블라인드 중 `409 INVALID_STATE`, 말머리 변경·칸 오류 `400 VALIDATION_FAILED`, 정지 계정 `403 ACCOUNT_SUSPENDED`, 남의 글·지운 글 `404` | F4-03, F4-10 |
+| DELETE | `/pr-posts/{id}` | S(본인) | 삭제. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환) | |
+| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회, `429 BUMP_TOO_SOON`). ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환 — 화면은 "끌어올림" 날짜를 이미 보여 줌) | |
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
@@ -277,7 +340,6 @@
 | PUT · DELETE | `/free-helpfuls` | U, S | `{ "targetType": "POST", "targetId": 12 }` — 도움 돼요 누르기 / 취소. 응답 `{ "helpfulCount" }` | F4-17 |
 | PUT · DELETE | `/free-posts/{id}/bookmark` | U, S | 저장 / 저장 취소 | F4-17 |
 | GET | `/me/free-bookmarks` | U, S | 내 저장 글 | F4-17 |
-| DELETE | `/free-comments/{id}` | 본인 | "삭제된 댓글이에요"로 남김 | |
 
 ---
 
@@ -288,6 +350,8 @@
 | GET | `/me/notifications` | 로그인 (S\*, 정지 포함) | `?category=&before=` 최신순 20개 → `{ "items": [{ id, type, category, title, body, link, read, createdAt }], "nextBefore", "unreadCount" }` | |
 | GET | `/me/notifications/unread-count` | 로그인 | `{ "count" }` — 머리 종 배지 | |
 | POST | `/me/notifications/read` | 로그인 | `{ "ids": [12] }` 또는 `{ "all": true }` → `204`. 남의 id는 무시 | |
+| GET | `/me/notifications/settings` | 로그인 | `{ "emailEnabled", "email" }` — 중요 알림 메일 (notifications.md 10장) | |
+| PUT | `/me/notifications/settings` | 로그인 | `{ "emailEnabled": false }` → 같은 모양 | |
 
 - 어떤 일에 누구에게 어떤 알림이 가는지는 [notifications.md](notifications.md) 3장. 채팅 메시지는 알림을 만들지 않는다.
 
@@ -296,7 +360,10 @@
 ## 6. F5 부가 기능
 
 ### 6.1 결제·취소
+- 결제 마감 (D-57, #52): `GET /performances/{id}` 와 `GET /performances/{id}/order` 에 `paymentDeadline` (처음 컨펌 뒤 결제 전만, 아니면 null). 마감이 지나면 서버가 1분 안에 자동 취소(취소자 SYSTEM, 0원)하고, 그 뒤 결제는 `409 INVALID_STATE`. 리마인드는 일반 24h·3h 전, 임박 12h·3h 전 `PAYMENT_REMINDER`.
+
 | 메서드 | 경로 | 권한 | 설명 | AC |
+
 |---|---|---|---|---|
 | POST | `/performances/{id}/order` | U | 통합 청구서 발행 — 모든 필요 단계 CONFIRMED/SKIPPED 아니면 `409 INVALID_STATE` | F5-03, F5-04 |
 | GET | `/performances/{id}/order` | U | 청구서 (업체별 금액, 수수료, 합계, 장부 상태) | F5-03, F5-07 |
@@ -305,6 +372,7 @@
 | GET | `/performances/{id}/cancel-quote` | U | 지금 취소하면 내는 금액·환불 예정액 미리보기 | F5-08, F5-09 |
 | POST | `/performances/{id}/cancel` | U | 사용자 취소 | F5-08, F5-09 |
 | POST | `/performances/{id}/cancel-by-supplier` | S(확정 업체) | 업체 사정 취소 → 전액 환불 + 경고 | F5-10 |
+| GET | `/supplier/reservations` | S | 내 업체가 확정된 공연의 일정·담당 부문·견적 합계·결제/취소 상태 | |
 | GET | `/performances/{id}/sheet` | U, 확정 업체 | 최종 담당표 — **결제 후에만 연락처 포함**, 확정 안 된 업체 404 | F5-11, F5-12 |
 
 **GET /performances/{id}/cancel-quote** (D-1, 업체 금액 185만 원 + 이용료 5% 예)
@@ -377,3 +445,14 @@
 
 ## 8. 열린 질문
 - ~~파일 업로드 크기 제한~~ → uploads.md (D-51)
+
+## 후기·평점 (11/20 추가)
+
+자세한 규칙·응답 모양은 `specs/reviews.md` 3장.
+
+| 메서드 | 경로 | 권한 |
+|---|---|---|
+| GET·POST | `/performances/{id}/reviews` | 공연 주인 사용자 |
+| DELETE | `/reviews/{id}` | 쓴 사람 |
+| GET | `/suppliers/{id}/reviews` | 누구나 |
+| GET | `/review-summaries?ids=` | 누구나 |
