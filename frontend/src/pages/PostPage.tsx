@@ -73,7 +73,7 @@ export function PostPage() {
   const p = post.data;
   const label = PR_CATEGORY_LABEL[p.category];
   return (
-    <div className={`sd-container ${styles.wrap}`}>
+    <div className={`sd-container ${styles.wrap} ${styles.detail}`}>
       <ol className={styles.crumb} aria-label="현재 위치">
         <li>
           <Link to="/board">업체 찾기</Link>

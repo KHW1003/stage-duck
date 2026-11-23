@@ -1,6 +1,6 @@
 /* 커뮤니티 (#100). 출처: docs/design/mockup-v4/pages/community.html, community-post.html, community-write.html. 색·크기는 토큰만 */
 .wrap { padding-top: 24px; padding-bottom: var(--sd-inner-section); }
-.narrow { max-width: 880px; margin: 0 auto; } /* 글·문서 화면 폭 (DESIGN.md 5장) */
+.narrow { max-width: var(--sd-doc-width); margin: 0 auto; } /* 글·문서 화면 폭 (DESIGN.md 5장) */
 
 /* 말머리 탭 + 도구 줄 */
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--sd-line); } /* 진한 선은 아래 표 머리 하나만 (11/23: 탭 선과 표 선이 둘 다 진해 지저분했다) */
