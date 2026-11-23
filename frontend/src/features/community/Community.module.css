@@ -92,3 +92,31 @@
   .num { display: none; }
   .toolbar { flex-direction: column; align-items: stretch; }
 }
+
+/* ── 디자인 검수 반영 (2026-11-23, exports/design-review 4-커뮤니티-글-상세.md) ──
+   읽는 화면답게 본문을 키우고, 진한 선은 댓글 제목 하나만, 누르는 곳 44px */
+.postTitle { margin-top: 8px; }
+.postMeta { gap: 8px; margin-top: 12px; }
+.postMeta > span:first-child { color: var(--sd-ink); font-weight: 600; }
+.postMeta > span + span::before { content: "·"; margin-right: 8px; color: var(--sd-line-strong); }
+.postHead { padding-bottom: 20px; }
+.postBody { padding: 32px 0; font-size: var(--sd-text-lg); line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; }
+.reacts { padding-bottom: 32px; border-bottom: 0; }
+.reacts [aria-pressed="true"] { border-color: var(--sd-ink); background: var(--sd-th); font-weight: 700; }
+.mineActions { margin-left: auto; }
+.comments { padding-top: 8px; }
+.comment { padding: 16px 0; }
+.commentHead .count { font-size: var(--sd-text-small); }
+/* 댓글 행동(답글·삭제·신고): 보이는 크기는 작게, 누르는 영역은 44px, 글자는 본문 왼쪽 선에 맞춤 */
+.commentActions { gap: 16px; margin-top: 0; }
+.commentActions > a, .commentActions > button { min-height: var(--sd-touch); padding-inline: 0; }
+.commentInput { min-height: calc(var(--sd-touch) * 2); }
+.commentInput:focus { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
+.commentFormBar .count { font-size: var(--sd-text-small); }
+.commentEmpty { padding: 24px 0; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+.commentLogin { padding: 16px 0 32px; }
+.near { margin-top: 24px; }
+.near li { align-items: center; min-height: var(--sd-touch); padding: 0 4px; }
+.near a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.near span { flex: none; }
+.actions { margin-top: 24px; }

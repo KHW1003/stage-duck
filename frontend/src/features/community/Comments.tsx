@@ -53,7 +53,7 @@ function Form({ postId, parentId, onDone }: { postId: number; parentId: number |
         <span className={`${styles.count} sd-num`}>
           {body.length} / {COMMENT_MAX}
         </span>
-        <Button type="submit" size="sm" variant="primary" loading={add.isPending} disabled={!body.trim()}>
+        <Button type="submit" variant="primary" loading={add.isPending} disabled={!body.trim()}>
           등록
         </Button>
       </div>
@@ -148,6 +148,7 @@ export function Comments({ post, member }: { post: FreePost; member: boolean }) 
       <h2 id="comments-title" className={styles.commentsTitle}>
         댓글 <span className="sd-num">{post.commentCount}</span>
       </h2>
+      {post.comments.length === 0 && <p className={styles.commentEmpty}>아직 댓글이 없어요. 첫 댓글을 남겨 보세요.</p>}
       {post.comments.length > 0 && (
         <ul className={styles.commentList}>
           {post.comments.map((c) => (
@@ -158,9 +159,11 @@ export function Comments({ post, member }: { post: FreePost; member: boolean }) 
       {member ? (
         <Form postId={post.id} parentId={null} />
       ) : (
-        <ButtonLink to={loginPath(`/community/${post.id}`)} variant="line">
-          로그인하고 댓글 쓰기
-        </ButtonLink>
+        <div className={styles.commentLogin}>
+          <ButtonLink to={loginPath(`/community/${post.id}`)} variant="line">
+            로그인하고 댓글 쓰기
+          </ButtonLink>
+        </div>
       )}
     </section>
   );
