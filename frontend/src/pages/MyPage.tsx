@@ -20,6 +20,7 @@ import { useLogout, useMe } from "../shared/auth/useMe";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice, errorMessageOf, fieldErrorOf } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const NAV = [
   { label: "내 프로필", to: "/mypage" },
@@ -67,6 +68,7 @@ function FieldError({ text }: { text?: string }) {
 }
 
 export function MyPage() {
+  usePageMeta("마이페이지");
   const me = useMe();
   const profile = useMyProfile();
   const update = useUpdateMyProfile();

@@ -24,6 +24,13 @@ import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
 import { CONDITIONS, FORMS, SERVICES, TASKS, VENUE_TYPES } from "../features/request/codes";
 import { usePageMeta } from "../features/seo/usePageMeta";
 
+/** 받침이 있으면 "을", 없으면 "를" (공연장을 · 장비를 · 엔지니어를) */
+function withObj(word: string): string {
+  const last = word.charCodeAt(word.length - 1);
+  const hasFinal = last >= 0xac00 && last <= 0xd7a3 && (last - 0xac00) % 28 !== 0;
+  return `${word}${hasFinal ? "을" : "를"}`;
+}
+
 const EDITABLE = ["DRAFT", "PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT"];
 const POSTED = ["PUBLISHED", "ASSIGNING"];
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
@@ -83,7 +90,7 @@ function StepRow({ p, s, index, last }: { p: PerformanceDetail; s: StageSummary;
         : state === "skip"
           ? "직접 준비해요"
           : prev
-            ? `${prev}을 확정하면 열려요.`
+            ? `${withObj(prev)} 확정하면 열려요.`
             : "공고를 게시하면 열려요.";
 
   return (
@@ -150,7 +157,7 @@ function StepRow({ p, s, index, last }: { p: PerformanceDetail; s: StageSummary;
             )}
             {state === "wait" && (
               <p className="muted">
-                {prev ? `${prev}을 확정하면 ${name} 업체에 공고가 열려요.` : `공고를 게시하면 ${name} 업체에 공고가 열려요.`}
+                {prev ? `${withObj(prev)} 확정하면 ${name} 업체에 공고가 열려요.` : `공고를 게시하면 ${name} 업체에 공고가 열려요.`}
                 {last ? "" : " 필요 없으면 그때 건너뛸 수 있어요."}
               </p>
             )}

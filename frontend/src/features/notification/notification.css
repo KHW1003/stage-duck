@@ -11,7 +11,7 @@
 .noti-row__time { font-size: 12px; color: var(--sd-muted); white-space: nowrap; }
 .noti-list > li + li { border-top: 1px solid var(--sd-line); }
 
-.noti-badge { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #e5484d; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+.noti-badge { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--sd-blue); color: var(--sd-on-blue); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
 .noti-empty { padding: 28px 16px; text-align: center; color: var(--sd-muted); font-size: 13px; }
 
 .noti-page__tabs { margin-bottom: 16px; overflow-x: auto; }

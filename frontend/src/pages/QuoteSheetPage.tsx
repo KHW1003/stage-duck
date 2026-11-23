@@ -24,8 +24,9 @@ const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 const hm = (t: string | null) => (t ? t.slice(0, 5) : "—");
 const CHECK_LABEL: Record<QuoteCheck["result"], string> = { PASS: "통과", WARNING: "경고", NEEDS_INFO: "확인 필요", CONFLICT: "충돌" };
 const CHECK_NAME: Record<string, string> = {
-  "CHK-01": "수용 인원", "CHK-02": "설치 시간", "CHK-03": "공간 조건", "CHK-04": "입실·퇴실", "CHK-05": "설치 완료",
-  "CHK-07": "장비 반입", "CHK-08": "엔지니어", "CHK-09": "일정", "CHK-10": "중복 장비", "CHK-11": "정보 부족", "CHK-12": "요청서 버전",
+  "CHK-01": "수용 인원", "CHK-02": "설치 시간", "CHK-03": "공간 조건", "CHK-04": "입실 → 설치",
+  "CHK-05": "설치 → 리허설", "CHK-07": "철수 → 퇴실", "CHK-08": "엔지니어 근무", "CHK-09": "엔지니어 중복",
+  "CHK-10": "예산", "CHK-11": "정보 누락", "CHK-12": "요청서 버전", /* 명세서 3.8 · 비교 화면과 같은 이름 (디자인 검수 11/23: "중복 장비" 줄에 예산 내용이 나왔다) */
 };
 
 function dateKo(iso: string | null, withTime = false) {

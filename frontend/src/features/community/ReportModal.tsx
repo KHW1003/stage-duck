@@ -1,5 +1,6 @@
 /** 신고 창 (FR-COMM-03·04). 사유를 적어 4번 POST /reports 로 보낸다. 처리(블라인드·경고)는 관리자가 한다 */
 import { useEffect, useId, useRef, useState } from "react";
+import { useScrollLock } from "../../shared/ui/useScrollLock";
 import { Button } from "../../shared/ui/Button";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
 import { useReport } from "./api";
@@ -18,6 +19,7 @@ export function ReportModal({ targetType, targetId, onClose }: Props) {
   const [reason, setReason] = useState("");
 
   useEffect(() => ref.current?.focus(), []);
+  useScrollLock();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !report.isPending) onClose();

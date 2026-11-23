@@ -8,6 +8,7 @@ import { TERMS, TERMS_TABS, isTermsType } from "../features/support/terms";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { Ico } from "../shared/ui/Ico";
 import { TermsDocumentBody } from "../features/support/TermsDocumentBody";
+import { Select } from "../shared/ui/Select";
 
 export function TermsPage() {
   const { type } = useParams();
@@ -55,9 +56,7 @@ export function TermsPage() {
               </div>
               <label className="tm-ver">
                 <span className="tm-sr">이전 버전 보기</span>
-                <select className="select select--sm" defaultValue="current">
-                  <option value="current">{doc.versionLabel}</option>
-                </select>
+                <Select size="sm" aria-label="이전 버전 보기" value="current" options={[{ value: "current", label: doc.versionLabel }]} onChange={() => undefined} />
               </label>
             </div>
             <div className="tm-scroll" tabIndex={0} aria-label={`${tab?.label} 전문`} key={type}>

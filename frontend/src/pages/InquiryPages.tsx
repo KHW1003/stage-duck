@@ -38,6 +38,7 @@ import { KitModal } from "../shared/ui/KitModal";
 import { ErrorNotice, fieldErrorOf } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
 import "../features/support/inquiry.css";
+import { Select } from "../shared/ui/Select";
 
 const STATUS_FILTERS: { value: ListFilter["status"]; label: string }[] = [
   { value: "", label: "전체" },
@@ -121,19 +122,13 @@ export function InquiryListPage() {
               </button>
             ))}
           </div>
-          <select
-            className="select select--sm"
+          <Select
+            size="sm"
             aria-label="문의 유형"
             value={filter.category}
-            onChange={(e) => go({ category: e.target.value as ListFilter["category"] })}
-          >
-            <option value="">모든 유형</option>
-            {INQUIRY_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: "모든 유형" }, ...INQUIRY_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))]}
+            onChange={(v) => go({ category: v as ListFilter["category"] })}
+          />
         </div>
 
         {isPending ? (
@@ -316,19 +311,13 @@ function InquiryForm({ initial }: { initial?: InquiryDetail }) {
             }}
           />
           {isUser && (
-            <select
-              className="select select--sm"
+            <Select
+              size="sm"
               aria-label="관련 공연"
-              value={performanceId ?? ""}
-              onChange={(e) => setPerformanceId(e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">관련 공연 없음</option>
-              {myPerfs.map((p) => (
-                <option key={p.id} value={p.id}>
-                  관련 공연: {p.title} · {monthDay(p.showDate)}
-                </option>
-              ))}
-            </select>
+              value={performanceId === null ? "" : String(performanceId)}
+              options={[{ value: "", label: "관련 공연 없음" }, ...myPerfs.map((p) => ({ value: String(p.id), label: `관련 공연: ${p.title} · ${monthDay(p.showDate)}` }))]}
+              onChange={(v) => setPerformanceId(v ? Number(v) : null)}
+            />
           )}
         </div>
         <textarea

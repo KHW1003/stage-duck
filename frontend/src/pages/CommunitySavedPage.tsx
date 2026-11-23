@@ -6,8 +6,10 @@ import { ErrorNotice } from "../shared/ui/ErrorText";
 import { useMyBookmarks } from "../features/community/api";
 import { CATEGORY_LABEL, authorLabel, shortDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 export function CommunitySavedPage() {
+  usePageMeta("저장한 글");
   const saved = useMyBookmarks();
   const today = new Date();
 

@@ -1,5 +1,6 @@
 /** 글·댓글 삭제 확인 창. Esc·[취소]로 닫는다 */
 import { useEffect, useId, useRef } from "react";
+import { useScrollLock } from "../../shared/ui/useScrollLock";
 import { Button } from "../../shared/ui/Button";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
 import styles from "./Community.module.css";
@@ -17,6 +18,7 @@ export function ConfirmDelete({ loading, error, onCancel, onConfirm, title = "�
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => ref.current?.focus(), []);
+  useScrollLock();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !loading) onCancel();
