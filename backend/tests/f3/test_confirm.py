@@ -260,6 +260,10 @@ def test_first_confirm_sets_payment_deadline_and_notifies_user(client, db):
     owner = user.get(f"{API}/me").json()["id"]
     types = list(db.scalars(select(Notification.type).where(Notification.user_id == owner)))
     assert "PAYMENT_DEADLINE_SET" in types and "PAYMENT_READY" in types
+    ready = db.scalar(select(Notification).where(Notification.user_id == owner, Notification.type == "PAYMENT_READY"))
+    order = user.post(f"{API}/performances/{perf_id}/order").json()
+    assert order["platformFee"] > 0
+    assert f"합계 {order['totalAmount']:,}원" in ready.body  # 이용료를 포함한 청구서 금액과 같다
     assert user.get(f"{API}/performances/{perf_id}").json()["paymentDeadline"] is not None
 
 

@@ -212,7 +212,9 @@ def accept(db: Session, user: User, card_id: int, *, now: datetime) -> AcceptRes
 
 def _notify_deadline(db: Session, stage: Stage, now: datetime) -> None:
     """D-57: 처음 컨펌이면 결제 마감 안내, 모든 단계가 끝나 결제할 수 있게 됐으면 결제 안내 (사용자에게)."""
+    from app.payment import calc
     from app.payment import deadline as dl
+    from app.payment.service import PLATFORM_FEE_RATE
 
     db.flush()
     perf = stage.performance
@@ -225,7 +227,9 @@ def _notify_deadline(db: Session, stage: Stage, now: datetime) -> None:
         notification.notify(db, perf.user_id, "PAYMENT_DEADLINE_SET", link=f"/performances/{perf.id}",
                             params={"deadline": dl.label(deadline), "title": perf.title}, payload={"performanceId": perf.id})
     if request_service.after_confirm(db, stage.id, full_spec=False).checkout_available:
-        total = sum(ln.amount for ln in request_service.confirmed_lines(db, perf.id))
+        # 청구서와 같은 계산 — 이용료를 포함한 결제할 금액
+        lines = request_service.confirmed_lines(db, perf.id)
+        total = calc.invoice_amounts([ln.amount for ln in lines], PLATFORM_FEE_RATE).total_amount
         notification.notify(db, perf.user_id, "PAYMENT_READY", link=f"/performances/{perf.id}/order",
                             params={"deadline": dl.label(deadline), "title": perf.title, "amount": notification.won(total)},
                             payload={"performanceId": perf.id})

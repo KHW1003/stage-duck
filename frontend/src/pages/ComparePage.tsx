@@ -159,7 +159,7 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
         ))}
       </div>
       {rows.map(([label, value], i) => (
-        <div role="row" className="sp__row" key={label}>
+        <div role="row" className="sp__row" key={i}>
           <div className={`sp__k${i === rows.length - 1 ? " is-last" : ""}`} role="rowheader">{label}</div>
           {quotes.map((q) => (
             <div key={q.quoteId} role="cell" className={["sp__v", i === 0 && "is-num", i === rows.length - 1 && "is-last", picked(q, stage) && "is-pick"].filter(Boolean).join(" ")}>
