@@ -43,6 +43,8 @@ def _status(
         return "NEEDS_REVIEW"
     if performance_status == "COMPLETED":
         return "COMPLETED"
+    if order_status == "SETTLEMENT_SCHEDULED":  # 공연이 끝나 정산 예정 — 화면은 "공연 완료", 취소 버튼 없음 (AC-F5-07)
+        return "COMPLETED"
     if order_status in PAID_STATUSES:
         return "PAID"
     if order_status == "ISSUED" or performance_status == "AWAITING_PAYMENT":

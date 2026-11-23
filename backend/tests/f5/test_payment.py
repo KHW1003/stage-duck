@@ -16,7 +16,7 @@ from app.models.request import Performance
 from app.models.supplier import Supplier
 from app.payment import service
 from app.payment.router import get_now
-from tests.conftest import make_user
+from tests.conftest import make_supplier, make_user
 from tests.f2.test_quotes import _as
 from tests.f5.test_order import _fixed_now, _fixed_today, _ready  # noqa: F401 (픽스처)
 
@@ -161,6 +161,41 @@ def test_ac_f5_07_scheduler_settles_once_and_notifies_each_supplier(client, db):
     assert user.post(f"/api/v1/performances/{perf_id}/cancel").status_code == 409
     db.expire_all()
     assert db.get(Performance, perf_id).status == "CONFIRMED"
+
+
+@pytest.mark.parametrize("settled", [False, True])
+def test_ac_f5_07_supplier_cannot_cancel_after_show_ends(client, db, settled):
+    """공연이 끝나면 정산 예정으로 바뀌기 전 1분 사이에도 업체가 취소해 환불되게 할 수 없다. 끝나기 1분 전까지는 된다."""
+    user, perf_id, order_id, (c, _) = _order(client, db)
+    _pay(user, order_id)
+    perf = db.get(Performance, perf_id)
+    end = datetime.combine(perf.show_date, perf.show_end)
+    if settled:
+        service.settle_completed_orders(db, now=end)
+    sup = db.get(Supplier, c).user
+    supplier, outsider = _as(db, sup), _as(db, make_supplier(db, review_status="APPROVED").user)
+    url, body = f"/api/v1/performances/{perf_id}/cancel-by-supplier", {"reason": "사정"}
+
+    app.dependency_overrides[get_now] = lambda: end
+    assert supplier.post(url, json=body).status_code == 409
+    assert outsider.post(url, json=body).status_code == 404  # 남의 공연은 끝났는지도 알 수 없다
+    db.expire_all()
+    assert not [e for e in _ledger(db, order_id) if e[1] == "REFUND"]
+    assert db.get(Supplier, c).user.warning_count == 0
+    assert supplier.get("/api/v1/supplier/reservations").json()[0]["status"] == ("COMPLETED" if settled else "PAID")
+    if not settled:
+        app.dependency_overrides[get_now] = lambda: end - timedelta(minutes=1)
+        assert supplier.post(url, json=body).status_code == 200
+
+
+def test_ac_f5_07_supplier_cannot_cancel_unpaid_after_show_ends(client, db):
+    _, perf_id, order_id, (c, _) = _order(client, db)
+    perf = db.get(Performance, perf_id)
+    app.dependency_overrides[get_now] = lambda: datetime.combine(perf.show_date, perf.show_end)
+    res = _as(db, db.get(Supplier, c).user).post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "사정"})
+    assert res.status_code == 409
+    db.expire_all()
+    assert db.get(Order, order_id).status == "ISSUED"
 
 
 def test_ac_f5_07_cancelled_order_is_not_settled(client, db):
