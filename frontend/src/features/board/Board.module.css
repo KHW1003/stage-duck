@@ -92,3 +92,13 @@
 .photoAdd input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .photoAdd:focus-within { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 .formActions { display: flex; justify-content: flex-end; margin-top: 40px; }
+
+/* ── 상세 화면 본문 위치 맞춤 (11/23 해원 결정) ──
+   커뮤니티 글 상세는 본문(--sd-doc-width)을 가운데에 둔다. 소개 글 상세는 오른쪽 칸을 그대로 두고,
+   경로·본문의 왼쪽 선만 커뮤니티 본문 왼쪽 선에 맞춰 가운데 쪽으로 들인다 (오른쪽 칸은 침범하지 않는다).
+   들이는 폭 = (칸 안쪽 폭 - 문서 폭) / 2. 칸 안쪽 폭은 컨테이너 쿼리 단위(cqw)로 잰다 */
+.detail { container-type: inline-size; }
+.detail > .crumb, .detail .withAside > article { margin-left: max(0px, calc((100cqw - var(--sd-doc-width)) / 2)); }
+@media (max-width: 760px) {
+  .detail > .crumb, .detail .withAside > article { margin-left: 0; }
+}
