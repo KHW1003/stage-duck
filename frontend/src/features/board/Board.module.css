@@ -8,6 +8,7 @@
 .tab { position: relative; display: inline-flex; align-items: center; height: 54px; padding: 0 22px; border: 0; background: transparent; color: var(--sd-muted); font-size: var(--sd-text-card); font-weight: 600; white-space: nowrap; cursor: pointer; }
 .tab:hover { color: var(--sd-ink); }
 .tab[aria-selected="true"] { color: var(--sd-ink); font-weight: 700; }
+.tab[aria-disabled="true"], .tab[aria-disabled="true"]:hover { color: var(--sd-photo-text); cursor: not-allowed; } /* 승인 안 된 부문 (목업 ui.css .tabs [aria-disabled]) */
 .tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sd-ink); }
 
 /* 지역 + 개수 줄 */
