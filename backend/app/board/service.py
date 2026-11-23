@@ -5,8 +5,9 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.board.schemas import PhotoOut, PrPostIn, PrPostItemOut, PrPostListOut, PrPostOut
-from app.core.errors import AppError, not_found
+from app.board.calc import has_contact_or_link
+from app.board.schemas import PhotoOut, PrPostIn, PrPostItemOut, PrPostListOut, PrPostOut, PrPostSavedOut
+from app.core.errors import AppError, invalid_state, not_found
 from app.files import service as files
 from app.models.board import PrPost
 from app.models.file import StoredFile
@@ -117,9 +118,15 @@ def _raise_if_blocked(db: Session, supplier_id: int, category: str) -> None:
         raise AppError(409, "ACTIVE_POST_EXISTS", "이 부문에는 이미 올린 소개 글이 있어요. 올린 글을 고쳐 주세요.")
 
 
-def create_post(db: Session, user: User, body: PrPostIn, *, now: datetime) -> PrPostOut:
+def _saved(db: Session, post: PrPost) -> PrPostSavedOut:
+    """AC-F4-03: 저장한 글 + 연락처·계좌·외부 링크 경고."""
+    return PrPostSavedOut(**_out(db, post).model_dump(), contact_warning=has_contact_or_link(post.title, post.body))
+
+
+def create_post(db: Session, user: User, body: PrPostIn, *, now: datetime) -> PrPostSavedOut:
     """AC-F4-01: 승인된 업체가 자기 승인 부문 말머리로만 쓴다.
     AC-F4-02: 부문당 활성 글 1개 (가린 글이 있어도 새 글 불가, AC-F4-10).
+    AC-F4-03: 연락처·계좌·외부 링크가 있으면 경고만 한다.
     """
     supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id).with_for_update())
     if supplier is None or supplier.review_status in ("PENDING", "REJECTED"):
@@ -156,4 +163,41 @@ def create_post(db: Session, user: User, body: PrPostIn, *, now: datetime) -> Pr
         _raise_if_blocked(db, supplier.id, body.category)
         raise
     db.refresh(post)
-    return _out(db, post)
+    return _saved(db, post)
+
+
+def update_post(db: Session, user: User, post_id: int, body: PrPostIn, *, now: datetime) -> PrPostSavedOut:
+    """AC-F4-10: 본인 글을 고친다. 블라인드 중에는 고칠 수 없고, 관리자가 풀면(ACTIVE) 고쳐서 다시 보인다.
+
+    말머리(부문)는 바꿀 수 없다 (#31). 남의 글·지운 글은 404 (CLAUDE.md 10).
+    사진: fileIds 는 보여 줄 순서 그대로. 이미 붙은 사진은 그대로 두고 새 TEMP 파일만 붙인다.
+    AC-F4-03: 연락처·계좌·외부 링크가 있으면 경고만 한다.
+    """
+    supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
+    post = db.scalar(select(PrPost).where(PrPost.id == post_id).with_for_update())
+    if supplier is None or post is None or post.supplier_id != supplier.id or post.status == "DELETED":
+        raise not_found()
+    if supplier.review_status == "SUSPENDED":
+        raise AppError(403, "ACCOUNT_SUSPENDED", "정지된 계정은 소개 글을 고칠 수 없어요. 고객센터로 문의해 주세요.")
+    if post.status != "ACTIVE":
+        raise invalid_state("가려진 글은 고칠 수 없어요. 블라인드가 풀린 뒤에 고쳐 주세요.")
+    if body.category != post.category:
+        raise AppError(
+            400,
+            "VALIDATION_FAILED",
+            "말머리는 바꿀 수 없어요.",
+            [{"field": "category", "reason": "말머리는 바꿀 수 없어요. 다른 부문은 새 글로 써 주세요."}],
+        )
+
+    kept = set(post.photos)
+    files.attach_files(
+        db, owner_id=user.id, file_ids=[i for i in body.file_ids if i not in kept], purpose="PR_POST", now=now
+    )
+    post.title = body.title
+    post.body = body.body
+    post.sido = body.sido
+    post.price_range = body.price_range or None
+    post.photos = list(body.file_ids)
+    db.commit()
+    db.refresh(post)
+    return _saved(db, post)
