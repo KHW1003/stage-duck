@@ -80,3 +80,17 @@ class PrPostListOut(BaseModel):
     page: int
     size: int
     total: int
+
+
+class MyPrPostOut(PrPostOut):
+    """GET /pr-posts/mine 한 줄 (FR-BOARD-02·03): 본인에게만 상태·블라인드 사유·끌어올리기 가능 여부를 준다."""
+
+    status: str
+    blind_reason: str | None
+    can_bump: bool
+    next_bump_at: datetime
+
+
+class MyPrPostListOut(BaseModel):
+    model_config = _OUT
+    items: list[MyPrPostOut]

@@ -6,7 +6,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.board.calc import can_bump, has_contact_or_link, next_bump_at
-from app.board.schemas import PhotoOut, PrPostIn, PrPostItemOut, PrPostListOut, PrPostOut, PrPostSavedOut
+from app.board.schemas import (
+    MyPrPostListOut,
+    MyPrPostOut,
+    PhotoOut,
+    PrPostIn,
+    PrPostItemOut,
+    PrPostListOut,
+    PrPostOut,
+    PrPostSavedOut,
+)
 from app.core.errors import AppError, invalid_state, not_found
 from app.core.history import record_transition
 from app.files import service as files
@@ -86,6 +95,33 @@ def supplier_posts(db: Session, supplier_id: int) -> list[PrPostItemOut]:
         .order_by(PrPost.bumped_at.desc(), PrPost.id.desc())
     ).all()
     return _items(db, posts)
+
+
+_CATEGORY_ORDER = {"VENUE": 0, "EQUIPMENT": 1, "ENGINEER": 2}  # 배정 순서 (CLAUDE.md 4)
+
+
+def my_posts(db: Session, user: User, *, now: datetime) -> MyPrPostListOut:
+    """FR-BOARD-02·03: 내 소개 글 화면용. 내린 글은 빼고, 가려진 글은 사유와 함께 본인에게만 준다 (공개 목록·상세에는 없음).
+
+    정지된 업체도 자기 글은 본다 (고치기·내리기·끌어올리기는 403). 업체 정보가 없으면 빈 목록.
+    """
+    supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
+    if supplier is None:
+        return MyPrPostListOut(items=[])
+    posts = db.scalars(select(PrPost).where(PrPost.supplier_id == supplier.id, PrPost.status != "DELETED")).all()
+    posts = sorted(posts, key=lambda p: (_CATEGORY_ORDER.get(p.category, 9), p.id))
+    return MyPrPostListOut(
+        items=[
+            MyPrPostOut(
+                **_out(db, p).model_dump(),
+                status=p.status,
+                blind_reason=p.blind_reason,
+                can_bump=can_bump(p.bumped_at, now),
+                next_bump_at=next_bump_at(p.bumped_at),
+            )
+            for p in posts
+        ]
+    )
 
 
 def get_post(db: Session, post_id: int) -> PrPostOut:
