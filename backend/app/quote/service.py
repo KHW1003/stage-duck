@@ -8,7 +8,7 @@ from datetime import datetime, time
 from typing import Any
 
 from pydantic.alias_generators import to_camel
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, not_, select
 from sqlalchemy.orm import Session
 
 from app.chat import service as chat_service
@@ -309,13 +309,17 @@ def get_quote(db: Session, user: User, quote_id: int) -> Quote:
 def quote_counts(db: Session, stage_ids: list[int]) -> dict[int, int]:
     """[약속 3 → 2] 단계별 받은 견적서 수. 철회(WITHDRAWN)는 세지 않고, 견적서가 없는 단계는 0.
 
-    쓰는 곳: 2번 해원 #40 "내 공연 현황". stage_ids 가 비면 {}. 쿼리 한 번 (GROUP BY stage_id).
+    업체 사정 취소(D-57)로 단계가 다시 모집 중이면 견적서는 CONFIRMED로 남아도 세지 않는다
+    (단계가 CONFIRMED·RECHECK가 아닌데 견적서만 CONFIRMED — 단계별 비교 화면과 같은 기준).
+    쓰는 곳: 2번 해원 #40 "내 공연 현황". stage_ids 가 비면 {}. 쿼리 한 번 (stages 읽기 전용 JOIN, GROUP BY stage_id).
     """
     if not stage_ids:
         return {}
+    cancelled = and_(Quote.status == "CONFIRMED", Stage.status.not_in(("CONFIRMED", "RECHECK")))
     rows = db.execute(
         select(Quote.stage_id, func.count(Quote.id))
-        .where(Quote.stage_id.in_(stage_ids), Quote.status != "WITHDRAWN")
+        .join(Stage, Stage.id == Quote.stage_id)
+        .where(Quote.stage_id.in_(stage_ids), Quote.status != "WITHDRAWN", not_(cancelled))
         .group_by(Quote.stage_id)
     ).all()
     counts = dict.fromkeys(stage_ids, 0)
