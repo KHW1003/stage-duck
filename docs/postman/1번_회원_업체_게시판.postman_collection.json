@@ -1,0 +1,1951 @@
+{
+  "info": {
+    "name": "STAGE DUCK 1번 회원·업체·게시판",
+    "description": "1번 묶음 API 확인용. docs/verify/1번_회원_업체_게시판.md 와 함께 본다.\n\n- 서버는 APP_ENV=test 로 켜야 /dev/switch-account(가짜 로그인)와 비밀번호 찾기 시연 링크가 켜진다.\n- 시드 계정 id(hostUserId·supplierDUserId)는 DB에 맞게 바꾼다.\n- 0번 폴더부터 순서대로 돌린다. 실행마다 새 가짜 이메일(@stageduck.test)로 가입한다.\n- testPassword 는 이 컬렉션이 만드는 시험 계정의 가짜 비밀번호다. 실제 비밀번호·토큰을 넣지 않는다.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 준비",
+      "item": [
+        {
+          "name": "0-1 서버 상태 (APP_ENV=test)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "이 컬렉션은 APP_ENV=test 서버에서만 돈다. 실행마다 새 이메일·닉네임을 만든다 (run)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const run = String(Date.now()).slice(-7);",
+                  "pm.collectionVariables.set(\"run\", run);",
+                  "pm.collectionVariables.set(\"userEmail\", `pm-user-${run}@stageduck.test`);",
+                  "pm.collectionVariables.set(\"userNickname\", `포맨${run}`);",
+                  "pm.collectionVariables.set(\"supplierEmail\", `pm-supplier-${run}@stageduck.test`);",
+                  "const d = new Date(); d.setFullYear(d.getFullYear() - 13);",
+                  "pm.collectionVariables.set(\"birth13\", d.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"시험 환경 (가짜 로그인이 켜짐)\", () => pm.expect(pm.response.json().env).to.eql(\"test\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 사용자 가입 (F1-01~03)",
+      "item": [
+        {
+          "name": "1-1 필수 칸이 비면 가입 안 됨",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agreements\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 VALIDATION_FAILED\", () => pm.expect(pm.response.json().code).to.eql(\"VALIDATION_FAILED\"));",
+                  "pm.test(\"칸마다 이유\", () => { const f = pm.response.json().fieldErrors.map(e => e.field); [\"name\", \"phone\", \"email\", \"birthDate\", \"nickname\", \"password\"].forEach(k => pm.expect(f).to.include(k)); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-2 만 14세 미만 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"포스트맨사용자\",\n  \"phone\": \"01000000000\",\n  \"email\": \"{{userEmail}}\",\n  \"birthDate\": \"{{birth13}}\",\n  \"nickname\": \"{{userNickname}}\",\n  \"password\": \"{{testPassword}}\",\n  \"signupPurpose\": \"PERFORMANCE\",\n  \"musicianType\": \"BAND\",\n  \"signupChannel\": \"SNS\",\n  \"agreements\": {\n    \"service\": true,\n    \"privacyRequired\": true,\n    \"privacyOptional\": false,\n    \"marketing\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 UNDER_AGE\", () => pm.expect(pm.response.json().code).to.eql(\"UNDER_AGE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-3 마케팅 미동의로 가입",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"포스트맨사용자\",\n  \"phone\": \"01000000000\",\n  \"email\": \"{{userEmail}}\",\n  \"birthDate\": \"1999-03-02\",\n  \"nickname\": \"{{userNickname}}\",\n  \"password\": \"{{testPassword}}\",\n  \"signupPurpose\": \"PERFORMANCE\",\n  \"musicianType\": \"BAND\",\n  \"signupChannel\": \"SNS\",\n  \"agreements\": {\n    \"service\": true,\n    \"privacyRequired\": true,\n    \"privacyOptional\": false,\n    \"marketing\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"첫 화면 /me/performances\", () => pm.expect(pm.response.json().landing).to.eql(\"/me/performances\"));",
+                  "pm.test(\"연락처·이름·생일 없음 (CLAUDE.md 20)\", () => { const s = JSON.stringify(pm.response.json()); [\"\\\"phone\\\"\", \"\\\"email\\\"\", \"\\\"name\\\"\", \"\\\"birthDate\\\"\"].forEach(k => pm.expect(s).to.not.include(k)); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-4 같은 이메일 다시",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"포스트맨사용자\",\n  \"phone\": \"01000000000\",\n  \"email\": \"{{userEmail}}\",\n  \"birthDate\": \"1999-03-02\",\n  \"nickname\": \"{{userNickname}}2\",\n  \"password\": \"{{testPassword}}\",\n  \"signupPurpose\": \"PERFORMANCE\",\n  \"musicianType\": \"BAND\",\n  \"signupChannel\": \"SNS\",\n  \"agreements\": {\n    \"service\": true,\n    \"privacyRequired\": true,\n    \"privacyOptional\": false,\n    \"marketing\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 코드 EMAIL_TAKEN\", () => pm.expect(pm.response.json().code).to.eql(\"EMAIL_TAKEN\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 로그인·내 정보·로그아웃 (F1-11·12)",
+      "item": [
+        {
+          "name": "2-1 로그아웃",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-2 틀린 비밀번호",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"wrong-{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"오류 코드 UNAUTHENTICATED\", () => pm.expect(pm.response.json().code).to.eql(\"UNAUTHENTICATED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-3 로그인 → 역할별 첫 화면",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"USER → /me/performances\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); pm.expect(b.landing).to.eql(\"/me/performances\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-4 내 정보 (본인만 연락처)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"내 이메일\", () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get(\"userEmail\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-5 CSRF 헤더 없이 로그아웃 → 거부",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"오류 코드 CSRF_FAILED\", () => pm.expect(pm.response.json().code).to.eql(\"CSRF_FAILED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-6 로그아웃",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-7 로그아웃 뒤 내 정보",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"오류 코드 UNAUTHENTICATED\", () => pm.expect(pm.response.json().code).to.eql(\"UNAUTHENTICATED\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 간편 로그인 (F1-04~10, 네이버 서버 없이)",
+      "item": [
+        {
+          "name": "3-1 네이버 시작 → 동의 화면으로 302",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/naver/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "naver",
+                "start"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"네이버 주소 + state\", () => { const l = pm.response.headers.get(\"Location\"); pm.expect(l).to.include(\"nid.naver.com\"); pm.expect(l).to.include(\"state=\"); });",
+                  "pm.test(\"oauth_state 쿠키\", () => pm.expect(pm.response.headers.all().some(h => h.key.toLowerCase() === \"set-cookie\" && h.value.startsWith(\"oauth_state=\"))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "3-2 state 가 다른 콜백 → 실패 안내",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/naver/callback?code=fake&state=wrong-state",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "naver",
+                "callback"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "fake"
+                },
+                {
+                  "key": "state",
+                  "value": "wrong-state"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 302\", () => pm.response.to.have.status(302));",
+                  "pm.test(\"/login?social=failed\", () => pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/login?social=failed\"));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "3-3 가입 토큰 없이 추가 정보",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/social/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "social",
+                "pending"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"오류 코드 SOCIAL_SIGNUP_EXPIRED\", () => pm.expect(pm.response.json().code).to.eql(\"SOCIAL_SIGNUP_EXPIRED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-4 가입 토큰 없이 가입 완료",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/social/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "social",
+                "complete"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agreements\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"오류 코드 SOCIAL_SIGNUP_EXPIRED\", () => pm.expect(pm.response.json().code).to.eql(\"SOCIAL_SIGNUP_EXPIRED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-5 카카오는 기본 꺼짐",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/kakao/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "kakao",
+                "start"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 비밀번호 찾기 (F1-21·22)",
+      "item": [
+        {
+          "name": "4-1 가입한 이메일 → 202 + 시연 링크",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 202\", () => pm.response.to.have.status(202));",
+                  "pm.test(\"시연 링크(test 환경만)\", () => { const l = pm.response.json().demoLink; pm.expect(l).to.include(\"token=\"); pm.collectionVariables.set(\"resetToken\", decodeURIComponent(l.split(\"token=\")[1].split(\"&\")[0])); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-2 없는 이메일 → 같은 202 (가입 여부 숨김)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-{{run}}@stageduck.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 202\", () => pm.response.to.have.status(202));",
+                  "pm.test(\"링크 없음, 같은 모양\", () => pm.expect(pm.response.json()).to.eql({ demoLink: null }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-3 링크로 새 비밀번호",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"new-{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-4 같은 링크 다시 → 만료",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"new2-{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 RESET_TOKEN_INVALID\", () => pm.expect(pm.response.json().code).to.eql(\"RESET_TOKEN_INVALID\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-5 예전 비밀번호로 로그인 → 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"오류 코드 UNAUTHENTICATED\", () => pm.expect(pm.response.json().code).to.eql(\"UNAUTHENTICATED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-6 새 비밀번호로 로그인",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"new-{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-7 로그아웃",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 업체 입점 신청 (F1-17·18, F4-01)",
+      "item": [
+        {
+          "name": "5-1 업체 계정 만들기",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup/supplier",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup",
+                "supplier"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{supplierEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"name\": \"포스트맨업체담당\",\n  \"phone\": \"01000000000\",\n  \"agreements\": {\n    \"service\": true,\n    \"privacyRequired\": true,\n    \"privacyOptional\": false,\n    \"marketing\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-2 체크섬 틀린 사업자번호 → 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "application"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessType\": \"SOLE_PROPRIETOR\",\n  \"companyName\": \"가상업체P\",\n  \"representativeName\": \"가상대표P\",\n  \"businessRegNo\": \"1234567890\",\n  \"businessAddress\": \"광주광역시 가상구 1\",\n  \"mainPhone\": \"01000000000\",\n  \"mailOrderNo\": null,\n  \"categories\": [\n    \"EQUIPMENT\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 INVALID_BUSINESS_NO\", () => pm.expect(pm.response.json().code).to.eql(\"INVALID_BUSINESS_NO\"));",
+                  "pm.test(\"businessRegNo 칸\", () => pm.expect(pm.response.json().fieldErrors.map(e => e.field)).to.include(\"businessRegNo\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-3 개인(프리랜서)은 사업자 칸 없이 신청",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "application"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessType\": \"INDIVIDUAL\",\n  \"companyName\": \"가상업체P\",\n  \"representativeName\": \"가상대표P\",\n  \"mainPhone\": \"01000000000\",\n  \"mailOrderNo\": null,\n  \"categories\": [\n    \"EQUIPMENT\",\n    \"ENGINEER\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"심사 중\", () => pm.expect(pm.response.json().reviewStatus).to.eql(\"PENDING\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-4 내 신청서",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "application"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"PENDING, 사업자번호 없음\", () => { const b = pm.response.json(); pm.expect(b.reviewStatus).to.eql(\"PENDING\"); pm.expect(b.businessRegNo).to.eql(null); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-5 심사 중에는 소개 글 못 씀",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"EQUIPMENT\",\n  \"title\": \"심사 중 글\",\n  \"body\": \"소개\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": null,\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"오류 코드 SUPPLIER_NOT_APPROVED\", () => pm.expect(pm.response.json().code).to.eql(\"SUPPLIER_NOT_APPROVED\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 계정 전환·권한 (F1-13·16)",
+      "item": [
+        {
+          "name": "6-1 시연 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => pm.expect(pm.response.json().role).to.eql(\"USER\"));",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6-2 없는(남의) 공연 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6-3 사용자가 업체 신청서 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "application"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6-4 사용자가 내 소개 글 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7 업체 찾기·소개 글 (F4-01~04·09, FR-BOARD-02·03)",
+      "item": [
+        {
+          "name": "7-1 업체 D 로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierDUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => pm.expect(pm.response.json().role).to.eql(\"SUPPLIER\"));",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-2 승인 안 된 부문(공연장) → 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"VENUE\",\n  \"title\": \"공연장 글\",\n  \"body\": \"소개\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": null,\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"오류 코드 CATEGORY_NOT_APPROVED\", () => pm.expect(pm.response.json().code).to.eql(\"CATEGORY_NOT_APPROVED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-3 장비 글 (연락처 있음) → 저장 + 경고",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"EQUIPMENT\",\n  \"title\": \"밴드 공연 음향 맡아요\",\n  \"body\": \"문의 010-0000-0000\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": \"장비 40~60만 원\",\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"contactWarning true\", () => pm.expect(pm.response.json().contactWarning).to.be.true);",
+                  "pm.collectionVariables.set(\"postId\", pm.response.json().id); pm.collectionVariables.set(\"supplierDId\", pm.response.json().supplierId);",
+                  "pm.test(\"연락처·이름·생일 없음 (CLAUDE.md 20)\", () => { const s = JSON.stringify(pm.response.json()); [\"\\\"phone\\\"\", \"\\\"email\\\"\", \"\\\"name\\\"\", \"\\\"birthDate\\\"\"].forEach(k => pm.expect(s).to.not.include(k)); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-4 같은 부문 두 번째 → 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"EQUIPMENT\",\n  \"title\": \"두 번째\",\n  \"body\": \"소개\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": null,\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 코드 ACTIVE_POST_EXISTS\", () => pm.expect(pm.response.json().code).to.eql(\"ACTIVE_POST_EXISTS\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-5 말머리 바꾸기 → 거부",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"ENGINEER\",\n  \"title\": \"밴드 공연 음향 맡아요\",\n  \"body\": \"소개\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": null,\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 VALIDATION_FAILED\", () => pm.expect(pm.response.json().code).to.eql(\"VALIDATION_FAILED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-6 고치기 (연락처 없음)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"EQUIPMENT\",\n  \"title\": \"밴드 공연 음향, 설치까지 맡아요\",\n  \"body\": \"관객 150명 이하 공연\",\n  \"sido\": \"광주광역시\",\n  \"priceRange\": \"장비 40~60만 원\",\n  \"fileIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"경고 없음\", () => pm.expect(pm.response.json().contactWarning).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-7 내 소개 글",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"게시 중, 7일 안 됨\", () => { const i = pm.response.json().items.find(x => x.id === pm.collectionVariables.get(\"postId\")); pm.expect(i.status).to.eql(\"ACTIVE\"); pm.expect(i.blindReason).to.eql(null); pm.expect(i.canBump).to.be.false; pm.expect(i.nextBumpAt).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-8 끌어올리기 7일 안 됨 → 거부",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}/bump",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}",
+                "bump"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 429\", () => pm.response.to.have.status(429));",
+                  "pm.test(\"오류 코드 BUMP_TOO_SOON\", () => pm.expect(pm.response.json().code).to.eql(\"BUMP_TOO_SOON\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-9 방문자처럼 목록 (말머리 장비)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts?category=EQUIPMENT",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "EQUIPMENT"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"내 글이 있음\", () => pm.expect(pm.response.json().items.map(i => i.id)).to.include(pm.collectionVariables.get(\"postId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-10 없는 말머리 → 거부",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts?category=BAD",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "BAD"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 코드 VALIDATION_FAILED\", () => pm.expect(pm.response.json().code).to.eql(\"VALIDATION_FAILED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-11 업체 프로필 (연락처 없음, F5-15)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/{{supplierDId}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "{{supplierDId}}",
+                "profile"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"연락처·이름·생일 없음 (CLAUDE.md 20)\", () => { const s = JSON.stringify(pm.response.json()); [\"\\\"phone\\\"\", \"\\\"email\\\"\", \"\\\"name\\\"\", \"\\\"birthDate\\\"\"].forEach(k => pm.expect(s).to.not.include(k)); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-12 글 내리기",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-13 내린 글 상세 → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-14 다시 내리기 → 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pr-posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pr-posts",
+                "{{postId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 코드 NOT_FOUND\", () => pm.expect(pm.response.json().code).to.eql(\"NOT_FOUND\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7-15 로그아웃",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1"
+    },
+    {
+      "key": "hostUserId",
+      "value": "1"
+    },
+    {
+      "key": "supplierDUserId",
+      "value": "5"
+    },
+    {
+      "key": "testPassword",
+      "value": "pm-duck-1234"
+    },
+    {
+      "key": "run",
+      "value": ""
+    },
+    {
+      "key": "userEmail",
+      "value": ""
+    },
+    {
+      "key": "userNickname",
+      "value": ""
+    },
+    {
+      "key": "supplierEmail",
+      "value": ""
+    },
+    {
+      "key": "birth13",
+      "value": ""
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "postId",
+      "value": ""
+    },
+    {
+      "key": "supplierDId",
+      "value": ""
+    }
+  ]
+}
