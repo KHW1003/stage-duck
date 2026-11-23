@@ -43,9 +43,14 @@ function includes(q: CompareQuote, stage: StageSummary): string {
 
 const nameOf = (q: CompareQuote) => (q.venueName ? `${q.venueName} · ${q.label}` : q.label);
 
+/** 확정한 견적서인가. 결제 전에 업체가 취소하면(D-57) 단계는 다시 모집 중인데 견적서는 CONFIRMED 로 남아 있어 단계 상태로 함께 본다 */
+const picked = (q: CompareQuote, stage: StageSummary) => q.status === "CONFIRMED" && (stage.status === "CONFIRMED" || stage.status === "RECHECK");
+const withdrawn = (q: CompareQuote, stage: StageSummary) => q.status === "CONFIRMED" && !picked(q, stage);
+
 function QuoteColumn({ q, stage }: { q: CompareQuote; stage: StageSummary }) {
-  const confirmed = q.status === "CONFIRMED";
-  const off = stage.status === "CONFIRMED" && !confirmed;
+  const confirmed = picked(q, stage);
+  const cancelled = withdrawn(q, stage);
+  const off = (stage.status === "CONFIRMED" && !confirmed) || cancelled;
   return (
     <article className={["q-col", confirmed && "is-on", off && "is-off"].filter(Boolean).join(" ")} aria-label={nameOf(q)}>
       {q.venueId !== null && q.venueType !== null && (
@@ -71,7 +76,7 @@ function QuoteColumn({ q, stage }: { q: CompareQuote; stage: StageSummary }) {
         ))}
       </ul>
       <div className="q-col__foot">
-        <span className="state">{confirmed ? "확정" : off ? "마감" : "조율 중"}</span>
+        <span className="state">{confirmed ? "확정" : cancelled ? "업체 사정 취소" : off ? "마감" : "조율 중"}</span>
         {q.offered && <span className="small">견적 요청으로 받은 견적서</span>}
       </div>
     </article>
@@ -95,10 +100,10 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
       <div role="row" className="sp__row">
         <div className="sp__h is-k" role="columnheader" />
         {quotes.map((q) => (
-          <div key={q.quoteId} role="columnheader" className={`sp__h is-v${q.status === "CONFIRMED" ? " is-pick" : ""}`}>
+          <div key={q.quoteId} role="columnheader" className={`sp__h is-v${picked(q, stage) ? " is-pick" : ""}`}>
             <b>{nameOf(q)}</b>
             {q.isFullSpec && <span>풀스펙</span>}
-            {q.status === "CONFIRMED" && <em><Ico name="pass" sm />확정</em>}
+            {picked(q, stage) && <em><Ico name="pass" sm />확정</em>}
           </div>
         ))}
       </div>
@@ -106,7 +111,7 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
         <div role="row" className="sp__row" key={label}>
           <div className={`sp__k${i === rows.length - 1 ? " is-last" : ""}`} role="rowheader">{label}</div>
           {quotes.map((q) => (
-            <div key={q.quoteId} role="cell" className={["sp__v", i === rows.length - 1 && "is-last", q.status === "CONFIRMED" && "is-pick"].filter(Boolean).join(" ")}>
+            <div key={q.quoteId} role="cell" className={["sp__v", i === rows.length - 1 && "is-last", picked(q, stage) && "is-pick"].filter(Boolean).join(" ")}>
               {i === 0 ? <b className="sp__price">{value(q)}</b> : value(q)}
             </div>
           ))}

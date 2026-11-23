@@ -28,7 +28,7 @@ TEMPLATES: dict[str, tuple[str, str, str | None]] = {
     "INVOICE_READY": ("PAYMENT", "통합 청구서가 발행되었습니다", "합계 {amount}원 · 결제하시면 섭외가 확정됩니다"),
     "PAID": ("PAYMENT", "결제가 완료되어 섭외가 확정되었습니다", "{title} · 최종 담당표를 확인해 주십시오"),
     "CANCELLED_BY_USER": ("PAYMENT", "사용자가 공연을 취소했습니다", "{title} · {penalty}"),
-    "CANCELLED_BY_SUPPLIER": ("PAYMENT", "{company} 사정으로 {stage} 단계가 취소되었습니다", "전액 환불 예정 · 해당 단계만 다시 모집하실 수 있습니다"),
+    "CANCELLED_BY_SUPPLIER": ("PAYMENT", "{company} 사정으로 {stage} 단계가 취소되었습니다", "{refund} · 해당 단계만 다시 모집하실 수 있습니다"),
     "SETTLEMENT_SCHEDULED": ("PAYMENT", "공연이 종료되어 정산 예정입니다", "{title} · {amount}원"),
     # 3.5 운영
     "WARNING_ISSUED": ("ADMIN", "경고가 부과되었습니다 ({count}/3)", "사유: {reason} · 3회가 되면 이용이 정지됩니다"),

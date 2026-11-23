@@ -17,7 +17,7 @@ const reservation = (status: string) => ({
   sido: "광주", sigungu: "동구", status, stageTypes: ["EQUIPMENT"], amount: 1350000,
 });
 
-function mockServer(status: string) {
+function mockServer(status: string, warningCount = 0) {
   const calls: { key: string; body: unknown }[] = [];
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     const key = `${(init?.method ?? "GET").toUpperCase()} ${url}`;
@@ -26,6 +26,7 @@ function mockServer(status: string) {
       "GET /api/v1/me": SUPPLIER,
       "GET /api/v1/supplier/terms-review": { version: "1.0:1.0", reviewed: true },
       "GET /api/v1/supplier/reservations": [reservation(status)],
+      "GET /api/v1/supplier/warnings": { warningCount, suspendAt: 3 },
       "POST /api/v1/performances/5/cancel-by-supplier": {
         phase: "SUPPLIER_FAULT", ratePercent: 0, paid: 0, penaltyBase: 0, penaltyTotal: 0, penaltyBySupplier: [],
         feeRefunded: 0, refundTotal: 0, cancellationId: 1,
@@ -63,6 +64,21 @@ describe("내 예약 — 업체 사정 취소", () => {
     const sent = calls.filter((c) => c.key === "POST /api/v1/performances/5/cancel-by-supplier");
     expect(sent).toHaveLength(1);
     expect(sent[0].body).toEqual({ reason: "장비 고장" });
+    expect(dialog.queryByText(/바로 이용이 정지/)).not.toBeInTheDocument(); // 경고 0회 — 정지 안내 없음
+  });
+
+  it("AC-F5-10 경고 2회인 업체는 이번 취소로 정지된다고 미리 알리고, 취소 뒤 정지 안내를 보여 준다", async () => {
+    mockServer("AWAITING_PAYMENT", 2);
+    renderAt("/supplier/reservations");
+
+    await userEvent.click(await screen.findByRole("button", { name: "업체 사정 취소" }));
+    const dialog = within(screen.getByRole("dialog"));
+    expect(await dialog.findByText(/지금 경고가 2회예요. 이번에 취소하면 3회가 되어 바로 이용이 정지/)).toBeInTheDocument();
+    await userEvent.type(dialog.getByRole("textbox"), "장비 고장");
+    await userEvent.click(dialog.getByRole("button", { name: "취소하기" }));
+
+    expect(await screen.findByText(/경고가 3회 쌓여 이용이 정지됐어요/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "로그인 화면으로" })).toHaveAttribute("href", "/login");
   });
 
   it("AC-F5-10 결제 후 취소는 전액 환불 안내", async () => {
