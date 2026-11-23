@@ -4,11 +4,14 @@ from datetime import time
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
 from app.check.calc import overall
 from app.core.db import get_db
+from app.models.chat import ChatRoom
+from app.models.supplier import Supplier
 from app.models.user import User
 from app.quote import service as quote_service
 
@@ -26,6 +29,8 @@ class CompareQuoteOut(BaseModel):
 
     quote_id: int
     supplier_id: int
+    company_name: str  # 비교 카드 맨 위 "누구" (11/23 디자인 검수)
+    room_id: int | None  # 그 단계 × 업체 채팅방 — 카드의 [채팅] 이 연다. 견적서를 보내면 생기니 보통 있다
     label: str
     status: str  # 견적서 상태 (SENT · CONFIRMED …)
     version: int
@@ -52,10 +57,17 @@ def compare_quotes(
 ) -> list[CompareQuoteOut]:
     """AC-F3-20~24: 그 단계에 받은 견적서를 검사 결과와 함께 나란히. 남의 공연은 404."""
     out = []
-    for quote, row, checks in quote_service.stage_quotes_with_checks(db, user, stage_id):
+    rows = quote_service.stage_quotes_with_checks(db, user, stage_id)
+    ids = {q.supplier_id for q, _, _ in rows}
+    names = dict(db.execute(select(Supplier.id, Supplier.company_name).where(Supplier.id.in_(ids))).all()) if ids else {}
+    rooms = dict(db.execute(
+        select(ChatRoom.supplier_id, ChatRoom.id).where(ChatRoom.stage_id == stage_id, ChatRoom.supplier_id.in_(ids))
+    ).all()) if ids else {}
+    for quote, row, checks in rows:
         snap = row.venue_snapshot or {}
         out.append(CompareQuoteOut(
-            quote_id=quote.id, supplier_id=quote.supplier_id, label=quote.label, status=quote.status,
+            quote_id=quote.id, supplier_id=quote.supplier_id, company_name=names.get(quote.supplier_id, ""),
+            room_id=rooms.get(quote.supplier_id), label=quote.label, status=quote.status,
             version=row.version, based_on_perf_version=row.based_on_perf_version, total_amount=row.total_amount,
             venue_id=snap.get("venueId"), venue_type=snap.get("venueType"), venue_name=snap.get("name"), max_capacity=snap.get("maxCapacity"), checkout_time=snap.get("checkoutTime"),
             checkin_time=_hm(row.checkin_time), setup_available_time=_hm(row.setup_available_time),

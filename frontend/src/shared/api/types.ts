@@ -515,6 +515,10 @@ export interface CheckItem {
 export interface CompareQuote {
   quoteId: number;
   supplierId: number;
+  /** 업체 상호 */
+  companyName: string;
+  /** 그 단계 × 업체 채팅방 (없으면 null) */
+  roomId: number | null;
   label: string;
   status: string;
   version: number;
