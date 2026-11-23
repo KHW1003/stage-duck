@@ -1,10 +1,12 @@
-"""회원 가입·로그인·로그아웃·내 정보 (api-contract.md 2장, FR-AUTH-01·06)."""
+"""회원 가입·로그인·로그아웃·내 정보·소셜 로그인 (api-contract.md 2장, FR-AUTH-01~06)."""
+import secrets
 from datetime import datetime
 
-from fastapi import APIRouter, Cookie, Depends, Response, status
+from fastapi import APIRouter, Cookie, Depends, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.auth import calc, reset, service
+from app.auth import calc, reset, service, social
 from app.auth.deps import current_user, unauthenticated
 from app.auth.schemas import (
     AuthOut,
@@ -16,11 +18,29 @@ from app.auth.schemas import (
     PasswordResetIn,
     PasswordResetOut,
     SignupIn,
+    SocialCompleteIn,
+    SocialPendingOut,
     SupplierSignupIn,
 )
-from app.auth.tokens import clear_login_cookies, read_refresh_claims, set_login_cookies
+from app.auth.tokens import (
+    SIGNUP_COOKIE,
+    STATE_COOKIE,
+    clear_login_cookies,
+    clear_social_cookie,
+    issue_signup_token,
+    read_refresh_claims,
+    read_signup_token,
+    set_login_cookies,
+    set_signup_cookie,
+    set_state_cookie,
+    state_matches,
+)
 from app.core.db import get_db
+from app.core.errors import AppError, not_found
 from app.models.user import User
+
+SOCIAL_EXTRA_PAGE = "/signup/extra"  # 추가 정보 화면 (user-flow.md, plan.md 8장)
+SOCIAL_FAILED_PAGE = "/login?social=failed"  # state 불일치·소셜 서버 실패·탈퇴·정지
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 me_router = APIRouter(tags=["auth"])
@@ -110,6 +130,127 @@ def password_reset_confirm(
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
     clear_login_cookies(response)
     return response
+
+
+# ---------- 소셜 로그인 (FR-AUTH-02~05, AC-F1-04~10) ----------
+
+
+def _start(request: Request, provider: str, callback: str) -> RedirectResponse:
+    """AC-F1-04: 동의 화면으로 보낸다. state 를 쿠키에 넣어 콜백에서 비교한다 (NFR-SEC-10)."""
+    if not social.is_enabled(provider):
+        raise not_found()
+    state = secrets.token_urlsafe(32)
+    url = social.authorize_url(provider, state, str(request.url_for(callback)))
+    response = RedirectResponse(url, status_code=status.HTTP_302_FOUND)
+    set_state_cookie(response, state)
+    return response
+
+
+def _callback(
+    request: Request, db: Session, provider: str, callback: str, code: str | None, state: str | None, saved: str | None
+) -> RedirectResponse:
+    """AC-F1-04·10: 연결된 계정이면 로그인 → 역할별 첫 화면, 처음이면 signup_token → 추가 정보 화면.
+
+    같은 이메일 계정이 있어도 로그인시키지 않는다 (연결은 고유 식별값으로만).
+    """
+    if not social.is_enabled(provider):
+        raise not_found()
+    if not code or not state_matches(state, saved):
+        return _social_failed()
+    try:
+        profile = social.fetch_profile(provider, code, state=state, redirect_uri=str(request.url_for(callback)))
+        user = service.social_user(db, profile)
+    except (social.SocialError, AppError):
+        return _social_failed()
+    if user is not None:
+        response = RedirectResponse(service.landing(db, user), status_code=status.HTTP_302_FOUND)
+        set_login_cookies(response, user.id)
+    else:
+        response = RedirectResponse(SOCIAL_EXTRA_PAGE, status_code=status.HTTP_302_FOUND)
+        set_signup_cookie(response, issue_signup_token(social.to_claims(profile)))
+    clear_social_cookie(response, STATE_COOKIE)
+    return response
+
+
+def _signup_expired() -> AppError:
+    """계약서 2.1: signup_token 쿠키가 없거나 10분이 지남."""
+    return AppError(401, "SOCIAL_SIGNUP_EXPIRED", "간편 가입 시간이 지났어요. 다시 로그인해 주세요.")
+
+
+def _social_failed() -> RedirectResponse:
+    response = RedirectResponse(SOCIAL_FAILED_PAGE, status_code=status.HTTP_302_FOUND)
+    clear_social_cookie(response, STATE_COOKIE)
+    return response
+
+
+@router.get("/naver/start")
+def naver_start(request: Request) -> RedirectResponse:
+    return _start(request, social.NAVER, "naver_callback")
+
+
+@router.get("/naver/callback")
+def naver_callback(
+    request: Request,
+    code: str | None = Query(default=None, max_length=500),
+    state: str | None = Query(default=None, max_length=200),
+    oauth_state: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    return _callback(request, db, social.NAVER, "naver_callback", code, state, oauth_state)
+
+
+@router.get("/kakao/start")
+def kakao_start(request: Request) -> RedirectResponse:
+    """AC-F1-08: KAKAO_LOGIN_ENABLED=false 면 404."""
+    return _start(request, social.KAKAO, "kakao_callback")
+
+
+@router.get("/kakao/callback")
+def kakao_callback(
+    request: Request,
+    code: str | None = Query(default=None, max_length=500),
+    state: str | None = Query(default=None, max_length=200),
+    oauth_state: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    """AC-F1-08·09: 꺼져 있으면 404, 켜져 있으면 네이버와 같은 흐름."""
+    return _callback(request, db, social.KAKAO, "kakao_callback", code, state, oauth_state)
+
+
+@router.get("/social/pending", response_model=SocialPendingOut)
+def social_pending(response: Response, signup_token: str | None = Cookie(default=None)) -> SocialPendingOut:
+    """AC-F1-06: 추가 정보 화면에 미리 채울 값. signup_token 쿠키가 없거나 만료되면 401 SOCIAL_SIGNUP_EXPIRED. 브라우저에 저장하지 않게 한다."""
+    claims = read_signup_token(signup_token)
+    if claims is None:
+        raise _signup_expired()
+    response.headers["Cache-Control"] = "no-store"
+    profile = social.from_claims(claims)
+    return SocialPendingOut(
+        provider=profile.provider,
+        email=profile.email,
+        name=profile.name,
+        phone=profile.phone,
+        birth_date=profile.birth_date,
+        nickname=profile.nickname,
+    )
+
+
+@router.post("/social/complete", response_model=AuthOut, status_code=status.HTTP_201_CREATED)
+def social_complete(
+    body: SocialCompleteIn,
+    response: Response,
+    signup_token: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> AuthOut:
+    """AC-F1-05·06·07·10: 추가 정보 + 우리 약관 동의 → 가입. 끝나면 signup_token 을 지우고 로그인 쿠키를 붙인다."""
+    claims = read_signup_token(signup_token)
+    if claims is None:
+        raise _signup_expired()
+    user = service.social_complete(db, social.from_claims(claims), body, now=now)
+    clear_social_cookie(response, SIGNUP_COOKIE)
+    set_login_cookies(response, user.id)
+    return _auth_out(db, user)
 
 
 @me_router.get("/me", response_model=MeOut)

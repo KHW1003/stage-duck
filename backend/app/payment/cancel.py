@@ -16,6 +16,7 @@ from app.models.supplier import Supplier
 from app.models.user import User
 from app.notification import service as notification
 from app.payment import calc
+from app.payment.deadline import SUPPLIER_CANCEL_EXTRA_HOURS
 from app.payment.service import _move_order, supplier_names
 from app.policy import service as policy_service
 from app.request import rejection
@@ -154,6 +155,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
         policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
         c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
         stage_ids = [ln.stage_id for ln in order.lines if ln.supplier_id == supplier.id]
+        refund = "전액 환불 예정"
     else:
         mine = sorted((ln for ln in request_service.confirmed_lines(db, perf.id) if ln.supplier_id == supplier.id),
                       key=lambda ln: db.get(Stage, ln.stage_id).seq)
@@ -169,11 +171,12 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
         # shortcut: 한 업체가 여러 단계를 확정했으면 가장 앞 단계만 다시 연다 (한 번에 한 단계만 모집) — 실제로 생기면 나머지도 순서대로
         request_service.reopen_stage(db, mine[0].stage_id, actor_id=user.id)
         stage_ids = [mine[0].stage_id]
+        refund = f"결제 전이라 환불할 금액은 없습니다 · 결제 마감이 {SUPPLIER_CANCEL_EXTRA_HOURS}시간 늘었습니다"
     # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
     stage_types = sorted({db.get(Stage, sid).stage_type for sid in stage_ids})
     notification.notify(
         db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
-        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types)},
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types), "refund": refund},
         payload={"performanceId": perf.id},
     )
     db.commit()

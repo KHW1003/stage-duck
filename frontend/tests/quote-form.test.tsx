@@ -293,10 +293,7 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
 
     const venue = await screen.findByRole("combobox", { name: /공간/ });
     await typeIn(user, /견적서 이름/, "대관");
-    await typeIn(user, "1번 품목 이름", "공간 대관");
-    await typeIn(user, "1번 분류", "대관");
-    await typeIn(user, "1번 수량", "1");
-    await typeIn(user, "1번 단가", "500000");
+    await typeIn(user, /^대관료/, "500000");
     await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
     expect(await screen.findAllByText("공연장 견적서에는 꼭 입력해 주세요.")).toHaveLength(3);
     expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
@@ -316,6 +313,58 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });
     const body = calls.find((c) => c.key === "POST /api/v1/stages/1/quotes")?.body as Record<string, unknown>;
     expect(body).toMatchObject({ venueId: 3, checkinTime: "15:00", setupAvailableTime: "15:30", totalAmount: 500000 });
+  });
+
+  it("AC-F2-17 공연장 단계는 품목 표·운반·설치·인건비·기타 대신 대관료 한 칸이고, 합계 = 대관료 − 할인으로 보낸다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer({ ...VENUE, "POST /api/v1/stages/1/quotes": { status: 201, body: { ...SENT, chatRoomId: null } } });
+    renderAt("/supplier/postings/1/quote");
+
+    await screen.findByLabelText(/^대관료/);
+    expect(screen.queryByLabelText("1번 품목 이름")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "품목 추가" })).not.toBeInTheDocument();
+    for (const name of ["운반비", "설치비", "인건비", "기타"]) expect(screen.queryByLabelText(name)).not.toBeInTheDocument();
+
+    await typeIn(user, /견적서 이름/, "대관");
+    await typeIn(user, /^대관료/, "500000");
+    await typeIn(user, /^업체할인/, "20000");
+    expect(screen.getByTestId("quote-total")).toHaveTextContent("480,000원");
+
+    // 최소 금액 검사는 그대로: 대관료 25,000 − 할인 20,000 = 5,000원이면 막는다
+    await typeIn(user, /^대관료/, "25000");
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    expect(await screen.findByText("금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요.")).toBeInTheDocument();
+    expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
+
+    await typeIn(user, /^대관료/, "500000");
+    await user.click(screen.getByRole("combobox", { name: /공간/ }));
+    await user.click(await screen.findByRole("option", { name: /공간 C/ }));
+    await typeIn(user, /^입실 시각/, "15:00");
+    await typeIn(user, /^설치 가능 시각/, "15:30");
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+
+    await screen.findByRole("heading", { name: "견적서를 보냈어요" });
+    const body = calls.find((c) => c.key === "POST /api/v1/stages/1/quotes")?.body as Record<string, unknown>;
+    expect(body).toMatchObject({
+      items: [{ name: "대관료", category: "대관", qty: 1, unitPrice: 500000, amount: 500000 }],
+      amounts: { items: 500000, transport: 0, install: 0, labor: 0, etc: 0 },
+      discountAmount: 20000,
+      totalAmount: 480000,
+    });
+  });
+
+  it("설치 가능 시각(공연장)·설치 시작(장비 업체) 칸 아래에 뜻을 한 줄로 알려 준다", async () => {
+    mockServer(VENUE);
+    const venue = renderAt("/supplier/postings/1/quote");
+    expect(await screen.findByText("이 시각부터 장비를 들여와도 돼요")).toBeInTheDocument();
+    expect(screen.queryByText("이 시각에 설치를 시작해요")).not.toBeInTheDocument();
+    venue.unmount();
+    vi.unstubAllGlobals();
+
+    mockServer(EQUIP);
+    renderAt("/supplier/postings/2/quote");
+    expect(await screen.findByText("이 시각에 설치를 시작해요")).toBeInTheDocument();
+    expect(screen.queryByText("이 시각부터 장비를 들여와도 돼요")).not.toBeInTheDocument();
   });
 
   it("AC-F2-18 등록한 공간이 없으면 공간을 먼저 등록하라고 안내한다", async () => {

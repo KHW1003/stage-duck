@@ -50,6 +50,10 @@ function includes(q: CompareQuote, stage: StageSummary): string {
 const subOf = (q: CompareQuote) => (q.venueName ? `${q.venueName} · ${q.label}` : q.label);
 const nameOf = (q: CompareQuote) => q.companyName || subOf(q);
 
+/** 확정한 견적서인가. 결제 전에 업체가 취소하면(D-57) 단계는 다시 모집 중인데 견적서는 CONFIRMED 로 남아 있어 단계 상태로 함께 본다 */
+const picked = (q: CompareQuote, stage: StageSummary) => q.status === "CONFIRMED" && (stage.status === "CONFIRMED" || stage.status === "RECHECK");
+const withdrawn = (q: CompareQuote, stage: StageSummary) => q.status === "CONFIRMED" && !picked(q, stage);
+
 /** 총액 아래 검사 요약: 0이 아닌 것만, 심각한 순서 */
 const SUMMARY: [CheckItem["result"], string][] = [["CONFLICT", "충돌"], ["WARNING", "경고"], ["NEEDS_INFO", "확인 필요"], ["PASS", "통과"]];
 
@@ -73,8 +77,9 @@ interface ColumnProps {
 }
 
 function QuoteColumn({ q, stage, lowest, showDiff, rating }: ColumnProps) {
-  const confirmed = q.status === "CONFIRMED";
-  const off = stage.status === "CONFIRMED" && !confirmed;
+  const confirmed = picked(q, stage);
+  const cancelled = withdrawn(q, stage);
+  const off = (stage.status === "CONFIRMED" && !confirmed) || cancelled;
   const diff = q.totalAmount - lowest;
   return (
     <article className={["q-col", confirmed && "is-on", off && "is-off"].filter(Boolean).join(" ")} aria-label={q.companyName ? `${q.companyName} ${subOf(q)}` : subOf(q)}>
@@ -109,7 +114,7 @@ function QuoteColumn({ q, stage, lowest, showDiff, rating }: ColumnProps) {
       </ul>
       <div className="q-col__foot">
         <span className="q-col__state">
-          <span className="state">{confirmed ? "확정" : off ? "마감" : "조율 중"}</span>
+          <span className="state">{confirmed ? "확정" : cancelled ? "업체 사정 취소" : off ? "마감" : "조율 중"}</span>
           {q.offered && <span className="small muted">견적 요청으로 받음</span>}
         </span>
         <span className="q-col__acts">
@@ -145,11 +150,11 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
       <div role="row" className="sp__row">
         <div className="sp__h is-k" role="columnheader" />
         {quotes.map((q) => (
-          <div key={q.quoteId} role="columnheader" className={`sp__h is-v${q.status === "CONFIRMED" ? " is-pick" : ""}`}>
+          <div key={q.quoteId} role="columnheader" className={`sp__h is-v${picked(q, stage) ? " is-pick" : ""}`}>
             <b>{nameOf(q)}</b>
             {q.companyName && <span className="sp__sub">{subOf(q)}</span>}
             {q.isFullSpec && <span>풀스펙</span>}
-            {q.status === "CONFIRMED" && <em><Ico name="pass" sm />확정</em>}
+            {picked(q, stage) && <em><Ico name="pass" sm />확정</em>}
           </div>
         ))}
       </div>
@@ -157,7 +162,7 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
         <div role="row" className="sp__row" key={label}>
           <div className={`sp__k${i === rows.length - 1 ? " is-last" : ""}`} role="rowheader">{label}</div>
           {quotes.map((q) => (
-            <div key={q.quoteId} role="cell" className={["sp__v", i === 0 && "is-num", i === rows.length - 1 && "is-last", q.status === "CONFIRMED" && "is-pick"].filter(Boolean).join(" ")}>
+            <div key={q.quoteId} role="cell" className={["sp__v", i === 0 && "is-num", i === rows.length - 1 && "is-last", picked(q, stage) && "is-pick"].filter(Boolean).join(" ")}>
               {i === 0 ? <b className="sp__price">{value(q)}</b> : value(q)}
             </div>
           ))}

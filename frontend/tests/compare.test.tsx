@@ -108,6 +108,18 @@ describe("단계별 견적 비교 (/performances/:id/compare)", () => {
     expect(await screen.findByText(/아직 받은 견적서가 없어요/)).toBeInTheDocument();
   });
 
+  it("D-57 결제 전에 업체가 취소해 다시 모집 중인 단계에서는 그 업체 견적서를 확정으로 보이지 않는다", async () => {
+    const reopened = { ...PERF, stages: [{ ...PERF.stages[0], status: "OPEN" }, ...PERF.stages.slice(1)] };
+    const cancelled = QUOTES.map((q, i) => (i === 0 ? { ...q, status: "CONFIRMED" } : q));
+    mockServer({ "/api/v1/me": USER, "/api/v1/performances/5": reopened, "/api/v1/stages/1/quotes": cancelled });
+    renderAt("/performances/5/compare");
+
+    const a = await screen.findByRole("article", { name: "공간 A · 기본형" });
+    expect(within(a).getByText("업체 사정 취소")).toBeInTheDocument();
+    expect(within(a).queryByText("확정")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("table", { name: "공연장 견적서 항목별 비교" })).queryByText("확정")).not.toBeInTheDocument();
+  });
+
   it("남의 공연(서버 404)이면 불러오는 중에 멈추지 않고 찾을 수 없음 화면", async () => {
     mockServer({ "/api/v1/me": USER });
     renderAt("/performances/9/compare");
