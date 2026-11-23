@@ -110,8 +110,10 @@ describe("메인 (/)", () => {
     mockServer({});
     renderAt("/");
     const search = await screen.findByRole("search");
-    await userEvent.selectOptions(within(search).getByLabelText("지역"), "광주");
-    await userEvent.selectOptions(within(search).getByLabelText("관객 수"), "50~150명");
+    await userEvent.click(within(search).getByRole("combobox", { name: "지역" }));
+    await userEvent.click(screen.getByRole("option", { name: "광주" }));
+    await userEvent.click(within(search).getByRole("combobox", { name: "관객 수" }));
+    await userEvent.click(screen.getByRole("option", { name: "50~150명" }));
     await userEvent.click(within(search).getByRole("button", { name: "공간 찾기" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/venues?sido=%EA%B4%91%EC%A3%BC&audience=50%7E150%EB%AA%85");
   });

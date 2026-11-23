@@ -7,9 +7,10 @@
 .login__opts { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: var(--sd-text-desc); }
 .login__or { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .login__or::before, .login__or::after { content: ""; flex: 1; height: 1px; background: var(--sd-line); }
-.naver { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 54px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-btn); background: var(--sd-bg); font-size: 15px; font-weight: 600; cursor: pointer; }
-.naver span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 3px; background: var(--sd-ink); color: #fff; font-size: 12px; font-weight: 800; }
+.naver { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: var(--sd-button-lg); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-btn); background: var(--sd-bg); font-size: 15px; font-weight: 600; cursor: pointer; }
+.naver span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: var(--sd-r-tag); background: var(--sd-ink); color: var(--sd-on-blue); font-size: 12px; font-weight: 800; }
 .login__links { display: flex; justify-content: center; margin-top: 24px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.login__opts a, .login__links a { display: inline-flex; align-items: center; min-height: var(--sd-touch); }
 .login__links a + a::before { content: ""; display: inline-block; width: 1px; height: 11px; margin: 0 12px; background: var(--sd-line-strong); }
 .auth-split .login { width: 100%; max-width: none; padding: 48px 48px 40px; }
 .login__input { height: 52px; }
