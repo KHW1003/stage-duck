@@ -104,7 +104,8 @@ export function MyPostPage() {
     e.preventDefault();
     create.mutate(
       { category, title, body, sido, priceRange: priceRange.trim() || null, fileIds: photos.map((p) => p.id) },
-      { onSuccess: (saved) => navigate(`/board/${saved.id}`) },
+      // AC-F4-03: 연락처·계좌·외부 링크가 있으면 올린 소개 글 화면에서 저장한 사람에게만 경고를 보여 준다
+      { onSuccess: (saved) => navigate(`/board/${saved.id}`, { state: { contactWarning: saved.contactWarning } }) },
     );
   }
 
