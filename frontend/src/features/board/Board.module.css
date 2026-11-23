@@ -65,6 +65,12 @@
 .who b { display: block; font-size: var(--sd-text-body); }
 .who small { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
 
+@media (max-width: 760px) {
+  .withAside { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .postHead h1 { overflow-wrap: anywhere; }
+  .side { position: static; }
+}
+
 /* 내 소개 글 쓰기 (목업 p-post.html .form-table) */
 .formTable { border-top: 1px solid var(--sd-rule); }
 .row { display: grid; grid-template-columns: 180px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }

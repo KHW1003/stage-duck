@@ -88,6 +88,7 @@ export function AppRoutes() {
         <Route path="/terms/:type" element={<TermsPage />} />
         <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
           <Route path="/inquiries" element={<InquiryListPage />} />
+          <Route path="/me/inquiries" element={<Navigate replace to="/inquiries" />} />
           <Route path="/inquiries/new" element={<InquiryWritePage />} />
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
@@ -99,6 +100,7 @@ export function AppRoutes() {
           <Route path="/supplier/onboarding" element={<SupplierOnboardingPage />} />
         </Route>
         <Route element={<RequireAuth roles={["SUPPLIER"]} approvedOnly />}>
+          <Route path="/supplier/profile" element={<SupplierProfilePage own />} />
           <Route path="/supplier/posts" element={<MyPostPage />} />
           <Route path="/supplier/postings" element={<PostingsPage />} />
           <Route path="/supplier/postings/:stageId" element={<PostingPage />} />

@@ -24,6 +24,17 @@ def supplier_profile(supplier_id: int, db: Session = Depends(get_db)) -> Supplie
     return service.supplier_profile(db, supplier_id)
 
 
+@router.get("/supplier/profile", response_model=SupplierProfileOut)
+def my_supplier_profile(
+    response: Response,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> SupplierProfileOut:
+    """로그인한 승인 업체 자신의 공개 프로필."""
+    response.headers["Cache-Control"] = "no-store"
+    return service.my_supplier_profile(db, user)
+
+
 @router.get("/users/{user_id}/profile", response_model=UserProfileOut)
 def user_profile(
     user_id: int,

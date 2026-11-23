@@ -109,6 +109,21 @@ describe("업체 프로필 (/suppliers/:id)", () => {
     expect(screen.queryByText("전화번호와 사업자 서류는 공개하지 않아요.")).not.toBeInTheDocument();
   });
 
+  it("업체 계정 메뉴에서 로그인한 업체의 프로필을 연다", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER_D },
+      "GET /api/v1/supplier/profile": { status: 200, body: SUPPLIER },
+    });
+    renderAt("/board");
+
+    await user.click(await screen.findByRole("button", { name: /업체D담당/ }));
+    await user.click(screen.getByRole("menuitem", { name: "업체 프로필" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "업체 D" })).toBeInTheDocument();
+    expect(calls.some(({ url }) => url === "/api/v1/supplier/profile")).toBe(true);
+    expect(calls.some(({ url }) => url === "/api/v1/suppliers/5/profile")).toBe(false);
+  });
+
   it("소개 글 상세의 업체 이름을 누르면 업체 프로필로 간다", async () => {
     const user = userEvent.setup();
     const post: PrPost = { ...SUPPLIER.posts[0], body: "소개", photos: [], createdAt: "2026-11-01T10:00:00" };

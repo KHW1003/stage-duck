@@ -129,6 +129,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.getByRole("button", { name: "알림" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /광주밴드/ }));
     expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "견적함", "관심 업체", "최종 담당표", "1:1 문의", "알림", "로그아웃"]);
+    expect(screen.getByRole("menuitem", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries");
     expect(screen.getByText("사용자 계정")).toBeInTheDocument();
   });
 
@@ -167,6 +168,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
       "알림",
       "로그아웃",
     ]);
+    expect(screen.getByRole("menuitem", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries");
   });
 
   it("심사 중 업체는 알림 종이 없고 계정 메뉴는 알림·로그아웃뿐이다 (목업)", async () => {
