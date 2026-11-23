@@ -1288,7 +1288,7 @@
                 "files"
               ]
             },
-            "description": "Body → form-data 의 file 칸에서 png·jpg 하나를 직접 고른다. 고르지 않으면 400이고, 3-13도 실패한다.",
+            "description": "Body → form-data 의 file 칸에서 png·jpg 하나를 직접 고른다. 고르지 않으면 400이고, 3-13도 실패한다.\nRunner에서는 실패함, 파일을 직접 골라 Send.",
             "body": {
               "mode": "formdata",
               "formdata": [
