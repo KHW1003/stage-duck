@@ -59,7 +59,7 @@
 @media (max-width: 1023px) {
   /* 오른쪽 버튼이 많으면(업체·관리자 표시) 로고가 줄어들어 겹치지 않게 한다 */
   .inner { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .logo { min-width: 0; }
+  .logo { min-width: 0; justify-self: stretch; } /* start 면 칸 폭이 내용에 맞춰 줄고 img max-width:100% 와 서로 0 을 만든다 (11/23 #246 회귀) */
   .logo img { min-width: 0; max-width: 100%; height: auto; max-height: var(--sd-logo-img); }
   .role { flex: none; }
   .right { justify-content: flex-end; gap: 2px; }
