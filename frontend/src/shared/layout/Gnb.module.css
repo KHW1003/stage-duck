@@ -80,3 +80,10 @@
   .dropdown { position: fixed; top: calc(var(--sd-gnb-height) + 4px); left: var(--sd-page-pad); right: var(--sd-page-pad); }
   .notiPanel { position: fixed; top: calc(var(--sd-gnb-height) + 4px); left: var(--sd-page-pad); right: var(--sd-page-pad); width: auto; max-width: none; }
 }
+
+/* 모바일(560px 아래)에서는 로고를 숨기고 메뉴·알림·계정만 둔다 — 버튼이 많아 로고가 작게 눌리던 문제 (11/23 해원 결정).
+   홈으로는 메뉴의 항목으로 간다. 링크는 남겨 두되 화면에서만 뺀다 */
+@media (max-width: 560px) {
+  .logo { display: none; }
+  .inner { grid-template-columns: minmax(0, 1fr) auto; }
+}
