@@ -23,6 +23,7 @@
 | 권한 | 남의 리소스는 `404 NOT_FOUND` (존재 여부 숨김) |
 | 버전 충돌 | 수정 요청 본문에 `version`(현재 버전) → 다르면 `409 VERSION_CONFLICT` |
 | 멱등 | 결제·컨펌·다음 단계 요청은 `Idempotency-Key` 헤더 필수. 같은 키 → 처음 응답 그대로 |
+| 상태 확인 | `GET /health` → `{ "status": "ok", "env", "simulation": true }` (로그인 없음, 배포 확인용) |
 
 ### 1.1 오류 응답
 
@@ -58,6 +59,7 @@
 |---|---|---|---|---|
 | POST | `/auth/signup` | 🌐 | 사용자 이메일 가입 | F1-01~03 |
 | POST | `/auth/signup/supplier` | 🌐 | 업체 1단계 (이메일·담당자·약관) | F1-17 |
+| POST | `/auth/check-available` | 🌐 | 가입 화면 [중복 확인] `{ "field": "email" \| "nickname", "value" }` → `{ "available", "message" }`. 모양이 틀리면 400 `VALIDATION_FAILED`. 가입할 때도 같은 검사를 다시 한다. CSRF 검사 예외 | F1-01 |
 | POST | `/auth/login` | 🌐 | 로그인 → 쿠키 발급, 응답에 `role`, `landing` | F1-11 |
 | POST | `/auth/logout` | 누구나 | 쿠키 삭제 (204). 로그인 쿠키가 만료됐어도 남은 쿠키를 지운다 | F1-12 |
 | POST | `/auth/refresh` | 쿠키 | Access 재발급 | |
@@ -156,8 +158,8 @@
 ### 3.1 업체 서비스·공간
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| PUT | `/supplier/profile` | S | 3단계: 지역, 소개, 사진, 설치·철수 시간, 엔지니어 정보, 신뢰 지표 | |
-| PUT | `/supplier/equipment` | S | 보유 장비 목록 (자유 입력, 전체 교체) | |
+| PUT | `/supplier/profile` | S | 3단계: 지역, 소개, 사진, 설치·철수 시간, 엔지니어 정보, 신뢰 지표. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환: 입점 신청 `/supplier/application` 에 합쳤는지) | |
+| PUT | `/supplier/equipment` | S | 보유 장비 목록 (자유 입력, 전체 교체). ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환) | |
 | GET | `/supplier/venues` | S(VENUE) | 내 공간 목록 (숨긴 공간 포함, 등록 순, `VenueOut` 배열). 견적서 작성에서 공간 고르기 (#192) | F2-18 |
 | POST | `/supplier/venues` | S(VENUE) | 공간 등록 | F2-01, F2-02 |
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
@@ -210,8 +212,9 @@
 | GET | `/postings/{stageId}` | S | 공고 상세 + 앞 단계 확정 정보 (공연장 입실·기본 장비·전원 등) | F3-03 |
 | POST | `/stages/{stageId}/quotes` | S | 견적서 전송 (여러 개 가능, `label`) → 사용자 견적함 + 알림 | F2-15, F2-16, F2-18, F2-19 |
 | PUT | `/quotes/{quoteId}` | S(본인) | 견적서 수정 → 새 버전, 대기 카드 무효 | F2-20, F3-09 |
-| POST | `/quotes/{quoteId}/withdraw` | S(본인) | 철회 | |
+| POST | `/quotes/{quoteId}/withdraw` | S(본인) | 철회. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (3번 채은) | |
 | GET | `/quotes/{quoteId}` | P | 견적서 (현재 버전 + 이력) — 다른 업체는 404 | F1-14, F2-14 |
+| GET | `/quotes/by-version/{versionId}` | P | 채팅 견적서 카드의 [내역서 보기] (메시지 `refId` = 견적서 버전 id). 응답·권한은 `GET /quotes/{quoteId}` 와 같다 | F3-07 |
 
 **POST /stages/{stageId}/quotes**
 ```json
@@ -240,7 +243,7 @@
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
 | GET | `/stages/{stageId}/quotes` | U | 단계별 견적 비교: 견적서 + 자동 검사 + 풀스펙 배지 + 오퍼 여부 | F3-20~24 |
-| GET | `/quotes/{quoteId}/checks` | P | 자동 검사 결과만 | F3-21~24 |
+| ~~GET~~ | ~~`/quotes/{quoteId}/checks`~~ | | 따로 두지 않는다. 자동 검사 결과는 `GET /stages/{stageId}/quotes` 응답의 견적서마다 `checks`·`overall` 로 함께 온다 | F3-21~24 |
 
 **검사 결과 형식**
 ```json
@@ -263,7 +266,7 @@
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
 | POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true` | F3-06, F3-08, F3-15 |
 | POST | `/chat-rooms/{roomId}/read` | P | `{ "lastMessageId": 120 }` | F3-08 |
-| POST | `/chat-rooms/{roomId}/report` | P | 신고 | F4-03 |
+| POST | `/reports` | P | 채팅방 신고는 공통 신고 API 로: `{ "targetType": "CHAT_ROOM", "targetId": roomId, "reason" }` (5장) | F4-03 |
 
 ### 4.3 견적 내역 확인·컨펌·다음 단계
 | 메서드 | 경로 | 권한 | 설명 | AC |
@@ -320,9 +323,10 @@
 |---|---|---|---|---|
 | GET | `/pr-posts` | 🌐 | `?category=&sido=&page=` — category 생략 시 전체, 최신순(끌어올린 시각). 정지 업체 글 제외 | F4-04, F4-09, F4-11 |
 | GET | `/pr-posts/{id}` | 🌐 | 상세 | F4-04 |
-| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`), 연락처 패턴 경고 | F4-01~03, F4-10 |
-| PUT · DELETE | `/pr-posts/{id}` | S(본인) | 수정·삭제 | |
-| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회, `429 BUMP_TOO_SOON`) | |
+| POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`). 연락처·외부 링크 모양이 있으면 저장은 하고 응답 `contactWarning: true` (화면이 경고) | F4-01~03, F4-10 |
+| PUT | `/pr-posts/{id}` | S(본인) | 수정 (말머리는 못 바꿈). 응답에 `contactWarning`. 블라인드 중 `409 INVALID_STATE`, 말머리 변경·칸 오류 `400 VALIDATION_FAILED`, 정지 계정 `403 ACCOUNT_SUSPENDED`, 남의 글·지운 글 `404` | F4-03, F4-10 |
+| DELETE | `/pr-posts/{id}` | S(본인) | 삭제. ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환) | |
+| POST | `/pr-posts/{id}/bump` | S(본인) | 끌어올리기 (7일에 1회, `429 BUMP_TOO_SOON`). ⚠️ 아직 구현 없음 — 담당 확인 (11/23 spec-sync) (1번 세환 — 화면은 "끌어올림" 날짜를 이미 보여 줌) | |
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
@@ -336,7 +340,6 @@
 | PUT · DELETE | `/free-helpfuls` | U, S | `{ "targetType": "POST", "targetId": 12 }` — 도움 돼요 누르기 / 취소. 응답 `{ "helpfulCount" }` | F4-17 |
 | PUT · DELETE | `/free-posts/{id}/bookmark` | U, S | 저장 / 저장 취소 | F4-17 |
 | GET | `/me/free-bookmarks` | U, S | 내 저장 글 | F4-17 |
-| DELETE | `/free-comments/{id}` | 본인 | "삭제된 댓글이에요"로 남김 | |
 
 ---
 

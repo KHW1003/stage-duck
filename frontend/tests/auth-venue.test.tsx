@@ -101,7 +101,7 @@ describe("로그인 (/login)", () => {
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/community"));
   });
 
-  it("AC-F1-04 비밀번호가 틀리면 서버 문구가 입력칸 아래에, AC-F1-08 5회 실패는 안내 상자로 보인다", async () => {
+  it("FR-AUTH-06 비밀번호가 틀리면 서버 문구가 입력칸 아래에, 5회 실패는 안내 상자로 보인다", async () => {
     mockServer({ "POST /api/v1/auth/login": { status: 401, body: err("UNAUTHENTICATED", "이메일이나 비밀번호가 맞지 않아요.") } });
     renderAt("/login");
     await userEvent.type(screen.getByLabelText("이메일"), "a@stageduck.test");
