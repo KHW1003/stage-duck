@@ -62,9 +62,10 @@
 | POST | `/auth/logout` | 누구나 | 쿠키 삭제 (204). 로그인 쿠키가 만료됐어도 남은 쿠키를 지운다 | F1-12 |
 | POST | `/auth/refresh` | 쿠키 | Access 재발급 | |
 | GET | `/auth/naver/start` | 🌐 | 네이버 로그인 이동 (`state` 쿠키) | F1-04 |
-| GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 / 처음 → `signupToken` 발급 후 추가 정보 화면으로 | F1-04, F1-10 |
-| GET | `/auth/kakao/start` · `/auth/kakao/callback` | 🌐 | `KAKAO_LOGIN_ENABLED=false`면 404 | F1-08, F1-09 |
-| POST | `/auth/social/complete` | signupToken | 추가 정보 + 약관 동의 → 가입 완료 | F1-05~07 |
+| GET | `/auth/naver/callback` | 🌐 | 기존 회원 → 로그인 쿠키 + 첫 화면으로 302 / 처음 → `signup_token` 쿠키(httpOnly, 10분) + `/signup/extra` 로 302 / 실패 → `/login?social=failed` 로 302 (아래 2.1) | F1-04, F1-10 |
+| GET | `/auth/kakao/start` · `/auth/kakao/callback` | 🌐 | 네이버와 같은 흐름. `KAKAO_LOGIN_ENABLED=false`면 404 | F1-08, F1-09 |
+| GET | `/auth/social/pending` | `signup_token` 쿠키 | 추가 정보 화면에 미리 채울 값 `{provider, email, name, phone, birthDate, nickname}`. 쿠키가 없거나 만료(10분)면 401 | F1-05, F1-06 |
+| POST | `/auth/social/complete` | `signup_token` 쿠키 | 추가 정보 + 약관 동의 → 가입 완료. 요청은 `/auth/signup` 에서 `password` 만 뺀 모양. CSRF 검사 예외 (아래 2.1) | F1-05~07 |
 | POST | `/auth/password-reset` | 🌐 | 재설정 링크 요청 `{email}` → 항상 202 `{demoLink}` (시연 서버 `APP_ENV=test`·`MAIL_BACKEND=console`만 `/password/reset?token=…`, 그 밖은 null). 같은 이메일 10분 3회 넘으면 429 `PASSWORD_RESET_RATE_LIMITED` (가입 안 한 이메일도 같은 규칙). CSRF 검사 예외 | F1-21, F1-23 |
 | POST | `/auth/password-reset/confirm` | 🌐 | `{token, password}` → 204 + 그 사용자 Refresh 전부 폐기(바꾼 시각 전에 발급된 refresh 는 `/auth/refresh` 401) + 이 브라우저 로그인 쿠키 지움. 만료·사용됨 → 400 `RESET_TOKEN_INVALID`, 비밀번호 규칙 → 400 `VALIDATION_FAILED`. CSRF 검사 예외 | F1-22 |
 | GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태 | F1-11 |
@@ -89,6 +90,53 @@
 // 400 — 만 14세 미만
 { "code": "UNDER_AGE", "message": "만 14세 이상만 가입할 수 있어요.", "fieldErrors": [{"field":"birthDate","reason":"만 14세 미만"}] }
 ```
+
+### 2.1 소셜 로그인 (네이버·카카오, #25)
+
+업체는 소셜 로그인을 쓰지 않는다 (Q-37). 소셜 가입은 사용자만.
+
+**콜백 (`GET /auth/{naver|kakao}/callback`)** — 응답 본문 없이 302 로 보낸다.
+
+| 경우 | 쿠키 | 이동 |
+|---|---|---|
+| 이 소셜 계정으로 가입한 회원 | 로그인 쿠키 (`/auth/login` 과 같음) | 그 역할의 첫 화면 |
+| 처음 (가입 전) | `signup_token` (httpOnly, 10분) — 소셜 식별값·받아온 값 | `/signup/extra` |
+| 같은 이메일로 이메일 가입한 계정이 이미 있음 | 없음 (자동으로 연결하지 않는다, AC-F1-10) | `/login?social=failed` |
+| `state` 불일치·사용자가 동의 취소·소셜 서버 오류 | 없음 | `/login?social=failed` |
+
+`/login?social=failed` 화면 문구: "간편 로그인을 마치지 못했어요. 다시 시도하거나 이메일로 로그인해 주세요."
+
+**GET /auth/social/pending**
+```json
+// 200 — 받아오지 못한 값은 null (예: 생일 동의를 해제하면 birthDate null, AC-F1-05)
+{ "provider": "NAVER", "email": "a@naver.com", "name": "김덕구", "phone": "01012345678", "birthDate": null, "nickname": null }
+// 401 — signup_token 쿠키가 없거나 10분이 지남 → 화면은 로그인으로 돌려보낸다
+{ "code": "SOCIAL_SIGNUP_EXPIRED", "message": "간편 가입 시간이 지났어요. 다시 로그인해 주세요.", "fieldErrors": [] }
+```
+
+**POST /auth/social/complete**
+```json
+// 요청 — /auth/signup 에서 password 만 뺀 모양. 미리 채운 값도 사용자가 고칠 수 있다 (AC-F1-06)
+{
+  "name": "김덕구", "phone": "01012345678", "email": "a@naver.com",
+  "birthDate": "1999-03-02", "nickname": "덕구밴드",
+  "signupPurpose": "PERFORMANCE", "musicianType": "BAND", "signupChannel": "SNS",
+  "agreements": { "service": true, "privacyRequired": true, "privacyOptional": false, "marketing": false }
+}
+// 201 — 가입 + 로그인 쿠키, signup_token 쿠키는 지운다
+{ "id": 13, "role": "USER", "nickname": "덕구밴드", "landing": "/me/performances" }
+```
+
+| 상태 | 코드 | 언제 |
+|---|---|---|
+| 401 | `SOCIAL_SIGNUP_EXPIRED` | `signup_token` 쿠키가 없거나 10분이 지남 |
+| 400 | `VALIDATION_FAILED` | 빈 칸·형식 (`fieldErrors`, `/auth/signup` 과 같은 규칙) |
+| 400 | `UNDER_AGE` | 만 14세 미만 |
+| 400 | `TERMS_REQUIRED` | 필수 약관 동의 없음 (AC-F1-07) |
+| 409 | `EMAIL_TAKEN` · `NICKNAME_TAKEN` | 이미 쓰는 이메일·닉네임 |
+| 409 | `SOCIAL_ALREADY_LINKED` | 그 소셜 계정으로 이미 가입함 (다른 탭에서 먼저 완료 등) |
+
+**서버 설정** (`backend/app/core/config.py`, 값은 서버 `.env` 에만): `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `KAKAO_LOGIN_ENABLED`(기본 false), `KAKAO_CLIENT_ID`. 네이버 개발자 센터에 콜백 `https://{SITE_ADDRESS}/api/v1/auth/naver/callback` 등록.
 
 **POST /supplier/application**
 ```json
