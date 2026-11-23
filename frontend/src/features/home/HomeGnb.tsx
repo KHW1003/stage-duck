@@ -47,6 +47,10 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
         </Link>
         {menu.length > 0 && (
           <nav id="home-menu" className={cx(s.gnbMenu, open && s.gnbMenuOpen)} aria-label={partnerPage ? "업체 메뉴" : "주 메뉴"}>
+            {/* 모바일(560px 아래)은 로고를 숨기니 메뉴 맨 위에 홈을 둔다 (11/23) */}
+            <Link className={s.gnbHome} to={partnerPage ? "/partner" : "/"} onClick={() => setOpen(false)}>
+              홈
+            </Link>
             {menu.map((m) =>
               m.external ? (
                 <a key={m.label} href={m.to}>
