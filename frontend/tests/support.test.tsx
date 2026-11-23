@@ -194,10 +194,15 @@ describe("약관·정책 (/terms/:type)", () => {
     expect(screen.getByTestId("where")).toHaveTextContent(/^\/terms\/service$/);
   });
 
-  it("가입 화면 약관 [보기]가 해당 탭을 연다", () => {
+  it("가입 화면 약관 [보기]가 화면을 옮기지 않고 해당 약관 모달을 연다 (#223)", async () => {
     mockServer({});
     renderAt("/signup");
-    const links = screen.getAllByRole("link", { name: "보기" }).map((a) => a.getAttribute("href"));
-    expect(links).toEqual(expect.arrayContaining(["/terms/service", "/terms/privacy"]));
+    const [service, privacy] = screen.getAllByRole("button", { name: "보기" });
+    await userEvent.click(service);
+    expect(within(screen.getByRole("dialog")).getAllByText(/이용약관/).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("where")).toHaveTextContent(/^\/signup$/);
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(privacy);
+    expect(within(screen.getByRole("dialog")).getAllByText(/개인정보/).length).toBeGreaterThan(0);
   });
 });

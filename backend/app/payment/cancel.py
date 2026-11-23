@@ -1,7 +1,7 @@
 """취소·위약금·업체 사정 취소 (T4-07 #52, FR-PAY-03, AC-F5-08·09·10, D-39·D-53·D-57). 묶음 4.
 
 금액은 payment/calc 의 순수 함수(cancel_phase·cancel_amounts)만 쓴다. 장부는 추가만 한다.
-공연 상태(CANCELLED)·단계 다시 열기는 2번 묶음 몫이라 아직 바꾸지 않는다 (약속 함수가 생기면 여기서 부른다).
+공연 상태(CANCELLED)·단계 다시 열기는 2번 묶음 약속 함수(performance_cancelled·reopen_stage)로 바꾼다.
 """
 from dataclasses import dataclass
 from datetime import datetime
@@ -136,20 +136,41 @@ def _notify_user_cancel(db: Session, perf: Performance, q: "CancelQuote") -> Non
 
 
 def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: str, now: datetime) -> tuple[Cancellation, CancelQuote]:
-    """AC-F5-10: 결제한 공연을 확정 업체가 자기 사정으로 취소 → 이용료까지 전액 환불 + 그 업체 경고 1회.
-    확정 업체가 아니면 404. 결제 전 업체 취소(D-57 마감 48시간 연장)는 결제 마감(#52 후반, #43 뒤)과 함께 만든다."""
+    """AC-F5-10: 확정 업체가 자기 사정으로 취소 → 그 업체 경고 1회. 확정 업체가 아니면 404.
+
+    - 결제 후: 이용료까지 전액 환불 (장부 REFUND).
+    - 결제 전 (D-57): 그 단계만 다시 모집(2번 reopen_stage) + 발행된 청구서 취소 + 결제 마감 자동 48시간 연장
+      (취소 기록 order_id=NULL 한 건마다 48시간, deadline.deadline_for 가 센다). 낸 돈이 없어 금액은 모두 0원.
+    """
     supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
     perf = db.get(Performance, performance_id, with_for_update=True)
-    order = _live_order(db, performance_id, lock=True) if perf else None
-    if perf is None or supplier is None or order is None or supplier.id not in {ln.supplier_id for ln in order.lines}:
+    if perf is None or supplier is None:
         raise not_found()
-    if order.status not in PAID_STATUSES:
-        raise invalid_state("결제가 완료된 공연만 업체 사정으로 취소할 수 있습니다.")
-    q = _quote(db, perf, order, "SUPPLIER_FAULT")
-    policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
-    c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
+    order = _live_order(db, performance_id, lock=True)
+    if order is not None and order.status in PAID_STATUSES:
+        if supplier.id not in {ln.supplier_id for ln in order.lines}:
+            raise not_found()
+        q = _quote(db, perf, order, "SUPPLIER_FAULT")
+        policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
+        c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
+        stage_ids = [ln.stage_id for ln in order.lines if ln.supplier_id == supplier.id]
+    else:
+        mine = sorted((ln for ln in request_service.confirmed_lines(db, perf.id) if ln.supplier_id == supplier.id),
+                      key=lambda ln: db.get(Stage, ln.stage_id).seq)
+        if not mine:
+            raise not_found()
+        if perf.status not in ("ASSIGNING", "AWAITING_PAYMENT"):
+            raise invalid_state("지금 상태에서는 업체 사정으로 취소할 수 없습니다.")
+        q = _quote(db, perf, None, "SUPPLIER_FAULT")  # 결제 전 — 모두 0원
+        policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소(결제 전): {reason}", report_id=None)
+        if order is not None:
+            _move_order(db, order, "CANCELLED", user.id)  # 금액이 바뀌므로 청구서는 다시 발행한다
+        c = _record(db, perf, None, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id)
+        # shortcut: 한 업체가 여러 단계를 확정했으면 가장 앞 단계만 다시 연다 (한 번에 한 단계만 모집) — 실제로 생기면 나머지도 순서대로
+        request_service.reopen_stage(db, mine[0].stage_id, actor_id=user.id)
+        stage_ids = [mine[0].stage_id]
     # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
-    stage_types = sorted({db.get(Stage, ln.stage_id).stage_type for ln in order.lines if ln.supplier_id == supplier.id})
+    stage_types = sorted({db.get(Stage, sid).stage_type for sid in stage_ids})
     notification.notify(
         db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
         params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types)},

@@ -396,8 +396,8 @@ erDiagram
 
 | 대상 | 값 |
 |---|---|
-| performances.status | DRAFT → PUBLISHED → ASSIGNING → AWAITING_PAYMENT → CONFIRMED → COMPLETED · 중간 어디서나 CANCELLED / WITHDRAWN(공고 내림) |
-| stages.status | WAITING → OPEN → NEGOTIATING → CONFIRMED (→ RECHECK → CONFIRMED) · WAITING → SKIPPED |
+| performances.status | DRAFT → PUBLISHED → ASSIGNING → AWAITING_PAYMENT → CONFIRMED → COMPLETED · 중간 어디서나 CANCELLED / WITHDRAWN(공고 내림) · 결제 전 업체 취소 시 AWAITING_PAYMENT → ASSIGNING (D-57) |
+| stages.status | WAITING → OPEN → NEGOTIATING → CONFIRMED (→ RECHECK → CONFIRMED) · WAITING → SKIPPED · 결제 전 업체 취소 시 그 단계만 CONFIRMED → OPEN, `confirmed_quote_version_id` 비움 (D-57). 다른 확정 단계는 공연장 단계가 다시 열려도 CONFIRMED 그대로 두고, 새 공연장과의 호환은 현장 준비 확인(tech_checks)으로 본다 (11/23 해원 결정) |
 | quotes.status | SENT → CONFIRMED / CLOSED / WITHDRAWN / EXPIRED |
 | confirm_requests.status | PENDING → CONFIRMED / RENEGOTIATE / EXPIRED / INVALIDATED |
 | offers.status | PENDING → QUOTED / DECLINED / EXPIRED |

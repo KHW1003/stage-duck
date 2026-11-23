@@ -45,6 +45,19 @@ export function useSupplierReservations(supplierUserId: number | undefined) {
   });
 }
 
+/** 업체 사정 취소 (AC-F5-10, D-57). 결제 전이면 그 단계만 다시 모집·결제 마감 48시간 연장, 결제 후면 전액 환불. 업체 경고 1회 */
+export function useSupplierCancel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { performanceId: number; reason: string }) =>
+      api<CancelQuote>(`/performances/${v.performanceId}/cancel-by-supplier`, {
+        method: "POST",
+        body: JSON.stringify({ reason: v.reason }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["supplier"] }),
+  });
+}
+
 /** 최종 담당표 (#53). 사용자·확정 업체만, 남이면 404 */
 export function useSheet(performanceId: number) {
   return useQuery({
