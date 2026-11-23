@@ -147,7 +147,8 @@
 .adLeft { right: calc(100% + var(--sd-ad-gap)); }
 .adRight { left: calc(100% + var(--sd-ad-gap)); }
 .adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
-@container (max-width: 1199px) { .adRail { display: none; } } /* 여백 160px = 광고 140 + 간격 20 이 안 되면 숨김 */
+/* 광고는 칸 밖 여백(페이지 좌우 여백 포함)까지 쓴다. 본문 상자 바깥 여백 = (화면 폭 - 880) / 2 가 광고 180 + 간격 20 + 끝 여백 16 보다 좁으면 숨김 → 1312px 미만 (미디어 쿼리는 변수를 못 써서 숫자) */
+@media (max-width: 1311px) { .adRail { display: none; } }
 @media (max-width: 760px) {
   .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
