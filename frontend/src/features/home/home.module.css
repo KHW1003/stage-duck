@@ -562,3 +562,9 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
   .slide, .flow-tab__text small { transition: none; }
   .pv.is-active, .toast, .slider__bar span.run, .flow-tab.is-active .flow-tab__bar { animation: none; }
 }
+
+/* 모바일(560px 아래) 머리: 안쪽 머리(Gnb)와 같게 로고를 숨긴다 (11/23 해원 결정) */
+@media (max-width: 560px) {
+  .gnb .logo { display: none; }
+  .gnb__inner { grid-template-columns: minmax(0, 1fr) auto; }
+}

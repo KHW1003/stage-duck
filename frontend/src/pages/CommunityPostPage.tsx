@@ -70,28 +70,28 @@ export function CommunityPostPage() {
           {me.data ? (
             <>
               <Button
-                variant="line"
+                variant="ghost"
                 aria-pressed={p.myHelpful}
                 loading={helpful.isPending}
                 onClick={() => helpful.mutate({ targetType: "POST", targetId: p.id, on: !p.myHelpful })}
               >
                 도움 돼요 {p.helpfulCount}
               </Button>
-              <Button variant="line" aria-pressed={p.bookmarked} loading={bookmark.isPending} onClick={() => bookmark.mutate(!p.bookmarked)}>
+              <Button variant="ghost" aria-pressed={p.bookmarked} loading={bookmark.isPending} onClick={() => bookmark.mutate(!p.bookmarked)}>
                 {p.bookmarked ? "저장됨" : "저장"}
               </Button>
               {!p.isMine && (
-                <Button variant="ghost" onClick={() => setReporting(true)}>
+                <Button variant="ghost" className={styles.reactsEnd} onClick={() => setReporting(true)}>
                   신고
                 </Button>
               )}
             </>
           ) : (
             <>
-              <ButtonLink to={loginPath(back)} variant="line">
+              <ButtonLink to={loginPath(back)} variant="ghost">
                 도움 돼요 {p.helpfulCount}
               </ButtonLink>
-              <ButtonLink to={loginPath(back)} variant="line">
+              <ButtonLink to={loginPath(back)} variant="ghost">
                 저장
               </ButtonLink>
             </>

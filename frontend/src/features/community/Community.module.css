@@ -102,7 +102,6 @@
 .postHead { padding-bottom: 20px; }
 .postBody { padding: 32px 0; font-size: var(--sd-text-lg); line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; }
 .reacts { padding-bottom: 32px; border-bottom: 0; }
-.reacts [aria-pressed="true"] { border-color: var(--sd-ink); background: var(--sd-th); font-weight: 700; }
 .mineActions { margin-left: auto; }
 .comments { padding-top: 8px; }
 .comment { padding: 16px 0; }
@@ -120,3 +119,21 @@
 .near a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .near span { flex: none; }
 .actions { margin-top: 24px; }
+
+/* ── 11/23 해원 피드백: 간격을 넓히고 최소 높이로 맞춤, 도움 돼요·저장은 신고와 같은 글자 버튼 ──
+   제목 → 본문 → 반응 → 댓글 사이를 같은 리듬(32·40·48px)으로, 짧은 글도 본문 칸이 납작해지지 않게 최소 높이 */
+.postHead { padding-bottom: 24px; }
+.postMeta { margin-top: 16px; }
+.postBody { padding: 40px 0; min-height: 200px; }
+.reacts { align-items: center; gap: 4px 20px; min-height: var(--sd-touch); padding-bottom: 48px; }
+.reacts > a, .reacts > button, .mineActions > a, .mineActions > button { padding-inline: 0; }
+.reacts > a:hover, .reacts > button:hover, .mineActions > a:hover, .mineActions > button:hover { background: transparent; }
+.reacts [aria-pressed="true"] { color: var(--sd-ink); font-weight: 700; } /* 눌린 상태는 진한 글자 + 굵게 */
+.reactsEnd, .mineActions { margin-left: auto; }
+.mineActions { gap: 20px; }
+.commentsTitle { padding-bottom: 16px; }
+.comment { padding: 20px 0; }
+.commentBody { margin-top: 8px; }
+.commentForm { padding: 24px 0; }
+.near { margin-top: 32px; }
+.actions { margin-top: 32px; }
