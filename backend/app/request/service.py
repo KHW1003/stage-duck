@@ -123,6 +123,7 @@ def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfir
     """[약속 2 → 3] 컨펌 직후 다음 할 일 (AC-F3-05 풀스펙 건너뛰기 제안, AC-F3-14 [통합 결제하기]).
 
     full_spec: 확정한 견적서가 풀스펙(장비·엔지니어 포함)인지 — 견적서는 3번 것이라 부르는 쪽이 넘긴다.
+    장비 견적서는 장비를 늘 포함하므로, full_spec 이면 엔지니어가 포함된 것이다 (AC-F3-23).
     """
     stage = db.get(Stage, stage_id)
     stages = _stages_of(db, stage.performance_id)
@@ -130,7 +131,8 @@ def after_confirm(db: Session, stage_id: int, *, full_spec: bool) -> AfterConfir
     done = all(s.status in DONE_STATUSES for s in stages)
     return AfterConfirm(
         next_stage_type=remaining[0].stage_type if remaining else None,
-        suggest_skip=full_spec and stage.stage_type == "VENUE" and bool(remaining),
+        # 풀스펙 공연장(AC-F3-05) 또는 엔지니어를 포함한 장비 견적서(AC-F3-23, CHK-09)면 남은 단계 건너뛰기를 제안
+        suggest_skip=full_spec and stage.stage_type in ("VENUE", "EQUIPMENT") and bool(remaining),
         checkout_available=not remaining and done,
     )
 
