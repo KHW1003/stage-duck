@@ -3,6 +3,7 @@
  * - message.created: 그 방 캐시에 말풍선을 더하고 목록(마지막 메시지·안 읽은 수)을 새로 받는다 (AC-F3-08)
  * - message.read: 상대가 읽은 위치를 옮긴다 → 내 말풍선에 "읽음"
  * - quote.updated: 그 방 메시지와 목록을 새로 받는다
+ * - notification: 알림을 새로 받고, CHAT_STARTED 면 목록(startedAt)도 새로 받는다
  * 끊기면 다시 연결하고, 다시 연결되면 열어 둔 방마다 ?after=마지막 id 로 빠진 메시지를 채운다.
  */
 import { confirmKey } from "../../features/confirm/api";
@@ -36,6 +37,10 @@ function handle(qc: QueryClient, e: WsChatEvent, meId: number) {
   // 사이트 안 알림 (#45): 같은 연결로 온다. 목록·안 읽은 수를 다시 받는다
   if ((e as { type: string }).type === "notification") {
     void qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
+    // 채팅 시작 알림(CHAT_STARTED)은 업체 쪽 방의 startedAt 을 바꾼다 → 목록을 다시 받아 입력창을 연다 (AC-F3-06)
+    if ((e as unknown as { data: { type?: unknown } }).data.type === "CHAT_STARTED") {
+      void qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true });
+    }
     return;
   }
   // 최종 견적 카드 상태 (#43, api-contract.md 7장 confirm.updated)
