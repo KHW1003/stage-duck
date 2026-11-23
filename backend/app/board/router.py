@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
 from app.board import service
-from app.board.schemas import PrCategory, PrPostIn, PrPostListOut, PrPostOut, PrPostSavedOut
+from app.board.schemas import MyPrPostListOut, PrCategory, PrPostIn, PrPostListOut, PrPostOut, PrPostSavedOut
 from app.core.db import get_db
 from app.models.user import User
 
@@ -28,6 +28,16 @@ def list_posts(
 ) -> PrPostListOut:
     """AC-F4-04·09: 로그인 없이 목록. category 생략 = [전체]."""
     return service.list_posts(db, category=category, sido=sido or None, page=page, size=size)
+
+
+@router.get("/mine", response_model=MyPrPostListOut)
+def my_posts(
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> MyPrPostListOut:
+    """FR-BOARD-02·03: 내 소개 글 (가려진 글·사유 포함, 내린 글 제외). /{post_id} 보다 먼저 둔다."""
+    return service.my_posts(db, user, now=now)
 
 
 @router.get("/{post_id}", response_model=PrPostOut)
