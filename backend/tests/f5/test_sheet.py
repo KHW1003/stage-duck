@@ -124,5 +124,13 @@ def test_supplier_reservations_reflect_supplier_cancelled_paid_order(client, db)
     assert venue.get(url).json()[0]["status"] == "PAID"
 
     assert venue.post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "공간 누수"}).status_code == 200
-    assert venue.get(url).json()[0]["status"] == "CANCELLED"
+    assert venue.get(url).json() == []  # 공연장 단계는 다시 모집 — 확정 연결이 없다 (D-37, 결제 전 취소와 같다)
     assert equip.get(url).json()[0]["status"] == "NEEDS_REVIEW"
+
+
+def test_supplier_reservations_keep_other_supplier_after_unpaid_cancel(client, db):
+    user, perf_id, (c, d) = _ready(client, db)
+    user.post(f"/api/v1/performances/{perf_id}/order")
+    venue = _supplier_client(db, c)
+    assert venue.post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "누수"}).status_code == 200
+    assert _supplier_client(db, d).get("/api/v1/supplier/reservations").json()[0]["status"] == "ASSIGNING"

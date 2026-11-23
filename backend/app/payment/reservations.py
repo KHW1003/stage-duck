@@ -38,9 +38,11 @@ def _status(
     if cancelled_by_team or performance_status in ("CANCELLED", "WITHDRAWN"):
         return "CANCELLED"
     if order_status == "CANCELLED":
-        if cancelling_supplier_id in (None, supplier_id):
-            return "CANCELLED"
-        return "NEEDS_REVIEW"
+        # 다시 모집 중이면 취소된 청구서는 지난 것 — 남은 업체의 예약은 유지된다 (D-37)
+        if performance_status == "ASSIGNING":
+            return "ASSIGNING" if cancelling_supplier_id in (None, supplier_id) else "NEEDS_REVIEW"
+        if performance_status != "AWAITING_PAYMENT":
+            return "CANCELLED" if cancelling_supplier_id in (None, supplier_id) else "NEEDS_REVIEW"
     if performance_status == "COMPLETED":
         return "COMPLETED"
     if order_status in PAID_STATUSES:

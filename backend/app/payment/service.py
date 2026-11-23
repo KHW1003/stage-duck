@@ -32,6 +32,7 @@ def payment_deadline(db: Session, performance_id: int) -> datetime | None:
     """[약속 4 → 3] 그 공연의 최종 결제 마감 시각(KST, D-57). 커밋하지 않는다.
 
     = min(처음 컨펌 + 168시간(일반) 또는 48시간(임박), 공연 5일 전 0시). 결제 전 업체 취소로 늘어난 48시간 포함.
+    결제 후 업체 사정 취소로 다시 모집하면 그 취소 시각부터 센다.
     아직 처음 컨펌이 없거나 이미 결제했으면 None.
     쓰는 곳: 3번 확인 카드 만료 = min(보낸 뒤 48시간, 이 값) (#43), 결제 알림 문구 (#45).
     구현: 4번 목산 — 처음 컨펌 시각이 생기는 #43 뒤 T4-06·T4-07 (#51, #52).
@@ -69,7 +70,9 @@ def issue_order(db: Session, user: User, performance_id: int, *, now: datetime) 
     existing = _active_order(db, perf.id)
     if existing is not None:
         return existing, False
-    if not perf.stages or any(s.status not in DONE_STAGE_STATUSES for s in perf.stages):
+    if perf.status in ("CONFIRMED", "COMPLETED", "CANCELLED"):  # 끝난 공연에 청구서를 또 만들지 않는다 (AC-F5-10)
+        raise invalid_state("지금은 청구서를 만들 수 없습니다. 공연 상태를 다시 확인해 주십시오.")
+    if perf.status != "AWAITING_PAYMENT" or not perf.stages or any(s.status not in DONE_STAGE_STATUSES for s in perf.stages):
         raise invalid_state("아직 확정하지 않은 단계가 있습니다. 모든 단계를 확정하거나 건너뛴 후 청구서를 볼 수 있습니다.")
     lines = request_service.confirmed_lines(db, perf.id)
     if not lines:
@@ -166,6 +169,10 @@ def pay_order(
     """AC-F5-05·06: 테스트 결제. 금액은 서버 계산값과 같아야 하고(400 AMOUNT_MISMATCH),
     같은 Idempotency-Key 로 다시 오면 처음 결과를 그대로 돌려준다. 다른 키로 두 번 눌러도 청구서 행 잠금으로 한 번만 결제된다.
     """
+    # 공연 → 청구서 순서로 잠근다 (업체 사정 취소와 같은 순서 — 겹쳐도 교착되지 않는다)
+    perf_id = db.scalar(select(Order.performance_id).where(Order.id == order_id))
+    if perf_id is not None:
+        db.get(Performance, perf_id, with_for_update=True)
     order = db.get(Order, order_id, with_for_update=True)
     if order is None or db.get(Performance, order.performance_id).user_id != user.id:
         raise not_found()
