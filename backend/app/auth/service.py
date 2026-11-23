@@ -90,6 +90,7 @@ def social_user(db: Session, profile: SocialProfile) -> User | None:
     """AC-F1-04·10: 소셜 연결은 (provider, 고유 식별값)으로만 찾는다. 같은 이메일 계정이 있어도 합치지 않는다.
 
     연결이 없으면 None (→ 추가 정보 화면). 탈퇴 계정은 이메일 로그인과 같은 401, 정지 계정은 403.
+    연결이 없는데 같은 이메일로 가입한 계정이 있으면 EMAIL_TAKEN — 콜백은 /login?social=failed 로 보낸다 (계약서 2.1).
     """
     user = db.scalar(
         select(User)
@@ -97,6 +98,8 @@ def social_user(db: Session, profile: SocialProfile) -> User | None:
         .where(SocialAccount.provider == profile.provider, SocialAccount.provider_user_id == profile.provider_user_id)
     )
     if user is None:
+        if profile.email and db.scalar(select(User.id).where(User.email == normalize_email(profile.email))) is not None:
+            raise _email_taken()
         return None
     if user.status == "WITHDRAWN":
         raise _bad_login()
@@ -132,7 +135,7 @@ def social_complete(db: Session, profile: SocialProfile, body: SocialCompleteIn,
 
 
 def _already_linked() -> AppError:
-    return AppError(409, "INVALID_STATE", "이미 가입된 소셜 계정이에요. 다시 로그인해 주세요.")
+    return AppError(409, "SOCIAL_ALREADY_LINKED", "이미 가입된 소셜 계정이에요. 다시 로그인해 주세요.")
 
 
 def _add_user(db: Session, body: SocialCompleteIn, *, password: str | None, social: bool, now: datetime) -> User:

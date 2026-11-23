@@ -172,6 +172,11 @@ def _callback(
     return response
 
 
+def _signup_expired() -> AppError:
+    """계약서 2.1: signup_token 쿠키가 없거나 10분이 지남."""
+    return AppError(401, "SOCIAL_SIGNUP_EXPIRED", "간편 가입 시간이 지났어요. 다시 로그인해 주세요.")
+
+
 def _social_failed() -> RedirectResponse:
     response = RedirectResponse(SOCIAL_FAILED_PAGE, status_code=status.HTTP_302_FOUND)
     clear_social_cookie(response, STATE_COOKIE)
@@ -214,10 +219,10 @@ def kakao_callback(
 
 @router.get("/social/pending", response_model=SocialPendingOut)
 def social_pending(response: Response, signup_token: str | None = Cookie(default=None)) -> SocialPendingOut:
-    """AC-F1-06: 추가 정보 화면에 미리 채울 값. signup_token 쿠키가 없거나 만료되면 401. 브라우저에 저장하지 않게 한다."""
+    """AC-F1-06: 추가 정보 화면에 미리 채울 값. signup_token 쿠키가 없거나 만료되면 401 SOCIAL_SIGNUP_EXPIRED. 브라우저에 저장하지 않게 한다."""
     claims = read_signup_token(signup_token)
     if claims is None:
-        raise unauthenticated()
+        raise _signup_expired()
     response.headers["Cache-Control"] = "no-store"
     profile = social.from_claims(claims)
     return SocialPendingOut(
@@ -241,7 +246,7 @@ def social_complete(
     """AC-F1-05·06·07·10: 추가 정보 + 우리 약관 동의 → 가입. 끝나면 signup_token 을 지우고 로그인 쿠키를 붙인다."""
     claims = read_signup_token(signup_token)
     if claims is None:
-        raise unauthenticated()
+        raise _signup_expired()
     user = service.social_complete(db, social.from_claims(claims), body, now=now)
     clear_social_cookie(response, SIGNUP_COOKIE)
     set_login_cookies(response, user.id)
