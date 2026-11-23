@@ -108,7 +108,16 @@
   --sd-logo-img: 30px;   /* 머리 로고 이미지 높이 — 메인(HomeGnb)과 안쪽(Gnb)이 같은 값 (11/23: 화면을 옮기면 헤더가 줄어 보이던 문제) */
   --sd-avatar: 48px;
   --sd-aside: 320px;
-  --sd-ad-sky: 120px;   /* 상세 화면 양쪽 세로 광고 폭 (시연용 광고 자리, 11/23) */
+  --sd-ad-sky: 140px;   /* 상세 화면 양쪽 세로 광고 폭 (시연용 광고 자리, 11/23 해원: 120 → 140) */
+  /* 시연용 광고 배너 색 (가상 업체, AdSlot.tsx 만 쓴다. 광고는 사이트 규칙의 예외라 강조색·그라데이션을 쓴다) */
+  --sd-ad-ink: #0d1117;
+  --sd-ad-yellow: #ffd23f;
+  --sd-ad-mint: #3ee6c1;
+  --sd-ad-pink: #ff4fa3;
+  --sd-ad-red: #ff3b30;
+  --sd-ad-cream: #f6efe2;
+  --sd-ad-gold: #c9a227;
+  --sd-ad-navy: #16325c;
   --sd-ad-gap: 20px;    /* 세로 광고와 본문 상자 사이 */
 
   /* 안쪽 화면 */
