@@ -341,6 +341,31 @@ describe("대화방", () => {
     expect(within(panel).queryByRole("button", { name: "채팅 시작" })).not.toBeInTheDocument();
   });
 
+  it("AC-F3-06 업체가 시작 전 방을 열어 둔 채 WebSocket 으로 CHAT_STARTED 알림이 오면 새로고침 없이 입력창이 열린다", async () => {
+    const routes: Record<string, Reply> = {
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/chat-rooms": { status: 200, body: [room(34, "가을밤밴드", 80, null, { startedAt: null })] },
+      "GET /api/v1/chat-rooms/34/messages": { status: 200, body: { messages: [msg(80, null, null, { type: "QUOTE", refId: 400 })], partnerLastReadMessageId: null } },
+      "POST /api/v1/chat-rooms/34/read": { status: 204 },
+    };
+    mockServer(routes);
+    renderAt("/faq");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
+    const panel = screen.getByRole("dialog", { name: "채팅" });
+    await user.click(await within(panel).findByText("가을밤밴드"));
+    await within(panel).findByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.");
+
+    routes["GET /api/v1/chat-rooms"] = { status: 200, body: [room(34, "가을밤밴드", 80, null, { startedAt: "2026-11-13T14:00:00+09:00" })] };
+    lastSocket().open();
+    lastSocket().emit("notification", {
+      id: 501, type: "CHAT_STARTED", category: "QUOTE_CHAT", title: "가을밤밴드님이 채팅을 시작했습니다",
+      body: "가을밤 공연 · 장비", link: "/chats/34", createdAt: "2026-11-13T14:00:00+09:00",
+    });
+    expect(await within(panel).findByRole("textbox", { name: "메시지" })).toBeInTheDocument();
+    expect(within(panel).queryByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).not.toBeInTheDocument();
+  });
+
   it("AC-F3-08 방을 열면 읽음을 보내고, 글을 보내면 말풍선이 생기고, WebSocket 으로 온 메시지·읽음이 새로고침 없이 반영된다", async () => {
     const calls = mockServer({
       ...AS_USER,
