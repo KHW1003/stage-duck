@@ -75,6 +75,8 @@ def test_detail_counts_views_and_links_prev_next(client, db, clock):
 
     assert out["viewCount"] == 2
     assert (out["prevId"], out["nextId"]) == (first, third)
+    first_title = client.get(f"/api/v1/free-posts/{first}").json()["title"]
+    assert out["prevTitle"] == first_title and out["nextTitle"]  # 화면이 "다음 글 보기" 대신 제목을 보여 준다
 
 
 # ---- AC-F4-13 말머리 필터·정렬·검색 ---------------------------------------------------------

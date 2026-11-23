@@ -23,7 +23,7 @@ function post(over: Partial<FreePost> = {}): FreePost {
   return {
     id: 9, category: "QUESTION", title: "리허설 질문", author: { name: "광주밴드", kind: "USER" }, viewCount: 10,
     commentCount: 2, helpfulCount: 4, hasPhotos: false, createdAt: "2026-11-16T14:20:00", body: "몇 시간 전에?",
-    photoIds: [], status: "ACTIVE", blindReason: null, prevId: null, nextId: null, isMine: false, updatedAt: "2026-11-16T14:20:00",
+    photoIds: [], status: "ACTIVE", blindReason: null, prevId: null, nextId: null, prevTitle: null, nextTitle: null, isMine: false, updatedAt: "2026-11-16T14:20:00",
     comments: [comment({ replies: [comment({ id: 32, author: { name: "광주밴드", kind: "USER" }, body: "감사해요!", isPostAuthor: true })] })],
     myHelpful: false, bookmarked: false, ...over,
   };
