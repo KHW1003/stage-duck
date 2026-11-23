@@ -3,7 +3,7 @@
  * 가입되면 바로 로그인되고, 서버가 준 첫 화면(입점 신청)으로 간다.
  */
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageTop } from "../shared/layout/PageTop";
 import { Button, ButtonLink } from "../shared/ui/Button";
 import { ApiError } from "../shared/api/client";
@@ -12,6 +12,8 @@ import { Field, Input } from "../shared/ui/Field";
 import { useSupplierSignup } from "../features/supplier/api";
 import { emailError, passwordError, phoneError } from "../features/auth/rules";
 import { useDupCheck } from "../features/auth/useDupCheck";
+import { TermsModal } from "../features/support/TermsModal";
+import type { TermsType } from "../features/support/terms";
 import { Steps } from "../features/supplier/Steps";
 import styles from "../features/supplier/Supplier.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -32,6 +34,8 @@ export function SupplierSignupPage() {
   const [form, setForm] = useState(EMPTY);
   const [checked, setChecked] = useState(false);
   const dup = useDupCheck();
+  /** 약관 [보기]: 화면을 옮기지 않고 모달로 (옮기면 입력이 지워진다) */
+  const [reading, setReading] = useState<{ type: TermsType; label: string; key: BoxKey } | null>(null);
   const local = checked ? localErrors(form) : {};
   const emailDup = dup.result("email", form.email);
   const err = (field: string) =>
@@ -108,12 +112,16 @@ export function SupplierSignupPage() {
             <label className={styles.check}>
               <input type="checkbox" {...box("service")} />
               STAGE DUCK 이용약관 (필수)
-              <Link to="/terms/supplier">보기</Link>
+              <button className="link" type="button" onClick={() => setReading({ type: "supplier", label: "STAGE DUCK 이용약관 (필수)", key: "service" })}>
+                보기
+              </button>
             </label>
             <label className={styles.check}>
               <input type="checkbox" {...box("privacy")} />
               개인정보 수집·이용 (필수)
-              <Link to="/terms/privacy">보기</Link>
+              <button className="link" type="button" onClick={() => setReading({ type: "privacy", label: "개인정보 수집·이용 (필수)", key: "privacy" })}>
+                보기
+              </button>
             </label>
             <label className={styles.check}>
               <input type="checkbox" {...box("marketing")} />
@@ -132,6 +140,14 @@ export function SupplierSignupPage() {
           </div>
         </form>
       </div>
+      {reading && (
+        <TermsModal
+          type={reading.type}
+          label={reading.label}
+          onClose={() => setReading(null)}
+          onAgree={() => setForm((f) => ({ ...f, [reading.key]: true }))}
+        />
+      )}
     </>
   );
 }
