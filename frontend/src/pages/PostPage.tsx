@@ -84,7 +84,7 @@ export function PostPage() {
         </li>
       </ol>
       <div className={styles.withAside}>
-        <article className={styles.card}>
+        <article className={styles.detailCard}>
           {/* 왼쪽 여백의 세로 광고 (시연용 더미, 여백이 모자라면 숨김). 오른쪽은 업체 칸 아래 네모 광고 */}
           <div className={`${styles.adRail} ${styles.adLeft}`}>
             <AdSlot kind="sky" seed={p.id} className={styles.adSticky} />

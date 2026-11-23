@@ -105,14 +105,14 @@
 
 /* ── 상세 화면 상자 + 양쪽 광고 (11/23 해원: 주변에 붕 떠 보여서) ──
    본문을 아주 옅은 선 상자로, 왼쪽 여백에 세로 광고, 오른쪽은 업체 칸 아래 네모 광고 (시연용 더미) */
-.card { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.detailCard { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
 .adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
 .adLeft { right: calc(100% + var(--sd-ad-gap)); }
 .adSticky { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
 .sideAd { margin-top: 16px; }
 @container (max-width: 1160px) { .adRail { display: none; } }
 @media (max-width: 760px) {
-  .card { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
+  .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
 /* 오른쪽 칸: 업체 상자 + 네모 광고를 한 칸으로 묶어 함께 따라오게 (sticky 를 상자에서 칸으로 옮김) */
 .sideCol { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
