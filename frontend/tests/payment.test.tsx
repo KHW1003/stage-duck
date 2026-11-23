@@ -82,7 +82,7 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     expect(within(box).getByText("1,942,500")).toBeInTheDocument();
     expect(screen.getByText("업체 C")).toBeInTheDocument();
     expect(screen.getByText("건너뜀")).toBeInTheDocument();
-    expect(screen.getByText("테스트 결제 — 실제 청구되지 않습니다")).toBeInTheDocument();
+    expect(screen.getByText("테스트 결제라 실제로 청구되지 않습니다")).toBeInTheDocument();
     const penaltyTable = screen.getByRole("table", { name: "취소 시점별 위약금" });
     expect(within(penaltyTable).getByRole("row", { name: /공연 1일 전 70%/ })).toBeInTheDocument();
     expect(within(penaltyTable).getByRole("row", { name: /결제 전.*없음/ })).toBeInTheDocument();

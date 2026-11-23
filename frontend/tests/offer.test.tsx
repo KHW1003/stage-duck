@@ -6,6 +6,7 @@ import { AppRoutes } from "../src/App";
 import type { OfferOut, ReceivedOffer, StageOffers } from "../src/features/offer/api";
 import { FavoriteSuggest } from "../src/features/offer/FavoriteSuggest";
 import type { Me, PerformanceSummary, PrPost } from "../src/shared/api/types";
+import { optionNames } from "./pickOption";
 
 /** 견적 요청(직접 오퍼)·관심 업체 화면 (#32, AC-F3-16~19). 화면 문구는 "견적 요청" (11/19 팀 결정) */
 
@@ -91,7 +92,7 @@ describe("소개 글에서 견적 요청하기 (AC-F3-16)", () => {
     renderAt("/board/3");
     const box = await screen.findByRole("group", { name: "견적 요청하기" });
     const select = await within(box).findByLabelText("내 공연");
-    expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual(["가을밤 밴드 공연 · 장비 단계"]);
+    expect(await optionNames(select)).toEqual(["가을밤 밴드 공연 · 장비 단계"]);
     expect(await within(box).findByText("0 / 10곳")).toBeInTheDocument();
 
     await user.click(within(box).getByRole("button", { name: "견적 요청하기" }));

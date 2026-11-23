@@ -20,7 +20,7 @@ import { TransactionTermsModal } from "./TransactionTermsModal";
 import "./payment.css";
 
 const STAGE_ICON: Record<StageType, KitIconName> = { VENUE: "venue", EQUIPMENT: "speaker", ENGINEER: "engineer" };
-export const TEST_PAY = "테스트 결제 — 실제 청구되지 않습니다";
+export const TEST_PAY = "테스트 결제라 실제로 청구되지 않습니다";
 
 const PAYMENT_AGREEMENTS = {
   rules: {

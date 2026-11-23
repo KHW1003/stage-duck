@@ -13,6 +13,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Ico } from "./Ico";
+import { Select } from "./Select";
 import s from "./DateField.module.css";
 
 interface Props {
@@ -159,11 +160,14 @@ export function DateField({ value, onChange, id, min, max, placeholder = "YYYY-M
     if (!open) return;
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node;
+      if (t instanceof Element && t.closest('[role="listbox"]')) return; // 연·월 Select 목록 (body 에 뜬다)
       if (!pop.current?.contains(t) && !box.current?.contains(t)) close(false);
     };
     const onResize = () => close(false);
     const onScroll = (e: Event) => {
-      if (!pop.current?.contains(e.target as Node)) close(false);
+      const t = e.target as Node;
+      if (t instanceof Element && t.closest('[role="listbox"]')) return;
+      if (!pop.current?.contains(t)) close(false);
     };
     document.addEventListener("mousedown", onDown);
     window.addEventListener("resize", onResize);
@@ -275,20 +279,26 @@ export function DateField({ value, onChange, id, min, max, placeholder = "YYYY-M
               <button type="button" className={s.nav} aria-label="이전 달" disabled={!prevOk} onClick={() => setYM(y, m - 1)}>
                 <Ico name="left" sm />
               </button>
-              <select className={s.ym} aria-label="연도" value={y} onChange={(e) => setYM(Number(e.target.value), m)}>
-                {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map((yy) => (
-                  <option key={yy} value={yy}>
-                    {yy}년
-                  </option>
-                ))}
-              </select>
-              <select className={s.ym} aria-label="월" value={m} onChange={(e) => setYM(y, Number(e.target.value))}>
-                {Array.from({ length: 12 }, (_, i) => i).map((mm) => (
-                  <option key={mm} value={mm} disabled={(minD && new Date(y, mm + 1, 0) < minD) || (maxD && new Date(y, mm, 1) > maxD) || false}>
-                    {mm + 1}월
-                  </option>
-                ))}
-              </select>
+              <Select
+                size="sm"
+                className={`${s.ym} ${s.ymYear}`}
+                aria-label="연도"
+                value={String(y)}
+                options={Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map((yy) => ({ value: String(yy), label: `${yy}년` }))}
+                onChange={(v) => setYM(Number(v), m)}
+              />
+              <Select
+                size="sm"
+                className={s.ym}
+                aria-label="월"
+                value={String(m)}
+                options={Array.from({ length: 12 }, (_, i) => i).map((mm) => ({
+                  value: String(mm),
+                  label: `${mm + 1}월`,
+                  disabled: Boolean((minD && new Date(y, mm + 1, 0) < minD) || (maxD && new Date(y, mm, 1) > maxD)),
+                }))}
+                onChange={(v) => setYM(y, Number(v))}
+              />
               <button type="button" className={s.nav} aria-label="다음 달" disabled={!nextOk} onClick={() => setYM(y, m + 1)}>
                 <Ico name="right" sm />
               </button>

@@ -88,7 +88,7 @@ export function CancelPage() {
         meta={p ? [p.title, dateLabel(p.showDate)] : undefined}
       />
       <main className="container container--narrow main">
-        <p className="test-pay"><Ico name="info" sm />테스트 결제 — 실제 청구되지 않습니다. 환불·위약금도 모의로 처리됩니다.</p>
+        <p className="test-pay"><Ico name="info" sm />테스트 결제라 실제로 청구되지 않습니다. 환불·위약금도 모의로 처리됩니다.</p>
         {done ? (
           <section className="result mt-40" role="status">
             <span className="result__icon"><Ico name="pass" /></span>
@@ -120,7 +120,7 @@ export function CancelPage() {
               {q.phase === "BEFORE_PAYMENT" ? (
                 <>
                   <table className="info-table"><tbody>
-                    <tr><th>취소 수수료</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았습니다</span></td></tr>
+                    <tr><th>취소 위약금</th><td className="num strong">0원 <span className="muted small">· 아직 결제하지 않았습니다</span></td></tr>
                   </tbody></table>
                   <p className="field__hint mt-8">채팅을 시작한 공연을 취소하면 반려 1회로 기록됩니다. 반려가 5회 쌓이면 새 공고는 24시간 후에 올릴 수 있습니다.</p>
                 </>

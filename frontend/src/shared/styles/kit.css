@@ -3,7 +3,6 @@
    화면 JSX 는 목업과 같은 className 문자열을 쓴다: className="btn btn--primary" */
 
 /* ── base.css ── */
-[data-sd-area="content"] :focus-visible { outline: 3px solid var(--sd-focus); outline-offset: 2px; }
 .num { font-variant-numeric: tabular-nums; }
 .muted { color: var(--sd-muted); }
 .strong { font-weight: 700; }
@@ -46,6 +45,7 @@
 .page-top__inner { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding-top: 28px; padding-bottom: 28px; }
 .page-top__crumb { display: flex; gap: 6px; margin-bottom: 8px; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .page-top__crumb li + li::before { content: "›"; margin-right: 6px; color: var(--sd-line-strong); }
+.page-top__crumb a { display: inline-block; padding-block: 14px; margin-block: -14px; } /* 누르는 영역 44px, 줄 높이는 그대로 (디자인 검수 11/23) */
 .page-top__crumb a:hover { color: var(--sd-ink); text-decoration: underline; }
 .page-top h1 { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.35; }
 .page-top__desc { margin-top: 4px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
@@ -180,7 +180,7 @@ button.link { border: 0; background: none; padding: 0; cursor: pointer; }
 .tabs--box [aria-selected="true"] { background: var(--sd-bg); border: 1px solid var(--sd-rule); border-bottom-color: var(--sd-bg); margin: 0 -1px -1px; }
 .tabs--box [aria-selected="true"]::after { display: none; }
 .filters { display: flex; gap: 0; }
-.filters button { height: 34px; padding: 0 14px; border: 1px solid var(--sd-line-strong); background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
+.filters button { height: var(--sd-touch); padding: 0 14px; border: 1px solid var(--sd-line-strong); background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
 .filters button + button { margin-left: -1px; }
 .filters button:first-child { border-radius: var(--sd-r-btn) 0 0 var(--sd-r-btn); }
 .filters button:last-child { border-radius: 0 var(--sd-r-btn) var(--sd-r-btn) 0; }
@@ -284,7 +284,7 @@ a.list__item:hover, .list__item.is-link:hover { background: var(--sd-hover); }
 .modal__lead { font-size: 16px; font-weight: 700; line-height: 1.5; }
 .modal__lead + p { margin-top: 6px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
 .modal__foot { display: flex; gap: 8px; padding: 0 24px 24px; }
-.modal__foot > .btn { flex: 1; height: 50px; }
+.modal__foot > .btn { flex: 1; height: var(--sd-button-lg); }
 @keyframes sd-pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .layer--drawer { place-items: stretch end; padding: 0; }
 .drawer { display: flex; flex-direction: column; width: min(100%, var(--w, 420px)); height: 100%; background: var(--sd-bg); animation: sd-slide .2s ease-out; }
@@ -635,8 +635,17 @@ a.list__item:hover, .list__item.is-link:hover { background: var(--sd-hover); }
 .sel-list__opt.is-selected { color: var(--sd-ink); font-weight: 700; }
 .sel-list__opt.is-selected::after { content: ""; position: absolute; right: 14px; top: 50%; width: 5px; height: 10px; margin-top: -7px; border: solid var(--sd-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .sel-list__opt[aria-disabled="true"] { color: var(--sd-photo-text, #b0b6be); cursor: default; background: transparent; }
-.input:focus, .select:focus, .textarea:focus, .select.is-open { outline: 3px solid rgba(32, 46, 61, .08); outline-offset: 0; border-color: var(--sd-ink); }
+.input:focus, .select:focus, .textarea:focus, .select.is-open { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
 .select.is-open { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23202e3d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 15 6-6 6 6'/%3E%3C/svg%3E"); }
 [data-sd-area="content"] :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
-.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: 3px solid rgba(32, 46, 61, .08); outline-offset: 0; }
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; }
 html { scrollbar-gutter: stable; } /* refine.css: 긴 화면·짧은 화면을 오가도 내용이 좌우로 움직이지 않게 */
+
+/* ── 디자인 검수 반영 (2026-11-23, exports/design-review 0-공통부품.md) ──
+   - 주인 없는 기본 글자 크기(<small> 11.67px, <h3> 16.38px)를 토큰으로
+   - 작은 버튼(36px)은 표·카드 안에서만. 좁은 화면에서는 모두 44px */
+small { font-size: var(--sd-text-small); }
+h3 { font-size: var(--sd-text-card); }
+@media (max-width: 760px) {
+  .btn--sm { min-height: var(--sd-touch); }
+}

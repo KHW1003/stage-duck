@@ -18,6 +18,7 @@ import { Input } from "../shared/ui/Field";
 import { Icon } from "../shared/ui/Icon";
 import { Select } from "../shared/ui/Select";
 import styles from "../features/board/Board.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const SIDO_OPTIONS = SIDO.map((s) => ({ value: s, label: s }));
 
@@ -77,6 +78,7 @@ function Row(props: {
 }
 
 export function MyPostPage() {
+  usePageMeta("내 소개 글");
   const navigate = useNavigate();
   const application = useApplication();
   const create = useCreatePrPost();

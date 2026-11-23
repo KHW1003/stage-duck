@@ -23,6 +23,7 @@ import { QuoteForm } from "../features/quote/QuoteForm";
 import { useSupplierTermsReview } from "../features/supplier/termsReview";
 import { SupplierTermsFlow } from "./SupplierTermsReview";
 import styles from "../features/quote/Quote.module.css";
+import { usePageMeta } from "../features/seo/usePageMeta";
 
 const LIST_PATH = "/supplier/postings";
 
@@ -161,6 +162,7 @@ function Writer({ stageId, again }: { stageId: number; again: string }) {
 }
 
 export function QuotePage() {
+  usePageMeta("견적서 쓰기");
   const stageId = Number(useParams().stageId);
   const again = useSearchParams()[0].get("new") ?? "";
   // [다른 견적서 쓰기]로 ?new= 가 바뀌면 양식·보낸 결과를 새로 시작한다 (?chat= 은 그대로 둔다)

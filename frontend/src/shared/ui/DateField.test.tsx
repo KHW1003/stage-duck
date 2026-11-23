@@ -39,12 +39,13 @@ describe("DateField", () => {
   it("연도 목록은 min~max 안의 네 자리 연도만, 연도를 바꾸면 그 해 달력이 보인다", () => {
     render(<Harness min="1926-11-20" max="2026-11-20" initialMonth="2001-11-20" />);
     fireEvent.click(screen.getByRole("button", { name: "달력 열기" }));
-    const year = screen.getByRole("combobox", { name: "연도" }) as HTMLSelectElement;
-    const years = Array.from(year.options).map((o) => Number(o.value));
+    const year = screen.getByRole("combobox", { name: "연도" });
+    expect(year).toHaveTextContent("2001년");
+    fireEvent.click(year);
+    const years = screen.getAllByRole("option").map((o) => parseInt(o.textContent ?? "", 10));
     expect(Math.max(...years)).toBe(2026);
     expect(Math.min(...years)).toBe(1926);
-    expect(year.value).toBe("2001");
-    fireEvent.change(year, { target: { value: "1995" } });
+    fireEvent.click(screen.getByRole("option", { name: "1995년" }));
     fireEvent.click(screen.getByRole("button", { name: /^1995년 11월 3일/ }));
     expect(screen.getByTestId("v").textContent).toBe("1995-11-03");
   });

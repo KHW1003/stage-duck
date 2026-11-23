@@ -23,6 +23,7 @@ import { Ico } from "../shared/ui/Ico";
 import { TermsModal } from "../features/support/TermsModal";
 import type { TermsType } from "../features/support/terms";
 import "./signup.css";
+import { Select } from "../shared/ui/Select";
 
 const PURPOSES = ["밴드 공연", "연극·뮤지컬", "강연·행사", "종교 행사", "기타"];
 
@@ -337,11 +338,13 @@ function SignupForm({ initial, provider }: { initial: Form; provider?: Provider 
                 />
               </Row>
               <Row label="가입 목적" req={false}>
-                <select className="select signup__short" value={form.purpose} onChange={set("purpose")} aria-label="가입 목적">
-                  {PURPOSES.map((p) => (
-                    <option key={p}>{p}</option>
-                  ))}
-                </select>
+                <Select
+                  className="signup__short"
+                  aria-label="가입 목적"
+                  value={form.purpose}
+                  options={PURPOSES.map((p) => ({ value: p, label: p }))}
+                  onChange={(v) => set("purpose")({ target: { value: v } })}
+                />
               </Row>
             </div>
           </section>
