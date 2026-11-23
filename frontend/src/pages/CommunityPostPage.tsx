@@ -17,6 +17,7 @@ import { ReportModal } from "../features/community/ReportModal";
 import { CATEGORY_LABEL, authorLabel, loginPath, longDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { AdSlot } from "../shared/ui/AdSlot";
 
 export function CommunityPostPage() {
   const id = Number(useParams().id);
@@ -38,7 +39,14 @@ export function CommunityPostPage() {
 
   return (
     <div className={`sd-container ${styles.wrap}`}>
-      <article className={styles.narrow}>
+      <article className={`${styles.narrow} ${styles.card}`}>
+        {/* 양쪽 여백의 세로 광고 (시연용 더미, 여백이 모자라면 숨김) */}
+        <div className={`${styles.adRail} ${styles.adLeft}`} aria-hidden="false">
+          <AdSlot kind="sky" seed={p.id} className={styles.adSticky} />
+        </div>
+        <div className={`${styles.adRail} ${styles.adRight}`}>
+          <AdSlot kind="sky" seed={p.id + 1} className={styles.adSticky} />
+        </div>
         <header className={styles.postHead}>
           <Link to="/community" className={styles.postCat}>
             커뮤니티 · {CATEGORY_LABEL[p.category]}

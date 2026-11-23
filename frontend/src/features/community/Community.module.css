@@ -137,3 +137,17 @@
 .commentForm { padding: 24px 0; }
 .near { margin-top: 32px; }
 .actions { margin-top: 32px; }
+
+/* ── 상세 화면 상자 + 양쪽 광고 (11/23 해원: 주변에 붕 떠 보여서) ──
+   본문을 아주 옅은 선 상자로 감싸고, 상자 양쪽 여백에 세로 광고(시연용 더미)를 둔다.
+   여백(칸 안쪽 폭 - 문서 폭)/2 가 광고 폭 + 간격보다 좁으면 광고를 숨긴다 (컨테이너 쿼리) */
+.wrap { container-type: inline-size; }
+.card { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
+.adLeft { right: calc(100% + var(--sd-ad-gap)); }
+.adRight { left: calc(100% + var(--sd-ad-gap)); }
+.adSticky { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
+@container (max-width: 1160px) { .adRail { display: none; } }
+@media (max-width: 760px) {
+  .card { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
+}
