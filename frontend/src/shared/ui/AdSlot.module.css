@@ -1,8 +1,7 @@
 /* 시연용 광고 배너 (AdSlot.tsx). 가상 업체 6곳, 사진 배경 + 업체마다 다른 꾸밈.
    광고는 남의 콘텐츠라 사이트 규칙(그라데이션·그림자·강조색 하나) 예외로 둔다 (11/23 해원). 색은 tokens.css 의 --sd-ad-* 만 */
 .ad { position: relative; display: block; overflow: hidden; border-radius: var(--sd-r-box); background: var(--sd-ad-ink); color: var(--sd-on-blue); isolation: isolate; }
-.bg { position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center; transition: transform .2s ease; }
-.ad:hover .bg { transform: scale(1.04); }
+.bg { position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center; }
 .shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, color-mix(in srgb, var(--sd-ad-ink) 20%, transparent) 0%, color-mix(in srgb, var(--sd-ad-ink) 55%, transparent) 45%, color-mix(in srgb, var(--sd-ad-ink) 92%, transparent) 100%); }
 .body { position: relative; display: flex; flex-direction: column; height: 100%; gap: 10px; }
 
@@ -15,8 +14,8 @@
 .note { margin: 0; font-size: var(--sd-text-tiny); line-height: 1.4; opacity: .65; word-break: keep-all; }
 
 /* 세로 배너 140×600 */
-.sky { width: var(--sd-ad-sky); height: 600px; padding: 22px 12px 14px; }
-.sky .head { margin-top: auto; font-size: 22px; }
+.sky { width: var(--sd-ad-sky); height: 600px; padding: 24px 16px 16px; }
+.sky .head { margin-top: auto; font-size: 26px; }
 .sky .cta { margin-top: 6px; }
 /* 네모 배너 320×250: 왼쪽에 글, 사진은 오른쪽이 보이게 */
 .rect { width: 100%; height: 250px; padding: 20px 20px 14px; }
@@ -101,7 +100,5 @@
 .rect .stamp { top: auto; bottom: 20px; left: auto; right: 24px; margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bg { transition: none; }
-  .ad:hover .bg { transform: none; }
   .rec i { animation: none; }
 }
