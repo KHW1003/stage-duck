@@ -1,0 +1,45 @@
+/* 공연 후기·평점 (specs/reviews.md) */
+.star { display: block; width: 1em; height: 1em; }
+.stars { display: inline-flex; gap: 2px; color: #f5a524; vertical-align: middle; }
+.stars--sm { font-size: 14px; }
+.stars--md { font-size: 18px; }
+.stars--lg { font-size: 22px; }
+
+.rating-badge { display: inline-flex; align-items: center; gap: 3px; font-size: var(--sd-text-meta); color: var(--sd-muted); white-space: nowrap; }
+.rating-badge .star { width: 13px; height: 13px; color: #f5a524; }
+.rating-badge b { color: var(--sd-ink); }
+
+/* 업체 프로필: 요약 */
+.review-sum { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: center; padding: 20px 24px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); }
+.review-sum__avg { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.review-sum__avg > b { font-size: 40px; line-height: 1; }
+.review-sum__dist { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--sd-text-desc); }
+.review-sum__dist li { display: grid; grid-template-columns: 32px minmax(0, 1fr) 28px; gap: 10px; align-items: center; }
+.review-sum__bar { height: 8px; border-radius: 999px; background: var(--sd-band); overflow: hidden; }
+.review-sum__bar i { display: block; height: 100%; border-radius: inherit; background: #f5a524; }
+
+.review-list { margin: 16px 0 0; padding: 0; list-style: none; }
+.review-list li { padding: 16px 0; border-bottom: 1px solid var(--sd-line); }
+.review-list__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--sd-text-desc); }
+.review-list p { margin: 8px 0 0; line-height: 1.6; white-space: pre-line; }
+
+/* 내 공연: 쓰기 */
+.review-targets { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.review-targets > li { padding: 18px 20px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); }
+.review-targets__who { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.review-targets__who a { color: inherit; }
+.review-write { display: grid; gap: 10px; }
+.review-write__foot { display: flex; align-items: center; justify-content: space-between; font-size: var(--sd-text-meta); }
+.review-done p { margin: 6px 0 10px; line-height: 1.6; }
+
+.star-picker { display: flex; align-items: center; gap: 2px; color: #f5a524; }
+.star-picker label { display: grid; place-items: center; width: 36px; height: 36px; cursor: pointer; font-size: 26px; color: var(--sd-line-strong); transition: transform .1s; }
+.star-picker label.is-on { color: #f5a524; }
+.star-picker label:hover { transform: scale(1.12); }
+.star-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.star-picker label:has(input:focus-visible) { outline: 2px solid var(--sd-ink); outline-offset: 2px; border-radius: 6px; }
+.star-picker__word { margin-left: 8px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+
+@media (max-width: 560px) {
+  .review-sum { grid-template-columns: 1fr; gap: 16px; padding: 16px; }
+}

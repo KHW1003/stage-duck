@@ -5,6 +5,8 @@
  */
 import { Link, useSearchParams } from "react-router-dom";
 import { SIDO } from "../features/request/codes";
+import { useReviewSummaries, type ReviewSummary } from "../features/review/api";
+import { RatingBadge } from "../features/review/Stars";
 import { boardQuery, usePrPosts, type BoardParams } from "../features/board/api";
 import { PR_CATEGORIES, PR_CATEGORY_LABEL, isPrCategory, monthDay } from "../features/board/labels";
 import type { PrPostItem } from "../shared/api/types";
@@ -26,7 +28,7 @@ function readParams(qs: URLSearchParams): BoardParams {
   };
 }
 
-function PostCard({ post }: { post: PrPostItem }) {
+function PostCard({ post, rating }: { post: PrPostItem; rating?: ReviewSummary }) {
   return (
     <Link className={styles.card} to={`/board/${post.id}`}>
       {post.thumbUrl ? (
@@ -36,6 +38,12 @@ function PostCard({ post }: { post: PrPostItem }) {
       )}
       <p className={styles.cardMeta}>
         {post.companyName} · {post.sido}
+        {rating && (
+          <>
+            {" · "}
+            <RatingBadge average={rating.average} count={rating.count} />
+          </>
+        )}
       </p>
       <p className={styles.cardTitle}>
         <span className={styles.prefix}>{PR_CATEGORY_LABEL[post.category]}</span>
@@ -53,6 +61,7 @@ export function BoardPage() {
   const [qs, setQs] = useSearchParams();
   const params = readParams(qs);
   const posts = usePrPosts(params);
+  const ratings = useReviewSummaries(posts.data?.items.map((p) => p.supplierId) ?? []);
   const pages = posts.data ? Math.max(1, Math.ceil(posts.data.total / posts.data.size)) : 1;
   const categoryLabel = params.category ? PR_CATEGORY_LABEL[params.category] : "전체";
 
@@ -107,7 +116,7 @@ export function BoardPage() {
         {posts.data && posts.data.items.length > 0 && (
           <div className={styles.grid}>
             {posts.data.items.map((p) => (
-              <PostCard key={p.id} post={p} />
+              <PostCard key={p.id} post={p} rating={ratings.get(p.supplierId)} />
             ))}
           </div>
         )}
