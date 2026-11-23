@@ -348,6 +348,9 @@ def invalidate_pending_cards(db: Session, stage_id: int) -> None:
     """[약속 3 → 2] 이 단계의 대기(PENDING) 견적 내역 확인 카드를 모두 INVALIDATED 로 바꾼다 (CLAUDE.md 3장 6).
 
     쓰는 곳: 2번 해원 #37 요청서 수정(새 버전) — 부르는 쪽 트랜잭션 안에서 실행되고 커밋하지 않는다.
-    구현: 3번 채은 #43 (확인 카드 테이블을 만들 때). 그 전까지는 아무 일도 하지 않는다.
+    커밋되면 그 방 참여자에게 WS confirm.updated (AC-F2-13, 구현은 confirm.service.invalidate_for_stage).
     """
-    pass
+    from app.confirm.service import invalidate_for_stage  # confirm 이 chat 을 import 하므로 여기서 (순환 피함)
+
+    # now 는 기록용 — decided_at 에만 쓴다. 약속 모양(db, stage_id)에 now 인자가 없어서 여기서 한 번만 읽는다.
+    invalidate_for_stage(db, stage_id, now=datetime.now())
