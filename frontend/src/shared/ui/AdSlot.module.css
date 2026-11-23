@@ -1,0 +1,9 @@
+/* 광고 자리 (AdSlot.tsx). 그림자·그라데이션 없이 옅은 바탕 + 옅은 선 (DESIGN.md 8장) */
+.ad { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-th); color: var(--sd-muted); }
+.sky { width: var(--sd-ad-sky); min-height: 600px; align-items: flex-start; }
+.rect { width: 100%; min-height: 250px; }
+.tag { align-self: flex-start; padding: 0 6px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); background: var(--sd-bg); font-size: var(--sd-text-meta); line-height: 18px; }
+.icon { display: grid; place-items: center; width: var(--sd-touch); height: var(--sd-touch); margin-top: 8px; border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); }
+.title { color: var(--sd-ink); font-size: var(--sd-text-body); line-height: 1.4; word-break: keep-all; }
+.desc { margin: 0; font-size: var(--sd-text-small); line-height: 1.6; word-break: keep-all; }
+.note { margin: auto 0 0; font-size: var(--sd-text-meta); color: var(--sd-photo-text); line-height: 1.5; word-break: keep-all; }
