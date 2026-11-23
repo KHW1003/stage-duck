@@ -17,6 +17,8 @@ import { KitPageTop } from "../shared/layout/KitPageTop";
 import { DateField, yearsFromNow } from "../shared/ui/DateField";
 import { DoneView } from "../shared/ui/DoneView";
 import { Ico } from "../shared/ui/Ico";
+import { TermsModal } from "../features/support/TermsModal";
+import type { TermsType } from "../features/support/terms";
 import "./signup.css";
 
 const PURPOSES = ["밴드 공연", "연극·뮤지컬", "강연·행사", "종교 행사", "기타"];
@@ -79,6 +81,8 @@ export function SignupPage() {
   const [tried, setTried] = useState(false);
   const [terms, setTerms] = useState({ service: false, privacy: false, marketing: false });
   const dupCheck = useDupCheck();
+  /** 약관 [보기]: 화면을 옮기지 않고 모달로 (옮기면 입력이 지워진다) */
+  const [reading, setReading] = useState<{ type: TermsType; label: string; key: "service" | "privacy" | "marketing" } | null>(null);
   const [done, setDone] = useState<{ nickname: string; email: string } | null>(null);
 
   const set = (k: Field) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -299,9 +303,9 @@ export function SignupPage() {
                   <input type="checkbox" checked={terms.service} onChange={(e) => setTerms((t) => ({ ...t, service: e.target.checked }))} />
                   STAGE DUCK 이용약관 (필수)
                 </label>
-                <Link className="link" to="/terms/service">
+                <button className="link" type="button" onClick={() => setReading({ type: "service", label: "STAGE DUCK 이용약관 (필수)", key: "service" })}>
                   보기
-                </Link>
+                </button>
               </div>
               <div className="list__item">
                 <label className="check">
@@ -311,18 +315,18 @@ export function SignupPage() {
                     <small>이름, 전화번호, 이메일, 생년월일, 닉네임. 주소는 받지 않아요.</small>
                   </span>
                 </label>
-                <Link className="link" to="/terms/privacy">
+                <button className="link" type="button" onClick={() => setReading({ type: "privacy", label: "개인정보 수집·이용 (필수)", key: "privacy" })}>
                   보기
-                </Link>
+                </button>
               </div>
               <div className="list__item">
                 <label className="check">
                   <input type="checkbox" checked={terms.marketing} onChange={(e) => setTerms((t) => ({ ...t, marketing: e.target.checked }))} />
                   마케팅 정보 받기 (선택)
                 </label>
-                <Link className="link" to="/terms/service">
+                <button className="link" type="button" onClick={() => setReading({ type: "service", label: "마케팅 정보 받기 (선택)", key: "marketing" })}>
                   보기
-                </Link>
+                </button>
               </div>
             </div>
             {tried && !required && (
@@ -349,6 +353,14 @@ export function SignupPage() {
           </div>
         </form>
       </main>
+      {reading && (
+        <TermsModal
+          type={reading.type}
+          label={reading.label}
+          onClose={() => setReading(null)}
+          onAgree={() => setTerms((t) => ({ ...t, [reading.key]: true }))}
+        />
+      )}
     </>
   );
 }

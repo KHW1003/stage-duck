@@ -85,6 +85,7 @@
 .btns--center { justify-content: center; }
 .btns--fill > .btn { flex: 1; }
 .link { display: inline-flex; align-items: center; gap: 2px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+button.link { padding: 0; border: 0; background: none; font-family: inherit; cursor: pointer; }
 .link:hover { color: var(--sd-ink); text-decoration: underline; text-underline-offset: 3px; }
 .link--point { color: var(--sd-blue); font-weight: 600; }
 button.link { border: 0; background: none; padding: 0; cursor: pointer; }

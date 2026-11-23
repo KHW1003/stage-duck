@@ -130,6 +130,27 @@ describe("로그인 (/login)", () => {
 });
 
 describe("사용자 가입 (/signup)", () => {
+  it("약관 [보기]는 화면을 옮기지 않고 A4 모달로 열고, 넣은 값은 그대로 남는다 · [동의하고 닫기]는 체크해 준다", async () => {
+    mockServer({});
+    renderAt("/signup");
+    await userEvent.type(screen.getByLabelText("이름"), "김공연");
+    await userEvent.type(screen.getByLabelText("이메일"), "host@stageduck.test");
+    const [, privacyView] = screen.getAllByRole("button", { name: "보기" });
+    await userEvent.click(privacyView);
+    const dialog = screen.getByRole("dialog", { name: "STAGE DUCK 개인정보 처리방침" });
+    expect(screen.getByTestId("where")).toHaveTextContent("/signup"); // 화면을 옮기지 않는다
+    await userEvent.click(within(dialog).getByRole("button", { name: "개인정보 수집·이용 (필수)에 동의하고 닫기" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("이름")).toHaveValue("김공연");
+    expect(screen.getByLabelText("이메일")).toHaveValue("host@stageduck.test");
+    expect(screen.getByRole("checkbox", { name: /개인정보 수집·이용/ })).toBeChecked();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "보기" })[0]);
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /이용약관/ })).not.toBeChecked(); // 그냥 닫으면 체크하지 않는다
+  });
+
   it("[중복 확인]을 누르는 즉시 이메일이 이미 있는지 알려 주고, 칸을 고치면 문구가 사라진다", async () => {
     const calls = mockServer({ "POST /api/v1/auth/check-available": { status: 200, body: { available: false, message: "이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요." } } });
     renderAt("/signup");
