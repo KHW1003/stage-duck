@@ -5,9 +5,10 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.board.calc import has_contact_or_link
+from app.board.calc import can_bump, has_contact_or_link, next_bump_at
 from app.board.schemas import PhotoOut, PrPostIn, PrPostItemOut, PrPostListOut, PrPostOut, PrPostSavedOut
 from app.core.errors import AppError, invalid_state, not_found
+from app.core.history import record_transition
 from app.files import service as files
 from app.models.board import PrPost
 from app.models.file import StoredFile
@@ -201,3 +202,46 @@ def update_post(db: Session, user: User, post_id: int, body: PrPostIn, *, now: d
     db.commit()
     db.refresh(post)
     return _saved(db, post)
+
+
+def _own_post(db: Session, user: User, post_id: int, *, action: str) -> PrPost:
+    """본인 글을 잠가서 가져온다. 남의 글·없는 글·내린 글은 404, 정지 계정은 403 (update_post 와 같은 규칙)."""
+    supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
+    post = db.scalar(select(PrPost).where(PrPost.id == post_id).with_for_update())
+    if supplier is None or post is None or post.supplier_id != supplier.id or post.status == "DELETED":
+        raise not_found()
+    if supplier.review_status == "SUSPENDED":
+        raise AppError(403, "ACCOUNT_SUSPENDED", f"정지된 계정은 소개 글을 {action} 없어요. 고객센터로 문의해 주세요.")
+    return post
+
+
+def delete_post(db: Session, user: User, post_id: int) -> None:
+    """FR-BOARD-02: [글 내리기]. 지우지 않고 DELETED 로 바꿔 그 부문에 새 글을 쓸 수 있게 한다 (active_guard).
+
+    가려진(BLINDED) 글은 내릴 수 없다 — 내리면 "관리자가 풀기 전까지 그 부문 새 글 불가"(FR-BOARD-03)를 피해 가게 된다.
+    """
+    post = _own_post(db, user, post_id, action="내릴 수")
+    if post.status != "ACTIVE":
+        raise invalid_state("가려진 글은 내릴 수 없어요. 블라인드가 풀린 뒤에 내려 주세요.")
+    record_transition(db, entity_type="pr_post", entity_id=post.id, from_status="ACTIVE", to_status="DELETED",
+                      actor_user_id=user.id, reason="업체가 글 내림")
+    post.status = "DELETED"
+    db.commit()
+
+
+def bump_post(db: Session, user: User, post_id: int, *, now: datetime) -> PrPostOut:
+    """FR-BOARD-03: 끌어올리기 7일에 1회. 목록은 bumped_at 최신순이라 맨 위로 올라간다 (FR-BOARD-01)."""
+    post = _own_post(db, user, post_id, action="끌어올릴 수")
+    if post.status != "ACTIVE":
+        raise invalid_state("가려진 글은 끌어올릴 수 없어요. 블라인드가 풀린 뒤에 해 주세요.")
+    if not can_bump(post.bumped_at, now):
+        at = next_bump_at(post.bumped_at)
+        raise AppError(
+            429,
+            "BUMP_TOO_SOON",
+            f"끌어올리기는 7일에 한 번 할 수 있어요. {at.month}월 {at.day}일 {at:%H:%M}부터 다시 할 수 있어요.",
+        )
+    post.bumped_at = now
+    db.commit()
+    db.refresh(post)
+    return _out(db, post)

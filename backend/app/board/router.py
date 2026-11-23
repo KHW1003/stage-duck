@@ -1,7 +1,7 @@
 """업체 찾기 API (api-contract.md 5장 /pr-posts, #30). 목록·상세는 방문자도, 작성은 업체(S)만."""
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.deps import require_role
@@ -57,3 +57,25 @@ def update_post(
 ) -> PrPostSavedOut:
     """AC-F4-10: 본인 글 수정 (블라인드 중 409, 말머리 고정, 남의 글 404). AC-F4-03 연락처 경고."""
     return service.update_post(db, user, post_id, body, now=now)
+
+
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(
+    post_id: int,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """FR-BOARD-02: [글 내리기] (남의 글·내린 글 404, 가려진 글 409, 정지 계정 403)."""
+    service.delete_post(db, user, post_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{post_id}/bump", response_model=PrPostOut)
+def bump_post(
+    post_id: int,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> PrPostOut:
+    """FR-BOARD-03: 끌어올리기 7일에 1회 (429 BUMP_TOO_SOON). 남의 글·내린 글 404, 가려진 글 409, 정지 계정 403."""
+    return service.bump_post(db, user, post_id, now=now)
