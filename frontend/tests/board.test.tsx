@@ -89,7 +89,11 @@ function renderAt(path: string) {
 
 const GUEST = { "GET /api/v1/me": err(401, "UNAUTHENTICATED", "로그인이 필요해요.") };
 const AS_USER = { "GET /api/v1/me": { status: 200, body: USER } };
-const AS_SUPPLIER = { "GET /api/v1/me": { status: 200, body: SUPPLIER_D }, "GET /api/v1/supplier/application": { status: 200, body: APPLICATION } };
+const AS_SUPPLIER = {
+  "GET /api/v1/me": { status: 200, body: SUPPLIER_D },
+  "GET /api/v1/supplier/application": { status: 200, body: APPLICATION },
+  "GET /api/v1/pr-posts/mine": { status: 200, body: { items: [] } }, // 아직 올린 글이 없다 (#31 내 소개 글 목록)
+};
 
 afterEach(() => vi.unstubAllGlobals());
 

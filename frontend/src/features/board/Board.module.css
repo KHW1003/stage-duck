@@ -86,3 +86,6 @@
 .photoAdd input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .photoAdd:focus-within { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 .formActions { display: flex; justify-content: flex-end; margin-top: 40px; }
+.formActionsSplit { justify-content: space-between; } /* 목업 p-post.html: 왼쪽 [글 내리기], 오른쪽 [저장] */
+.bumpSummary { --cols: 2; margin-bottom: 28px; } /* 마지막 끌어올리기 · [끌어올리기] (조회·관심 저장 수는 서버가 주지 않아 뺐다) */
+.bumpCell { display: flex; align-items: center; }
