@@ -27,7 +27,7 @@ const PERF = {
 
 function quote(over: Partial<CompareQuote>): CompareQuote {
   return {
-    quoteId: 1, supplierId: 1, label: "기본형", status: "SENT", version: 1, basedOnPerfVersion: 1, totalAmount: 500000,
+    quoteId: 1, supplierId: 1, companyName: "", roomId: null, label: "기본형", status: "SENT", version: 1, basedOnPerfVersion: 1, totalAmount: 500000,
     venueId: 3, venueType: "CULTURE_SPACE", venueName: "공간 C", maxCapacity: 120, checkinTime: "14:00", setupAvailableTime: "15:00", checkoutTime: "23:00",
     includesEquipment: false, includesEngineer: false, isFullSpec: false, offered: false, overall: "PASS",
     checks: [
@@ -80,11 +80,11 @@ describe("단계별 견적 비교 (/performances/:id/compare)", () => {
     expect(within(a).getByRole("img", { name: "공간 A · 기본형 사진" })).toBeInTheDocument();
 
     const b = screen.getByRole("article", { name: "공간 B · 기본형" });
-    expect(within(b).getByRole("status", { name: "검사 결과: 경고" })).toBeInTheDocument();
+    expect(within(b).getByLabelText("검사 결과: 경고 1")).toBeInTheDocument();
     expect(within(b).getByText(/0분이에요/)).toBeInTheDocument();
 
     const c = screen.getByRole("article", { name: "공간 C · 기본형" });
-    expect(within(c).getByRole("status", { name: "검사 결과: 통과" })).toBeInTheDocument();
+    expect(within(c).getByLabelText("검사 결과: 통과 2")).toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "공연장 견적서 항목별 비교" });
     expect(within(table).getByText("200명")).toBeInTheDocument();
@@ -108,10 +108,40 @@ describe("단계별 견적 비교 (/performances/:id/compare)", () => {
     expect(await screen.findByText(/아직 받은 견적서가 없어요/)).toBeInTheDocument();
   });
 
-  it("남의 공연이면 서버 오류 문구를 그대로 보여 준다", async () => {
+  it("D-57 결제 전에 업체가 취소해 다시 모집 중인 단계에서는 그 업체 견적서를 확정으로 보이지 않는다", async () => {
+    const reopened = { ...PERF, stages: [{ ...PERF.stages[0], status: "OPEN" }, ...PERF.stages.slice(1)] };
+    const cancelled = QUOTES.map((q, i) => (i === 0 ? { ...q, status: "CONFIRMED" } : q));
+    mockServer({ "/api/v1/me": USER, "/api/v1/performances/5": reopened, "/api/v1/stages/1/quotes": cancelled });
+    renderAt("/performances/5/compare");
+
+    const a = await screen.findByRole("article", { name: "공간 A · 기본형" });
+    expect(within(a).getByText("업체 사정 취소")).toBeInTheDocument();
+    expect(within(a).queryByText("확정")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("table", { name: "공연장 견적서 항목별 비교" })).queryByText("확정")).not.toBeInTheDocument();
+  });
+
+  it("남의 공연(서버 404)이면 불러오는 중에 멈추지 않고 찾을 수 없음 화면", async () => {
     mockServer({ "/api/v1/me": USER });
     renderAt("/performances/9/compare");
 
-    expect(await screen.findByText("찾을 수 없어요.")).toBeInTheDocument();
+    expect(await screen.findByText("화면을 찾을 수 없어요")).toBeInTheDocument();
+  });
+
+  it("카드 맨 위는 업체 상호, 총액 아래 검사 요약과 가장 낮은 금액과의 차이, 맨 아래 [견적서 보기]·[채팅]", async () => {
+    const named = [
+      { ...QUOTES[0], companyName: "업체 A", roomId: 31 },
+      { ...QUOTES[1], companyName: "업체 B", roomId: 32 },
+    ];
+    mockServer({ "/api/v1/me": USER, "/api/v1/performances/5": PERF, "/api/v1/stages/1/quotes": named });
+    renderAt("/performances/5/compare");
+
+    const a = await screen.findByRole("article", { name: "업체 A 공간 A · 기본형" });
+    expect(within(a).getByText("+3,600,000원")).toBeInTheDocument();
+    expect(within(a).getByText("통과 2")).toBeInTheDocument();
+    expect(within(a).getByRole("link", { name: "견적서 보기" })).toHaveAttribute("href", "/quotes/11");
+    expect(within(a).getByRole("link", { name: "업체 A와 채팅" })).toHaveAttribute("href", "/performances/5/compare?stage=1&chat=31");
+    const b = screen.getByRole("article", { name: "업체 B 공간 B · 기본형" });
+    expect(within(b).getByText("가장 낮은 금액")).toBeInTheDocument();
+    expect(within(b).getByText("경고 1")).toBeInTheDocument();
   });
 });

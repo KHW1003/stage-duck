@@ -27,6 +27,16 @@ export interface AuthResult {
   landing: string;
 }
 
+/** GET /auth/social/pending (#25, AC-F1-06) — 소셜에서 받아 온 값. 받지 못한 칸은 null (선택 동의 해제·카카오 승인 전) */
+export interface SocialPending {
+  provider: "NAVER" | "KAKAO";
+  email: string | null;
+  name: string | null;
+  phone: string | null;
+  birthDate: string | null;
+  nickname: string | null;
+}
+
 export interface Agreements {
   service: boolean;
   privacyRequired: boolean;
@@ -515,6 +525,10 @@ export interface CheckItem {
 export interface CompareQuote {
   quoteId: number;
   supplierId: number;
+  /** 업체 상호 */
+  companyName: string;
+  /** 그 단계 × 업체 채팅방 (없으면 null) */
+  roomId: number | null;
   label: string;
   status: string;
   version: number;

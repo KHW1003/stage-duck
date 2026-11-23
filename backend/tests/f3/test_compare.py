@@ -48,6 +48,17 @@ def test_ac_f3_20_compare_full_spec_warning_pass(venue_stage):
     assert (rows["C"]["venueId"], rows["C"]["venueType"]) == (7, "CULTURE_SPACE")
 
 
+def test_ac_f3_20_compare_has_company_and_chat_room(venue_stage):
+    """비교 카드 맨 위 업체 상호, [채팅] 이 열 방 번호 (견적서를 보내면 방이 생긴다)."""
+    user, stage_id = venue_stage
+
+    rows = user.get(f"/api/v1/stages/{stage_id}/quotes").json()
+
+    assert all(q["companyName"] for q in rows)
+    assert all(isinstance(q["roomId"], int) for q in rows)
+    assert len({q["roomId"] for q in rows}) == 3  # 업체가 다르면 방도 다르다
+
+
 def test_ac_f3_20_other_user_gets_404(venue_stage, client, db):
     _, stage_id = venue_stage
     other = login_as(client, make_user(db))

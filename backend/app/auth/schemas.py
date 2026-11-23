@@ -21,7 +21,9 @@ class AgreementsIn(BaseModel):
     marketing: bool = False
 
 
-class SignupIn(BaseModel):
+class SocialCompleteIn(BaseModel):
+    """FR-AUTH-04 소셜 추가 정보. 이메일 가입과 같은 칸에서 비밀번호만 뺐다 (비밀번호를 받지 않는다)."""
+
     model_config = _IN
 
     name: str | None = None
@@ -29,11 +31,14 @@ class SignupIn(BaseModel):
     email: str | None = None
     birth_date: date | None = None
     nickname: str | None = None
-    password: str | None = Field(default=None, json_schema_extra={"format": "password"})
     signup_purpose: str | None = None
     musician_type: str | None = None
     signup_channel: str | None = None
     agreements: AgreementsIn = Field(default_factory=AgreementsIn)
+
+
+class SignupIn(SocialCompleteIn):
+    password: str | None = Field(default=None, json_schema_extra={"format": "password"})
 
 
 class SupplierSignupIn(BaseModel):
@@ -92,6 +97,22 @@ class PasswordResetConfirmIn(BaseModel):
 
     token: str = Field(min_length=1, max_length=200)
     password: str = Field(min_length=1, max_length=200, json_schema_extra={"format": "password"})
+
+
+class SocialPendingOut(BaseModel):
+    """GET /auth/social/pending — 추가 정보 화면에 미리 채울 값 (AC-F1-06).
+
+    signup_token 쿠키를 가진 본인에게만 돌려주는 본인 정보라 /me 처럼 이름·이메일·전화번호를 담는다 (CLAUDE.md 20의 예외).
+    """
+
+    model_config = _OUT
+
+    provider: str
+    email: str | None
+    name: str | None
+    phone: str | None
+    birth_date: date | None
+    nickname: str | None
 
 
 class AuthOut(BaseModel):

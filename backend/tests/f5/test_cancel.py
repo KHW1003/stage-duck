@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import func, select
 
 from app.main import app
+from app.models.notification import Notification
 from app.models.payment import Cancellation, LedgerEntry, Order
 from app.models.rejection import RejectionEvent
 from app.models.request import Performance, Stage
@@ -175,6 +176,30 @@ def test_ac_f5_22_supplier_cancel_before_payment_reopens_stage_and_extends_deadl
     assert (row.requested_by, row.order_id, row.fault_supplier_id) == ("SUPPLIER", None, d)
     assert before == datetime(2026, 11, 8, 15, 0)
     assert payment_deadline(db, perf_id) == datetime(2026, 11, 10, 15, 0)  # +48시간
+    note = db.scalar(select(Notification).where(Notification.user_id == db.get(Performance, perf_id).user_id, Notification.type == "CANCELLED_BY_SUPPLIER"))
+    assert "환불할 금액은 없습니다" in note.body and "48시간" in note.body  # 결제 전 — "전액 환불"이라고 하지 않는다
+    assert "전액 환불" not in note.body
+
+
+def test_ac_f5_10_paid_supplier_cancel_notification_says_full_refund(client, db):
+    user, perf_id, _, (c, _) = _paid(client, db)
+    _as(db, db.get(Supplier, c).user).post(f"/api/v1/performances/{perf_id}/cancel-by-supplier", json={"reason": "공간 누수"})
+    note = db.scalar(select(Notification).where(Notification.user_id == db.get(Performance, perf_id).user_id, Notification.type == "CANCELLED_BY_SUPPLIER"))
+    assert note.body.startswith("전액 환불 예정")
+
+
+def test_ac_f5_10_supplier_warnings_for_cancel_dialog(client, db):
+    """확인 창이 "이번 취소로 정지돼요"를 미리 알리도록 지금 경고 수와 정지 기준(3회)을 준다. 업체만."""
+    supplier = make_supplier(db, review_status="APPROVED", categories=("VENUE",))
+    db.get(User, supplier.user_id).warning_count = 2
+    db.commit()
+
+    res = _as(db, supplier.user).get("/api/v1/supplier/warnings")
+
+    assert res.status_code == 200, res.text
+    assert res.json() == {"warningCount": 2, "suspendAt": 3}
+    host = make_user(db)
+    assert _as(db, host).get("/api/v1/supplier/warnings").status_code == 404  # 다른 역할은 404 (CLAUDE.md 10)
 
 
 @pytest.mark.parametrize(("first", "cancels", "deadline"), [

@@ -395,6 +395,34 @@ describe("대화방", () => {
     expect(within(panel).getByText("사진", { selector: ".msg__b" })).toBeInTheDocument();
   });
 
+  it("머리줄 아래 [견적서 보기]는 가장 최근 QUOTE 메시지의 견적서 버전(refId)으로 가고, 대화 목록 밖에 고정돼 있다", async () => {
+    const thread = {
+      ...THREAD_31,
+      messages: [...THREAD_31.messages, msg(121, null, null, { type: "QUOTE", refId: 502 }), msg(122, 12, "고친 견적서 확인해 주세요")],
+    };
+    mockServer({ ...AS_USER, "GET /api/v1/chat-rooms/31/messages": { status: 200, body: thread } });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const link = await within(panel).findByRole("link", { name: "견적서 보기" });
+    expect(link).toHaveAttribute("href", "/quotes/by-version/502");
+    // 스크롤되는 메시지 목록(.room__msgs) 밖에 있어 대화가 길어져도 보인다
+    expect(link.closest(".room__msgs")).toBeNull();
+    await user.click(link);
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "채팅" })).not.toBeInTheDocument());
+  });
+
+  it("불러온 메시지에 QUOTE 가 없으면 [견적서 보기]를 숨긴다", async () => {
+    mockServer({
+      ...AS_USER,
+      "GET /api/v1/chat-rooms/32/messages": { status: 200, body: { messages: [msg(110, 12, "설치 시간 확인했어요")], partnerLastReadMessageId: 0 } },
+      "POST /api/v1/chat-rooms/32/read": { status: 204 },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 E");
+    await within(panel).findByText("설치 시간 확인했어요", { selector: ".msg__b" });
+    expect(within(panel).queryByRole("link", { name: "견적서 보기" })).not.toBeInTheDocument();
+  });
+
   it("견적서 완료 화면의 [채팅방으로](?chat=<roomId>)로 오면 그 방이 열린다", async () => {
     mockServer({
       "GET /api/v1/me": { status: 200, body: SUPPLIER },

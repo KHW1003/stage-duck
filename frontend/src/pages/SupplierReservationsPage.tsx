@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useSupplierCancel, useSupplierReservations, type SupplierReservation } from "../features/payment/api";
+import { useSupplierCancel, useSupplierReservations, useSupplierWarnings, type SupplierReservation } from "../features/payment/api";
 import { dateLabel, hm, STAGE_NAME } from "../features/performance/labels";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { useMe } from "../shared/auth/useMe";
@@ -20,12 +20,26 @@ const STATUS: Record<SupplierReservation["status"], string> = {
 };
 
 const CANCELABLE: SupplierReservation["status"][] = ["ASSIGNING", "AWAITING_PAYMENT", "PAID"];
+/** 최종 담당표는 결제 뒤에만 연락처와 함께 열린다 (#53, CLAUDE.md 20) */
+const SHEET_READY: SupplierReservation["status"][] = ["PAID", "COMPLETED"];
 
 /** 업체 사정 취소 확인 창. 결제 전·후에 따라 결과 안내가 다르다 (D-57, AC-F5-10). 경고 1회는 둘 다 */
 function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierReservation; onClose: () => void }) {
   const cancel = useSupplierCancel();
+  const warnings = useSupplierWarnings(true);
   const [reason, setReason] = useState("");
+  const [suspended, setSuspended] = useState(false);
   const paid = reservation.status === "PAID";
+  const willSuspend = warnings.data !== undefined && warnings.data.warningCount + 1 >= warnings.data.suspendAt;
+  if (suspended) {
+    return (
+      <KitModal title="취소했어요" onClose={() => window.location.assign("/login")}
+        foot={<a className="btn btn--primary" href="/login">로그인 화면으로</a>}>
+        <p className="modal__lead">경고가 {warnings.data?.suspendAt}회 쌓여 이용이 정지됐어요.</p>
+        <p className="muted mt-8">정지 사유와 기간은 알림에서 볼 수 있어요. 궁금한 점은 1:1 문의로 남겨 주세요.</p>
+      </KitModal>
+    );
+  }
   return (
     <KitModal
       title="업체 사정으로 취소"
@@ -35,7 +49,8 @@ function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierRe
         <>
           <button className="btn" type="button" onClick={onClose} disabled={cancel.isPending}>돌아가기</button>
           <button className="btn btn--primary" type="button" disabled={!reason.trim() || cancel.isPending}
-            onClick={() => cancel.mutate({ performanceId: reservation.performanceId, reason: reason.trim() }, { onSuccess: onClose })}>
+            onClick={() => cancel.mutate({ performanceId: reservation.performanceId, reason: reason.trim() },
+              { onSuccess: () => (willSuspend ? setSuspended(true) : onClose()) })}>
             취소하기
           </button>
         </>
@@ -54,6 +69,11 @@ function SupplierCancelModal({ reservation, onClose }: { reservation: SupplierRe
         <li>업체 사정 취소는 경고 1회로 기록됩니다. 경고가 3회 쌓이면 이용이 정지됩니다.</li>
         <li>테스트 결제라 실제로 청구되지 않습니다.</li>
       </ul>
+      {willSuspend && (
+        <p className="notice notice--warn mt-16" role="alert">
+          지금 경고가 {warnings.data?.warningCount}회예요. 이번에 취소하면 {warnings.data?.suspendAt}회가 되어 바로 이용이 정지되고, 로그인할 수 없어요.
+        </p>
+      )}
       <label className="field mt-16">
         <span className="field__label">취소 사유<span className="req">*</span></span>
         <textarea className="textarea" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -84,7 +104,9 @@ function ReservationCard({ reservation }: { reservation: SupplierReservation }) 
           {status !== "COMPLETED" && (
             <Link className="btn btn--sm" to={"/supplier/tech/" + performanceId}>현장 준비 확인</Link>
           )}
-          <Link className="btn btn--sm btn--primary" to={"/performances/" + performanceId + "/sheet"}>담당표 보기</Link>
+          {SHEET_READY.includes(status) && (
+            <Link className="btn btn--sm btn--primary" to={"/performances/" + performanceId + "/sheet"}>담당표 보기</Link>
+          )}
           {CANCELABLE.includes(status) && (
             <button className="btn btn--sm btn--ghost" type="button" onClick={() => setAsking(true)}>업체 사정 취소</button>
           )}

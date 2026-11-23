@@ -58,6 +58,15 @@ export function useSupplierCancel() {
   });
 }
 
+/** 지금 경고 수와 정지 기준 (3회째 자동 정지). 업체 사정 취소 창이 "이번 취소로 정지돼요"를 미리 알린다 */
+export function useSupplierWarnings(enabled: boolean) {
+  return useQuery({
+    queryKey: ["supplier", "warnings"],
+    enabled,
+    queryFn: () => api<{ warningCount: number; suspendAt: number }>("/supplier/warnings"),
+  });
+}
+
 /** 최종 담당표 (#53). 사용자·확정 업체만, 남이면 404 */
 export function useSheet(performanceId: number) {
   return useQuery({

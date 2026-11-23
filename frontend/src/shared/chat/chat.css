@@ -32,6 +32,12 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel__who small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--sd-text-meta); color: var(--sd-muted); }
 .chat-panel__bar .avatar { --size: 36px; border-radius: 10px; }
 
+/* 대화방 머리줄 아래 [견적서 보기] 고정 줄 (스크롤 밖이라 대화가 길어도 보인다) */
+.chat-panel__quote { display: flex; justify-content: flex-end; flex: none; padding: 0 8px; border-bottom: 1px solid var(--sd-line); background: var(--sd-bg); }
+.chat-panel__quote a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 8px; color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; text-decoration: none; }
+.chat-panel__quote a:hover { background: var(--sd-band); }
+.chat-panel__quote a:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: -2px; }
+
 /* 검색 머리줄: 찾은 글자는 포인트 색 굵은 글씨 */
 .chat-panel__bar--search { gap: 6px; padding-left: 6px; }
 .chat-panel__q { flex: 1; min-width: 0; height: 38px; padding: 0 12px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); background: var(--sd-bg); color: var(--sd-ink); font: inherit; font-size: var(--sd-text-desc); }

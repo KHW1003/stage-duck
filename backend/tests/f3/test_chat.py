@@ -140,7 +140,7 @@ def test_ac_f3_06_user_can_send_before_start(client, db):
     assert _send(user, room_id).status_code == 201
 
 
-def test_ac_f3_06_image_file_not_yet(client, db):
+def test_ac_f3_06_invalid_file_or_blank_body_rejected(client, db):
     user, _, room_id, _, _ = _room(client, db)
     res = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "IMAGE", "fileId": 1})
     assert res.status_code == 400 and res.json()["code"] == "VALIDATION_FAILED"
