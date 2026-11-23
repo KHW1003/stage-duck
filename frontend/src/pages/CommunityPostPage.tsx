@@ -39,7 +39,7 @@ export function CommunityPostPage() {
 
   return (
     <div className={`sd-container ${styles.wrap}`}>
-      <article className={`${styles.narrow} ${styles.card}`}>
+      <article className={`${styles.narrow} ${styles.detailCard}`}>
         {/* 양쪽 여백의 세로 광고 (시연용 더미, 여백이 모자라면 숨김) */}
         <div className={`${styles.adRail} ${styles.adLeft}`} aria-hidden="false">
           <AdSlot kind="sky" seed={p.id} className={styles.adSticky} />

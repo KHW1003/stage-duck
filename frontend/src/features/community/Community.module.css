@@ -142,12 +142,12 @@
    본문을 아주 옅은 선 상자로 감싸고, 상자 양쪽 여백에 세로 광고(시연용 더미)를 둔다.
    여백(칸 안쪽 폭 - 문서 폭)/2 가 광고 폭 + 간격보다 좁으면 광고를 숨긴다 (컨테이너 쿼리) */
 .wrap { container-type: inline-size; }
-.card { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.detailCard { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
 .adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
 .adLeft { right: calc(100% + var(--sd-ad-gap)); }
 .adRight { left: calc(100% + var(--sd-ad-gap)); }
 .adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
 @container (max-width: 1199px) { .adRail { display: none; } } /* 여백 160px = 광고 140 + 간격 20 이 안 되면 숨김 */
 @media (max-width: 760px) {
-  .card { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
+  .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
