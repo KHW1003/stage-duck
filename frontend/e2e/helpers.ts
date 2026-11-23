@@ -21,6 +21,16 @@ export async function expectNoHorizontalScroll(page: Page) {
 
 export const E2E_USER = { email: "host@stageduck.test", password: "e2e-pass-1234" };
 
+/** 시드 순서: 사용자(1) → 업체 A~G(2~8) (backend/app/demo/service.py _seed). 시드 순서가 바뀌면 같이 고친다 */
+export const SUPPLIER_USER_ID = { a: 2, b: 3, c: 4, d: 5 } as const;
+
+/** 비밀번호 없는 시연 업체 계정으로 로그인 (/dev/switch-account, APP_ENV=test 에서만 켜진다). 쿠키는 그 page 의 브라우저에 남는다 */
+export async function switchAccount(page: Page, userId: number) {
+  const res = await page.request.post("/api/v1/dev/switch-account", { data: { userId } });
+  expect(res.ok(), `계정 전환 실패: ${res.status()}`).toBeTruthy();
+  expect((await res.json()).role).toBe("SUPPLIER");
+}
+
 export async function login(page: Page, { email, password } = E2E_USER) {
   await page.goto("/login");
   await page.getByLabel("이메일", { exact: true }).fill(email);
