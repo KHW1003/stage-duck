@@ -1,9 +1,26 @@
-/* 광고 자리 (AdSlot.tsx). 그림자·그라데이션 없이 옅은 바탕 + 옅은 선 (DESIGN.md 8장) */
-.ad { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-th); color: var(--sd-muted); }
-.sky { width: var(--sd-ad-sky); min-height: 600px; align-items: flex-start; }
-.rect { width: 100%; min-height: 250px; }
-.tag { align-self: flex-start; padding: 0 6px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); background: var(--sd-bg); font-size: var(--sd-text-meta); line-height: 18px; }
-.icon { display: grid; place-items: center; width: var(--sd-touch); height: var(--sd-touch); margin-top: 8px; border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); }
-.title { color: var(--sd-ink); font-size: var(--sd-text-body); line-height: 1.4; word-break: keep-all; }
-.desc { margin: 0; font-size: var(--sd-text-small); line-height: 1.6; word-break: keep-all; }
-.note { margin: auto 0 0; font-size: var(--sd-text-meta); color: var(--sd-photo-text); line-height: 1.5; word-break: keep-all; }
+/* 시연용 광고 배너 (AdSlot.tsx). 웹 배너처럼 단색 바탕 + 큰 문구 + 버튼 모양. 그림자·그라데이션 없음 (DESIGN.md 8장) */
+.ad { position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--sd-r-box); background: var(--ad-bg); color: var(--ad-fg); }
+.navy { --ad-bg: var(--sd-ad-navy); --ad-fg: var(--sd-on-blue); --ad-cta-bg: var(--sd-on-blue); --ad-cta-fg: var(--sd-ad-navy); }
+.teal { --ad-bg: var(--sd-ad-teal); --ad-fg: var(--sd-on-blue); --ad-cta-bg: var(--sd-on-blue); --ad-cta-fg: var(--sd-ad-teal); }
+.plum { --ad-bg: var(--sd-ad-plum); --ad-fg: var(--sd-on-blue); --ad-cta-bg: var(--sd-on-blue); --ad-cta-fg: var(--sd-ad-plum); }
+.mustard { --ad-bg: var(--sd-ad-mustard); --ad-fg: var(--sd-ink); --ad-cta-bg: var(--sd-ink); --ad-cta-fg: var(--sd-on-blue); }
+.sand { --ad-bg: var(--sd-ad-sand); --ad-fg: var(--sd-ink); --ad-cta-bg: var(--sd-ink); --ad-cta-fg: var(--sd-on-blue); }
+
+.tag { position: absolute; top: 8px; right: 8px; padding: 0 5px; border-radius: var(--sd-r-tag); background: color-mix(in srgb, var(--sd-ink) 40%, transparent); color: var(--sd-on-blue); font-size: var(--sd-text-tiny); line-height: 16px; }
+.brand { display: inline-flex; align-items: center; gap: 6px; font-size: var(--sd-text-small); font-weight: 800; letter-spacing: .02em; }
+.icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ad-cta-bg); color: var(--ad-cta-fg); }
+.icon :global(.icon) { width: 16px; height: 16px; }
+.head { font-weight: 800; line-height: 1.35; letter-spacing: -.02em; white-space: pre-line; word-break: keep-all; }
+.sub { margin: 0; font-size: var(--sd-text-small); line-height: 1.55; opacity: .85; word-break: keep-all; }
+.cta { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border-radius: var(--sd-r-btn); background: var(--ad-cta-bg); color: var(--ad-cta-fg); font-size: var(--sd-text-small); font-weight: 700; }
+.note { margin: 0; font-size: var(--sd-text-tiny); line-height: 1.4; opacity: .7; word-break: keep-all; }
+
+/* 세로 배너 140×600: 위 브랜드, 가운데 큰 문구, 아래 버튼 */
+.sky { width: var(--sd-ad-sky); height: 600px; padding: 32px 14px 16px; gap: 14px; }
+.sky .head { margin-top: 40px; font-size: var(--sd-text-sub); }
+.sky .cta { margin-top: auto; }
+
+/* 네모 배너 320×250 (오른쪽 칸 아래) */
+.rect { width: 100%; min-height: 250px; margin-top: 16px; padding: 24px 22px 16px; gap: 10px; }
+.rect .head { margin-top: 6px; font-size: var(--sd-text-sub); }
+.rect .cta { align-self: flex-start; margin-top: auto; }

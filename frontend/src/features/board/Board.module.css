@@ -108,13 +108,14 @@
 .card { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
 .adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
 .adLeft { right: calc(100% + var(--sd-ad-gap)); }
-.adSticky { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
+.adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
 .sideAd { margin-top: 16px; }
-@container (max-width: 1160px) { .adRail { display: none; } }
+@container (max-width: 1199px) { .adRail { display: none; } } /* 여백 160px = 광고 140 + 간격 20 이 안 되면 숨김 */
 @media (max-width: 760px) {
   .card { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
-/* 오른쪽 칸: 업체 상자 + 네모 광고를 한 칸으로 묶어 함께 따라오게 (sticky 를 상자에서 칸으로 옮김) */
-.sideCol { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
-.sideCol > .side { position: static; }
-@media (max-width: 760px) { .sideCol { position: static; } }
+/* 오른쪽 칸: 업체 상자만 따라오고(원래대로) 그 아래 네모 광고는 따라오지 않는다 (11/23 해원).
+   칸을 본문 높이만큼 늘려 상자가 그 안에서 붙어 있게, 광고는 상자 뒤로 지나간다 */
+.sideCol { align-self: stretch; }
+.sideCol > .side { position: sticky; z-index: 1; background: var(--sd-bg); }
+@media (max-width: 760px) { .sideCol > .side { position: static; } }

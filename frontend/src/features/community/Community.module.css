@@ -146,8 +146,8 @@
 .adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
 .adLeft { right: calc(100% + var(--sd-ad-gap)); }
 .adRight { left: calc(100% + var(--sd-ad-gap)); }
-.adSticky { position: sticky; top: calc(var(--sd-gnb-height) + 20px); }
-@container (max-width: 1160px) { .adRail { display: none; } }
+.adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
+@container (max-width: 1199px) { .adRail { display: none; } } /* 여백 160px = 광고 140 + 간격 20 이 안 되면 숨김 */
 @media (max-width: 760px) {
   .card { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
