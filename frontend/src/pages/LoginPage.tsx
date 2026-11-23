@@ -1,5 +1,5 @@
 /**
- * 로그인 (/login). 목업: mockup-v4/pages/login.html · FR-AUTH-02·06 · AC-F1-04·08·11
+ * 로그인 (/login). 목업: mockup-v4/pages/login.html · FR-AUTH-02·06 · AC-F1-11 (네이버·카카오 AC-F1-04·08 은 #25)
  * - 성공하면 서버가 정한 역할별 첫 화면(landing)으로. 로그인이 필요한 화면에서 왔으면(?next=) 그 화면으로
  *   (next 는 이 사이트 안 주소만 받는다 — "/"로 시작하고 "//"가 아닌 것)
  * - 비밀번호 틀림(UNAUTHENTICATED)은 입력칸 아래, 5회 실패(LOGIN_LOCKED)는 안내 상자로 서버 문구를 보여 준다

@@ -53,7 +53,9 @@ desktop.ini
 !.vscode/settings.json
 
 # ===== 로컬 도구 =====
-.claude/
+# .claude/ 는 개인 설정이라 올리지 않는다. 팀이 같이 쓰는 서브에이전트(.claude/agents/)만 올린다
+.claude/*
+!.claude/agents/
 
 # TypeScript build info
 *.tsbuildinfo

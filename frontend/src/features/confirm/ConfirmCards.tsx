@@ -4,6 +4,7 @@
  * - 견적서를 고쳤으면 "새 견적이 있어요"(AC-F3-09), 48시간 지나면 "만료"(AC-F3-12)
  * - 확정 완료 카드: 마지막 필요 단계면 [통합 결제하기], 아니면 [다음 단계로] (AC-F3-14)
  */
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { STAGE_LABEL } from "../request/codes";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
@@ -17,6 +18,20 @@ const STATUS_TEXT: Record<Exclude<ConfirmStatus, "PENDING">, string> = {
   INVALIDATED: "새 견적이 있어요. 업체에게 새 최종 견적을 요청해 주세요.",
 };
 
+/** 만료 시각이 지났는지. 화면을 열어 둔 채 시각이 지나도 그 순간 다시 그린다 (AC-F3-12) */
+function useTimeUp(expiresAt: string | null): boolean {
+  const at = expiresAt ? new Date(expiresAt).getTime() : null;
+  const [, rerender] = useState(0);
+  useEffect(() => {
+    if (at === null) return;
+    const ms = at - Date.now();
+    if (ms <= 0) return;
+    const t = setTimeout(() => rerender((n) => n + 1), Math.min(ms, 2 ** 31 - 1));
+    return () => clearTimeout(t);
+  }, [at]);
+  return at !== null && at <= Date.now();
+}
+
 export function sheetLink(c: ConfirmCardOut) {
   return `/quotes/by-version/${c.quoteVersionId}?confirm=${c.id}`;
 }
@@ -26,16 +41,20 @@ export function ConfirmRequestCard({ id, role, partner, onLeave }: { id: number;
   const accept = useAcceptCard(id);
   const renegotiate = useRenegotiate(id);
   const c = card.data;
+  const timeUp = useTimeUp(c?.status === "PENDING" ? c.expiresAt : null);
   if (!c) return <span className="room__sys">최종 견적이 도착했어요</span>;
   const pending = c.status === "PENDING";
   const user = role === "USER";
   const hintId = `confirm-hint-${id}`;
+  // 서버가 아직 PENDING 이어도 만료 시각이 지났으면 만료로 보이고 버튼을 끈다 (AC-F3-12, 서버도 422 로 막는다)
+  const shown: ConfirmStatus = pending && timeUp ? "EXPIRED" : c.status;
+  const open = shown === "PENDING";
 
   return (
     <div className="c-card c-card--confirm" data-status={c.status}>
       <div className="c-card__head">
         <span>최종 견적</span>
-        <span className={pending ? "state state--on" : "state"}>{pending ? leftText(c.expiresAt) : c.status === "CONFIRMED" ? "확정" : c.status === "INVALIDATED" ? "새 견적 있음" : c.status === "EXPIRED" ? "만료" : "다시 조율"}</span>
+        <span className={open ? "state state--on" : "state"}>{open ? leftText(c.expiresAt) : shown === "CONFIRMED" ? "확정" : shown === "INVALIDATED" ? "새 견적 있음" : shown === "EXPIRED" ? "만료" : "다시 조율"}</span>
       </div>
       <div className="c-card__body">
         <p className="c-card__meta">
@@ -44,13 +63,13 @@ export function ConfirmRequestCard({ id, role, partner, onLeave }: { id: number;
         <p className="c-card__amount">
           {c.label} · v{c.version} · <b>{won(c.totalAmount)}</b>
         </p>
-        {c.status !== "PENDING" && <p className="c-card__note">{STATUS_TEXT[c.status]}</p>}
-        {pending && user && !c.viewedAt && (
+        {shown !== "PENDING" && <p className="c-card__note">{STATUS_TEXT[shown]}</p>}
+        {open && user && !c.viewedAt && (
           <p className="c-card__note" id={hintId}>
             내역서를 먼저 열어 확인해 주세요.
           </p>
         )}
-        {pending && !user && <p className="c-card__note">사용자가 내역서를 확인하고 확정하면 알려 드려요.</p>}
+        {open && !user && <p className="c-card__note">사용자가 내역서를 확인하고 확정하면 알려 드려요.</p>}
         {(accept.error || renegotiate.error) && <ErrorNotice error={accept.error ?? renegotiate.error} />}
       </div>
       <div className="c-card__foot">
@@ -59,14 +78,14 @@ export function ConfirmRequestCard({ id, role, partner, onLeave }: { id: number;
         </Link>
         {pending && user && (
           <>
-            <button type="button" disabled={renegotiate.isPending} onClick={() => renegotiate.mutate()}>
+            <button type="button" disabled={timeUp || renegotiate.isPending} onClick={() => renegotiate.mutate()}>
               다시 조율
             </button>
             <button
               type="button"
               className="is-primary"
-              disabled={!c.viewedAt || accept.isPending}
-              aria-describedby={c.viewedAt ? undefined : hintId}
+              disabled={timeUp || !c.viewedAt || accept.isPending}
+              aria-describedby={open && !c.viewedAt ? hintId : undefined}
               onClick={() => accept.mutate()}
             >
               확정하기
