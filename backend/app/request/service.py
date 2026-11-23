@@ -229,7 +229,7 @@ def reopen_stage(db: Session, stage_id: int, *, actor_id: int | None) -> None:
     for s in stages:
         db.refresh(s, with_for_update=True)  # 동시에 취소해도 잠근 뒤의 값으로 본다
     if stage.status != "CONFIRMED":
-        raise invalid_state("이미 다시 모집 중인 단계입니다. 화면을 새로 고쳐 주십시오.")
+        raise invalid_state("이미 다시 모집 중인 단계예요. 화면을 새로 고쳐 주세요.")
     owners = {ln.stage_id: ln.supplier_id for ln in confirmed_lines(db, stage.performance_id)}
     for s in stages:
         if s.seq > stage.seq and s.id in owners and owners[s.id] == owners.get(stage.id):
