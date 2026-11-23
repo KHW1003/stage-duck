@@ -214,6 +214,25 @@ def performance_cancelled(db: Session, performance_id: int, *, actor_id: int | N
     _move_performance(db, perf, "CANCELLED", actor_id)
 
 
+def reopen_stage(db: Session, stage_id: int, *, actor_id: int | None) -> None:
+    """[약속 4 → 2] 결제 전에 확정 업체가 취소하면 4번(payment.cancel)이 같은 트랜잭션 안에서 부른다. 커밋하지 않는다.
+
+    그 단계만 다시 모집한다 (요구사항 명세서 D-57): CONFIRMED → OPEN, 확정 견적서 연결을 지운다.
+    공연이 결제 대기였으면 섭외 중(ASSIGNING)으로 되돌린다. 다른 단계가 이미 모집·조율 중이면 409 (한 번에 한 단계만 열림).
+    """
+    stage = db.get(Stage, stage_id, with_for_update=True)
+    if stage is None:
+        raise not_found()
+    stages = _stages_of(db, stage.performance_id, lock=True)
+    if stage.status != "CONFIRMED" or any(s.status in ("OPEN", "NEGOTIATING") for s in stages if s.id != stage.id):
+        raise invalid_state("지금은 이 단계를 다시 열 수 없어요. 다른 단계 모집이 끝난 뒤에 다시 시도해 주세요.")
+    _move_stage(db, stage, "OPEN", actor_id, reason="결제 전 업체 취소 — 다시 모집")
+    stage.confirmed_quote_version_id = None
+    perf = db.get(Performance, stage.performance_id, with_for_update=True)
+    if perf.status == "AWAITING_PAYMENT":
+        _move_performance(db, perf, "ASSIGNING", actor_id)
+
+
 def confirmed_lines(db: Session, performance_id: int) -> list[ConfirmedLine]:
     """[약속 2·3 → 4] 확정된 단계마다 한 줄. 건너뛴 단계는 넣지 않는다. 순서는 배정 순서(공연장 → 장비 → 엔지니어).
 
@@ -245,6 +264,7 @@ _ALLOWED = {
     ("PUBLISHED", "ASSIGNING"),  # 첫 단계 확정 (#38)
     ("ASSIGNING", "AWAITING_PAYMENT"),  # 필요한 단계가 모두 확정·건너뜀 (#38)
     ("AWAITING_PAYMENT", "CONFIRMED"),  # 테스트 결제 성공 (4번 #51 → performance_paid)
+    ("AWAITING_PAYMENT", "ASSIGNING"),  # 결제 전 업체 취소로 한 단계를 다시 모집 (4번 #52 → reopen_stage, D-57)
     # 취소 (4번 #52 → performance_cancelled): 사용자 취소·결제 마감 자동 취소
     ("PUBLISHED", "CANCELLED"),
     ("ASSIGNING", "CANCELLED"),
@@ -259,6 +279,7 @@ _STAGE_ALLOWED = {  # data-model.md 11장 stages.status
     ("CONFIRMED", "RECHECK"),
     ("RECHECK", "CONFIRMED"),
     ("WAITING", "SKIPPED"),
+    ("CONFIRMED", "OPEN"),  # 결제 전 업체가 확정을 취소 → 그 단계만 다시 모집 (요구사항 명세서 D-57, reopen_stage)
 }
 DONE_STATUSES = ("CONFIRMED", "SKIPPED")
 SKIP_ACK = "STAGE_SKIP_OWNED"  # 건너뛰기 책임 고지 동의 값 (api-contract.md 4.3, FR-ASSIGN-03)
