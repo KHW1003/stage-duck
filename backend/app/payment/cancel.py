@@ -55,7 +55,14 @@ def _quote(db: Session, perf: Performance, order: Order | None, phase: str) -> C
     return CancelQuote(amounts, by_supplier)
 
 
+def _ended(perf: Performance, now: datetime) -> bool:
+    """공연이 끝났는가 — 당일이라도 끝났으면 (정산 예정) 누구도 취소하지 않는다."""
+    return now >= datetime.combine(perf.show_date, perf.show_end)
+
+
 def _user_phase(perf: Performance, order: Order | None, now: datetime) -> str:
+    if _ended(perf, now):
+        raise ValueError("공연이 끝난 뒤에는 취소하지 않는다")
     paid_at = order.paid_at if order is not None and order.status in PAID_STATUSES else None
     return calc.cancel_phase(perf.show_date, now, paid_at=paid_at)
 
@@ -153,6 +160,8 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     if order is not None and order.status in PAID_STATUSES:
         if supplier.id not in {ln.supplier_id for ln in order.lines}:
             raise not_found()
+        if _ended(perf, now):  # 스케줄러가 정산 예정으로 바꾸기 전 1분 사이에도 환불하지 않는다
+            raise invalid_state("공연이 끝나 취소할 수 없습니다.")
         q = _quote(db, perf, order, "SUPPLIER_FAULT")
         policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
         c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id, now=now)
@@ -171,7 +180,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
                       key=lambda ln: db.get(Stage, ln.stage_id).seq)
         if not mine:
             raise not_found()
-        if perf.status not in ("ASSIGNING", "AWAITING_PAYMENT"):
+        if perf.status not in ("ASSIGNING", "AWAITING_PAYMENT") or _ended(perf, now):
             raise invalid_state("지금 상태에서는 업체 사정으로 취소할 수 없습니다.")
         q = _quote(db, perf, None, "SUPPLIER_FAULT")  # 결제 전 — 모두 0원
         policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소(결제 전): {reason}", report_id=None)

@@ -217,17 +217,33 @@ def apply_mock_callback(db: Session, provider_tx_id: str, result: str, *, now: d
 def settle_completed_orders(db: Session, *, now: datetime) -> int:
     """AC-F5-07: 공연이 끝난(공연 날짜·종료 시각이 지난) 결제 완료 청구서 → 정산 예정. 업체별 장부 SETTLE_SCHEDULED.
 
-    스케줄러가 부른다 (plan.md 5.7 "공연 완료"). 처리한 청구서 수를 돌려준다. 공연 상태 COMPLETED 전환은 2번 묶음 몫.
+    스케줄러(core/scheduler.py)가 1분마다 부른다 (plan.md 5.7 "공연 완료"). 처리한 청구서 수를 돌려준다.
+    확정 업체마다 SETTLEMENT_SCHEDULED 알림 한 번 (여러 단계를 맡았으면 금액을 합쳐서). 공연 상태 COMPLETED 전환은 2번 묶음 몫.
     """
-    paid = db.scalars(select(Order).where(Order.status == "PAID").with_for_update()).all()
+    ids = db.execute(
+        select(Order.id, Order.performance_id).join(Performance, Performance.id == Order.performance_id)
+        .where(Order.status == "PAID", Performance.show_date <= now.date())
+    ).all()
     done = 0
-    for order in paid:
-        perf = db.get(Performance, order.performance_id)
-        if datetime.combine(perf.show_date, perf.show_end) > now:
+    for order_id, performance_id in ids:
+        # 공연 → 청구서 순서로 하나씩 잠근다 (취소와 같은 순서). 그 사이 취소됐으면 건너뛴다
+        perf = db.get(Performance, performance_id, with_for_update=True, populate_existing=True)
+        order = db.get(Order, order_id, with_for_update=True, populate_existing=True)
+        if order.status != "PAID" or datetime.combine(perf.show_date, perf.show_end) > now:
+            db.rollback()
             continue
         _move_order(db, order, "SETTLEMENT_SCHEDULED", None)
         db.add_all(LedgerEntry(order_id=order.id, supplier_id=line.supplier_id, entry_type="SETTLE_SCHEDULED",
                                amount=line.amount, memo="공연 완료 — 정산 예정") for line in order.lines)
+        amounts: dict[int, int] = {}
+        for line in order.lines:
+            amounts[line.supplier_id] = amounts.get(line.supplier_id, 0) + line.amount
+        for supplier_id, user_id in db.execute(select(Supplier.id, Supplier.user_id).where(Supplier.id.in_(amounts))).all():
+            notification.notify(
+                db, user_id, "SETTLEMENT_SCHEDULED", link="/supplier/reservations",
+                params={"title": perf.title, "amount": notification.won(amounts[supplier_id])},
+                payload={"performanceId": perf.id, "orderId": order.id},
+            )
+        db.commit()
         done += 1
-    db.commit()
     return done
