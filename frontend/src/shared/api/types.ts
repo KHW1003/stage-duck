@@ -488,6 +488,11 @@ export interface PrPost extends Omit<PrPostItem, "thumbUrl"> {
   createdAt: string;
 }
 
+/** POST·PUT /pr-posts 응답 (#31, AC-F4-03): 전화번호·계좌번호·외부 링크가 있으면 저장은 하고 경고만 */
+export interface PrPostSaved extends PrPost {
+  contactWarning: boolean;
+}
+
 /** POST /pr-posts (FR-BOARD-02). 사진은 먼저 POST /files (purpose PR_POST, 최대 10장) */
 export interface PrPostRequest {
   category: PrCategory | "";

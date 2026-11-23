@@ -1,15 +1,18 @@
 /**
  * 소개 글 (/board/:id, #30). 목업 v4 post.html. FR-BOARD-02, AC-F4-04(방문자도 본다).
  * 연락처는 넣지 않는다 (CLAUDE.md 20) — 서버도 돌려주지 않는다.
- * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. [관심 업체 저장]·[견적 요청하기]는 #32 (말머리 부문의 열린 단계), 신고는 #31, 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
+ * 업체 이름은 업체 프로필(/suppliers/:id, #33)로 간다. [관심 업체 저장]·[견적 요청하기]는 #32 (말머리 부문의 열린 단계), 조회수·거래 건수·대표 장비·업체 정보 표는 서버가 주지 않아 넣지 않았다.
+ * AC-F4-03 (#31): 저장 응답의 contactWarning 이 참이면 안내를 띄운다 (글쓰기 화면이 state 로 넘긴다). [신고]는 로그인한 사람에게만.
  */
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { usePrPost } from "../features/board/api";
 import { FavoriteButton, OfferPicker } from "../features/offer/OfferParts";
 import { PR_CATEGORY_LABEL, monthDay } from "../features/board/labels";
+import { ReportDialog } from "../features/board/ReportDialog";
 import { ApiError } from "../shared/api/client";
 import type { PrPost } from "../shared/api/types";
+import { useMe } from "../shared/auth/useMe";
 import { NotFound } from "../shared/layout/NotFound";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import styles from "../features/board/Board.module.css";
@@ -51,6 +54,9 @@ function Gallery({ post }: { post: PrPost }) {
 export function PostPage() {
   const id = Number(useParams().id);
   const post = usePrPost(id);
+  const me = useMe();
+  const state = useLocation().state as { contactWarning?: boolean } | null;
+  const [reporting, setReporting] = useState(false);
 
   if (!Number.isInteger(id) || (post.error instanceof ApiError && post.error.status === 404)) return <NotFound />;
   if (post.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
@@ -88,8 +94,20 @@ export function PostPage() {
               <span>{p.sido}</span>
               {p.priceRange && <span>{p.priceRange}</span>}
               <span>{monthDay(p.bumpedAt)} 끌어올림</span>
+              {me.data && (
+                <span>
+                  <button className="link" type="button" onClick={() => setReporting(true)}>
+                    신고
+                  </button>
+                </span>
+              )}
             </div>
           </div>
+          {state?.contactWarning && (
+            <div className="notice notice--warn mb-16" role="status">
+              <p>외부 연락처로 보이는 글자가 있어요. 전화번호·계좌번호·외부 링크는 쓸 수 없어요. 신고되면 블라인드되고 경고가 기록돼요.</p>
+            </div>
+          )}
           <Gallery post={p} />
           <div className={styles.postBody}>{p.body}</div>
         </article>
@@ -117,6 +135,7 @@ export function PostPage() {
           </div>
         </aside>
       </div>
+      {reporting && <ReportDialog postId={p.id} onClose={() => setReporting(false)} />}
     </div>
   );
 }

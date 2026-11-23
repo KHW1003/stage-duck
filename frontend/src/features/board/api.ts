@@ -1,7 +1,7 @@
 /** 업체 찾기 API (api-contract.md 5장 /pr-posts, #30). 서버 데이터는 TanStack Query 로만 다룬다 (CLAUDE.md 6.2). */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../shared/api/client";
-import type { PrCategory, PrPost, PrPostPage, PrPostRequest, UploadedFile } from "../../shared/api/types";
+import type { PrCategory, PrPost, PrPostPage, PrPostRequest, PrPostSaved, UploadedFile } from "../../shared/api/types";
 
 export const PR_POSTS_KEY = ["pr-posts"] as const;
 
@@ -37,7 +37,7 @@ export function usePrPost(id: number) {
 export function useCreatePrPost() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: PrPostRequest) => api<PrPost>("/pr-posts", { method: "POST", body: JSON.stringify(body) }),
+    mutationFn: (body: PrPostRequest) => api<PrPostSaved>("/pr-posts", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
   });
 }
@@ -51,5 +51,13 @@ export function useUploadPrPhoto() {
       form.append("purpose", "PR_POST");
       return api<UploadedFile>("/files", { method: "POST", body: form });
     },
+  });
+}
+
+/** AC-F4-03: 소개 글 신고 → 4번 POST /reports (targetType PR_POST). 블라인드·경고는 관리자가 처리한다 */
+export function useReportPrPost() {
+  return useMutation({
+    mutationFn: (v: { targetId: number; reason: string }) =>
+      api<unknown>("/reports", { method: "POST", body: JSON.stringify({ targetType: "PR_POST", ...v }) }),
   });
 }
