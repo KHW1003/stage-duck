@@ -11,6 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { Me } from "../../shared/api/types";
 import type { LayoutKind } from "../../shared/auth/useMe";
 import { AccountMenu, NotificationBell } from "../../shared/layout/Gnb";
+import { useHideOnScroll, useMobile } from "../../shared/layout/useMobile";
 import { MENUS } from "../../shared/layout/menus";
 import { HomeIcon } from "./icons";
 import { cx } from "./cx";
@@ -28,6 +29,8 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
   const menu = partnerPage && !me ? MENUS.partner : MENUS[kind];
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const tabs = useMobile() && kind !== "admin"; // 아래 탭(MobileTabBar)이 메뉴를 대신한다
+  const { ref, hidden } = useHideOnScroll(tabs);
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
@@ -39,10 +42,10 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
 
   const name = me ? (me.nickname ?? me.name) : "";
   return (
-    <header className={s.gnb}>
+    <header ref={ref} className={cx(s.gnb, tabs && s.gnbTabbed, tabs && "m-head")} data-scroll-hidden={hidden || undefined}>
       <div className={s.gnbInner}>
-        <Link className={s.logo} to={partnerPage ? "/partner" : "/"} aria-label={partnerPage ? "STAGE DUCK 파트너 홈" : "STAGE DUCK 홈"}>
-          <img className={s.logoImg} src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
+        <Link className={s.logo} to={partnerPage && !tabs ? "/partner" : "/"} aria-label={partnerPage && !tabs ? "STAGE DUCK 파트너 홈" : "STAGE DUCK 홈"}>
+          <img className={cx(s.logoImg, tabs && "m-word")} src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
           {partner && <span className={s.partnerChip}>파트너</span>}
         </Link>
         {menu.length > 0 && (

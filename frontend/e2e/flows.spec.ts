@@ -4,15 +4,20 @@
 import { expect, test } from "@playwright/test";
 import { collectErrors, expectNoHorizontalScroll, login } from "./helpers";
 
-test("로그인하면 내 공연으로 가고, 로그아웃하면 로그인 화면으로 돌아온다", async ({ page }) => {
+test("로그인하면 내 공연으로 가고, 로그아웃하면 로그인 화면으로 돌아온다", async ({ page, isMobile }) => {
   const errors = collectErrors(page);
   await login(page);
   await expect(page).toHaveURL(/\/me\/performances$/);
   await expect(page.getByRole("heading", { level: 1, name: "내 공연" })).toBeVisible();
   await expectNoHorizontalScroll(page);
 
-  await page.getByRole("button", { name: /광주밴드/ }).click();
-  await page.getByRole("menuitem", { name: "로그아웃" }).click();
+  if (isMobile) {
+    await page.getByRole("navigation", { name: "아래 메뉴" }).getByRole("button", { name: "마이" }).click();
+    await page.getByRole("dialog", { name: "마이" }).getByRole("button", { name: "로그아웃" }).click();
+  } else {
+    await page.getByRole("button", { name: /광주밴드/ }).click();
+    await page.getByRole("menuitem", { name: "로그아웃" }).click();
+  }
   await expect(page).toHaveURL(/\/login$/);
   expect(errors).toEqual([]);
 });
@@ -56,10 +61,9 @@ test("공간 찾기: 처음은 서울, 광주로 바꿔 찾고, 없으면 초기
   await expectNoHorizontalScroll(page);
 });
 
-test("메인 머리 메뉴로 커뮤니티에 간다 (휴대폰은 메뉴 버튼을 열어서)", async ({ page, isMobile }) => {
+test("메인 머리 메뉴로 커뮤니티에 간다 (휴대폰은 아래 탭으로)", async ({ page, isMobile }) => {
   await page.goto("/");
-  if (isMobile) await page.getByRole("button", { name: "메뉴 열기" }).click();
-  await page.getByRole("navigation", { name: "주 메뉴" }).getByRole("link", { name: "커뮤니티" }).click();
+  await page.getByRole("navigation", { name: isMobile ? "아래 메뉴" : "주 메뉴" }).getByRole("link", { name: "커뮤니티" }).click();
   await expect(page).toHaveURL(/\/community$/);
   await expect(page.getByRole("heading", { level: 1, name: "커뮤니티" })).toBeVisible();
 });

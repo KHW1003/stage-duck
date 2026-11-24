@@ -14,6 +14,7 @@ import { layoutKindOf, useMe } from "../auth/useMe";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Footer } from "./Footer";
 import { Gnb } from "./Gnb";
+import { MobileTabBar } from "./MobileTabBar";
 import { useOnline } from "./useOnline";
 import { ErrorView } from "./ErrorView";
 import styles from "./AppLayout.module.css";
@@ -40,6 +41,7 @@ export function AppLayout() {
         </div>
       </main>
       <Footer partner={partner} />
+      {!me.isPending && <MobileTabBar kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />}
       {me.data && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
     </div>
   );

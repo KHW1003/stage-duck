@@ -14,9 +14,11 @@ interface Props {
   foot?: ReactNode;
   busy?: boolean;
   focusableBody?: boolean;
+  /** 아래에서 올라오는 판 (모바일 아래 탭) */
+  sheet?: boolean;
 }
 
-export function KitModal({ title, onClose, children, foot, busy = false, focusableBody = false }: Props) {
+export function KitModal({ title, onClose, children, foot, busy = false, focusableBody = false, sheet = false }: Props) {
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
 
@@ -38,8 +40,8 @@ export function KitModal({ title, onClose, children, foot, busy = false, focusab
   }, [busy, onClose]);
 
   return (
-    <div className="layer" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={`${id}-t`} tabIndex={-1} ref={box}>
+    <div className={sheet ? "layer layer--sheet" : "layer"} onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+      <div className={sheet ? "modal sheet" : "modal"} role="dialog" aria-modal="true" aria-labelledby={`${id}-t`} tabIndex={-1} ref={box}>
         <div className="modal__head">
           <h2 id={`${id}-t`}>{title}</h2>
           <button className="icon-btn" type="button" aria-label="닫기" onClick={onClose} disabled={busy}>

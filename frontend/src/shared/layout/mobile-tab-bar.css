@@ -1,0 +1,44 @@
+/* 모바일 아래 탭·판 (560px 이하에서만 그린다 — useMobile) */
+:root { --m-tabs-height: calc(60px + env(safe-area-inset-bottom, 0px)); }
+.m-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--sd-z-header); display: flex; height: var(--m-tabs-height); padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
+.m-tabs-space { flex: none; height: var(--m-tabs-height); }
+.m-tab { display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; gap: 2px; min-width: var(--sd-touch); min-height: var(--sd-touch); padding: 0; border: 0; background: transparent; color: var(--sd-muted); font: inherit; font-size: var(--sd-text-meta); cursor: pointer; }
+.m-tab[aria-current="page"] { color: var(--sd-blue); font-weight: 700; }
+.m-tab:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: -2px; }
+.m-tab__icon { position: relative; display: grid; place-items: center; width: 28px; height: 28px; }
+.m-tab__badge { position: absolute; top: -3px; left: 17px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--sd-blue-button); color: var(--sd-on-blue); font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* 입력 중(키보드)·채팅 창·모달이 열리면 숨긴다 */
+html.chat-open .m-tabs,
+html:has([aria-modal="true"]) .m-tabs,
+html:has(:is(textarea, [contenteditable="true"], input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="file"])):focus) .m-tabs { display: none; }
+
+/* 탭이 있을 때: 화면 아래에 붙는 것은 탭 위로, 초점이 탭 뒤에 숨지 않게 */
+html:has(.m-tabs) { scroll-padding-bottom: var(--m-tabs-height); }
+html:has(.m-tabs) .iq-sticky { bottom: var(--m-tabs-height); }
+html:has(.m-tabs) .toasts { bottom: calc(var(--m-tabs-height) + 20px); }
+html:has(.m-tabs) .chat-fab { display: none; }
+/* 머리가 숨으면 그 아래 붙던 탭은 맨 위로 */
+html:has([data-scroll-hidden="true"]) .space__tabs { top: 0; }
+
+.m-sheet { margin: -12px 0 0; padding: 0 0 env(safe-area-inset-bottom, 0px); list-style: none; }
+.m-sheet a, .m-sheet button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0; border: 0; background: transparent; color: var(--sd-ink); font: inherit; font-size: var(--sd-text-body); text-align: left; cursor: pointer; }
+.m-sheet [aria-current="page"] { color: var(--sd-blue); font-weight: 700; }
+
+/* 글자 로고: logo.svg(1680×232)에서 글자 영역(x 308~1670, y 40~221)만 보인다. --word = 글자 높이 */
+@media (max-width: 560px) {
+  img.m-word.m-word {
+    --word: 15px;
+    flex: none;
+    height: calc(var(--word) * 232 / 181);
+    width: calc(var(--word) * 1680 / 181);
+    max-width: none;
+    max-height: none;
+    margin: calc(var(--word) * -40 / 181) calc(var(--word) * -10 / 181) calc(var(--word) * -11 / 181) calc(var(--word) * -308 / 181);
+    clip-path: inset(calc(var(--word) * 40 / 181) calc(var(--word) * 10 / 181) calc(var(--word) * 11 / 181) calc(var(--word) * 308 / 181));
+  }
+  .m-head { transition: transform .2s; }
+  .m-head[data-scroll-hidden="true"] { transform: translateY(-100%); }
+}
+@media (max-width: 360px) { img.m-word.m-word { --word: 12px; } }
+@media (prefers-reduced-motion: reduce) { .m-head { transition: none; } }

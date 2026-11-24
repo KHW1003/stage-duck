@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { layoutKindOf, useMe } from "../../shared/auth/useMe";
 import { ChatWidget } from "../../shared/chat/ChatWidget";
+import { MobileTabBar } from "../../shared/layout/MobileTabBar";
 import { HomeFooter } from "./HomeFooter";
 import { HomeGnb } from "./HomeGnb";
 import s from "./home.module.css";
@@ -32,6 +33,7 @@ export function HomeLayout() {
         <Outlet />
       </main>
       <HomeFooter partner={partnerPage} />
+      {!me.isPending && <MobileTabBar kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />}
       {me.data && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
     </div>
   );
