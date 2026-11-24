@@ -148,19 +148,27 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
    내 말풍선은 왼쪽 옆, 상대 말풍선은 오른쪽 옆. 떠 있는 동안만 읽음·시간을 덮는다 */
 .chat-panel .msg__t { position: relative; }
 .chat-panel .msg__acts { position: absolute; bottom: -4px; left: 0; z-index: 2; display: inline-flex; gap: 0; padding: 2px;
-  border: 1px solid var(--sd-line); border-radius: 999px; background: var(--sd-bg); opacity: 0; pointer-events: none; }
+  border: 0; border-radius: 8px; background: color-mix(in srgb, var(--sd-ink) 8%, transparent); backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none; }
 .chat-panel .msg--me .msg__acts { left: auto; right: 0; }
 .chat-panel .msg:hover .msg__acts, .chat-panel .msg__acts:focus-within { opacity: 1; pointer-events: auto; }
+/* 막대가 떠 있는 동안 읽음·시간은 숨긴다 (막대만 보이게, 11/25) */
+.chat-panel .msg__t { transition: color .1s; }
+@media (hover: hover) {
+  .chat-panel .msg:hover .msg__t:has(.msg__acts), .chat-panel .msg:hover .msg__t:has(.msg__acts) :is(.msg__read, .msg__edited),
+  .chat-panel .msg__t:focus-within, .chat-panel .msg__t:focus-within :is(.msg__read, .msg__edited) { color: transparent; }
+}
 /* 휴대폰(마우스 없음): 평소엔 숨기고, 말풍선을 꾹 누르면(.msg--acts) 보인다 (11/25) */
 @media (hover: none) {
   .chat-panel .msg__acts { opacity: 0; pointer-events: none; }
   .chat-panel .msg--acts .msg__acts { opacity: 1; pointer-events: auto; }
+  .chat-panel .msg--acts .msg__t:has(.msg__acts), .chat-panel .msg--acts .msg__t:has(.msg__acts) :is(.msg__read, .msg__edited) { color: transparent; }
   .chat-panel .msg__col { -webkit-touch-callout: none; }
   .chat-panel .msg--acts .msg__b { outline: 2px solid var(--sd-line-strong); outline-offset: 2px; }
 }
-.chat-panel .msg__act { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+.chat-panel .msg__act { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px;
   background: transparent; color: var(--sd-muted); cursor: pointer; }
-.chat-panel .msg__act:hover { background: var(--sd-band); color: var(--sd-ink); }
+.chat-panel .msg__act:hover { background: color-mix(in srgb, var(--sd-ink) 10%, transparent); color: var(--sd-ink); }
 .chat-panel .msg__act:disabled { cursor: default; opacity: .4; }
 .chat-panel .msg__quote { display: flex; flex-direction: column; gap: 2px; max-width: 100%; padding: 6px 10px; border: 0;
   border-radius: 4px; background: var(--sd-band); color: var(--sd-muted); font: inherit; font-size: var(--sd-text-small); text-align: left; cursor: pointer; }
