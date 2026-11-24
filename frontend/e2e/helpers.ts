@@ -15,8 +15,10 @@ export function collectErrors(page: Page): string[] {
 
 /** 가로로 밀리는 화면이 없어야 한다 (모바일 375px 에서 특히) */
 export async function expectNoHorizontalScroll(page: Page) {
-  const { scroll, inner } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, inner: window.innerWidth }));
-  expect(scroll, `가로 넘침: scrollWidth ${scroll} > innerWidth ${inner}`).toBeLessThanOrEqual(inner);
+  // 휴대폰 흉내에서는 innerWidth 도 내용만큼 늘어나 넘침을 놓친다 → 정해 둔 화면 폭과 비교
+  const width = page.viewportSize()!.width;
+  const scroll = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(scroll, `가로 넘침: scrollWidth ${scroll} > 화면 폭 ${width}`).toBeLessThanOrEqual(width);
 }
 
 export const E2E_USER = { email: "host@stageduck.test", password: "e2e-pass-1234" };
