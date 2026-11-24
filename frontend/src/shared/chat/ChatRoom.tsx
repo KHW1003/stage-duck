@@ -206,37 +206,40 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
               <span className="msg__quote-text">{replyText(quoted)}</span>
             </button>
           )}
-          {content}
-        </div>
-        <span className="msg__t">
-          {/* 답장·수정·삭제: "읽음"·시간 칸 위에 뜬다 — 말풍선을 가리지 않게 (11/25) */}
-          {!m.deleted && acts.editingId !== m.id && (
-            <span className="msg__acts">
-              <button type="button" className="msg__act" aria-label="답장" title="답장" onClick={() => acts.onReply(m)}>
-                <Ico name="reply" sm />
-              </button>
-              {mine && m.type === "TEXT" && (
-                <button type="button" className="msg__act" aria-label="수정" title="수정" disabled={acts.busy} onClick={() => {
-                  acts.onLongPress(null);
-                  acts.onEditStart(m);
-                }}>
-                  <Ico name="edit" sm />
-                </button>
+          {/* 말풍선과 읽음·시간을 한 줄로 묶는다: 답장 인용이 말풍선보다 넓어도 시간은 말풍선 바로 옆 (11/25) */}
+          <div className="msg__line">
+            {content}
+            <span className="msg__t">
+              {/* 답장·수정·삭제: "읽음"·시간 칸 위에 뜬다 — 말풍선을 가리지 않게 (11/25) */}
+              {!m.deleted && acts.editingId !== m.id && (
+                <span className="msg__acts">
+                  <button type="button" className="msg__act" aria-label="답장" title="답장" onClick={() => acts.onReply(m)}>
+                    <Ico name="reply" sm />
+                  </button>
+                  {mine && m.type === "TEXT" && (
+                    <button type="button" className="msg__act" aria-label="수정" title="수정" disabled={acts.busy} onClick={() => {
+                      acts.onLongPress(null);
+                      acts.onEditStart(m);
+                    }}>
+                      <Ico name="edit" sm />
+                    </button>
+                  )}
+                  {mine && (
+                    <button type="button" className="msg__act" aria-label="삭제" title="삭제" disabled={acts.busy} onClick={() => {
+                      acts.onLongPress(null);
+                      acts.onDelete(m.id);
+                    }}>
+                      <Ico name="trash" sm />
+                    </button>
+                  )}
+                </span>
               )}
-              {mine && (
-                <button type="button" className="msg__act" aria-label="삭제" title="삭제" disabled={acts.busy} onClick={() => {
-                  acts.onLongPress(null);
-                  acts.onDelete(m.id);
-                }}>
-                  <Ico name="trash" sm />
-                </button>
-              )}
+              {mine && read && <span className="msg__read">읽음</span>}
+              {m.editedAt && !m.deleted && <span className="msg__edited">수정됨</span>}
+              {msgTime(m.createdAt)}
             </span>
-          )}
-          {mine && read && <span className="msg__read">읽음</span>}
-          {m.editedAt && !m.deleted && <span className="msg__edited">수정됨</span>}
-          {msgTime(m.createdAt)}
-        </span>
+          </div>
+        </div>
       </div>
       {m.contactWarning && !m.deleted && (
         <div className="room__warn" role="note">
