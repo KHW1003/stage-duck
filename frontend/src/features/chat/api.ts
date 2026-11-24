@@ -94,12 +94,13 @@ export function attachmentProblem(type: AttachType, file: File): string | null {
 export function useSendAttachment(roomId: number) {
   const onSuccess = useAddSent(roomId);
   return useMutation({
-    mutationFn: async ({ type, file }: { type: AttachType; file: File }) => {
+    mutationFn: async ({ type, file, replyToId }: { type: AttachType; file: File; replyToId?: number | null }) => {
       const form = new FormData();
       form.append("file", file);
       form.append("purpose", "CHAT");
       const uploaded = await api<UploadedFile>("/files", { method: "POST", body: form });
-      return postMessage(roomId, type === "FILE" ? { type, fileId: uploaded.id, body: file.name } : { type, fileId: uploaded.id });
+      const base = type === "FILE" ? { type, fileId: uploaded.id, body: file.name } : { type, fileId: uploaded.id };
+      return postMessage(roomId, replyToId ? { ...base, replyToId } : base);
     },
     onSuccess,
   });
@@ -121,5 +122,39 @@ export function useMarkRoomRead() {
       );
       void qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true });
     },
+  });
+}
+
+/** 위로 올려 예전 대화 보기 (11/24): before 앞의 최근 50개. 50개보다 적으면 더 없음 */
+export const OLDER_PAGE = 50;
+export async function fetchOlder(roomId: number, before: number): Promise<ChatThread> {
+  return threadFromRest(await api<ChatMessagesOut>(`/chat-rooms/${roomId}/messages?before=${before}&limit=${OLDER_PAGE}`));
+}
+
+/** 바뀐 메시지 하나를 그 방 캐시에서 바꾼다 (수정·삭제 응답, message.updated) */
+function useReplaceMessage(roomId: number) {
+  const qc = useQueryClient();
+  return (m: ChatMessageOut) => {
+    qc.setQueryData<ChatThread>(messagesKey(roomId), (old) => addToThread(old, { messages: [fromRest(m)], partnerLastReadMessageId: null }));
+    void qc.invalidateQueries({ queryKey: CHAT_ROOMS_KEY, exact: true });
+  };
+}
+
+/** 메시지 수정 (11/24): 내가 보낸 글 메시지만 */
+export function useEditMessage(roomId: number) {
+  const onSuccess = useReplaceMessage(roomId);
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: string }) =>
+      api<ChatMessageOut>(`/chat-rooms/${roomId}/messages/${id}`, { method: "PATCH", body: JSON.stringify({ body }) }),
+    onSuccess,
+  });
+}
+
+/** 메시지 삭제 (11/24): "삭제된 메시지"로 남는다 */
+export function useDeleteMessage(roomId: number) {
+  const onSuccess = useReplaceMessage(roomId);
+  return useMutation({
+    mutationFn: (id: number) => api<ChatMessageOut>(`/chat-rooms/${roomId}/messages/${id}`, { method: "DELETE" }),
+    onSuccess,
   });
 }

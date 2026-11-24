@@ -140,3 +140,34 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .c-card__amount b { font-weight: 800; }
 .chat-panel .c-card__note { margin: 6px 0 0; font-size: var(--sd-text-small); color: var(--sd-muted); }
 .chat-panel .c-card[data-status="INVALIDATED"], .chat-panel .c-card[data-status="EXPIRED"], .chat-panel .c-card[data-status="RENEGOTIATE"] { opacity: .75; }
+
+/* ---------- 답장 (11/24): 말풍선 옆 꺾인 화살표, 말풍선 위 인용, 입력창 위 인용 ---------- */
+.chat-panel .msg__col { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.chat-panel .msg--me .msg__col { align-items: flex-end; }
+.chat-panel .msg__acts { display: inline-flex; flex: none; align-self: center; gap: 0; opacity: 0; }
+.chat-panel .msg:hover .msg__acts, .chat-panel .msg__acts:focus-within { opacity: 1; }
+@media (hover: none) { .chat-panel .msg__acts { opacity: .6; } }
+.chat-panel .msg__act { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--sd-muted); cursor: pointer; }
+.chat-panel .msg__act:hover { background: var(--sd-band); color: var(--sd-ink); }
+.chat-panel .msg__act:disabled { cursor: default; opacity: .4; }
+.chat-panel .msg__quote { display: flex; flex-direction: column; gap: 2px; max-width: 100%; padding: 6px 10px; border: 0; border-left: 3px solid var(--sd-line-strong);
+  border-radius: 4px; background: var(--sd-band); color: var(--sd-muted); font: inherit; font-size: var(--sd-text-small); text-align: left; cursor: pointer; }
+.chat-panel .msg__quote:hover { color: var(--sd-ink); }
+.chat-panel .msg__quote-who { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.chat-panel .msg__quote-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; }
+.chat-panel .msg--flash .msg__b, .chat-panel .msg--flash .msg__photo { outline: 2px solid var(--sd-blue); outline-offset: 2px; }
+.chat-panel .composer__reply { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--sd-line); background: var(--sd-band);
+  color: var(--sd-muted); font-size: var(--sd-text-small); }
+.chat-panel .composer__reply-main { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.chat-panel .composer__reply-main b { color: var(--sd-ink); font-weight: 600; }
+.chat-panel .composer__reply-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 메시지 속 링크 (11/24): 긴 주소도 말풍선 밖으로 나가지 않게 */
+.chat-panel .msg__link { color: inherit; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+/* 수정·삭제·예전 대화 (11/24) */
+.chat-panel .msg__b--deleted { color: var(--sd-muted); font-style: italic; user-select: none; }
+.chat-panel .msg__edited { color: var(--sd-muted); }
+.chat-panel .msg__edit { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+.chat-panel .msg__edit textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); font: inherit; resize: vertical; }
+.chat-panel .msg__edit-acts { display: flex; justify-content: flex-end; gap: 6px; }
+.chat-panel .room__older { display: flex; justify-content: center; padding: 4px 0 8px; color: var(--sd-muted); font-size: var(--sd-text-small); }
