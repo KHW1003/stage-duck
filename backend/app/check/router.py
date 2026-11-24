@@ -39,6 +39,7 @@ class CompareQuoteOut(BaseModel):
     supplier_id: int
     company_name: str  # 비교 카드 맨 위 "누구" (11/23 디자인 검수)
     room_id: int | None  # 그 단계 × 업체 채팅방 — 카드의 [채팅] 이 연다. 견적서를 보내면 생기니 보통 있다
+    chat_started: bool  # 사용자가 채팅을 시작했는지 (방이 있어도 시작 전이면 "견적 받음", 11/24)
     label: str
     status: str  # 견적서 상태 (SENT · CONFIRMED …). 지금 확정된 견적서만 CONFIRMED (_shown_status)
     version: int
@@ -69,14 +70,17 @@ def compare_quotes(
     confirmed_version_id = db.get(Stage, stage_id).confirmed_quote_version_id  # 읽기 전용 참조 (2번 stages)
     ids = {q.supplier_id for q, _, _ in rows}
     names = dict(db.execute(select(Supplier.id, Supplier.company_name).where(Supplier.id.in_(ids))).all()) if ids else {}
-    rooms = dict(db.execute(
-        select(ChatRoom.supplier_id, ChatRoom.id).where(ChatRoom.stage_id == stage_id, ChatRoom.supplier_id.in_(ids))
-    ).all()) if ids else {}
+    room_rows = db.execute(
+        select(ChatRoom.supplier_id, ChatRoom.id, ChatRoom.started_at)
+        .where(ChatRoom.stage_id == stage_id, ChatRoom.supplier_id.in_(ids))
+    ).all() if ids else []
+    rooms = {sid: rid for sid, rid, _ in room_rows}
+    started = {sid for sid, _, at in room_rows if at is not None}
     for quote, row, checks in rows:
         snap = row.venue_snapshot or {}
         out.append(CompareQuoteOut(
             quote_id=quote.id, supplier_id=quote.supplier_id, company_name=names.get(quote.supplier_id, ""),
-            room_id=rooms.get(quote.supplier_id), label=quote.label, status=_shown_status(quote, confirmed_version_id),
+            room_id=rooms.get(quote.supplier_id), chat_started=quote.supplier_id in started, label=quote.label, status=_shown_status(quote, confirmed_version_id),
             version=row.version, based_on_perf_version=row.based_on_perf_version, total_amount=row.total_amount,
             venue_id=snap.get("venueId"), venue_type=snap.get("venueType"), venue_name=snap.get("name"), max_capacity=snap.get("maxCapacity"), checkout_time=snap.get("checkoutTime"),
             checkin_time=_hm(row.checkin_time), setup_available_time=_hm(row.setup_available_time),
