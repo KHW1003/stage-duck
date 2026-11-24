@@ -160,7 +160,7 @@ test("견적서: 공고 목록 → 상세 → 견적서 보내기 → 자동 검
   await sup.context().close();
 });
 
-test("채팅: [채팅 시작] → 새로고침 없이 오가는 메시지·읽음, 전화번호 경고, 오른쪽 클릭으로 상단 고정 (AC-F3-06·08·15·27)", async ({ page, browser }, info) => {
+test("채팅: [채팅 시작] → 새로고침 없이 오가는 메시지·읽음, 전화번호 경고, 오른쪽 클릭으로 상단 고정 (AC-F3-06·08·15·27)", async ({ page, browser, isMobile }, info) => {
   const title = `채팅 흐름 (${info.project.name})`;
   const userErrors = collectErrors(page);
   await login(page);
@@ -177,8 +177,8 @@ test("채팅: [채팅 시작] → 새로고침 없이 오가는 메시지·읽�
   await expect(panel(sup).getByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).toBeVisible();
   await expect(panel(sup).getByRole("textbox", { name: "메시지" })).toHaveCount(0);
 
-  // 사용자: 둥근 버튼 → 목록 → 방 → [채팅 시작]
-  await page.getByRole("button", { name: /^채팅 열기/ }).click();
+  // 사용자: 둥근 버튼(휴대폰은 아래 탭) → 목록 → 방 → [채팅 시작]
+  await (isMobile ? page.getByRole("navigation", { name: "아래 메뉴" }).getByRole("button", { name: /채팅/ }) : page.getByRole("button", { name: /^채팅 열기/ })).click();
   await roomItem(page, chatRoomId).getByRole("button").click();
   await expect(panel(page).getByText("견적서를 보냈어요", { exact: false })).toBeVisible(); // 견적서 카드
   await panel(page).getByRole("button", { name: "채팅 시작" }).click();

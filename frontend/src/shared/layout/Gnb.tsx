@@ -17,6 +17,7 @@ import { ButtonLink } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { NotificationList } from "../../features/notification/NotificationList";
 import { useMarkRead, useNotifications, useUnreadCount } from "../../features/notification/api";
+import { useHideOnScroll, useMobile } from "./useMobile";
 import { ACCOUNT_LINKS, HOME, LOGO_HOME, MENUS, NOTIFICATIONS_PATH, type MenuItem } from "./menus";
 import styles from "./Gnb.module.css";
 
@@ -46,6 +47,8 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
   const partner = kind === "partner" || kind === "partner-review";
   const { pathname, search } = useLocation();
   const [navOpen, setNavOpen] = useState(false);
+  const tabs = useMobile() && kind !== "admin"; // 아래 탭(MobileTabBar)이 메뉴를 대신한다
+  const { ref, hidden } = useHideOnScroll(tabs);
   const hasMenu = MENUS[kind].length > 0 || !me;
   // 화면을 옮기면 모바일 메뉴 판을 닫는다
   useEffect(() => setNavOpen(false), [pathname, search]);
@@ -57,20 +60,20 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
   }, [navOpen]);
   const logo = (
     <>
-      <img src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
+      <img src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" className={tabs ? "m-word" : undefined} />
       {partner && <span className={styles.role}>파트너</span>}
       {kind === "admin" && <span className={`${styles.role} ${styles.roleAdmin}`}>관리자</span>}
     </>
   );
   return (
-    <header className={styles.gnb}>
+    <header ref={ref} className={tabs ? `${styles.gnb} ${styles.tabbed} m-head` : styles.gnb} data-scroll-hidden={hidden || undefined}>
       <div className={`sd-container ${styles.inner}`}>
         {kind === "admin" ? (
           <a className={styles.logo} href={HOME.admin}>
             {logo}
           </a>
         ) : (
-          <Link className={styles.logo} to={LOGO_HOME[kind]}>
+          <Link className={styles.logo} to={tabs ? "/" : LOGO_HOME[kind]}>
             {logo}
           </Link>
         )}

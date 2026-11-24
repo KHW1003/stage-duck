@@ -88,4 +88,7 @@
   .logo { display: none; }
   .menu .homeLink { display: inline-flex; }
   .inner { grid-template-columns: minmax(0, 1fr) auto; }
+  /* 아래 탭이 있으면(관리자 빼고) 글자 로고만 둔다 (11/24, 위 11/23 결정을 바꿈) */
+  .tabbed .logo { display: inline-flex; justify-self: start; min-height: var(--sd-touch); }
+  .tabbed .menu, .tabbed .right { display: none; }
 }

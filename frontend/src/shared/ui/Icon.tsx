@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import styles from "./Icon.module.css";
 
 const SHAPES = {
+  home: <path d="M3 11 12 3l9 8M5.5 9v12h13V9M9.5 21v-7h5v7" />,
   pass: (
     <>
       <circle cx="12" cy="12" r="9" />

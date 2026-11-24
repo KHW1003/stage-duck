@@ -568,5 +568,8 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
 @media (max-width: 560px) {
   .gnb .logo { display: none; }
   .gnb__menu--open .gnb__home { display: flex; }
+  /* 아래 탭이 있으면(관리자 빼고) 글자 로고만 둔다 (11/24) */
+  .gnb--tabbed .logo { display: inline-flex; justify-self: start; min-height: var(--sd-touch); }
+  .gnb--tabbed .gnb__menu, .gnb--tabbed .gnb__right { display: none; }
   .gnb__inner { grid-template-columns: minmax(0, 1fr) auto; }
 }
