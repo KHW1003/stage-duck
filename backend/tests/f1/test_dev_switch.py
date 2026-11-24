@@ -114,3 +114,34 @@ def test_ac_f1_16_switch_invalid_input_is_400(client, payload):
     body = res.json()
     assert body["code"] == "VALIDATION_FAILED"
     assert body["fieldErrors"][0]["field"] == "userId"
+
+
+@pytest.mark.parametrize(
+    ("role", "email"),
+    [
+        ("USER", "someone@example.com"),
+        ("USER", "host@stageduck.test.example.com"),
+        ("USER", "host@notstageduck.test"),
+        ("ADMIN", "admin@example.com"),
+    ],
+)
+def test_ac_f1_16_switch_real_email_account_is_404(client, db, role, email):
+    """시연 계정이 아닌(실제 이메일) 회원으로는 전환되지 않는다 → 404, 쿠키 없음 (FR-AUTH-08)."""
+    user = make_user(db, role=role, email=email)
+    res = client.post(URL, json={"userId": user.id})
+    assert res.status_code == 404
+    assert res.json()["code"] == "NOT_FOUND"
+    assert res.headers.get_list("set-cookie") == []
+
+
+@pytest.mark.parametrize(
+    ("role", "email"),
+    [("USER", "demo-user@stageduck.test"), ("ADMIN", "admin@stageduck.test"), ("USER", "Demo-Upper@StageDuck.Test")],
+)
+def test_ac_f1_16_switch_demo_email_account(client, db, role, email):
+    """@stageduck.test 시연 계정은 (관리자 포함) 전환된다. 도메인 대소문자는 가리지 않는다."""
+    user = make_user(db, role=role, email=email)
+    res = client.post(URL, json={"userId": user.id})
+    assert res.status_code == 200, res.text
+    assert res.json()["role"] == role
+    assert read_access_token(res.cookies.get(ACCESS_COOKIE)) == user.id
