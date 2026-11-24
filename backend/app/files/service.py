@@ -25,6 +25,8 @@ Image.MAX_IMAGE_PIXELS = calc.MAX_PIXEL_SUM * calc.MAX_PIXEL_SUM // 4
 _PIL_FORMATS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
 
 
+SUSPENDED_PURPOSE = "INQUIRY"  # 정지 계정이 올릴 수 있는 유일한 용도 (uploads.md 6장)
+
 def _bad_file(message: str) -> AppError:
     return AppError(400, "VALIDATION_FAILED", message, [{"field": "file", "reason": message}])
 
@@ -98,7 +100,12 @@ def _process_image(data: bytes, sniffed: str, rule: calc.Rule, ext: str) -> tupl
 
 
 def upload(db: Session, user: User, *, purpose: str, filename: str | None, stream: BinaryIO, now: datetime) -> StoredFile:
-    """D-51: 용도별 형식·크기 검사, 사진은 위치 정보를 지우고 크기를 줄여 저장. 상태는 TEMP."""
+    """D-51: 용도별 형식·크기 검사, 사진은 위치 정보를 지우고 크기를 줄여 저장. 상태는 TEMP.
+
+    정지 계정은 1:1 문의 사진(INQUIRY)만 올린다 (uploads.md 6장, AC-F5-18).
+    """
+    if user.status == "SUSPENDED" and purpose != SUSPENDED_PURPOSE:
+        raise AppError(403, "ACCOUNT_SUSPENDED", "이용이 정지된 계정은 1:1 문의 사진만 올릴 수 있어요.")
     rule = calc.RULES.get(purpose)
     if rule is None:
         msg = "올릴 곳을 다시 골라 주세요."
@@ -155,9 +162,14 @@ def upload(db: Session, user: User, *, purpose: str, filename: str | None, strea
 
 
 def _readable(db: Session, f: StoredFile, user: User) -> bool:
-    """비공개 파일: 올린 사람과 관리자. 채팅 파일은 그 방 참여자도 — 판단은 채팅 서비스가 한다 (3번 #42)."""
+    """비공개 파일: 올린 사람과 관리자. 채팅 파일은 그 방 참여자도 — 판단은 채팅 서비스가 한다 (3번 #42).
+
+    정지 계정은 자기 파일만 (1:1 문의에 붙인 사진 보기).
+    """
     if f.owner_user_id == user.id or user.role == "ADMIN":
         return True
+    if user.status == "SUSPENDED":
+        return False
     if f.purpose == "CHAT":
         from app.chat import service as chat_service  # 채팅 서비스가 이 모듈을 부르므로 여기서 가져온다 (순환 import 방지)
 

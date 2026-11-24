@@ -103,14 +103,63 @@ def test_login_failures_look_the_same(client, db, case):
     assert ACCESS_COOKIE not in res.cookies
 
 
-def test_suspended_user_cannot_log_in(client, db):
-    """정지 계정은 로그인 자체가 막히고 정지라는 것을 알려 준다 (#24 결정). 쿠키도 붙이지 않는다."""
+def test_ac_f5_18_suspended_user_logs_in_and_me_shows_suspended(client, db):
+    """AC-F5-18·D-48: 정지 계정도 로그인은 된다 (api-contract.md 6.1 — 로그인·로그아웃·1:1 문의는 쓸 수 있다).
+
+    화면은 /me 의 status 를 보고 정지 화면을 띄운다 (mockup-v4 error.html suspended).
+    """
     user = make_user(db, password=PW, status="SUSPENDED")
     res = _login(client, user.email)
-    assert res.status_code == 403
-    assert res.json()["code"] == "ACCOUNT_SUSPENDED"
-    assert ACCESS_COOKIE not in res.cookies
-    assert client.get("/api/v1/me").status_code == 401
+    assert res.status_code == 200, res.text
+    assert read_access_token(res.cookies[ACCESS_COOKIE]) == user.id
+    me = client.get("/api/v1/me")
+    assert me.status_code == 200
+    assert me.json()["status"] == "SUSPENDED"
+
+
+def test_ac_f5_18_me_shows_suspension_date_and_last_warning(client, db, monkeypatch):
+    """정지 화면(mockup-v4 error.html suspended)의 정지일·마지막 경고를 /me 가 준다. 값은 4번 policy.service 에서."""
+    from types import SimpleNamespace
+
+    from app.policy import service as policy_service
+
+    summary = SimpleNamespace(suspended_at=datetime(2026, 11, 13, 10, 0), reason="경고 3회 누적",
+                              last_warning_reason="채팅에서 계좌 이체 유도 (외부 거래)")
+    asked = []
+    monkeypatch.setattr(policy_service, "suspension_summary", lambda db, uid: asked.append(uid) or summary, raising=False)
+    user = make_user(db, password=PW, status="SUSPENDED")
+    _login(client, user.email)
+
+    me = client.get("/api/v1/me").json()
+    assert me["suspension"] == {
+        "suspendedAt": "2026-11-13T10:00:00",
+        "reason": "경고 3회 누적",
+        "lastWarningReason": "채팅에서 계좌 이체 유도 (외부 거래)",
+    }
+    assert asked == [user.id]
+
+
+def test_ac_f5_18_three_warnings_then_me_shows_real_suspension(client, db):
+    """경고 3회(4번 policy.warn) → 정지 → 로그인하면 /me 에 정지일·마지막 경고가 실제 값으로 온다 (monkeypatch 없이)."""
+    from app.policy import service as policy_service
+
+    admin = make_user(db, role="ADMIN")
+    user = make_user(db, password=PW)
+    for reason in ("욕설", "연락처 공유", "채팅에서 계좌 이체 유도 (외부 거래)"):
+        policy_service.warn(db, user.id, actor_id=admin.id, reason=reason)
+
+    assert _login(client, user.email).status_code == 200
+    me = client.get("/api/v1/me").json()
+    assert me["status"] == "SUSPENDED"
+    assert me["suspension"]["reason"] == "경고 3회 누적"
+    assert me["suspension"]["lastWarningReason"] == "채팅에서 계좌 이체 유도 (외부 거래)"
+    assert me["suspension"]["suspendedAt"]
+
+
+def test_ac_f5_18_active_user_has_no_suspension(client, db):
+    user = make_user(db, password=PW)
+    _login(client, user.email)
+    assert client.get("/api/v1/me").json()["suspension"] is None
 
 
 def test_suspended_user_wrong_password_does_not_reveal_suspension(client, db):
@@ -120,13 +169,17 @@ def test_suspended_user_wrong_password_does_not_reveal_suspension(client, db):
     assert res.status_code == 401 and res.json()["code"] == "UNAUTHENTICATED"
 
 
-def test_suspended_after_login_is_kicked_out(client, db):
-    """로그인한 뒤에 정지되면 이미 받은 쿠키로도 /me 가 401."""
+def test_ac_f5_18_suspended_after_login_sees_status_but_other_api_is_blocked(client, db):
+    """로그인한 뒤에 정지되면 /me 는 정지 상태를 알려 주고, 그 밖의 API 는 그대로 막힌다.
+
+    (계약서는 그 밖의 API 를 403 ACCOUNT_SUSPENDED 로 적었지만 지금은 401 — 응답 통일은 별도 이슈)
+    """
     user = make_user(db, password=PW)
     _login(client, user.email)
     user.status = "SUSPENDED"
     db.commit()
-    assert client.get("/api/v1/me").status_code == 401
+    assert client.get("/api/v1/me").json()["status"] == "SUSPENDED"
+    assert client.get("/api/v1/me/profile").status_code == 401
 
 
 # ---------- FR-AUTH-06 5회 연속 실패 → 10분 잠금 ----------

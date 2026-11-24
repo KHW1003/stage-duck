@@ -175,6 +175,21 @@ def test_private_photo_is_saved_as_jpg_without_thumb(api, db, root):
     assert f.storage_key.startswith("private/inquiry/") and (root / f.storage_key).is_file()
 
 
+def test_ac_f5_18_suspended_user_uploads_only_inquiry_photos(api, db):
+    """uploads.md 6장: 정지 계정은 1:1 문의 사진(INQUIRY)만 올리고, 자기 파일만 보고 지운다."""
+    user = make_user(db, status="SUSPENDED")
+    c = login_as(api, user)
+
+    res = _post(c, _image("PNG"), "INQUIRY", "a.png", "image/png")
+    assert res.status_code == 201, res.text
+    assert c.get(f"{URL}/{res.json()['id']}").status_code == 200
+    assert c.delete(f"{URL}/{res.json()['id']}").status_code == 204
+
+    other = _post(c, _image("PNG"), "PROFILE", "a.png", "image/png")
+    assert other.status_code == 403
+    assert other.json()["code"] == "ACCOUNT_SUSPENDED"
+
+
 def test_public_file_is_not_served_by_files_api(api, db):
     res = _post(login_as(api, make_user(db)), _image("PNG"), "VENUE", "a.png", "image/png")
     assert api.get(f"{URL}/{res.json()['id']}").status_code == 404  # 공개 사진은 /media 주소로

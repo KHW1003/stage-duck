@@ -68,6 +68,9 @@ function renderAt(path: string) {
               <Route path="/supplier/reservations" element={<SupplierReservationsPage />} />
               <Route path="/supplier/posts" element={<p>내 소개 글 화면</p>} />
             </Route>
+            <Route element={<RequireAuth roles={["USER", "SUPPLIER"]} />}>
+              <Route path="/inquiries/new" element={<p>문의 쓰기 화면</p>} />
+            </Route>
             <Route path="/login" element={<Where />} />
             <Route path="/supplier/onboarding" element={<Where />} />
             <Route path="*" element={<NotFound />} />
@@ -246,6 +249,39 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
     renderAt("/me/performances");
     expect(await screen.findByRole("heading", { name: "이용이 정지된 계정이에요" })).toBeInTheDocument();
     expect(within(screen.getByRole("main")).getByRole("link", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries/new");
+    expect(within(screen.getByRole("main")).getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
+  });
+
+  it("AC-F5-18 정지 안내에 목업처럼 계정·정지일·마지막 경고·진행 중인 섭외를 보여 준다", async () => {
+    const suspension = { suspendedAt: "2026-11-13T10:00:00", reason: "경고 3회 누적", lastWarningReason: "채팅에서 계좌 이체 유도 (외부 거래)" };
+    mockServer({ "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED", suspension } } });
+    renderAt("/me/performances");
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByRole("heading", { name: "이용이 정지된 계정이에요" })).toBeInTheDocument();
+    const rows = main.getAllByRole("row").map((r) => r.textContent);
+    expect(rows).toEqual([
+      `계정${USER.email}`,
+      "정지일11월 13일",
+      "마지막 경고채팅에서 계좌 이체 유도 (외부 거래)",
+      "진행 중인 섭외관리자가 확인한 뒤 사용자에게 안내해요",
+    ]);
+  });
+
+  it("AC-F5-18 이용 정지 계정도 1:1 문의 화면에는 들어간다 (api-contract.md 6.1)", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED" } } });
+    renderAt("/inquiries/new");
+    expect(await screen.findByText("문의 쓰기 화면")).toBeInTheDocument();
+  });
+
+  it("이용 정지 안내의 [로그아웃]은 쿠키를 지우고 로그인 화면으로 간다 (목업 v4 error.html)", async () => {
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED" } },
+      "POST /api/v1/auth/logout": { status: 204 },
+    });
+    renderAt("/me/performances");
+    await userEvent.setup().click(await within(await screen.findByRole("main")).findByRole("button", { name: "로그아웃" }));
+    expect(await screen.findByTestId("where")).toHaveTextContent("/login");
+    expect(calls.some((c) => c.method === "POST" && c.url === "/api/v1/auth/logout")).toBe(true);
   });
 
   it("인터넷이 끊기면 연결 끊김 화면을 덮고, 다시 연결되면 쓰던 화면이 그대로 남아 있다", async () => {
