@@ -16,13 +16,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # 답장한 원래 메시지. 시연 초기화처럼 방 메시지를 한꺼번에 지워도 막히지 않게 SET NULL
-    op.add_column("chat_messages", sa.Column("reply_to_id", BigID, nullable=True))
-    op.create_foreign_key(
-        "fk_chat_messages_reply_to_id", "chat_messages", "chat_messages", ["reply_to_id"], ["id"], ondelete="SET NULL"
-    )
+    # 답장한 원래 메시지. 시연 초기화처럼 방 메시지를 한꺼번에 지워도 막히지 않게 SET NULL.
+    # batch_alter_table: SQLite(테스트)는 기존 표에 외래키를 바로 못 붙여 표를 새로 만들어 옮긴다. MariaDB 는 그냥 ALTER
+    with op.batch_alter_table("chat_messages") as batch:
+        batch.add_column(sa.Column("reply_to_id", BigID, nullable=True))
+        batch.create_foreign_key(
+            "fk_chat_messages_reply_to_id", "chat_messages", ["reply_to_id"], ["id"], ondelete="SET NULL"
+        )
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_chat_messages_reply_to_id", "chat_messages", type_="foreignkey")
-    op.drop_column("chat_messages", "reply_to_id")
+    with op.batch_alter_table("chat_messages") as batch:
+        batch.drop_constraint("fk_chat_messages_reply_to_id", type_="foreignkey")
+        batch.drop_column("reply_to_id")
