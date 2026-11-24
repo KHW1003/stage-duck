@@ -42,7 +42,8 @@ export function AppLayout() {
       </main>
       <Footer partner={partner} />
       {!me.isPending && <MobileTabBar kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />}
-      {me.data && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
+      {/* 정지 계정은 채팅을 못 쓴다 — 띄우면 막힌 채팅 API·실시간 연결을 되풀이해 부른다 (AC-F5-18) */}
+      {me.data && me.data.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
     </div>
   );
 }
