@@ -256,8 +256,8 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   );
 }
 
-function Composer({ roomId, replyTo, replyName, onClearReply }: {
-  roomId: number; replyTo: ChatMsg | null; replyName: string; onClearReply: () => void;
+function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
+  roomId: number; replyTo: ChatMsg | null; replyName: string; onClearReply: () => void; onSending: () => void;
 }) {
   const [text, setText] = useState("");
   const [pickError, setPickError] = useState<string | null>(null);
@@ -280,6 +280,7 @@ function Composer({ roomId, replyTo, replyName, onClearReply }: {
     const body = text.trim();
     if (!body || busy) return;
     clearErrors();
+    onSending();
     send.mutate(replyTo ? { type: "TEXT", body, replyToId: replyTo.id } : { type: "TEXT", body }, {
       onSuccess: () => {
         setText("");
@@ -298,6 +299,7 @@ function Composer({ roomId, replyTo, replyName, onClearReply }: {
       setPickError(problem);
       return;
     }
+    onSending();
     attach.mutate({ type, file, replyToId: replyTo?.id ?? null }, { onSuccess: onClearReply });
   };
   const error = send.error ?? attach.error;
@@ -441,10 +443,24 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
       });
   }, [lastId, roomId, qc]);
 
+  // 맨 아래(최신) 붙이기: 처음 열 때·새 메시지·패널이 보이거나 크기가 바뀔 때. 위로 올려 보는 중이면 끌어내리지 않는다
+  // (11/24: 주소로 바로 열면 패널이 보이기 전에 맞춰 맨 위에서 열리던 문제)
+  const stick = useRef(true);
+  const toBottom = () => {
+    const el = listRef.current;
+    if (el && stick.current) el.scrollTop = el.scrollHeight;
+  };
+  // 방 정보(room)가 대화보다 늦게 오면 그때 목록이 처음 그려진다 → 그 시점에도 맞춘다
+  const listShown = Boolean(room) && thread.isSuccess;
+  useLayoutEffect(toBottom, [lastId, listShown]);
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [lastId]);
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(toBottom);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listShown]);
 
   const back = (
     <button className="icon-btn" type="button" aria-label="목록으로" onClick={onBack}>
@@ -534,7 +550,9 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
           className="room__msgs"
           ref={listRef}
           onScroll={(e) => {
-            if (e.currentTarget.scrollTop < 60) void loadOlder();
+            const el = e.currentTarget;
+            stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+            if (el.scrollTop < 60) void loadOlder();
           }}
         >
           {hasMore && (
@@ -580,6 +598,9 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
             replyTo={replyTo}
             replyName={replyTo && replyTo.senderId === meId ? "나" : room.partnerName}
             onClearReply={() => setReplyTo(null)}
+            onSending={() => {
+              stick.current = true; // 내가 보내면 늘 맨 아래로
+            }}
           />
         ) : role === "USER" ? (
           <StartBar roomId={roomId} />
