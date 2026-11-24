@@ -185,9 +185,7 @@ test("채팅: [채팅 시작] → 새로고침 없이 오가는 메시지·읽�
   await expect(panel(page).getByText("대화 중")).toBeVisible();
   await expectNoHorizontalScroll(page);
 
-  // 업체 화면: [채팅 시작]은 실시간으로 오지 않는다 (WS 는 notification 만 보내고 위젯은 알림만 새로 받음 — 버그 보고함).
-  // 그래서 이 한 번만 다시 불러온다. 메시지·읽음은 아래에서 새로고침 없이 확인한다
-  await sup.goto(`/supplier/postings?chat=${chatRoomId}`);
+  // 업체 화면: 열어 둔 방에 새로고침 없이 입력창이 열린다 (채팅 시작 알림 → 채팅방 목록 다시 받음)
   await expect(panel(sup).getByRole("textbox", { name: "메시지" })).toBeVisible();
 
   // AC-F3-08: 사용자 → 업체 (새로고침 없이), 업체가 열어 두고 있으니 사용자 말풍선에 "읽음"
