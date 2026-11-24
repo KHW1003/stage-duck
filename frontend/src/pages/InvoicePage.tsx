@@ -131,7 +131,12 @@ export function InvoicePage() {
       />
       <main className="container main">
         {order.isError ? (
-          <ErrorNotice error={order.error} />
+          <>
+            <ErrorNotice error={order.error} />
+            <div className="btns mt-24">
+              <Link className="btn" to={p ? `/performances/${p.id}` : "/me/performances"}>{p ? "공연으로 돌아가기" : "내 공연으로 돌아가기"}</Link>
+            </div>
+          </>
         ) : !o || !p ? (
           <p className="muted">불러오는 중입니다.</p>
         ) : (

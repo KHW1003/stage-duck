@@ -11,6 +11,8 @@ from app.auth.deps import require_role
 from app.check.calc import overall
 from app.core.db import get_db
 from app.models.chat import ChatRoom
+from app.models.quote import Quote
+from app.models.request import Stage
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.quote import service as quote_service
@@ -20,6 +22,12 @@ router = APIRouter(prefix="/stages", tags=["check"])
 
 def _hm(t: time | None) -> str | None:
     return t.strftime("%H:%M") if t else None
+
+
+def _shown_status(quote: Quote, confirmed_version_id: int | None) -> str:
+    """업체 사정 취소 뒤 다시 확정한 단계: 취소된 옛 견적서는 CONFIRMED 로 남으므로(data-model 11장) 화면에는 마감으로 준다."""
+    stale = quote.status == "CONFIRMED" and confirmed_version_id is not None and confirmed_version_id not in {v.id for v in quote.versions}
+    return "CLOSED" if stale else quote.status
 
 
 class CompareQuoteOut(BaseModel):
@@ -32,7 +40,7 @@ class CompareQuoteOut(BaseModel):
     company_name: str  # 비교 카드 맨 위 "누구" (11/23 디자인 검수)
     room_id: int | None  # 그 단계 × 업체 채팅방 — 카드의 [채팅] 이 연다. 견적서를 보내면 생기니 보통 있다
     label: str
-    status: str  # 견적서 상태 (SENT · CONFIRMED …)
+    status: str  # 견적서 상태 (SENT · CONFIRMED …). 지금 확정된 견적서만 CONFIRMED (_shown_status)
     version: int
     based_on_perf_version: int
     total_amount: int
@@ -58,6 +66,7 @@ def compare_quotes(
     """AC-F3-20~24: 그 단계에 받은 견적서를 검사 결과와 함께 나란히. 남의 공연은 404."""
     out = []
     rows = quote_service.stage_quotes_with_checks(db, user, stage_id)
+    confirmed_version_id = db.get(Stage, stage_id).confirmed_quote_version_id  # 읽기 전용 참조 (2번 stages)
     ids = {q.supplier_id for q, _, _ in rows}
     names = dict(db.execute(select(Supplier.id, Supplier.company_name).where(Supplier.id.in_(ids))).all()) if ids else {}
     rooms = dict(db.execute(
@@ -67,7 +76,7 @@ def compare_quotes(
         snap = row.venue_snapshot or {}
         out.append(CompareQuoteOut(
             quote_id=quote.id, supplier_id=quote.supplier_id, company_name=names.get(quote.supplier_id, ""),
-            room_id=rooms.get(quote.supplier_id), label=quote.label, status=quote.status,
+            room_id=rooms.get(quote.supplier_id), label=quote.label, status=_shown_status(quote, confirmed_version_id),
             version=row.version, based_on_perf_version=row.based_on_perf_version, total_amount=row.total_amount,
             venue_id=snap.get("venueId"), venue_type=snap.get("venueType"), venue_name=snap.get("name"), max_capacity=snap.get("maxCapacity"), checkout_time=snap.get("checkoutTime"),
             checkin_time=_hm(row.checkin_time), setup_available_time=_hm(row.setup_available_time),
