@@ -1,99 +1,28 @@
 /**
- * 업체 메인 — 승인 업체 첫 화면 (mockup/partner.html 3번 st-approved).
- * 인사 → 지금 할 일 · 내 견적서 → 나에게 맞는 공고(전체·공고·받은 견적 요청) → 이번 달 일정 · 내 업체.
- *
- * 값은 아직 목업 예시(시연_예시값.md)다. 바꿀 곳:
- * - 공고·견적 요청 목록: 3번 공고 목록 API(#41, PostingSummary)가 develop 에 들어오면 JOBS 대신
- * - 할 일: 알림(notify, #45) / 견적서 수·정산: 견적서·결제 묶음
+ * 승인 업체 첫 화면 (/partner). 11/24 다시 만듦 — 예전 화면은 코드에 적은 가짜 숫자였다 (디자인 검수 "다시 만들어야 함").
+ * 모든 숫자·목록은 업체가 이미 쓰는 API 에서 온다 (새 API 없음):
+ *   받은 견적 요청 GET /supplier/offers · 공고 GET /postings · 내 예약 GET /supplier/reservations · 채팅 GET /chat-rooms
+ *   알림 GET /me/notifications · 경고 GET /supplier/warnings · 내 소개 글 GET /pr-posts/mine
+ * 화면은 판정·금액 계산을 하지 않는다 (CLAUDE.md 12). 개수 세기·날짜 정렬만 한다.
+ * 모양: 카드·그림자·파스텔 없이 얇은 선과 여백으로 묶고, 상태는 아이콘 + 글자 + 색 (DESIGN.md 8장). 불러오는 중에는 회색 자리.
  */
-import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { cx } from "./cx";
-import { HomeIcon, type HomeIconName } from "./icons";
-import s from "./home.module.css";
+import { useMyPrPosts } from "../board/api";
+import { useChatRooms } from "../chat/api";
+import { useNotifications } from "../notification/api";
+import { useReceivedOffers, type ReceivedOffer } from "../offer/api";
+import { useSupplierReservations, useSupplierWarnings, type SupplierReservation } from "../payment/api";
+import { STAGE_NAME, hm } from "../performance/labels";
+import { usePostings } from "../quote/api";
+import { useMe } from "../../shared/auth/useMe";
+import { Ico, type KitIconName } from "../../shared/ui/Ico";
+import s from "./partner-dashboard.module.css";
 
 const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+const DAY = 86_400_000;
 
-interface Todo {
-  icon: HomeIconName;
-  title: string;
-  desc: string;
-  action: string;
-  to: string;
-  hot?: boolean;
-}
-
-const TODOS: Todo[] = [
-  { icon: "mail", title: "견적 요청이 도착했어요", desc: "연말 합동 공연 · 응답 기한 47시간", action: "공고 보기", to: "/supplier/postings", hot: true },
-  { icon: "bubble", title: "가을밤밴드님이 채팅을 시작했어요", desc: "가을밤 밴드 공연 · 장비 · 5분 전", action: "채팅", to: "/supplier/postings?chat=list" },
-  { icon: "pass", title: "재즈 트리오 공연 견적서가 컨펌됐어요", desc: "700,000원 · 결제 완료", action: "담당표", to: "/sheet" },
-];
-
-const KPI = [
-  { label: "보낸 견적서", value: 3, to: "/supplier/postings" },
-  { label: "채팅 중", value: 1, to: "/supplier/postings?chat=list" },
-  { label: "확인 카드 대기", value: 1, to: "/supplier/postings", tone: "warn" as const },
-  { label: "컨펌", value: 1, to: "/supplier/postings", tone: "done" as const },
-];
-
-interface Job {
-  id: number;
-  date: string; // YYYY-MM-DD
-  title: string;
-  desc: string;
-  due: string;
-  offer?: boolean;
-  urgent?: boolean;
-  action: { label: string; to: string; primary: boolean };
-}
-
-const JOBS: Job[] = [
-  {
-    id: 1,
-    date: "2026-11-28",
-    title: "가을밤 밴드 공연 · 광주 동구 · 관객 80명",
-    desc: "앞 단계 공간 C (입실 15:00) · 가을밤밴드 · 이용 0 · 반려 0",
-    due: "확인 카드 보냄 · 47:12",
-    action: { label: "상세", to: "/supplier/postings", primary: false },
-  },
-  {
-    id: 2,
-    date: "2026-12-05",
-    title: "겨울 어쿠스틱 공연 · 광주 서구 · 관객 40명",
-    desc: "앞 단계 공간 B (입실 17:00) · 봄날 · 이용 2 · 반려 1",
-    due: "견적서 보내기 전",
-    action: { label: "견적서 쓰기", to: "/supplier/postings", primary: true },
-  },
-  {
-    id: 3,
-    date: "2026-12-12",
-    title: "연말 합동 공연 · 광주 북구 · 관객 120명",
-    desc: '앞 단계 공간 A 컨펌 · "드럼 세트는 저희가 가져가요."',
-    due: "응답 기한 47시간",
-    offer: true,
-    urgent: true,
-    action: { label: "견적 요청 보기", to: "/supplier/postings", primary: true },
-  },
-];
-
-const SCHEDULE = [
-  { date: "2026-11-14", text: "재즈 트리오 공연 · 설치 13:00", state: "결제 완료", pass: true },
-  { date: "2026-11-28", text: "가을밤 밴드 공연 · 설치 15:00~15:45", state: "컨펌 대기", pass: false },
-];
-
-type Filter = "all" | "posting" | "offer";
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "전체" },
-  { key: "posting", label: "공고" },
-  { key: "offer", label: "받은 견적 요청" },
-];
-
-const parse = (iso: string) => {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
-
-/** 달력 칸: 앞 빈칸 + 1일~말일 + 뒤 빈칸 (7의 배수) */
+/** 달력 칸: 그 달 1일의 요일만큼 빈칸, 뒤는 7의 배수까지 빈칸 */
 export function monthCells(year: number, month: number): (number | null)[] {
   const first = new Date(year, month, 1).getDay();
   const last = new Date(year, month + 1, 0).getDate();
@@ -102,250 +31,427 @@ export function monthCells(year: number, month: number): (number | null)[] {
   return cells;
 }
 
-function Calendar({ today }: { today: Date }) {
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const dateOf = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00`);
+const md = (iso: string) => {
+  const d = dateOf(iso);
+  return `${d.getMonth() + 1}.${d.getDate()} (${WEEKDAY[d.getDay()]})`;
+};
+const daysLeft = (iso: string, today: Date) => Math.round((dateOf(iso).getTime() - dateOf(ymd(today)).getTime()) / DAY);
+const dLabel = (iso: string, today: Date) => {
+  const n = daysLeft(iso, today);
+  return n === 0 ? "D-DAY" : n > 0 ? `D-${n}` : "";
+};
+const until = (iso: string, now: Date) => {
+  const h = Math.floor((new Date(iso).getTime() - now.getTime()) / 3_600_000);
+  if (h < 1) return "곧 마감";
+  if (h < 24) return `${h}시간 남음`;
+  return `${Math.floor(h / 24)}일 남음`;
+};
+
+const RES_STATUS: Record<SupplierReservation["status"], { label: string; tone: "pass" | "warn" | "info" | "muted" | "conflict" }> = {
+  ASSIGNING: { label: "섭외 중", tone: "info" },
+  AWAITING_PAYMENT: { label: "결제 대기", tone: "info" },
+  PAID: { label: "결제 완료", tone: "pass" },
+  COMPLETED: { label: "공연 완료", tone: "muted" },
+  NEEDS_REVIEW: { label: "재확인 필요", tone: "warn" },
+  CANCELLED: { label: "취소", tone: "conflict" },
+};
+
+type Tone = "pass" | "warn" | "info" | "muted" | "conflict";
+const TONE_ICON: Record<Tone, KitIconName> = { pass: "pass", warn: "warn", info: "info", muted: "clock", conflict: "conflict" };
+
+function Status({ tone, children }: { tone: Tone; children: ReactNode }) {
+  return (
+    <span className={`${s.status} ${s[tone]}`}>
+      <Ico name={TONE_ICON[tone]} sm />
+      {children}
+    </span>
+  );
+}
+
+/** 불러오는 중: 줄 모양 회색 자리 (움직임 없음) */
+function Skeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className={s.skeleton} aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <span key={i} />
+      ))}
+    </div>
+  );
+}
+
+function SecHead({ id, title, count, to, more = "전체 보기" }: { id?: string; title: string; count?: number; to?: string; more?: string }) {
+  return (
+    <div className={s.secHead}>
+      <h2 id={id}>
+        {title}
+        {count !== undefined && <span className={s.count}>{count}</span>}
+      </h2>
+      {to && (
+        <Link className={s.more} to={to}>
+          {more}
+          <Ico name="right" sm />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+interface Todo {
+  key: string;
+  tone: Tone;
+  label: string;
+  title: string;
+  sub: string;
+  meta?: string;
+  action: string;
+  to: string;
+}
+
+function buildTodos(
+  offers: ReceivedOffer[],
+  reservations: SupplierReservation[],
+  rooms: { roomId: number; partnerName: string; unreadCount: number }[],
+  bumpable: number,
+  noPost: boolean,
+  now: Date,
+): Todo[] {
+  const list: Todo[] = [];
+  for (const o of offers) {
+    const soon = new Date(o.expiresAt).getTime() - now.getTime() < DAY;
+    list.push({
+      key: `offer-${o.offerId}`,
+      tone: soon ? "warn" : "info",
+      label: "견적 요청",
+      title: `${o.nickname}님이 견적을 요청했어요`,
+      sub: `${o.title} · ${STAGE_NAME[o.stageType]} · ${md(o.showDate)} · 관객 ${o.audience}명`,
+      meta: until(o.expiresAt, now),
+      action: "견적 쓰기",
+      to: `/supplier/postings/${o.stageId}/quote`,
+    });
+  }
+  for (const r of reservations.filter((x) => x.status === "NEEDS_REVIEW")) {
+    list.push({
+      key: `res-${r.performanceId}`,
+      tone: "warn",
+      label: "재확인",
+      title: "다른 업체가 취소해 공연 내용이 바뀌었어요",
+      sub: `${r.title} · ${md(r.showDate)}`,
+      action: "예약 보기",
+      to: "/supplier/reservations",
+    });
+  }
+  // 안 읽은 대화: 하나면 그 방을, 여럿이면 한 줄로 묶어 채팅 목록을 연다 (줄이 같은 말로 반복되지 않게)
+  const unreadRooms = rooms.filter((x) => x.unreadCount > 0);
+  if (unreadRooms.length === 1) {
+    const room = unreadRooms[0];
+    list.push({ key: `chat-${room.roomId}`, tone: "info", label: "새 메시지", title: `${room.partnerName}님의 메시지 ${room.unreadCount}개`, sub: "채팅에서 답해 주세요", action: "채팅 열기", to: `/partner?chat=${room.roomId}` });
+  } else if (unreadRooms.length > 1) {
+    const total = unreadRooms.reduce((n, r) => n + r.unreadCount, 0);
+    list.push({
+      key: "chat-many",
+      tone: "info",
+      label: "새 메시지",
+      title: `안 읽은 대화 ${unreadRooms.length}개 · 메시지 ${total}개`,
+      sub: `${unreadRooms.slice(0, 3).map((r) => r.partnerName).join(", ")}${unreadRooms.length > 3 ? ` 외 ${unreadRooms.length - 3}명` : ""}`,
+      action: "채팅 열기",
+      to: "/partner?chat=list",
+    });
+  }
+  if (noPost) {
+    list.push({ key: "post-new", tone: "muted", label: "소개 글", title: "업체 찾기에 소개 글이 없어요", sub: "소개 글이 있어야 사용자가 먼저 찾아와요", action: "소개 글 쓰기", to: "/supplier/posts" });
+  } else if (bumpable > 0) {
+    list.push({ key: "post-bump", tone: "pass", label: "소개 글", title: `소개 글 ${bumpable}개를 끌어올릴 수 있어요`, sub: "7일에 한 번, 목록 맨 위로 올라가요", action: "끌어올리기", to: "/supplier/posts" });
+  }
+  return list;
+}
+
+function Calendar({ today, marked }: { today: Date; marked: Set<string> }) {
   const y = today.getFullYear();
   const m = today.getMonth();
-  const events = SCHEDULE.map((e) => parse(e.date)).filter((d) => d.getFullYear() === y && d.getMonth() === m).map((d) => d.getDate());
+  const cells = monthCells(y, m);
   return (
-    <div className={s.pPanel}>
-      <div className={s.pPanelHead}>
-        <h2>이번 달 일정</h2>
-        <span className={s.muted}>
-          {y}년 {m + 1}월
-        </span>
-      </div>
-      <div className={s.cal} aria-label={`${y}년 ${m + 1}월 달력`}>
+    <div className={s.cal}>
+      <p className={s.calHead}>
+        {y}년 {m + 1}월
+      </p>
+      <div className={s.calGrid} role="grid" aria-label={`${m + 1}월 공연 일정`}>
         {WEEKDAY.map((w) => (
-          <span key={w} className={s.calDow}>
+          <span key={w} className={s.calDow} aria-hidden="true">
             {w}
           </span>
         ))}
-        {monthCells(y, m).map((d, i) => (
-          <span key={i} className={cx(d === today.getDate() && s.isToday, d !== null && events.includes(d) && s.isEvent)}>
-            {d ?? ""}
-          </span>
-        ))}
-      </div>
-      <ul className={s.calList}>
-        {SCHEDULE.map((e) => {
-          const d = parse(e.date);
+        {cells.map((d, i) => {
+          if (d === null) return <span key={`e${i}`} />;
+          const iso = ymd(new Date(y, m, d));
+          const isToday = d === today.getDate();
+          const has = marked.has(iso);
           return (
-            <li key={e.date}>
-              <b>
-                {d.getDate()} ({WEEKDAY[d.getDay()]})
-              </b>
-              <span>{e.text}</span>
-              {e.pass ? (
-                <span className={cx(s.status, s.statusPass)}>
-                  <HomeIcon name="pass" />
-                  {e.state}
-                </span>
-              ) : (
-                <span className={cx(s.status, s.statusWarn)}>{e.state}</span>
-              )}
-            </li>
+            <span
+              key={iso}
+              className={[s.calDay, isToday && s.calToday, has && s.calHas].filter(Boolean).join(" ")}
+              aria-label={`${m + 1}월 ${d}일${has ? ", 공연 있음" : ""}${isToday ? ", 오늘" : ""}`}
+            >
+              {d}
+            </span>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 }
 
 export function PartnerDashboard({ company, today = new Date() }: { company: string; today?: Date }) {
-  const [filter, setFilter] = useState<Filter>("all");
-  const jobs = useMemo(() => JOBS.filter((j) => filter === "all" || (filter === "offer") === !!j.offer), [filter]);
-  const count = (f: Filter) => JOBS.filter((j) => f === "all" || (f === "offer") === !!j.offer).length;
+  const me = useMe();
+  const offers = useReceivedOffers();
+  const postings = usePostings("");
+  const reservations = useSupplierReservations(me.data?.id);
+  const rooms = useChatRooms();
+  const notes = useNotifications(null);
+  const warnings = useSupplierWarnings(true);
+  const myPosts = useMyPrPosts();
+
+  const pending = (offers.data ?? [])
+    .filter((o) => o.status === "PENDING" && o.stageOpen)
+    .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
+  const soonCount = pending.filter((o) => new Date(o.expiresAt).getTime() - today.getTime() < DAY).length;
+  const resList = reservations.data ?? [];
+  const upcoming = resList
+    .filter((r) => r.status !== "CANCELLED" && r.status !== "COMPLETED" && daysLeft(r.showDate, today) >= 0)
+    .sort((a, b) => a.showDate.localeCompare(b.showDate));
+  const in30 = upcoming.filter((r) => daysLeft(r.showDate, today) <= 30).length;
+  const roomList = rooms.data ?? [];
+  const unread = roomList.reduce((n, r) => n + r.unreadCount, 0);
+  const posts = myPosts.data?.items ?? [];
+  const bumpable = posts.filter((p) => p.status === "ACTIVE" && p.canBump).length;
+  const newPostings = (postings.data ?? []).slice(0, 6);
+  const noteList = (notes.data?.pages ?? []).flatMap((p) => p.items).slice(0, 4);
+  const warnCount = warnings.data?.warningCount ?? 0;
+  const suspendAt = warnings.data?.suspendAt ?? 3;
+
+  const loading = offers.isLoading || reservations.isLoading || rooms.isLoading || myPosts.isLoading;
+  const todos = loading ? [] : buildTodos(pending, resList, roomList, bumpable, myPosts.isSuccess && posts.length === 0, today);
+  const marked = new Set(upcoming.map((r) => r.showDate.slice(0, 10)));
+
+  const kpis: { label: string; value: number | null; sub: string; tone?: Tone; to: string }[] = [
+    { label: "답할 견적 요청", value: offers.isLoading ? null : pending.length, sub: soonCount ? `24시간 안 마감 ${soonCount}건` : "마감 임박 없음", tone: soonCount ? "warn" : undefined, to: "/supplier/offers" },
+    { label: "안 읽은 메시지", value: rooms.isLoading ? null : unread, sub: `대화 ${roomList.length}개`, to: "/partner?chat=list" },
+    { label: "30일 안 공연", value: reservations.isLoading ? null : in30, sub: upcoming[0] ? `가장 가까운 공연 ${dLabel(upcoming[0].showDate, today)}` : "예정된 공연 없음", to: "/supplier/reservations" },
+    { label: "모집 중 공고", value: postings.isLoading ? null : (postings.data ?? []).length, sub: "내 부문 · 견적을 보낼 수 있는 공고", to: "/supplier/postings" },
+  ];
 
   return (
-    <>
-      <section className={s.pTop}>
-        <div className={s.wrap}>
-          <div className={s.pHello}>
-            <div>
-              <p className={s.eyebrow}>
-                {today.getMonth() + 1}월 {today.getDate()}일 {WEEKDAY[today.getDay()]}요일
-              </p>
-              <h1>
-                {company}님, 오늘 확인할 일이 <em>{TODOS.length}건</em> 있어요
-              </h1>
-              <div className={s.pTags}>
-                <span className={cx(s.status, s.statusPass)}>
-                  <HomeIcon name="pass" />
-                  승인 업체
-                </span>
-                <span className={s.chip}>음향 장비·설치 · 엔지니어</span>
-                <span className={s.chip}>광주 · 전남</span>
-              </div>
-            </div>
-            <div className={s.pHelloBtns}>
-              <Link className={cx(s.btn, s.btnGhost, s.btnSm)} to="/supplier/posts">
-                소개 글 수정
-              </Link>
-              <Link className={cx(s.btn, s.btnPrimary, s.btnSm)} to="/supplier/postings">
-                공고 목록
-              </Link>
-            </div>
-          </div>
-          <div className={s.pBoard}>
-            <div className={s.pPanel}>
-              <div className={s.pPanelHead}>
-                <h2>지금 할 일</h2>
-                <Link className={s.more} to="/notifications">
-                  알림 전체 <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-              <ul className={s.todo}>
-                {TODOS.map((t) => (
-                  <li key={t.title} className={cx(s.todoItem, t.hot && s.isHot)}>
-                    <span className={s.todoIcon}>
-                      <HomeIcon name={t.icon} />
-                    </span>
-                    <div>
+    <div className={`sd-container ${s.page}`}>
+      <header className={s.top}>
+        <div>
+          <p className={s.date}>
+            {today.getMonth() + 1}월 {today.getDate()}일 {WEEKDAY[today.getDay()]}요일
+          </p>
+          <h1>
+            {company}님, 오늘 확인할 일이{" "}
+            {loading ? "" : todos.length > 0 ? (
+              <>
+                <em>{todos.length}건</em> 있어요
+              </>
+            ) : (
+              "없어요"
+            )}
+          </h1>
+        </div>
+        <nav className={s.quick} aria-label="바로 가기">
+          <Link className={s.quickLink} to="/supplier/postings">
+            <Ico name="list" sm />
+            공고 목록
+          </Link>
+          <Link className={s.quickLink} to="/supplier/reservations">
+            <Ico name="calendar" sm />
+            내 예약
+          </Link>
+          <Link className={s.quickLink} to="/supplier/posts">
+            <Ico name="edit" sm />
+            내 소개 글
+          </Link>
+        </nav>
+      </header>
+
+      <section className={s.kpis} aria-label="요약">
+        {kpis.map((k) => (
+          <Link key={k.label} className={s.kpi} to={k.to}>
+            <span className={s.kpiLabel}>{k.label}</span>
+            {k.value === null ? <span className={s.kpiSkel} aria-hidden="true" /> : <b className={s.kpiValue}>{k.value}</b>}
+            <span className={`${s.kpiSub} ${k.tone ? s[k.tone] : ""}`}>{k.sub}</span>
+          </Link>
+        ))}
+      </section>
+
+      <div className={s.grid}>
+        <div className={s.main}>
+          <section aria-labelledby="pd-todo">
+            <SecHead id="pd-todo" title="지금 할 일" count={loading || todos.length === 0 ? undefined : todos.length} />
+            {loading ? (
+              <Skeleton rows={3} />
+            ) : todos.length === 0 ? (
+              <p className={s.empty}>지금 처리할 일이 없어요. 새 공고가 올라오면 알림으로 알려 드려요.</p>
+            ) : (
+              <ul className={s.rows}>
+                {todos.map((t) => (
+                  <li key={t.key} className={s.todo}>
+                    <Status tone={t.tone}>{t.label}</Status>
+                    <div className={s.todoMain}>
                       <b>{t.title}</b>
-                      <small>{t.desc}</small>
+                      <span>{t.sub}</span>
                     </div>
-                    <Link className={cx(s.btn, s.btnSm, t.hot ? s.btnPrimary : s.btnGhost)} to={t.to}>
+                    {t.meta ? <span className={`${s.todoMeta} ${t.tone === "warn" ? s.warn : ""}`}>{t.meta}</span> : <span />}
+                    <Link className={s.action} to={t.to}>
                       {t.action}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className={s.pPanel}>
-              <div className={s.pPanelHead}>
-                <h2>내 견적서</h2>
-                <Link className={s.more} to="/supplier/postings">
-                  보낸 견적서 <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-              <div className={s.kpi}>
-                {KPI.map((k) => (
-                  <Link key={k.label} className={cx(s.kpiItem, k.tone === "warn" && s.isWarn, k.tone === "done" && s.isDone)} to={k.to}>
-                    <span>{k.label}</span>
-                    <b>{k.value}</b>
-                  </Link>
+            )}
+          </section>
+
+          <section aria-labelledby="pd-postings">
+            <SecHead id="pd-postings" title="새 공고" to="/supplier/postings" more="공고 전체 보기" />
+            {postings.isLoading ? (
+              <Skeleton rows={4} />
+            ) : newPostings.length === 0 ? (
+              <p className={s.empty}>지금 모집 중인 공고가 없어요.</p>
+            ) : (
+              <table className={s.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">공연</th>
+                    <th scope="col">부문</th>
+                    <th scope="col">공연 날짜</th>
+                    <th scope="col">
+                      <span className="sd-sr-only">견적</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newPostings.map((p) => (
+                    <tr key={p.stageId}>
+                      <td>
+                        <Link className={s.pTitle} to={`/supplier/postings/${p.stageId}`}>
+                          {p.title}
+                        </Link>
+                        <span className={s.pSub}>
+                          {p.sido} {p.sigungu}
+                          {p.nickname ? ` · ${p.nickname}` : ""}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={s.tag}>{STAGE_NAME[p.stageType]}</span>
+                      </td>
+                      <td className={s.num}>
+                        {md(p.showDate)}
+                        <span className={s.dday}>{dLabel(p.showDate, today)}</span>
+                      </td>
+                      <td className={s.right}>
+                        <Link className={s.action} to={`/supplier/postings/${p.stageId}/quote`}>
+                          견적 쓰기
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </div>
+
+        <aside className={s.side} aria-label="일정과 계정">
+          <section aria-labelledby="pd-schedule">
+            <SecHead id="pd-schedule" title="다가오는 공연" to="/supplier/reservations" more="내 예약" />
+            <Calendar today={today} marked={marked} />
+            {reservations.isLoading ? (
+              <Skeleton rows={2} />
+            ) : upcoming.length === 0 ? (
+              <p className={s.empty}>예정된 공연이 없어요.</p>
+            ) : (
+              <ul className={s.schedule}>
+                {upcoming.slice(0, 4).map((r) => (
+                  <li key={r.performanceId}>
+                    <span className={s.when}>
+                      <b>{md(r.showDate)}</b>
+                      <em>{dLabel(r.showDate, today)}</em>
+                    </span>
+                    <span className={s.what}>
+                      <b>{r.title}</b>
+                      <span>
+                        {hm(r.showStart)}~{hm(r.showEnd)} · {r.stageTypes.map((t) => STAGE_NAME[t]).join("·")}
+                      </span>
+                    </span>
+                    <Status tone={RES_STATUS[r.status].tone}>{RES_STATUS[r.status].label}</Status>
+                  </li>
                 ))}
-              </div>
-              <div className={s.settle}>
-                <div>
-                  <span>정산 예정 (공연 뒤)</span>
-                  <b>700,000원</b>
-                </div>
-                <div className={s.settleBar} aria-label="정산 예정 1건">
-                  <span style={{ width: "100%" }} />
-                </div>
-                <small>재즈 트리오 공연 · 결제금 보관 중 · 테스트 결제</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+              </ul>
+            )}
+          </section>
 
-      <section className={s.pJobs} id="jobs">
-        <div className={s.wrap}>
-          <div className={s.secHead}>
-            <div>
-              <h2 className={s.secTitle}>나에게 맞는 공고</h2>
-              <p className={s.secDesc}>음향 장비·설치 · 광주·전남 · 지금 열린 단계 기준이에요.</p>
-            </div>
-            <Link className={s.more} to="/supplier/postings">
-              공고 전체 보기 <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-          <div className={s.pFilter}>
-            <div className={s.seg} role="tablist" aria-label="공고 필터">
-              {FILTERS.map((f) => (
-                <button
-                  key={f.key}
-                  className={filter === f.key ? s.isOn : undefined}
-                  type="button"
-                  role="tab"
-                  aria-selected={filter === f.key}
-                  onClick={() => setFilter(f.key)}
-                >
-                  {f.label} <b>{count(f.key)}</b>
-                </button>
-              ))}
-            </div>
-            <label className={s.pSort}>
-              <span className={s.sr}>정렬</span>
-              <select defaultValue="date">
-                <option value="date">공연일 가까운 순</option>
-                <option value="recent">최근 게시 순</option>
-              </select>
-            </label>
-          </div>
-          <ul className={s.jobs}>
-            {jobs.map((j) => {
-              const d = parse(j.date);
-              return (
-                <li key={j.id} className={cx(s.job, j.offer && s.isOffer)}>
-                  <div className={s.jobDate}>
-                    <small>{d.getMonth() + 1}월</small>
-                    <b>{d.getDate()}</b>
-                    <span>{WEEKDAY[d.getDay()]}</span>
-                  </div>
-                  <div className={s.jobMain}>
-                    <div className={s.jobTags}>
-                      {j.offer && <span className={cx(s.badge, s.badgeBlue)}>받은 견적 요청</span>}
-                      <span className={s.chip}>장비 단계</span>
-                    </div>
-                    <h3>{j.title}</h3>
-                    <p>{j.desc}</p>
-                  </div>
-                  <div className={s.jobSide}>
-                    <span className={cx(s.jobDue, j.urgent && s.isUrgent)}>{j.due}</span>
-                    <Link className={cx(s.btn, s.btnSm, j.action.primary ? s.btnPrimary : s.btnGhost)} to={j.action.to}>
-                      {j.action.label}
-                    </Link>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </section>
-
-      <section className={s.pBottom} id="calendar">
-        <div className={cx(s.wrap, s.pBottomGrid)}>
-          <Calendar today={today} />
-          <div className={s.pPanel}>
-            <div className={s.pPanelHead}>
-              <h2>내 업체</h2>
-              <Link className={s.more} to="/supplier/profile">
-                업체 프로필 <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-            <dl className={s.pReviewInfo} style={{ marginTop: 4 }}>
-              {[
-                ["거래", "15건"],
-                ["기본 설치 시간", "90분"],
-                ["엔지니어 경력", "7년"],
-                ["배상책임보험", "가입 (업체 입력)"],
-              ].map(([dt, dd]) => (
-                <div key={dt}>
-                  <dt>{dt}</dt>
-                  <dd>{dd}</dd>
-                </div>
-              ))}
-            </dl>
-            <div className={s.prBox}>
+          <section aria-labelledby="pd-account">
+            <SecHead id="pd-account" title="내 계정" />
+            <dl className={s.account}>
               <div>
-                <b>소개 글</b>
-                <small>조회 312 · 관심 저장 18 · 마지막 끌어올리기 3일 전</small>
+                <dt>심사</dt>
+                <dd>
+                  <Status tone="pass">승인 업체</Status>
+                </dd>
               </div>
-              <div className={s.prBoxBtns}>
-                <Link className={cx(s.btn, s.btnSm, s.btnGhost)} to="/supplier/posts">
-                  글 수정
-                </Link>
-                <Link className={cx(s.btn, s.btnSm, s.btnPrimary)} to="/supplier/posts">
-                  끌어올리기
-                </Link>
+              <div>
+                <dt>경고</dt>
+                <dd>
+                  {warnCount > 0 ? (
+                    <Status tone={warnCount >= suspendAt - 1 ? "conflict" : "warn"}>
+                      {warnCount}회 · {suspendAt}회면 이용 정지
+                    </Status>
+                  ) : (
+                    <span className={s.muted}>없음</span>
+                  )}
+                </dd>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
+              <div>
+                <dt>소개 글</dt>
+                <dd>
+                  {myPosts.isLoading ? (
+                    "…"
+                  ) : posts.length === 0 ? (
+                    <Link className={s.inline} to="/supplier/posts">
+                      아직 없어요 · 쓰기
+                    </Link>
+                  ) : (
+                    <span>
+                      {posts.length}개{bumpable > 0 ? ` · 끌어올리기 ${bumpable}개 가능` : ""}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section aria-labelledby="pd-notes">
+            <SecHead id="pd-notes" title="최근 알림" to="/notifications" />
+            {notes.isLoading ? (
+              <Skeleton rows={3} />
+            ) : noteList.length === 0 ? (
+              <p className={s.empty}>새 알림이 없어요.</p>
+            ) : (
+              <ul className={s.notes}>
+                {noteList.map((n) => (
+                  <li key={n.id} className={n.read ? "" : s.unread}>
+                    <Link to={n.link}>
+                      <b>{n.title}</b>
+                      {n.body && <span>{n.body}</span>}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
+      </div>
+    </div>
   );
 }
