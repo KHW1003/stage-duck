@@ -38,11 +38,35 @@ class Settings(BaseSettings):
     seo_indexing: bool = False  # 시연 데이터가 검색에 남지 않게 기본은 끔
     site_verification_naver: str = ""
     site_verification_google: str = ""
+    # 서버(Docker)에서만 켠다 (deploy/Dockerfile.api). 켜져 있으면 서명 키가 기본값이거나 32바이트보다 짧을 때 시작하지 않는다
+    require_strong_secrets: bool = False
 
     @property
     def is_test_env(self) -> bool:
         """시연 계정 전환·데이터 초기화는 test 환경에서만 (NFR-OPS-01)."""
         return self.app_env == "test"
+
+
+DEFAULT_SECRETS = {"dev-only-change-me", "dev-only-change-me-jwt"}
+MIN_SECRET_BYTES = 32  # HS256 서명 키 권장 길이 (RFC 7518 3.2). 짧으면 PyJWT 가 경고하고 서명이 약하다
+
+
+def weak_secrets(s: Settings) -> list[str]:
+    """기본값이거나 32바이트보다 짧은 서명 키 이름 (값은 돌려주지 않는다)."""
+    named = {"ADMIN_SESSION_SECRET": s.admin_session_secret, "JWT_SECRET": s.jwt_secret}
+    return [k for k, v in named.items() if v in DEFAULT_SECRETS or len(v.encode()) < MIN_SECRET_BYTES]
+
+
+def check_secrets(s: Settings) -> None:
+    """서버에서 약한 서명 키로 뜨지 않게 막는다 (require_strong_secrets 가 켜져 있을 때만)."""
+    if not s.require_strong_secrets:
+        return
+    weak = weak_secrets(s)
+    if weak:
+        raise RuntimeError(
+            f"{', '.join(weak)} 가 기본값이거나 {MIN_SECRET_BYTES}바이트보다 짧습니다. "
+            "deploy/.env 에 `openssl rand -hex 32` 로 만든 값을 넣어 주세요."
+        )
 
 
 @lru_cache

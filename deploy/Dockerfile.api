@@ -26,6 +26,11 @@ COPY backend/ ./
 COPY --from=web /web/dist /app/web
 # app/core/config.py frontend_dist — index.html·robots.txt 옆 파일을 여기서 읽는다
 ENV FRONTEND_DIST=/app/web
+# 업로드는 볼륨(/uploads)에 저장한다. 없으면 기본값 "uploads"(= /app/uploads)에 쌓여 컨테이너를 다시 만들면 사라지고
+# Caddy 의 /media(/uploads/public)는 빈 폴더만 본다 (11/24 배포 점검)
+ENV UPLOAD_DIR=/uploads
+# 서명 키가 기본값이거나 32바이트보다 짧으면 서버가 시작하지 않는다 (config.py check_secrets)
+ENV REQUIRE_STRONG_SECRETS=true
 
 # root가 아닌 사용자로 실행. 업로드 폴더는 볼륨으로 붙는다 (specs/uploads.md)
 RUN useradd --create-home --uid 1000 app && mkdir -p /uploads/public /uploads/private && chown -R app:app /app /uploads
