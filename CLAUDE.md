@@ -213,8 +213,8 @@
 
 ### 6.3 DB 마이그레이션 (Alembic)
 
-- 모델을 더하거나 바꾸면 **같은 PR에 마이그레이션 파일**을 넣는다. 파일 이름: `NNNN_<묶음>_<내용>.py` (예: `0002_b2_performances_stages.py`). 번호는 develop의 마지막 번호 + 1.
-- `down_revision`은 **develop의 최신 리비전**이어야 한다. PR을 올리기 전에 develop을 받아 `alembic heads`가 **하나**인지 본다. 둘이면 내 파일의 `down_revision`과 번호를 고친다.
+- 모델을 더하거나 바꾸면 **같은 PR에 마이그레이션 파일**을 넣는다. 파일 이름: `NNNN_<묶음>_<내용>.py` (예: `0002_b2_performances_stages.py`). 번호는 main의 마지막 번호 + 1.
+- `down_revision`은 **main의 최신 리비전**이어야 한다. PR을 올리기 전에 main을 받아 `alembic heads`가 **하나**인지 본다. 둘이면 내 파일의 `down_revision`과 번호를 고친다.
 - `upgrade()`와 `downgrade()`를 둘 다 쓴다. 로컬 MariaDB에서 `alembic upgrade head` → `alembic downgrade -1` → `alembic upgrade head`가 되는지 본다 (CI도 upgrade·downgrade를 돌린다).
 - **머지된 마이그레이션 파일은 고치지 않는다.** 고칠 것이 있으면 새 파일을 만든다.
 - 모델과 마이그레이션이 다르면 `tests/test_common.py`의 비교 테스트가 실패한다. 이 테스트를 끄지 않는다.
@@ -273,14 +273,15 @@ npm run build                           # 타입 검사 포함
 
 `CONTRIBUTING.md`가 기준이다. AI가 특히 지킬 것:
 
-- **`main`·`develop`에서 직접 커밋하거나 push하지 않는다.** 최신 `develop`에서 작업 브랜치를 만든다: `feat/<모듈>-<설명>`, `fix/<모듈>-<설명>` (예: `feat/12-chat-견적내역확인카드`).
+- **11/25부터 기본 브랜치는 `main`이고, main에 머지되면 시연 서버에 자동 배포된다** (서버가 3분마다 main을 확인해 다시 빌드, specs/deploy.md). `develop`은 더 쓰지 않는다.
+- **`main`에서 직접 커밋하거나 push하지 않는다.** 최신 `main`에서 작업 브랜치를 만든다: `feat/<모듈>-<설명>`, `fix/<모듈>-<설명>` (예: `feat/12-chat-견적내역확인카드`).
 - 커밋 메시지: `<타입>(<모듈>): <한국어 50자 이내>`. 타입은 `feat` `fix` `refactor` `style` `test` `docs` `chore`. 모듈은 5장의 모듈 이름 또는 `common`.
 - **`git add .`·`git add -A`를 쓰지 않는다.** 파일 이름을 적어 담는다. 담기 전에 `git status`로 **자기 묶음 파일만** 바뀌었는지, `.env`·`node_modules`·`*.db`·업로드 파일이 없는지 본다.
 - **하지 않는다**: `git push --force`(개인 브랜치에서 꼭 필요할 때만, 사람에게 먼저 묻고), `--no-verify`, `git reset --hard`·`git clean`으로 남의 변경 지우기, 룰셋·브랜치 보호 설정 바꾸기.
 - **AI는 PR을 머지하거나 승인(Approve)하지 않는다.** 관리자 권한으로 검사를 건너뛰는 머지(`--admin`)를 하지 않는다. 머지는 사람이 한다.
-- PR은 `develop` 대상, 본문은 PR 템플릿을 채운다. `Closes #이슈번호`, **11장의 검증 표**, 화면을 바꿨으면 스크린샷.
+- PR은 **`main` 대상**, 본문은 PR 템플릿을 채운다. `Closes #이슈번호`, **11장의 검증 표**, 화면을 바꿨으면 스크린샷.
 - PR 하나 = 기능 하나 (변경 400줄 이하 권장). 커지면 나눈다.
-- PR을 올리기 전에 develop을 받아 합치고, `pytest`, `npm test`, `npm run build`가 모두 통과하는지 본다. CI가 실패하면 고친 뒤 다시 올린다.
+- PR을 올리기 전에 main을 받아 합치고, `pytest`, `npm test`, `npm run build`가 모두 통과하는지 본다. CI가 실패하면 고친 뒤 다시 올린다.
 - 다른 묶음의 파일이나 공통 파일을 고쳤으면 그 담당과 해원을 리뷰어에 넣는다.
 - 이슈에는 묶음 라벨(`area:1-회원·업체·게시판`, `area:2-요청·배정`, `area:3-견적·채팅`, `area:4-검사·결제·운영`, `area:common`)과 종류 라벨(`type:*`)을 붙인다.
 
