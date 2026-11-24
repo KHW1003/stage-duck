@@ -177,7 +177,7 @@
 .flow-tab__no { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sd-accent); color: var(--sd-blue); font-weight: 700; }
 .flow-tab__text b { display: block; font-size: 18px; font-weight: 800; color: var(--sd-muted); transition: color .2s; }
 .flow-tab__text small { display: block; margin-top: 6px; font-size: var(--sd-text-body); line-height: 1.65; color: var(--sd-muted); max-height: 0; opacity: 0; overflow: hidden; transition: max-height .3s, opacity .3s; }
-.flow-tab.is-active { background: var(--sd-bg); border-color: var(--sd-featured); }
+.flow-tab.is-active { background: var(--sd-bg); } /* 흰 바탕만으로 구분 — 검은 테두리 없음 (11/25) */
 .flow-tab.is-active b { color: var(--sd-blue); }
 .flow-tab.is-active small { max-height: 80px; opacity: 1; }
 .flow-tab.is-active .flow-tab__no { background: var(--sd-blue); color: var(--sd-on-blue); }
@@ -186,7 +186,9 @@
 .flow.is-manual .flow-tab__bar { display: none; }
 
 .flow__stage { position: relative; min-height: 440px; display: grid; place-items: center; padding: 30px; border-radius: 20px; background: var(--sd-accent); }
-.pv { width: 100%; max-width: 440px; position: relative; }
+.pv { width: 100%; max-width: 360px; position: relative; }
+/* 실제 화면 스크린샷: 휴대폰 화면처럼 둥근 모서리·옅은 테두리 (그림자 없음, DESIGN.md 8장) */
+.pv-shot { display: block; width: 100%; height: auto; aspect-ratio: 400 / 640; border: 1px solid var(--sd-line); border-radius: 20px; background: var(--sd-bg); }
 .pv.is-active { animation: sd-in .4s ease; }
 @keyframes sd-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .ui { background: var(--sd-bg); border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); padding: 22px; }

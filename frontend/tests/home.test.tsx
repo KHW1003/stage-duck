@@ -103,7 +103,7 @@ describe("메인 (/)", () => {
     const tabs = await screen.findByRole("tablist", { name: "이용 단계" });
     await userEvent.click(within(tabs).getByRole("tab", { name: /업체별 컨펌/ }));
     expect(within(tabs).getByRole("tab", { name: /업체별 컨펌/ })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tabpanel")).toHaveTextContent("견적 내역 확인");
+    expect(within(screen.getByRole("tabpanel")).getByRole("img", { name: /견적 내역 확인/ })).toHaveAttribute("src", "/flow/step-3.png");
   });
 
   it("공간 찾기는 고른 지역·관객 수를 쿼리로 넘긴다", async () => {
