@@ -177,7 +177,8 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* 수정·삭제·예전 대화 (11/24) */
 .chat-panel .msg__b--deleted { color: var(--sd-muted); font-style: italic; user-select: none; }
 .chat-panel .msg__edited { color: var(--sd-muted); }
-.chat-panel .msg__edit { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
-.chat-panel .msg__edit textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); font: inherit; resize: vertical; }
-.chat-panel .msg__edit-acts { display: flex; justify-content: flex-end; gap: 6px; }
 .chat-panel .room__older { display: flex; justify-content: center; padding: 4px 0 8px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+/* 수정은 아래 입력창에서 (11/25): 위에 "메시지 수정" 한 줄, 고치는 말풍선은 테두리만 */
+.chat-panel .composer__reply--edit { color: var(--sd-ink); }
+.chat-panel .composer__reply--edit .composer__reply-main { font-weight: 600; }
+.chat-panel .msg--editing .msg__b { outline: 2px solid var(--sd-blue); outline-offset: 2px; }

@@ -140,7 +140,7 @@ const AS_USER = {
 };
 
 async function openList() {
-  const user = userEvent.setup();
+  const user = userEvent.setup({ pointerEventsCheck: 0 }); // 말풍선 아이콘은 마우스를 올려야 눌린다(CSS :hover) — jsdom 은 :hover 를 모른다
   await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
   const panel = await screen.findByRole("dialog", { name: "채팅" });
   await within(panel).findByText("업체 D");
@@ -389,7 +389,7 @@ describe("대화방", () => {
     expect(within(panel).getByRole("button", { name: /업체 D의 메시지로 이동: 드럼 마이크도 추가돼요\?/ })).toBeInTheDocument();
   });
 
-  it("11/24 내 글 메시지는 [수정]으로 고치고 '수정됨'이 붙는다. 상대 메시지에는 수정·삭제가 없다", async () => {
+  it("11/25 내 글 메시지 [수정]은 아래 입력창에서 고쳐 저장하고 '수정됨'이 붙는다. 상대 메시지에는 수정·삭제가 없다", async () => {
     const calls = mockServer({
       ...AS_USER,
       "PATCH /api/v1/chat-rooms/31/messages/119": { status: 200, body: msg(119, 12, "안녕하세요! 문의드려요", { editedAt: "2026-11-13T13:25:00+09:00" }) },
@@ -402,18 +402,24 @@ describe("대화방", () => {
     expect(within(theirs).queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
 
     await user.click(within(mineMsg).getByRole("button", { name: "수정" }));
-    const box = within(panel).getByRole("textbox", { name: "메시지 고치기" });
+    expect(within(panel).getByText("메시지 수정")).toBeInTheDocument();
+    expect(mineMsg).toHaveClass("msg--editing");
+    const box = within(panel).getByRole("textbox", { name: "메시지" });
     expect(box).toHaveValue("안녕하세요");
+    expect(box).toHaveFocus();
     await user.clear(box);
     await user.type(box, "안녕하세요! 문의드려요");
-    await user.click(within(panel).getByRole("button", { name: "저장" }));
+    await user.click(within(panel).getByRole("button", { name: "수정 저장" }));
     expect(await within(panel).findByText("안녕하세요! 문의드려요")).toBeInTheDocument();
     expect(calls.find((c) => c.key === "PATCH /api/v1/chat-rooms/31/messages/119")?.body).toEqual({ body: "안녕하세요! 문의드려요" });
     expect(within(panel).getByText("수정됨")).toBeInTheDocument();
+    expect(within(panel).queryByText("메시지 수정")).not.toBeInTheDocument();
+    expect(within(panel).getByRole("textbox", { name: "메시지" })).toHaveValue("");
   });
 
-  it("11/24 내 메시지를 [삭제]하면 확인 후 '삭제된 메시지예요'로 바뀐다", async () => {
-    vi.stubGlobal("confirm", vi.fn(() => true));
+  it("11/25 내 메시지를 [삭제]하면 확인 창 없이 바로 '삭제된 메시지예요'로 바뀐다", async () => {
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal("confirm", confirm);
     const calls = mockServer({
       ...AS_USER,
       "DELETE /api/v1/chat-rooms/31/messages/119": { status: 200, body: msg(119, 12, null, { deleted: true }) },
@@ -425,6 +431,7 @@ describe("대화방", () => {
     expect(await within(panel).findByText("삭제된 메시지예요")).toBeInTheDocument();
     expect(calls.some((c) => c.key === "DELETE /api/v1/chat-rooms/31/messages/119")).toBe(true);
     expect(within(panel).queryByText("안녕하세요")).not.toBeInTheDocument();
+    expect(confirm).not.toHaveBeenCalled();
   });
 
   it("11/24 대화가 50개를 넘으면 [예전 대화 더 보기]로 그 앞을 불러오고, 끝까지 오면 버튼이 사라진다", async () => {

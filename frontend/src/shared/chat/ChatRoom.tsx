@@ -8,7 +8,7 @@
  * 최종 견적 카드·확정(#43)은 여기서 만들지 않는다.
  * 링크(11/24): 글 속 http·https·www. 주소는 눌러서 새 창으로 연다
  * 예전 대화(11/24): 위로 올리면 50개씩 더 불러오고, 보던 자리를 지킨다
- * 수정·삭제(11/24): 내 글 메시지는 [수정], 내 메시지는 [삭제] → "삭제된 메시지예요"로 남는다
+ * 수정·삭제(11/24·25): 내 글 메시지 [수정] → 아래 입력창에서 고쳐 저장, 내 메시지 [삭제] → 확인 없이 "삭제된 메시지예요"
  * 답장(11/24): 말풍선 옆 꺾인 화살표 → 입력창 위에 인용 → 보내면 말풍선 위에 원문. 인용을 누르면 원래 메시지로 이동
  */
 import { OUTSIDE_PAYMENT_NOTICE } from "../../features/support/terms";
@@ -97,7 +97,8 @@ function replyText(r: { type: ChatMsg["type"]; body: string | null; deleted?: bo
 interface MsgActions {
   onReply: (m: ChatMsg) => void;
   onJump: (id: number) => void;
-  onEdit: (id: number, body: string) => Promise<unknown>;
+  onEditStart: (m: ChatMsg) => void;
+  editingId: number | null;
   onDelete: (id: number) => void;
   busy: boolean;
   /** 휴대폰: 꾹 누른 말풍선의 아이콘만 연다 (11/25). PC 는 마우스를 올리면 */
@@ -128,58 +129,10 @@ function useLongPress(onLong: () => void) {
   };
 }
 
-/** 내 글 메시지 고치기: 말풍선 자리에서 바로 (Enter 저장, Esc 취소) */
-function EditBox({ m, onEdit, onDone }: { m: ChatMsg; onEdit: MsgActions["onEdit"]; onDone: () => void }) {
-  const [text, setText] = useState(m.body ?? "");
-  const [error, setError] = useState<unknown>(null);
-  const [saving, setSaving] = useState(false);
-  const save = async () => {
-    const body = text.trim();
-    if (!body || saving) return;
-    if (body === m.body) return onDone();
-    setSaving(true);
-    try {
-      await onEdit(m.id, body);
-      onDone();
-    } catch (e) {
-      setError(e);
-      setSaving(false);
-    }
-  };
-  return (
-    <div className="msg__edit">
-      <textarea
-        autoFocus
-        rows={2}
-        aria-label="메시지 고치기"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onDone();
-          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-            e.preventDefault();
-            void save();
-          }
-        }}
-      />
-      <div className="msg__edit-acts">
-        <button type="button" className="btn btn--sm" onClick={onDone} disabled={saving}>
-          취소
-        </button>
-        <button type="button" className="btn btn--sm btn--primary" onClick={() => void save()} disabled={saving || !text.trim()}>
-          저장
-        </button>
-      </div>
-      {error ? <ErrorNotice error={error} /> : null}
-    </div>
-  );
-}
-
 function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   m: ChatMsg; mine: boolean; read: boolean; partner: string; meId: number; room: Room; role: Props["role"]; onLeave: () => void;
   acts: MsgActions;
 }) {
-  const [editing, setEditing] = useState(false);
   const press = useLongPress(() => acts.onLongPress(m.id));
   if (m.senderId === null) {
     if (m.type === "QUOTE") {
@@ -208,8 +161,6 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   let content;
   if (m.deleted) {
     content = <p className="msg__b msg__b--deleted">삭제된 메시지예요</p>;
-  } else if (editing) {
-    content = <EditBox m={m} onEdit={acts.onEdit} onDone={() => setEditing(false)} />;
   } else if (m.type === "IMAGE" && m.attachmentUrl) {
     // 누르면 새 창에서 크게 보기 (비공개 파일이라 그 방 참여자만 열림)
     content = (
@@ -238,7 +189,7 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   return (
     <>
       <div
-        className={["msg", mine && "msg--me", acts.openId === m.id && "msg--acts"].filter(Boolean).join(" ")}
+        className={["msg", mine && "msg--me", acts.openId === m.id && "msg--acts", acts.editingId === m.id && "msg--editing"].filter(Boolean).join(" ")}
         data-msg-id={m.id}
         onContextMenu={(e) => {
           // 휴대폰에서 꾹 누르면 뜨는 기본 메뉴 대신 답장·수정·삭제
@@ -257,15 +208,15 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
           )}
           {content}
         </div>
-        {!m.deleted && !editing && (
+        {!m.deleted && acts.editingId !== m.id && (
           <span className="msg__acts">
             <button type="button" className="msg__act" aria-label="답장" title="답장" onClick={() => acts.onReply(m)}>
               <Ico name="reply" sm />
             </button>
             {mine && m.type === "TEXT" && (
               <button type="button" className="msg__act" aria-label="수정" title="수정" disabled={acts.busy} onClick={() => {
-                setEditing(true);
                 acts.onLongPress(null);
+                acts.onEditStart(m);
               }}>
                 <Ico name="edit" sm />
               </button>
@@ -296,10 +247,21 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   );
 }
 
-function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
+function Composer({ roomId, replyTo, replyName, onClearReply, onSending, editTarget, onClearEdit, onSaveEdit }: {
   roomId: number; replyTo: ChatMsg | null; replyName: string; onClearReply: () => void; onSending: () => void;
+  editTarget: ChatMsg | null; onClearEdit: () => void; onSaveEdit: (id: number, body: string) => Promise<unknown>;
 }) {
   const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<unknown>(null);
+  // 수정을 고르면 그 글을 입력창에 넣고, 그만두면 비운다 (11/25: 말풍선 안 입력칸 대신 아래 입력창에서)
+  const editingId = editTarget?.id ?? null;
+  useEffect(() => {
+    setEditError(null);
+    setText(editTarget?.body ?? "");
+    if (editTarget) textRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId]);
   const [pickError, setPickError] = useState<string | null>(null);
   const send = useSendMessage(roomId);
   const attach = useSendAttachment(roomId);
@@ -310,7 +272,7 @@ function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
     if (replyTo) textRef.current?.focus();
   }, [replyTo]);
   const fileInput = useRef<HTMLInputElement>(null);
-  const busy = send.isPending || attach.isPending;
+  const busy = send.isPending || attach.isPending || saving;
   const clearErrors = () => {
     setPickError(null);
     send.reset();
@@ -319,6 +281,16 @@ function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
   const submit = () => {
     const body = text.trim();
     if (!body || busy) return;
+    if (editTarget) {
+      if (body === editTarget.body) return onClearEdit();
+      setSaving(true);
+      setEditError(null);
+      onSaveEdit(editTarget.id, body)
+        .then(() => onClearEdit())
+        .catch((e: unknown) => setEditError(e))
+        .finally(() => setSaving(false));
+      return;
+    }
     clearErrors();
     onSending();
     send.mutate(replyTo ? { type: "TEXT", body, replyToId: replyTo.id } : { type: "TEXT", body }, {
@@ -342,7 +314,7 @@ function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
     onSending();
     attach.mutate({ type, file, replyToId: replyTo?.id ?? null }, { onSuccess: onClearReply });
   };
-  const error = send.error ?? attach.error;
+  const error = editError ?? send.error ?? attach.error;
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -364,7 +336,16 @@ function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
           <ErrorNotice error={error} />
         </div>
       )}
-      {replyTo && (
+      {editTarget && (
+        <div className="composer__reply composer__reply--edit" role="status">
+          <Ico name="edit" sm />
+          <b className="composer__reply-main">메시지 수정</b>
+          <button type="button" className="icon-btn" aria-label="수정 취소" onClick={onClearEdit}>
+            <Ico name="x" sm />
+          </button>
+        </div>
+      )}
+      {replyTo && !editTarget && (
         <div className="composer__reply" role="status">
           <Ico name="reply" sm />
           <div className="composer__reply-main">
@@ -382,20 +363,21 @@ function Composer({ roomId, replyTo, replyName, onClearReply, onSending }: {
         </p>
       )}
       <div className="composer">
-        <button className="icon-btn" type="button" aria-label="사진 보내기" disabled={busy} onClick={() => photoInput.current?.click()}>
+        <button className="icon-btn" type="button" aria-label="사진 보내기" disabled={busy || Boolean(editTarget)} onClick={() => photoInput.current?.click()}>
           <Ico name="image" />
         </button>
-        <button className="icon-btn" type="button" aria-label="파일 보내기" disabled={busy} onClick={() => fileInput.current?.click()}>
+        <button className="icon-btn" type="button" aria-label="파일 보내기" disabled={busy || Boolean(editTarget)} onClick={() => fileInput.current?.click()}>
           <Ico name="clip" />
         </button>
         <input ref={photoInput} type="file" hidden accept={ATTACH_RULES.IMAGE.accept} aria-label="사진 고르기" onChange={onPick("IMAGE")} />
         <input ref={fileInput} type="file" hidden accept={ATTACH_RULES.FILE.accept} aria-label="파일 고르기" onChange={onPick("FILE")} />
-        <textarea ref={textRef} rows={1} placeholder={replyTo ? "답장을 입력하세요" : "메시지를 입력하세요"} aria-label="메시지" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => {
-          if (e.key === "Escape" && replyTo) onClearReply();
+        <textarea ref={textRef} rows={1} placeholder={editTarget ? "고칠 내용을 입력하세요" : replyTo ? "답장을 입력하세요" : "메시지를 입력하세요"} aria-label="메시지" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => {
+          if (e.key === "Escape" && editTarget) onClearEdit();
+          else if (e.key === "Escape" && replyTo) onClearReply();
           onKey(e);
         }} />
-        <button className="btn btn--primary" type="button" aria-label="보내기" disabled={busy || !text.trim()} onClick={submit}>
-          <Ico name="send" sm />
+        <button className="btn btn--primary" type="button" aria-label={editTarget ? "수정 저장" : "보내기"} disabled={busy || !text.trim()} onClick={submit}>
+          <Ico name={editTarget ? "check" : "send"} sm />
         </button>
       </div>
     </>
@@ -421,18 +403,25 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
   const [menuOpen, setMenuOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMsg | null>(null);
   const [openActs, setOpenActs] = useState<number | null>(null); // 휴대폰: 꾹 눌러 아이콘을 연 말풍선
+  const [editTarget, setEditTarget] = useState<ChatMsg | null>(null); // 입력창에서 고치는 중인 내 메시지
   const listRef = useRef<HTMLDivElement>(null);
   const editMsg = useEditMessage(roomId);
   const deleteMsg = useDeleteMessage(roomId);
   const acts: MsgActions = {
     onReply: (m) => {
+      setEditTarget(null);
       setReplyTo(m);
       setOpenActs(null);
     },
     onJump: (id) => jumpTo(id),
-    onEdit: (id, body) => editMsg.mutateAsync({ id, body }),
+    onEditStart: (m) => {
+      setReplyTo(null);
+      setEditTarget(m);
+    },
+    editingId: editTarget?.id ?? null,
     onDelete: (id) => {
-      if (window.confirm("이 메시지를 삭제할까요? 상대방 화면에서도 \"삭제된 메시지예요\"로 바뀌어요.")) deleteMsg.mutate(id);
+      if (editTarget?.id === id) setEditTarget(null);
+      deleteMsg.mutate(id); // 확인 창 없이 바로 (11/25)
     },
     busy: editMsg.isPending || deleteMsg.isPending,
     openId: openActs,
@@ -651,6 +640,9 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
             onSending={() => {
               stick.current = true; // 내가 보내면 늘 맨 아래로
             }}
+            editTarget={editTarget}
+            onClearEdit={() => setEditTarget(null)}
+            onSaveEdit={(id, body) => editMsg.mutateAsync({ id, body })}
           />
         ) : role === "USER" ? (
           <StartBar roomId={roomId} />
