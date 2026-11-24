@@ -265,8 +265,10 @@
 | GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순 | F3-26, F3-27 |
 | PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
-| GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
+| GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` · 위로 올려 예전 대화는 `?before={messageId}` (그 앞의 최근 limit 개, 11/24) | F3-07 |
 | POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true`. 답장은 `"replyToId"`(같은 방 메시지, 아니면 `400`) → 응답·`message.created` 에 `replyTo: { id, type, senderUserId, body(앞 80자) }` (11/24) | F3-06, F3-08, F3-15 |
+| PATCH | `/chat-rooms/{roomId}/messages/{messageId}` | P(보낸 사람) | 글 메시지 수정 `{ "body" }` → `editedAt`, 연락처 경고 다시 계산. 남의·시스템·지운 메시지 `404`, 사진·파일 `400`. 상대에게 `message.updated` (11/24) | |
+| DELETE | `/chat-rooms/{roomId}/messages/{messageId}` | P(보낸 사람) | 메시지 삭제 → 행은 남기고 `deleted: true`, body·첨부 비움 (답장 인용도 "삭제된 메시지"). 상대에게 `message.updated` (11/24) | |
 | POST | `/chat-rooms/{roomId}/read` | P | `{ "lastMessageId": 120 }` | F3-08 |
 | POST | `/reports` | P | 채팅방 신고는 공통 신고 API 로: `{ "targetType": "CHAT_ROOM", "targetId": roomId, "reason" }` (5장) | F4-03 |
 
@@ -433,7 +435,8 @@
 
 | type | 언제 | payload |
 |---|---|---|
-| `message.created` | 새 메시지·카드 | `{ roomId, message: { id, type, body, attachmentUrl, refId, senderId, contactWarning, createdAt } }` |
+| `message.created` | 새 메시지·카드 | `{ roomId, message: { id, type, body, attachmentUrl, refId, senderId, contactWarning, createdAt, replyTo, editedAt, deleted } }` |
+| `message.updated` | 메시지 수정·삭제 (11/24) | `message.created` 와 같은 모양 — 화면은 같은 id 를 바꿔 넣는다 |
 | `message.read` | 상대가 읽음 | `{ roomId, userId, lastMessageId }` |
 | `quote.updated` | 견적서 새 버전 | `{ roomId, quoteId, version, changed: ["setupMinutes"] }` |
 | `confirm.updated` | 카드 상태 변경 | `{ roomId, confirmRequestId, status }` |
