@@ -182,4 +182,7 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* 수정은 아래 입력창에서 (11/25): 위에 "메시지 수정" 한 줄, 고치는 말풍선은 테두리만 */
 .chat-panel .composer__reply--edit { color: var(--sd-ink); }
 .chat-panel .composer__reply--edit .composer__reply-main { font-weight: 600; }
-.chat-panel .msg--editing .msg__b { outline: 2px solid var(--sd-blue); outline-offset: 2px; }
+/* 수정 중: 나머지 대화는 흐리게, 고치는 말풍선만 또렷하게 (11/25 — 테두리 대신) */
+.chat-panel .room__msgs.is-editing > * { opacity: .25; transition: opacity .15s; }
+.chat-panel .room__msgs.is-editing > .msg--editing { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .chat-panel .room__msgs.is-editing > * { transition: none; } }
