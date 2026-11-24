@@ -16,6 +16,7 @@ from app.chat.schemas import MessageIn, MessageOut
 from app.core.errors import AppError, not_found
 from app.files import service as files_service
 from app.models.chat import ChatMessage, ChatRead, ChatRoom
+from app.models.quote import Quote, QuoteVersion
 from app.models.request import Stage
 from app.models.supplier import Supplier
 from app.models.user import User
@@ -104,6 +105,16 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
     )
     last_msgs = {m.room_id: m for m in db.scalars(select(ChatMessage).where(ChatMessage.id.in_(last_ids.values())))}
     reads = {r.room_id: r for r in db.scalars(select(ChatRead).where(ChatRead.room_id.in_(ids), ChatRead.user_id == user.id))}
+    # 그 방(단계 × 업체)의 가장 최근 견적서 버전 — 대화가 길어져 견적서 카드가 밀려나도 [견적서 보기]가 열리게 (11/25)
+    latest_quote = {
+        (stage_id, supplier_id): vid
+        for stage_id, supplier_id, vid in db.execute(
+            select(Quote.stage_id, Quote.supplier_id, func.max(QuoteVersion.id))
+            .join(QuoteVersion, QuoteVersion.quote_id == Quote.id)
+            .where(Quote.stage_id.in_({r.stage_id for r in rooms}))
+            .group_by(Quote.stage_id, Quote.supplier_id)
+        ).all()
+    }
     unread = dict(
         db.execute(
             select(ChatMessage.room_id, func.count())
@@ -138,6 +149,7 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
             "pinned_at": read.pinned_at if read else None,
             "unread_count": unread.get(room.id, 0),
             "last_message": last,
+            "latest_quote_version_id": latest_quote.get((room.stage_id, room.supplier_id)),
         })
     rows.sort(key=lambda r: (r["pinned_at"] is None, -(last_ids.get(r["room_id"]) or 0), -r["room_id"]))
     return rows

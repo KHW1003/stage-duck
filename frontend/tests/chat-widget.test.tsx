@@ -562,6 +562,19 @@ describe("대화방", () => {
     expect(within(panel).queryByRole("link", { name: "견적서 보기" })).not.toBeInTheDocument();
   });
 
+  it("11/25 견적서 카드가 예전 대화로 밀려나 불러온 메시지에 없어도, 목록의 latestQuoteVersionId 로 [견적서 보기]가 열린다", async () => {
+    mockServer({
+      ...AS_USER,
+      "GET /api/v1/chat-rooms": { status: 200, body: ROOMS.map((r) => (r.roomId === 32 ? { ...r, latestQuoteVersionId: 777 } : r)) },
+      "GET /api/v1/chat-rooms/32/messages": { status: 200, body: { messages: [msg(110, 12, "설치 시간 확인했어요")], partnerLastReadMessageId: 0 } },
+      "POST /api/v1/chat-rooms/32/read": { status: 204 },
+    });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 E");
+    await within(panel).findByText("설치 시간 확인했어요", { selector: ".msg__b" });
+    expect(within(panel).getByRole("link", { name: "견적서 보기" })).toHaveAttribute("href", "/quotes/by-version/777");
+  });
+
   it("견적서 완료 화면의 [채팅방으로](?chat=<roomId>)로 오면 그 방이 열린다", async () => {
     mockServer({
       "GET /api/v1/me": { status: 200, body: SUPPLIER },

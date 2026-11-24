@@ -262,7 +262,7 @@
 ### 4.2 채팅
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순 | F3-26, F3-27 |
+| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순. `latestQuoteVersionId` = 그 방(단계 × 업체)의 가장 최근 견적서 버전 → 대화방 [견적서 보기] (11/25) | F3-26, F3-27 |
 | PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` · 위로 올려 예전 대화는 `?before={messageId}` (그 앞의 최근 limit 개, 11/24) | F3-07 |

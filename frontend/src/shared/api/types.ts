@@ -656,6 +656,8 @@ export interface ChatRoom {
   pinnedAt: string | null;
   unreadCount: number;
   lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string; deleted?: boolean } | null;
+  /** 그 방의 가장 최근 견적서 버전 → [견적서 보기] (11/25). 견적서가 없으면 null */
+  latestQuoteVersionId?: number | null;
 }
 
 /** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */
