@@ -1,0 +1,59 @@
+/* 고르기 칸 (DESIGN.md 5장 "고르기 칸"·"포커스", 목업 v4 css/select.css · ui.css .select).
+   그림자 없이 연한 테두리, 고른 항목은 굵게 + 체크, 손 올린 항목은 연한 회색 바탕. */
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  height: var(--sd-input);
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--sd-line-strong);
+  border-radius: var(--sd-r-field);
+  background: var(--sd-bg);
+  font-size: var(--sd-text-body);
+  text-align: left;
+  cursor: pointer;
+}
+.sm { width: auto; height: var(--sd-button-sm); font-size: var(--sd-text-desc); }
+.value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.placeholder { color: var(--sd-photo-text); }
+.chevron { flex: none; transition: transform .15s; }
+.open .chevron { transform: rotate(180deg); }
+
+/* 포커스·열림: 진한 테두리 + 옅은 바깥 띠 (그림자 아님) */
+.trigger:focus, .trigger:focus-visible, .open { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
+.trigger[aria-invalid="true"] { border-color: var(--sd-conflict-text); }
+.trigger:disabled { background: var(--sd-band); color: var(--sd-muted); cursor: default; }
+
+/* 펼친 목록 — body 에 뜬다 */
+.list {
+  position: fixed;
+  z-index: calc(var(--sd-z-toast) + 1);
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--sd-line-strong);
+  border-radius: var(--sd-r-menu);
+  background: var(--sd-bg);
+  font-size: var(--sd-text-desc);
+  list-style: none;
+  overscroll-behavior: contain;
+}
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--sd-touch);   /* 누르는 영역 44px (CLAUDE.md 6.2) — 목업은 38px */
+  padding: 0 12px;
+  border-radius: var(--sd-r-box);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.active { background: var(--sd-th); }
+.selected { font-weight: 700; }
+.option[aria-disabled="true"] { color: var(--sd-photo-text); background: transparent; cursor: default; }

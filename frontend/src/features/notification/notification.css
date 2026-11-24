@@ -1,0 +1,41 @@
+/* 사이트 안 알림 (#45). 머리 종 패널과 알림 화면이 같이 쓴다 */
+.noti-list { margin: 0; padding: 0; list-style: none; }
+.noti-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 10px; align-items: start; width: 100%; padding: 12px 16px; border: 0; background: none; font: inherit; color: var(--sd-ink); text-align: left; cursor: pointer; }
+.noti-row:hover { background: var(--sd-th); }
+.noti-row__dot { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; }
+.noti-row.is-unread .noti-row__dot { background: var(--sd-blue-button, #2563eb); }
+.noti-row__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.noti-row__text b { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.noti-row:not(.is-unread) .noti-row__text b { font-weight: 500; color: var(--sd-muted); }
+.noti-row__text span { font-size: 13px; color: var(--sd-muted); overflow-wrap: anywhere; }
+.noti-row__time { font-size: 12px; color: var(--sd-muted); white-space: nowrap; }
+.noti-list > li + li { border-top: 1px solid var(--sd-line); }
+
+.noti-badge { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--sd-blue); color: var(--sd-on-blue); font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+.noti-empty { padding: 28px 16px; text-align: center; color: var(--sd-muted); font-size: 13px; }
+
+.noti-page__tabs { margin-bottom: 16px; overflow-x: auto; }
+.noti-page__tabs button { flex: none; }
+.noti-bell + * .noti-list, [role="dialog"] .noti-list { max-height: 400px; overflow-y: auto; }
+.noti-page__group { margin: 20px 0 6px; font-size: 13px; font-weight: 700; color: var(--sd-muted); }
+.noti-page__box { border: 1px solid var(--sd-line); border-radius: 12px; overflow: hidden; background: var(--sd-bg); }
+.noti-bell { position: relative; display: inline-flex; }
+.noti-readall { margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--sd-muted); cursor: pointer; }
+.noti-readall:hover { color: var(--sd-ink); }
+
+/* 메일로도 받기 (notifications.md 10장) */
+.noti-mail { display: flex; align-items: center; gap: 14px; margin-top: 32px; padding: 18px 20px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-band); }
+.noti-mail > .icon { flex: none; width: 24px; height: 24px; color: var(--sd-muted); }
+.noti-mail__text { flex: 1; min-width: 0; }
+.noti-mail__text p { margin: 4px 0 0; color: var(--sd-muted); font-size: var(--sd-text-desc); overflow-wrap: anywhere; }
+.noti-mail__switch { display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: var(--sd-touch); font-size: var(--sd-text-desc); font-weight: 700; cursor: pointer; }
+.noti-mail__switch input { appearance: none; position: relative; width: 44px; height: 26px; margin: 0; border-radius: 999px; background: var(--sd-line-strong); cursor: pointer; transition: background .15s; }
+.noti-mail__switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--sd-bg); transition: transform .15s; }
+.noti-mail__switch input:checked { background: var(--sd-ink); }
+.noti-mail__switch input:checked::after { transform: translateX(18px); }
+.noti-mail__switch input:focus-visible { outline: 3px solid var(--sd-focus-ring); outline-offset: 2px; }
+.noti-mail__switch input:disabled { opacity: .6; }
+@media (max-width: 560px) {
+  .noti-mail { flex-wrap: wrap; }
+  .noti-mail > .icon { display: none; }
+}

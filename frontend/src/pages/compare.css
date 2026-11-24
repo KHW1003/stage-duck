@@ -1,0 +1,58 @@
+/* 단계별 견적 비교 — mockup-v4/pages/compare.html 의 <style> 그대로 (항목별로 나란히 보기).
+   q-cols·q-col 은 kit.css. 행마다 role="row" 로 묶어도 격자가 유지되게 .sp__row 는 display: contents */
+.sp { display: grid; grid-template-columns: 136px repeat(var(--cols, 3), minmax(0, 1fr)); column-gap: 12px; }
+.sp__row { display: contents; }
+.sp__row > div { padding: 14px 22px; font-size: var(--sd-text-desc); line-height: 1.55; }
+.sp__k { padding-left: 0 !important; color: var(--sd-muted); font-size: var(--sd-text-small) !important; border-top: 1px solid transparent; }
+.sp__h.is-k { background: none; }
+.sp__h.is-v, .sp__v { background: var(--sd-th); }
+.sp__h.is-v { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding-top: 20px; padding-bottom: 16px; border-radius: var(--sd-r-box) var(--sd-r-box) 0 0; }
+.sp__h b { font-size: 16px; letter-spacing: -.3px; }
+.sp__h span { color: var(--sd-muted); font-size: var(--sd-text-small); }
+.sp__h em { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-style: normal; font-size: var(--sd-text-small); font-weight: 700; color: var(--sd-ink); }
+.sp__h em .icon { width: 14px; height: 14px; color: var(--sd-pass-text); }
+.sp__v { border-top: 1px solid var(--sd-line); color: var(--sd-ink); }
+.sp__v.is-last { padding-bottom: 20px; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
+.sp__v.is-pick { font-weight: 600; }
+.sp__price { font-size: 18px; font-weight: 800; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+
+/* ── 디자인 검수 반영 (2026-11-23, exports/design-review 1-사용자.md "견적 비교") ── */
+/* 카드 머리: 업체 상호(+별점) → 공간·견적서 이름 → 총액 → 금액 차이 → 검사 요약 */
+.q-col__name { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.q-col__name > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-col__sub { margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.q-col__incl { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.q-col__diff { margin-left: auto; color: var(--sd-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.q-col__incl .tag { margin-left: auto; }
+.q-col__sum { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 12px; font-size: var(--sd-text-small); font-weight: 600; }
+/* 검사 줄: 한 줄 고정 높이라 칸끼리 같은 항목이 같은 높이에 온다. 전체 문장은 title·아래 표 */
+.q-col__checks li { min-height: var(--sd-touch); padding: 0; }
+.q-col__checks li > .status { flex: none; }
+.q-col__msg { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 카드 맨 아래: 상태 · [견적서 보기] · [채팅] — 카드 높이와 상관없이 바닥에 붙는다 */
+.q-col__foot { margin-top: auto; flex-wrap: wrap; }
+.q-col__state { display: inline-flex; align-items: center; gap: 8px; }
+.q-col__acts { display: inline-flex; align-items: center; gap: 12px; margin-left: auto; }
+.q-col__acts .link { min-height: var(--sd-touch); }
+.q-col__acts .btn { min-height: var(--sd-touch); }
+/* 표: 머리에 상호 아래 공간·견적서 이름, 금액은 오른쪽 정렬 */
+.sp__h .sp__sub { flex-basis: 100%; }
+.sp__v.is-num { text-align: right; }
+/* 잠긴 단계 탭: 자물쇠 + 흐린 상태 글자 */
+.tabs [aria-disabled="true"] { cursor: default; }
+.tabs [aria-disabled="true"] .state { color: var(--sd-photo-text); }
+.tabs [aria-disabled="true"] .icon { margin-right: 4px; vertical-align: -2px; }
+
+/* 760px 아래: 카드를 쌓지 않고 가로로 밀어 넘긴다 (다음 칸이 살짝 보이게) */
+@media (max-width: 760px) {
+  .q-cols { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(260px, 42%); overflow-x: auto; scroll-snap-type: x mandatory; }
+  .q-col { scroll-snap-align: start; }
+  .q-col__photo { aspect-ratio: 3; }
+  .sp { overflow-x: auto; }
+}
+@media (max-width: 560px) {
+  .q-cols { grid-auto-columns: 82%; }
+  .sp { grid-template-columns: 96px repeat(var(--cols, 3), minmax(140px, 1fr)); }
+  .sp__k, .sp__h.is-k { position: sticky; left: 0; z-index: 1; background: var(--sd-bg); }
+  .sp__row > div { padding: 12px 14px; }
+}

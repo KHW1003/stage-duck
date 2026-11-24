@@ -1,0 +1,135 @@
+/* 업체 찾기 (#30). 출처: docs/design/mockup-v4/pages/board.html · post.html · p-post.html, css/ui.css · domain.css. 색·크기는 토큰만 */
+.wrap { padding-top: 28px; padding-bottom: var(--sd-inner-section); }
+.narrow { max-width: var(--sd-doc-width); margin: 0 auto; } /* 글·문서 화면 폭 (DESIGN.md 5장) */
+
+/* 말머리 탭 (목업 .tab-bar · .tabs) */
+.tabBar { border-bottom: 1px solid var(--sd-line-strong); }
+.tabs { display: flex; overflow-x: auto; overflow-y: hidden; margin-bottom: -1px; padding-bottom: 1px; }
+.tab { position: relative; display: inline-flex; align-items: center; height: 54px; padding: 0 22px; border: 0; background: transparent; color: var(--sd-muted); font-size: var(--sd-text-card); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.tab:hover { color: var(--sd-ink); }
+.tab[aria-selected="true"] { color: var(--sd-ink); font-weight: 700; }
+.tab[aria-disabled="true"], .tab[aria-disabled="true"]:hover { color: var(--sd-photo-text); cursor: not-allowed; } /* 승인 안 된 부문 (목업 ui.css .tabs [aria-disabled]) */
+.tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sd-ink); }
+
+/* 지역 + 개수 줄 */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 24px 0; }
+.count { color: var(--sd-muted); font-size: var(--sd-text-desc); }
+.count b { color: var(--sd-ink); }
+
+/* 카드 격자 (목업 .grid · .item-card) */
+.grid { display: grid; grid-template-columns: repeat(var(--board-cols, 3), minmax(0, 1fr)); gap: 40px 24px; }
+.card { display: block; }
+.photo { display: block; width: 100%; aspect-ratio: var(--sd-photo-ratio); border-radius: var(--sd-r-box); background: var(--sd-photo); object-fit: cover; }
+.cardMeta { margin-top: 12px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.cardTitle { margin-top: 2px; font-size: var(--sd-text-lg); font-weight: 700; letter-spacing: -0.3px; line-height: 1.45; }
+.card:hover .cardTitle { text-decoration: underline; text-underline-offset: 3px; }
+.specs { display: flex; flex-wrap: wrap; margin-top: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.specs > span + span::before, .meta > span + span::before { content: ""; display: inline-block; width: 1px; height: 10px; margin: 0 8px; background: var(--sd-line-strong); }
+.prefix { margin-right: 4px; color: var(--sd-blue); font-weight: 700; }
+
+/* 빈 화면 (DESIGN.md 5장 "빈 화면") */
+.empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 56px 20px; border-radius: var(--sd-r-box); background: var(--sd-soft); text-align: center; }
+.empty b { font-size: var(--sd-text-card); }
+.empty p { color: var(--sd-muted); font-size: var(--sd-text-desc); }
+
+/* 쪽 넘기기 (목업 .pagination) */
+.pager { display: flex; justify-content: center; gap: 2px; margin-top: 32px; }
+.pageBtn { min-width: var(--sd-touch); min-height: var(--sd-touch); border: 0; border-radius: var(--sd-r-field); background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); font-variant-numeric: tabular-nums; cursor: pointer; }
+.pageBtn[aria-current="page"] { color: var(--sd-ink); font-weight: 700; text-decoration: underline; }
+
+/* 소개 글 (목업 post.html) */
+.crumb { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.crumb li + li::before { content: "›"; margin-right: 6px; color: var(--sd-line-strong); }
+.crumb a:hover { color: var(--sd-ink); text-decoration: underline; }
+.withAside { display: grid; grid-template-columns: minmax(0, 1fr) var(--sd-aside); gap: 48px; align-items: start; }
+.postHead { padding: 8px 0 20px; border-bottom: 1px solid var(--sd-line); }
+.postHead h1 { font-size: var(--sd-text-page); font-weight: 700; letter-spacing: -0.6px; line-height: 1.4; }
+.meta { display: flex; flex-wrap: wrap; margin-top: 10px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.gallery { margin-top: 24px; }
+.mainPhoto { position: relative; }
+.photoCount { position: absolute; right: 12px; bottom: 12px; padding: 2px 8px; border-radius: var(--sd-r-tag); background: var(--sd-ink); color: var(--sd-on-blue); font-size: var(--sd-text-small); }
+.thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.thumbBtn { aspect-ratio: 1.5; padding: 0; border: 0; border-radius: var(--sd-r-field); background: var(--sd-photo); cursor: pointer; opacity: 0.55; overflow: hidden; }
+.thumbBtn img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.thumbBtn:hover, .thumbBtn[aria-current="true"] { opacity: 1; }
+.thumbBtn[aria-current="true"] { outline: 2px solid var(--sd-rule); outline-offset: -2px; }
+.postBody { padding: 28px 0 8px; font-size: var(--sd-text-card); line-height: 1.85; white-space: pre-wrap; word-break: break-word; }
+
+/* 오른쪽 상자 (목업 .side-box) */
+.side { position: sticky; top: calc(var(--sd-gnb-height) + 20px); border-top: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; }
+.sideSec { padding: 22px 24px; }
+.sideSec + .sideSec { border-top: 1px solid var(--sd-line); }
+.sideTitle { margin: 0 0 12px; font-size: 15px; font-weight: 700; }   /* 견적 요청하기 (#32) */
+.sideGray { background: var(--sd-th); color: var(--sd-muted); font-size: var(--sd-text-small); }
+.who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.avatar { display: grid; place-items: center; width: var(--sd-avatar); height: var(--sd-avatar); flex: none; border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); font-weight: 700; }
+.who b { display: block; font-size: var(--sd-text-body); }
+.who small { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
+
+@media (max-width: 760px) {
+  .withAside { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .postHead h1 { overflow-wrap: anywhere; }
+  .side { position: static; }
+}
+
+/* 내 소개 글 쓰기 (목업 p-post.html .form-table) */
+.formTable { border-top: 1px solid var(--sd-rule); }
+.row { display: grid; grid-template-columns: 180px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }
+.th { display: flex; align-items: flex-start; gap: 2px; padding: 22px 20px; font-size: var(--sd-text-desc); font-weight: 600; }
+.req { color: var(--sd-conflict-text); }
+.thSub { margin-left: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); font-weight: 400; }
+.td { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; padding: 12px 20px; }
+.short { max-width: 280px; }
+.hint { color: var(--sd-muted); font-size: var(--sd-text-small); }
+.fieldError { color: var(--sd-conflict-text); font-size: var(--sd-text-small); }
+.textarea { width: 100%; min-height: 180px; padding: 10px 12px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); background: var(--sd-bg); font-size: var(--sd-text-body); line-height: 1.6; resize: none; }
+.textarea:focus, .textarea:focus-visible { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
+.textarea[aria-invalid="true"] { border-color: var(--sd-conflict-text); }
+.photos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.photoItem { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: var(--sd-r-field); background: var(--sd-photo); }
+.photoItem img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photoItem button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--sd-r-tag); background: var(--sd-ink); color: var(--sd-on-blue); cursor: pointer; }
+.photoAdd { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; aspect-ratio: 1; border: 1px dashed var(--sd-line-strong); border-radius: var(--sd-r-field); background: var(--sd-th); color: var(--sd-muted); font-size: var(--sd-text-small); cursor: pointer; }
+.photoAdd input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.photoAdd:focus-within { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
+.formActions { display: flex; justify-content: flex-end; margin-top: 40px; }
+.formActionsSplit { justify-content: space-between; } /* 목업 p-post.html: 왼쪽 [글 내리기], 오른쪽 [저장] */
+.bumpSummary { --cols: 2; margin-bottom: 28px; } /* 마지막 끌어올리기 · [끌어올리기] (조회·관심 저장 수는 서버가 주지 않아 뺐다) */
+.bumpCell { display: flex; align-items: center; }
+
+/* ── 상세 화면 본문 위치 맞춤 (11/23 해원 결정) ──
+   커뮤니티 글 상세는 본문(--sd-doc-width)을 가운데에 둔다. 소개 글 상세는 오른쪽 칸을 그대로 두고,
+   경로·본문의 왼쪽 선만 커뮤니티 본문 왼쪽 선에 맞춰 가운데 쪽으로 들인다 (오른쪽 칸은 침범하지 않는다).
+   들이는 폭 = (칸 안쪽 폭 - 문서 폭) / 2. 칸 안쪽 폭은 컨테이너 쿼리 단위(cqw)로 잰다 */
+.detail { container-type: inline-size; }
+.detail > .crumb, .detail .withAside > article { margin-left: max(0px, calc((100cqw - var(--sd-doc-width)) / 2)); }
+@media (max-width: 760px) {
+  .detail > .crumb, .detail .withAside > article { margin-left: 0; }
+}
+
+/* ── 상세 화면 상자 + 양쪽 광고 (11/23 해원: 주변에 붕 떠 보여서) ──
+   본문을 아주 옅은 선 상자로, 왼쪽 여백에 세로 광고, 오른쪽은 업체 칸 아래 네모 광고 (시연용 더미) */
+.detailCard { position: relative; min-height: 600px; padding: 40px 48px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.adRail { position: absolute; top: 0; bottom: 0; width: var(--sd-ad-sky); }
+.adLeft { right: calc(100% + var(--sd-ad-gap)); }
+.adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
+.sideAd { margin-top: 16px; }
+/* 광고는 칸 밖 여백(페이지 좌우 여백 포함)까지 쓴다. 본문 상자 바깥 여백 = (화면 폭 - 880) / 2 가 광고 180 + 간격 20 + 끝 여백 16 보다 좁으면 숨김 → 1312px 미만 (미디어 쿼리는 변수를 못 써서 숫자) */
+@media (max-width: 1311px) { .adRail { display: none; } }
+@media (max-width: 760px) {
+  .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
+}
+/* 오른쪽 칸: 업체 상자와 네모 광고 모두 따라오지 않는다 (11/24 해원: 광고 있는 화면에 고정 요소 없음).
+   둘 다 본문과 함께 스크롤된다 */
+.sideCol { align-self: start; }
+.sideCol > .side { position: static; } /* 광고가 있는 화면은 스크롤해도 따라오는 요소를 두지 않는다 — 업체 상자도 본문과 함께 올라간다 (11/24 해원) */
+@media (max-width: 760px) { .sideCol > .side { position: static; } }
+
+/* ── 소개 글 상세 간격을 커뮤니티 글 상세와 같게 (11/23 해원: "자유게시판만큼") ──
+   머리 아래 24px · 메타 위 16px(사이 점) · 사진 위 32px · 본문 위아래 40px + 최소 높이 200px · 본문 16px/1.75 */
+.postHead { padding: 0 0 24px; }
+.meta { gap: 8px; margin-top: 16px; }
+.meta > span:first-child { color: var(--sd-ink); font-weight: 600; }
+.meta > span + span::before { content: "·"; margin-right: 8px; color: var(--sd-line-strong); }
+.gallery { margin-top: 32px; }
+.postBody { padding: 40px 0; min-height: 200px; font-size: var(--sd-text-lg); line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; }

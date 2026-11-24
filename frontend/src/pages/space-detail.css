@@ -1,0 +1,39 @@
+/* 공간 상세 (mockup-v4/pages/space.html <style> 과 인라인 style 그대로) */
+.space-page { --box-right: max(24px, calc((100vw - var(--sd-page-width)) / 2 - 110px)); --edge: max(var(--sd-page-pad), calc((100vw - var(--sd-page-width)) / 2)); }
+.space-page .main, .space-page .tab-bar > .container { padding-right: calc(var(--sd-page-pad) + 332px - (var(--edge) - var(--box-right))); }
+.detail-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 36px; align-items: start; }
+.detail-top .gallery__main { aspect-ratio: auto; height: 340px; }
+.detail-top h1 { font-size: 29px; font-weight: 700; letter-spacing: -.8px; }
+.detail-top__meta { margin-top: 6px; font-size: 15px; color: var(--sd-muted); }
+.detail-top .chips-ico > div { padding: 16px 16px; }
+.detail-top .chips-ico b { font-size: 17px; }
+.detail-top .info-table { margin-top: 20px; font-size: 15px; }
+.detail-top .info-table th { width: 110px; }
+.detail-top .info-table th, .detail-top .info-table td { padding-top: 16px; padding-bottom: 16px; }
+.space-wrap { position: relative; }
+.offer-col { position: absolute; top: 40px; bottom: 56px; right: var(--box-right); width: 300px; pointer-events: none; }
+.offer-fixed { position: sticky; top: calc(var(--sd-gnb-height) + 24px); z-index: 6; background: var(--sd-bg); pointer-events: auto; }
+@media (max-width: 1100px) { .space-page .main, .space-page .tab-bar > .container { padding-right: var(--sd-page-pad); } .offer-col { position: static; width: auto; padding: 0 var(--sd-page-pad) 40px; } .offer-fixed { position: static; } }
+
+.space-page .space__crumb-row { padding-bottom: 14px; }
+.space__vat { font-weight: 400; }
+.space__tabs { position: sticky; top: var(--sd-gnb-height); background: var(--sd-bg); z-index: 5; }
+.space__intro { line-height: 1.8; }
+
+/* 반응형 (목업 v4 는 웹만 그렸다) */
+@media (max-width: 760px) {
+  .detail-top { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .detail-top .gallery__main { height: 240px; }
+  .detail-top h1 { font-size: 24px; }
+  .space__tabs .tabs { overflow-x: auto; white-space: nowrap; }
+  /* 4칸 이름-값 표 → 2칸씩 줄바꿈 */
+  .space__cond tr { display: grid; grid-template-columns: 110px minmax(0, 1fr); }
+  .space__cond th, .space__cond td { display: block; }
+  .offer-col { max-width: 560px; }
+}
+@media (max-width: 560px) {
+  .detail-top .gallery__main { height: 220px; }
+  .detail-top .chips-ico > div { padding: 12px 10px; }
+  .space__cond tr { grid-template-columns: 96px minmax(0, 1fr); }
+}
+

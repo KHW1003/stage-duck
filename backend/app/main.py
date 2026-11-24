@@ -1,0 +1,104 @@
+"""STAGE DUCK API 서버. 실행: uvicorn app.main:app --reload (backend 폴더에서)."""
+from pathlib import Path
+
+from fastapi import APIRouter, FastAPI
+from fastapi.staticfiles import StaticFiles
+
+from app.admin import setup_admin
+from app.auth.csrf import CSRFMiddleware
+from app.auth.router import me_router
+from app.auth.router import router as auth_router
+from app.core.config import get_settings, check_secrets
+from app.core.errors import register_error_handlers
+from app.dev.router import router as dev_router
+from app.supplier.router import router as supplier_router
+from app.supplier.router import venue_router
+from app.policy.router import router as reports_router
+from app.files.router import router as files_router
+from app.community.router import extra_router as community_extra_router
+from app.community.router import router as community_router
+from app.request.router import router as request_router
+from app.request.router import me_router as request_me_router, stage_router
+from app.board.router import router as board_router
+from app.quote.router import postings_router, router as quote_router, stage_quote_router
+from app.chat.router import router as chat_router
+from app.chat.router import ws_router as chat_ws_router
+from app.seo.router import router as seo_router
+from app.tech.router import router as tech_router
+from app.profile.router import router as profile_router
+from app.support.router import inquiry_router
+from app.support.router import router as notice_router
+from app.check.router import router as compare_router
+from app.payment.router import payment_router
+from app.offer.router import router as offer_router
+from app.notification.router import router as notification_router
+from app.confirm.router import router as confirm_router
+from app.review.router import router as review_router
+from app.payment.router import router as order_router
+
+
+from app.core import scheduler  # noqa: E402
+
+
+def create_app() -> FastAPI:
+    check_secrets(get_settings())  # 서버(Docker)에서 약한 서명 키로 뜨지 않게 (config.py)
+    app = FastAPI(title="STAGE DUCK API", version="0.1.0")
+    register_error_handlers(app)
+    app.add_middleware(CSRFMiddleware)  # #24: /api/v1 의 POST·PUT·PATCH·DELETE 는 X-CSRF-Token 필요 (해원 승인)
+
+    api = APIRouter(prefix="/api/v1")
+
+    @api.get("/health", tags=["common"])
+    def health() -> dict:
+        return {"status": "ok", "env": get_settings().app_env, "simulation": True}
+
+    api.include_router(auth_router)
+    api.include_router(me_router)
+    api.include_router(supplier_router)
+    api.include_router(venue_router)
+    api.include_router(reports_router)
+    api.include_router(files_router)
+    api.include_router(request_router)
+    api.include_router(community_router)
+    api.include_router(community_extra_router)
+    api.include_router(stage_router)
+    api.include_router(request_me_router)  # #39 GET /me/posting-limit
+    api.include_router(board_router)  # #30 업체 찾기
+    api.include_router(quote_router)
+    api.include_router(stage_quote_router)
+    api.include_router(postings_router)
+    api.include_router(chat_router)  # #42 채팅
+    api.include_router(tech_router)  # #49 기술 확인
+    api.include_router(profile_router)  # #33 프로필
+    api.include_router(notice_router)  # #103 공지사항
+    api.include_router(inquiry_router)  # #102 1:1 문의
+    api.include_router(compare_router)  # #48 견적 비교
+    api.include_router(order_router)  # #50 통합 청구서
+    api.include_router(payment_router)  # #51 테스트 결제
+    api.include_router(offer_router)  # #32 견적 요청·관심 업체
+    api.include_router(notification_router)  # #45 사이트 안 알림
+    api.include_router(confirm_router)  # #43 최종 견적·확정
+    api.include_router(review_router)  # 공연 후기·평점
+    if get_settings().is_test_env:  # AC-F1-16: 시연 계정 전환은 테스트 환경에서만
+        api.include_router(dev_router)
+    app.include_router(api)
+    app.include_router(chat_ws_router)  # #42 GET /ws 실시간 (api-contract.md 7장)
+    # 공개 사진 (uploads.md 3장). 비공개 파일은 /media 로 나가지 않는다 — GET /api/v1/files/{id}
+    app.mount("/media", StaticFiles(directory=Path(get_settings().upload_dir) / "public", check_dir=False), name="media")
+    setup_admin(app)
+    # 화면: 빌드된 JS·CSS, 그리고 나머지 주소는 head 를 채운 index.html (specs/seo.md 1장). 반드시 맨 마지막
+    app.mount("/assets", StaticFiles(directory=Path(get_settings().frontend_dist) / "assets", check_dir=False), name="assets")
+    app.include_router(seo_router)
+
+    @app.on_event("startup")
+    def _start_scheduler() -> None:  # 결제 마감 리마인드·자동 취소 (D-57), 1분마다
+        scheduler.start()
+
+    @app.on_event("shutdown")
+    def _stop_scheduler() -> None:
+        scheduler.stop()
+
+    return app
+
+
+app = create_app()

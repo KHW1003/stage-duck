@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요청서 STEP2 · STAGE DUCK</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* RequestStep2Page.module.css: 항목마다 머리줄(번호 · 이름 · 필요해요/이미 있어요) + 아래 입력 표 */
+  .need { border-top: 2px solid var(--sd-rule); }
+  .need + .need { margin-top: 40px; }
+  .need__head { display: flex; align-items: center; gap: 14px; padding: 16px 4px; border-bottom: 1px solid var(--sd-line); }
+  .need__no { font-size: var(--sd-text-small); font-weight: 800; color: var(--sd-muted); }
+  .need__title { flex: 1; }
+  .need__title b { font-size: 18px; }
+  .need__title small { display: block; font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .need .form-table { border-top: 0; }
+  .need-off { padding: 18px 4px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); color: var(--sd-muted); }
+  .items { width: 100%; max-width: 560px; }
+  .items td { padding: 4px 6px 4px 0; }
+</style>
+</head>
+<!-- 화면: 요청서 STEP2 필요한 것 · FR-REQ-02·03 · AC-F2-08~11 · 묶음 2
+     React: pages/RequestStep2Page.tsx = StepBar + NeedSection(venue) + NeedSection(equipment) + NeedSection(engineer) + PublishModal
+     needs JSON 구조는 data-model.md. 장비 칸은 처음에 비어 있다 (AC-F2-09). 엔지니어가 필요하면 작업 1개 이상 (AC-F2-10). -->
+<body data-layout="user" data-nav="my">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="my.html">내 공연</a></li><li>요청서 쓰기</li></ol><h1>요청서 쓰기</h1><p class="page-top__desc">가을밤 밴드 공연 · 11월 28일(토)</p></div><span class="tag tag--soft">14:06 임시 저장</span></div></div>
+
+<main class="container container--narrow main">
+  <ol class="step-bar"><li class="is-done"><b>01</b>공연 기본 정보</li><li class="is-now"><b>02</b>필요한 것</li><li><b>03</b>확인·게시</li></ol>
+  <p class="desc muted mt-24">이미 있는 것은 "이미 있어요"로 바꿔 주세요. 그 단계는 모집하지 않아요. 공연장 → 장비 → 엔지니어 순서로 차례로 구해요.</p>
+
+  <div class="need mt-24" data-need>
+    <div class="need__head"><span class="need__no">01</span><div class="need__title"><b>공연장</b><small>먼저 공연장을 정하고, 그다음 장비·엔지니어를 구해요.</small></div><div class="toggle"><button type="button" data-value="on" aria-pressed="true">필요해요</button><button type="button" data-value="off" aria-pressed="false">이미 있어요</button></div></div>
+    <div class="need-body"><div class="form-table">
+      <div><span class="form-table__th">공간 유형<span class="req">*</span></span><span class="form-table__td"><select class="select"><option>상관없음</option><option>전문 공연장</option><option selected>복합문화공간</option><option>루프탑</option><option>정원</option><option>창고</option><option>기타 (직접 입력)</option></select></span></div>
+      <div><span class="form-table__th">필요 수용 인원<span class="req">*</span></span><span class="form-table__td"><span class="unit" style="max-width:200px"><input class="input input--num" value="80"><span>명</span></span></span></div>
+      <div><span class="form-table__th">대관 예산</span><span class="form-table__td"><span class="unit" style="max-width:260px"><input class="input input--num" value="600,000"><span>원</span></span></span></div>
+      <div><span class="form-table__th">입실 · 퇴실</span><span class="form-table__td"><span class="form-table__inline"><input class="input" type="time" value="15:00"><span>~</span><input class="input" type="time" value="22:00"><label class="check"><input type="checkbox">업체 제안 받기</label></span></span></div>
+      <div><span class="form-table__th">꼭 필요한 조건</span><span class="form-table__td"><div class="checks"><label class="check"><input type="checkbox" checked>밴드 공연 가능</label><label class="check"><input type="checkbox" checked>외부 음향 장비 반입</label><label class="check"><input type="checkbox" checked>외부 엔지니어 허용</label><label class="check"><input type="checkbox" checked>대기실</label><label class="check"><input type="checkbox">무대 단상</label><label class="check"><input type="checkbox">주차</label></div></span></div>
+      <div><span class="form-table__th">추가 요청</span><span class="form-table__td"><textarea class="textarea" placeholder="예: 드럼 세트를 놓을 단상이 있으면 좋겠어요."></textarea></span></div>
+    </div></div>
+  </div>
+
+  <div class="need" data-need>
+    <div class="need__head"><span class="need__no">02</span><div class="need__title"><b>장비</b><small>장비를 잘 모르면 "업체 제안 받기"로 두세요.</small></div><div class="toggle"><button type="button" data-value="on" aria-pressed="true">필요해요</button><button type="button" data-value="off" aria-pressed="false">이미 있어요</button></div></div>
+    <div class="need-body"><div class="form-table">
+      <div><span class="form-table__th">원하는 장비</span><span class="form-table__td"><label class="check"><input type="checkbox" checked>업체 제안 받기 <small>공연에 맞게 업체가 구성을 제안해요</small></label><button class="btn btn--sm" type="button" style="align-self:flex-start"><span data-icon="plus" class="icon--sm"></span>장비 추가</button><span class="field__hint">미리 들어 있는 장비는 없어요.</span></span></div>
+      <div><span class="form-table__th">필요한 서비스</span><span class="form-table__td"><div class="checks"><label class="check"><input type="checkbox" checked>운반</label><label class="check"><input type="checkbox" checked>설치 및 철수</label></div></span></div>
+      <div><span class="form-table__th">장비 예산</span><span class="form-table__td"><span class="unit" style="max-width:260px"><input class="input input--num" value="1,500,000"><span>원</span></span></span></div>
+      <div><span class="form-table__th">가지고 있는 장비</span><span class="form-table__td"><table class="items"><tr><td><input class="input" value="드럼 세트 (심벌 포함, 킥 페달 1)" aria-label="장비"></td><td style="width:110px"><span class="unit"><input class="input input--num" value="1" aria-label="수량"><span>개</span></span></td><td style="width:44px"><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr><tr><td><input class="input" value="기타 앰프" aria-label="장비"></td><td><span class="unit"><input class="input input--num" value="2" aria-label="수량"><span>개</span></span></td><td><button class="icon-btn" type="button" aria-label="지우기"><span data-icon="trash"></span></button></td></tr></table><button class="btn btn--sm btn--ghost" type="button" style="align-self:flex-start"><span data-icon="plus" class="icon--sm"></span>장비 추가</button><span class="field__hint">자세히 적을수록 업체가 빠뜨리지 않아요.</span></span></div>
+    </div></div>
+  </div>
+
+  <div class="need" data-need>
+    <div class="need__head"><span class="need__no">03</span><div class="need__title"><b>엔지니어</b><small>해 줘야 할 작업을 하나 이상 골라 주세요.</small></div><div class="toggle"><button type="button" data-value="on" aria-pressed="true">필요해요</button><button type="button" data-value="off" aria-pressed="false">이미 있어요</button></div></div>
+    <div class="need-body"><div class="form-table">
+      <div><span class="form-table__th">작업<span class="req">*</span></span><span class="form-table__td"><div class="checks" style="--cols:2"><label class="check"><input type="checkbox" checked>메인 음향 (FOH 믹싱)</label><label class="check"><input type="checkbox" checked>설치 및 철수 보조</label><label class="check"><input type="checkbox" checked>사운드체크·리허설 진행 (동행 시)</label><label class="check"><input type="checkbox"><span>모니터 믹싱<small>무대 위 연주자용 소리</small></span></label><label class="check"><input type="checkbox">무선 마이크 채널 관리</label><label class="check"><input type="checkbox"><span>녹음 / 라이브 스트리밍 음향 송출<small>추가금이 붙어요</small></span></label><label class="check"><input type="checkbox">공연 중 장비 문제 대응</label><label class="check"><input type="checkbox">기타 (직접 입력)</label></div></span></div>
+      <div><span class="form-table__th">원하는 조건</span><span class="form-table__td"><div class="checks"><label class="check"><input type="checkbox" checked>밴드 공연 경험</label><label class="check"><input type="checkbox" checked>리허설 참여 가능</label><label class="check"><input type="checkbox">철수까지 함께</label></div></span></div>
+    </div></div>
+  </div>
+
+  <div class="notice mt-40"><span data-icon="info"></span><div>게시하면 <b>공연장 업체에게만</b> 공고가 보여요. 공연장을 컨펌하고 [다음 단계로]를 누르면 장비 업체에게 열려요.</div></div>
+  <div class="btns btns--center mt-40"><a class="btn btn--lg" href="request-1.html" style="min-width:160px">이전</a><button class="btn btn--primary btn--lg" type="button" data-open="publish" style="min-width:240px">확인하고 게시하기</button></div>
+</main>
+
+<div class="layer" id="publish" hidden><div class="modal modal--wide"><div class="modal__head"><h2>공고 게시</h2><button class="icon-btn" type="button" data-close aria-label="닫기"><span data-icon="x"></span></button></div>
+  <div class="modal__body"><p class="modal__lead">이 내용으로 공고를 올릴까요?</p><p>게시한 뒤 고치면 새 버전(v2)이 생기고, 업체에게 바뀐 항목이 보여요.</p>
+    <table class="info-table mt-16"><tr><th>공연</th><td>가을밤 밴드 공연 · 밴드</td></tr><tr><th>날짜 · 시간</th><td class="num">11월 28일(토) 19:00~21:00 · 리허설 17:00</td></tr><tr><th>지역 · 관객</th><td>광주 동구 · 80명</td></tr><tr><th>모집 순서</th><td><ol class="track-line"><li class="is-now">공연장 · 지금 모집</li><li>장비</li><li>엔지니어</li></ol></td></tr></table></div>
+  <div class="modal__foot"><button class="btn" type="button" data-close>더 고칠게요</button><a class="btn btn--primary" href="my.html">게시하기</a></div></div></div>
+
+<script src="../layout.js"></script>
+</body>
+</html>

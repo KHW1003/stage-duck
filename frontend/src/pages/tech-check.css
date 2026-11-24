@@ -1,0 +1,21 @@
+/* 기술 확인 (mockup-v4/pages/p-tech.html 인라인 style 을 클래스로) */
+.tech__owner { width: 140px; }
+.tech__state { width: 100px; }
+.tech__act { width: 110px; }
+.tech__table .tech__input { height: 36px; }
+
+/* 반응형 (목업 v4 는 웹만 그렸다): 표를 줄마다 카드처럼 쌓는다 */
+@media (max-width: 760px) {
+  .summary { --cols: 3 !important; }
+  .tech__table thead { display: none; }
+  .tech__table, .tech__table tbody, .tech__table tr, .tech__table td { display: block; width: auto; }
+  .tech__table tr { padding: 14px 4px; border-bottom: 1px solid var(--sd-line); }
+  .tech__table td { height: auto; padding: 3px 0 !important; border: 0 !important; text-align: left !important; }
+  .tech__table td:first-child { padding-bottom: 8px !important; }
+  .tech__table td:nth-child(2) { font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .tech__table .with-thumb small { white-space: normal; }
+  .tech__table td:empty { display: none; }
+}
+@media (max-width: 560px) {
+  .summary { --cols: 1 !important; }
+}

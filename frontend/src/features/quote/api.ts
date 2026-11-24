@@ -1,0 +1,66 @@
+/** 공고 목록·상세·견적서 보내기 API (backend quote/router.py). 서버 데이터는 TanStack Query 로만 (CLAUDE.md 6.2) */
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "../../shared/api/client";
+import type { MyVenue, PostingDetail, PostingSummary, QuoteIn, QuoteOut, QuoteSentOut, QuoteUpdateIn } from "../../shared/api/types";
+
+export const POSTINGS_KEY = ["postings"] as const;
+
+/** AC-F2-11·12: 내 부문 × 지금 열린 단계 공고. sido 가 비면 전체 지역 */
+export function usePostings(sido: string) {
+  return useQuery({
+    queryKey: [...POSTINGS_KEY, { sido }],
+    queryFn: () => api<PostingSummary[]>(sido ? `/postings?sido=${encodeURIComponent(sido)}` : "/postings"),
+  });
+}
+
+/** AC-F3-03: 공고 상세 + 앞 단계 확정 정보. 나에게 안 보이는 공고는 서버가 404 */
+export function usePosting(stageId: number) {
+  return useQuery({
+    queryKey: [...POSTINGS_KEY, stageId],
+    queryFn: () => api<PostingDetail>(`/postings/${stageId}`),
+  });
+}
+
+/** AC-F2-15·16: 견적서 보내기. 한 공고에 label 을 바꿔 여러 개 보낼 수 있다 */
+export function useSendQuote(stageId: number) {
+  return useMutation({
+    mutationFn: (body: QuoteIn) => api<QuoteSentOut>(`/stages/${stageId}/quotes`, { method: "POST", body: JSON.stringify(body) }),
+  });
+}
+
+/** AC-F2-20: 내 견적서 + 현재 버전 + 이력. 남의 견적서는 서버가 404 */
+export function useQuote(quoteId: number, enabled = true) {
+  return useQuery({
+    queryKey: ["quotes", quoteId],
+    queryFn: () => api<QuoteOut>(`/quotes/${quoteId}`),
+    enabled: enabled && Number.isInteger(quoteId) && quoteId > 0,
+  });
+}
+
+/** 채팅 견적서 카드(refId = 견적서 버전 번호)의 [내역서 보기] */
+export function useQuoteByVersion(versionId: number, enabled = true) {
+  return useQuery({
+    queryKey: ["quotes", "by-version", versionId],
+    queryFn: () => api<QuoteOut>(`/quotes/by-version/${versionId}`),
+    enabled: enabled && Number.isInteger(versionId) && versionId > 0,
+  });
+}
+
+/** AC-F2-20: 고치면 새 버전이 생긴다. 이력이 바뀌니 견적서를 다시 불러온다 */
+export function useUpdateQuote(quoteId: number) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: QuoteUpdateIn) => api<QuoteSentOut>(`/quotes/${quoteId}`, { method: "PUT", body: JSON.stringify(body) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["quotes", quoteId] }),
+  });
+}
+
+/** AC-F2-18: 공연장 견적서에 고를 내 공간 목록 (GET /supplier/venues). 관리자가 숨긴 공간(HIDDEN)은 뺀다 */
+export function useMyVenues(enabled: boolean) {
+  return useQuery({
+    queryKey: ["supplier", "venues"],
+    queryFn: () => api<MyVenue[]>("/supplier/venues"),
+    enabled,
+    select: (venues) => venues.filter((v) => v.status !== "HIDDEN"),
+  });
+}

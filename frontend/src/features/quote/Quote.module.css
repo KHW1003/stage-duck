@@ -1,0 +1,103 @@
+/* 공고 목록·상세 (#41). 출처: docs/design/mockup-v4/pages/p-jobs.html, p-job.html (css/refine.css .table · domain.css .prior · .side-box). 색·크기는 토큰만 */
+.wrap { padding-top: 32px; padding-bottom: var(--sd-inner-section); }
+
+/* 목록 위 고르기 줄 */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+
+/* 공고 표 (목업 .table) */
+.tableBox { overflow-x: auto; }
+.table { width: 100%; font-size: var(--sd-text-desc); }
+.table th { height: 40px; padding: 0 14px; border-bottom: 1px solid var(--sd-rule); color: var(--sd-muted); font-weight: 500; text-align: left; white-space: nowrap; }
+.table td { padding: 14px; border-bottom: 1px solid var(--sd-line); text-align: left; vertical-align: middle; }
+.table td small, .sub { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.title { font-size: var(--sd-text-card); font-weight: 700; }
+.actionCell { text-align: right; white-space: nowrap; }
+
+.tag { display: inline-block; margin-left: 6px; padding: 2px 6px; border: 1px solid var(--sd-blue); border-radius: var(--sd-r-tag); color: var(--sd-blue); font-size: var(--sd-text-small); font-weight: 600; vertical-align: middle; }
+
+.notice { padding: 14px 16px; border-left: 3px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
+.noticeActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.bullets { margin-top: 16px; padding-left: 18px; color: var(--sd-muted); font-size: var(--sd-text-small); line-height: 1.8; list-style: disc; }
+
+/* 상세: 본문 + 오른쪽 상자 (목업 .with-aside) */
+.withAside { display: grid; grid-template-columns: minmax(0, 1fr) var(--sd-aside); gap: 48px; align-items: start; }
+.sec + .sec { margin-top: 32px; }
+.secTitle { margin-bottom: 12px; font-size: var(--sd-text-sub); font-weight: 700; }
+
+/* 앞 단계에서 정해진 공간 (목업 .prior) */
+.prior { overflow: hidden; border: 1px solid var(--sd-rule); border-radius: var(--sd-r-box); }
+.priorHead { display: flex; align-items: center; gap: 8px; padding: 12px 18px; background: var(--sd-ink); color: var(--sd-on-blue); font-size: var(--sd-text-desc); font-weight: 700; }
+
+/* 정보 표 (목업 .info-table): 이름 / 값 두 칸 */
+.info { display: grid; grid-template-columns: 140px minmax(0, 1fr); margin: 0; border-top: 1px solid var(--sd-line-strong); }
+.infoRow { display: contents; }
+.prior .info { border-top: 0; }
+.info dt, .info dd { margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); line-height: 1.6; }
+.info dt { background: var(--sd-th); color: var(--sd-muted); font-weight: 500; }
+.prior .info dt:last-of-type, .prior .info dd:last-of-type { border-bottom: 0; }
+.desc { color: var(--sd-muted); font-size: var(--sd-text-desc); line-height: 1.8; }
+
+/* 오른쪽 상자 (목업 .side-box) */
+.sideBox { position: sticky; top: calc(var(--sd-gnb-height) + 16px); overflow: hidden; border-top: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); }
+.sideSec { padding: 22px 24px; }
+.sideSec + .sideSec { border-top: 1px solid var(--sd-line); }
+.sideGray { background: var(--sd-th); }
+.sideTitle { margin-bottom: 8px; font-size: var(--sd-text-card); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .withAside { grid-template-columns: 1fr; gap: 32px; }
+  .sideBox { position: static; }
+  .info { grid-template-columns: 1fr; }
+  .info dt { padding-bottom: 4px; border-bottom: 0; }
+}
+
+/* 견적서 쓰기 (#41). 출처: mockup-v4/pages/p-quote.html (.form-table · table.lines · .sum-total · .discount) */
+.formRows { display: flex; flex-direction: column; gap: 16px; }
+.row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.row4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.row4 + .row4 { margin-top: 16px; }
+.hint { color: var(--sd-muted); font-size: var(--sd-text-small); line-height: 1.6; }
+.fieldError { margin-top: 6px; color: var(--sd-conflict-text); font-size: var(--sd-text-small); }
+.mt12 { margin-top: 12px; }
+
+/* 포함 체크 (목업 .checks --cols:2) */
+.checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 0; padding: 0; border: 0; }
+.legend { grid-column: 1 / -1; margin-bottom: 4px; padding: 0; font-size: var(--sd-text-desc); font-weight: 700; }
+.check { display: flex; align-items: flex-start; gap: 8px; min-height: var(--sd-touch); padding-top: 10px; font-size: var(--sd-text-desc); cursor: pointer; }
+.check input { margin-top: 3px; }
+.check small { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
+
+/* 품목 표 (목업 table.lines) */
+.lines { width: 100%; font-size: var(--sd-text-desc); }
+.lines th { height: 40px; padding: 0 8px; border-bottom: 1px solid var(--sd-rule); color: var(--sd-muted); font-weight: 500; text-align: left; white-space: nowrap; }
+.lines td { padding: 8px; border-bottom: 1px solid var(--sd-line); vertical-align: top; }
+.lines td:nth-child(3) { width: 11%; }
+.lines td:nth-child(4), .lines td:nth-child(5) { width: 18%; }
+.lines tfoot td { padding: 12px 8px; background: var(--sd-th); font-weight: 700; }
+.lines .r, .r { text-align: right; white-space: nowrap; }
+
+.textarea { width: 100%; min-height: 88px; padding: 10px 12px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); background: var(--sd-bg); font-size: var(--sd-text-body); resize: vertical; }
+.textarea:focus { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
+
+/* 오른쪽 합계 (목업 .sum-total--point · .sum-rows) */
+.sumTotal { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--sd-line); }
+.sumTotal b { color: var(--sd-blue); font-size: var(--sd-text-total); font-weight: 800; }
+.sumRows { margin: 12px 0 8px; font-size: var(--sd-text-desc); }
+.sumRows div { display: flex; justify-content: space-between; padding: 4px 0; }
+.sumRows dt { color: var(--sd-muted); }
+.sumRows dd { margin: 0; }
+.discount { color: var(--sd-blue); font-weight: 700; white-space: nowrap; }
+
+/* 완료 화면의 자동 검사 결과 */
+.checkList { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.checkList li { display: flex; align-items: flex-start; gap: 10px; font-size: var(--sd-text-desc); line-height: 1.6; }
+.doneWrap { max-width: var(--sd-doc-width); margin: 0 auto; }
+
+/* 견적서 고치기: 버전 이력 (AC-F2-20) */
+.history { border-top: 1px solid var(--sd-line-strong); }
+.history li { display: flex; align-items: center; gap: 16px; min-height: var(--sd-touch); padding: 0 4px; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+.history li > :first-child { min-width: 40px; color: var(--sd-muted); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .row3, .row4, .checks { grid-template-columns: 1fr; }
+}

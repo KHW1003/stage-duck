@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1:1 문의 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .inquiry { max-width: 1120px; }
+  .inquiry .btn, .inquiry .filters button { min-height: 44px; border-radius: 8px; }
+  .inquiry .btn--primary { background: var(--sd-ink); border-color: var(--sd-ink); color: var(--sd-bg); }
+  .inquiry .btn--primary:hover { background: var(--sd-blue-button); }
+  .inquiry .notice { margin-bottom: 28px; }
+  .inquiry-tools { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .inquiry .filters { flex-wrap: wrap; gap: 8px; }
+  .inquiry .filters button + button { margin-left: 0; }
+  .inquiry .filters button[aria-pressed="true"] { background: var(--sd-band); }
+  .inquiry-count { margin: 24px 0 8px; color: var(--sd-muted); font-size: 14px; }
+  .inquiry-count b { color: var(--sd-ink); }
+  .inquiry .table { min-width: 760px; font-size: 15px; }
+  .inquiry .table th { height: 48px; font-size: 14px; }
+  .inquiry .table td { height: 72px; padding-top: 8px; padding-bottom: 8px; }
+  .inquiry .table th:nth-child(1) { width: 70px; }
+  .inquiry .table th:nth-child(2) { width: 130px; }
+  .inquiry .table th:nth-child(4) { width: 130px; }
+  .inquiry .table th:nth-child(5) { width: 140px; }
+  .inquiry-title { display: flex; align-items: center; min-height: 44px; font-weight: 600; }
+  .inquiry-title:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .inquiry .status { font-size: 14px; }
+  .inquiry .pagination span { min-width: 44px; height: 44px; border-radius: 8px; }
+  .inquiry .mock-switch { position: static; width: fit-content; padding: 0; margin-bottom: 24px; gap: 8px; background: var(--sd-bg); color: var(--sd-muted); font-size: 14px; }
+  .inquiry .mock-switch > span { opacity: 1; }
+  .inquiry .mock-switch button { min-height: 44px; padding: 0 14px; border: 1px solid var(--sd-line-strong); border-radius: 8px; background: var(--sd-bg); color: var(--sd-ink); }
+  .inquiry .mock-switch button[aria-pressed="true"] { background: var(--sd-band); border-color: var(--sd-ink); font-weight: 700; }
+  @media (max-width: 600px) { .inquiry { padding-left: 20px; padding-right: 20px; } .inquiry-tools > .btn { width: 100%; } }
+</style>
+</head>
+<!-- 제안용 목업: 사용자 본인의 문의만 보여요. 기존 파일은 변경하지 않아요. -->
+<body data-layout="user">
+<div class="page-top">
+  <div class="container inquiry page-top__inner">
+    <div><h1>1:1 문의</h1><p class="page-top__desc">플랫폼을 이용하며 궁금한 점을 운영자에게 물어보세요.</p></div>
+  </div>
+</div>
+<main class="container inquiry main">
+  <div class="mock-switch" data-group="view" aria-label="문의 목록 목업 보기">
+    <span>목업 보기</span>
+    <button type="button" data-value="list" aria-pressed="true">문의 있음</button>
+    <button type="button" data-value="empty" aria-pressed="false">문의 없음</button>
+  </div>
+  <div class="notice"><span data-icon="lock"></span><div><b>내 문의만 보여요.</b> 문의 내용과 답변은 작성한 사용자와 운영자만 볼 수 있어요.</div></div>
+  <div class="inquiry-tools">
+    <div class="filters" role="group" aria-label="문의 유형 필터">
+      <button type="button" aria-pressed="true" data-type="전체">전체</button>
+      <button type="button" aria-pressed="false" data-type="결제·환불">결제·환불</button>
+      <button type="button" aria-pressed="false" data-type="견적·컨펌">견적·컨펌</button>
+      <button type="button" aria-pressed="false" data-type="업체 이용">업체 이용</button>
+      <button type="button" aria-pressed="false" data-type="계정">계정</button>
+      <button type="button" aria-pressed="false" data-type="기타">기타</button>
+    </div>
+    <a class="btn btn--primary" href="inquiry-codex-write.html"><span data-icon="edit"></span>문의하기</a>
+  </div>
+  <section data-when="view:list" aria-label="내 문의 목록">
+    <p class="inquiry-count" role="status">내 문의 <b id="inquiry-count">7</b>건</p>
+    <div class="table-box" tabindex="0" role="region" aria-label="내 문의 표, 좁은 화면에서는 좌우로 움직여 보세요">
+      <table class="table">
+        <caption class="sr-only">내 문의의 번호, 문의 유형, 제목, 날짜, 답변 상태예요.</caption>
+        <thead><tr><th scope="col">번호</th><th scope="col">문의 유형</th><th scope="col">제목</th><th scope="col">날짜</th><th scope="col">답변 상태</th></tr></thead>
+        <tbody>
+          <tr data-type="결제·환불"><td class="num muted">7</td><td>결제·환불</td><td><a class="inquiry-title" href="inquiry-codex-post.html">테스트 결제 취소 내역은 어디에서 보나요?</a></td><td class="num muted">2026.11.16</td><td><span class="status status--pass"><span aria-hidden="true">✓</span> 답변 완료</span></td></tr>
+          <tr data-type="견적·컨펌"><td class="num muted">6</td><td>견적·컨펌</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=6&amp;state=wait">견적서 내용을 바꾸고 다시 컨펌할 수 있나요?</a></td><td class="num muted">2026.11.16</td><td><span class="status status--warn"><span aria-hidden="true">!</span> 답변 대기</span></td></tr>
+          <tr data-type="업체 이용"><td class="num muted">5</td><td>업체 이용</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=5&amp;state=wait">업체와 나눈 채팅을 다시 보고 싶어요</a></td><td class="num muted">2026.11.15</td><td><span class="status status--warn"><span aria-hidden="true">!</span> 답변 대기</span></td></tr>
+          <tr data-type="계정"><td class="num muted">4</td><td>계정</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=4">닉네임을 바꾸는 방법이 궁금해요</a></td><td class="num muted">2026.11.13</td><td><span class="status status--pass"><span aria-hidden="true">✓</span> 답변 완료</span></td></tr>
+          <tr data-type="결제·환불"><td class="num muted">3</td><td>결제·환불</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=3">플랫폼 이용료는 어디에서 확인하나요?</a></td><td class="num muted">2026.11.11</td><td><span class="status status--pass"><span aria-hidden="true">✓</span> 답변 완료</span></td></tr>
+          <tr data-type="기타"><td class="num muted">2</td><td>기타</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=2">답변 알림은 어디에서 볼 수 있나요?</a></td><td class="num muted">2026.11.09</td><td><span class="status status--pass"><span aria-hidden="true">✓</span> 답변 완료</span></td></tr>
+          <tr data-type="견적·컨펌"><td class="num muted">1</td><td>견적·컨펌</td><td><a class="inquiry-title" href="inquiry-codex-post.html?id=1">이전 견적서도 다시 볼 수 있나요?</a></td><td class="num muted">2026.11.06</td><td><span class="status status--pass"><span aria-hidden="true">✓</span> 답변 완료</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="pagination" aria-label="문의 목록 페이지"><span aria-current="page">1</span></nav>
+  </section>
+  <section class="empty" data-when="view:empty" hidden aria-label="문의가 없는 상태">
+    <b>아직 남긴 문의가 없어요</b><p>궁금한 점을 남겨 주세요. 답변은 이 화면과 알림으로 드려요.</p>
+    <a class="btn btn--primary" href="inquiry-codex-write.html">첫 문의 남기기</a>
+  </section>
+</main>
+<script src="../layout.js"></script>
+<script>
+  document.querySelectorAll('.footer__links a').forEach(function (link) {
+    if (link.textContent.trim() === '1:1 문의') link.href = 'inquiry-codex.html';
+  });
+  document.querySelectorAll('.filters button').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var count = 0;
+      document.querySelectorAll('tbody tr[data-type]').forEach(function (row) {
+        row.hidden = button.dataset.type !== '전체' && row.dataset.type !== button.dataset.type;
+        if (!row.hidden) count += 1;
+      });
+      document.getElementById('inquiry-count').textContent = count;
+    });
+  });
+</script>
+</body>
+</html>

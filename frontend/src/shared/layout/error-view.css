@@ -1,0 +1,19 @@
+/* 오류 화면 (mockup-v4/pages/error.html <style> 그대로) */
+.err { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - var(--sd-gnb-height) - 220px); padding: 64px 0 96px; text-align: center; }
+.err .err__code { max-width: none; margin: 0; font-size: clamp(96px, 16vw, 168px); font-weight: 800; line-height: 1; letter-spacing: -.04em; color: var(--sd-blue); font-variant-numeric: tabular-nums; }
+.err__ico { display: inline-flex; align-items: center; justify-content: center; width: 96px; height: 96px; border-radius: 50%; background: var(--sd-band); color: var(--sd-muted); }
+.err__ico--bad { color: var(--sd-conflict-text); }
+.err .info-table { width: 100%; max-width: 480px; margin-top: 24px; text-align: left; }
+.err .info-table th { width: 120px; }
+.err__ico .icon { width: 40px; height: 40px; }
+.err h1 { margin: 20px 0 0; font-size: 26px; letter-spacing: -.6px; }
+.err p { margin: 10px 0 0; max-width: 420px; font-size: var(--sd-text-body); line-height: 1.7; color: var(--sd-muted); }
+.err__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 28px; }
+.err .err__meta { margin-top: 24px; font-size: var(--sd-text-small); color: var(--sd-photo-text); }
+
+/* 반응형 (목업 v4 는 웹만 그렸다) */
+@media (max-width: 560px) {
+  .err { min-height: 0; padding: 48px 0 64px; }
+  .err h1 { font-size: 22px; }
+  .err__actions { flex-direction: column; align-self: stretch; }
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문의·공지 (관리자) · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .cs-q { white-space: pre-line; font-size: var(--sd-text-desc); line-height: 1.75; }
+  .cs-form .textarea { min-height: 160px; padding: 12px; }
+  .nt-form .textarea { min-height: 200px; padding: 12px; }
+</style>
+</head>
+<!-- 화면: 1:1 문의 답변, 공지사항 작성 · FR-ADMIN-06 · FR-CS-01·02 · AC-F5-19·21 · D-48 · 담당 미정
+     React 아님: SQLAdmin. 문의 [답변] 저장 → status ANSWERED + 회원에게 알림. 답변은 고칠 수 있다.
+     공지: 작성·수정·상단 고정·삭제. 고정 글은 공지사항 목록 맨 위. -->
+<body data-layout="admin" data-nav="cs">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>관리자</li><li>문의·공지</li></ol><h1>문의·공지</h1><p class="page-top__desc">회원 문의에 답하고 공지사항을 올려요.</p></div></div></div>
+
+<main class="container main">
+  <div class="tab-bar"><div class="tabs" role="tablist" data-tabs><button role="tab" aria-selected="true" aria-controls="c1" type="button">1:1 문의 <span class="count">2</span></button><button role="tab" aria-selected="false" aria-controls="c2" type="button">공지사항</button></div></div>
+
+  <section id="c1" class="mt-24">
+    <div class="with-aside" style="--sd-aside:400px">
+      <div>
+        <div class="row row--between mb-16"><div class="filters"><button type="button" aria-pressed="true">답변 대기</button><button type="button" aria-pressed="false">답변 완료</button><button type="button" aria-pressed="false">전체</button></div><select class="select select--sm" aria-label="분류"><option>모든 분류</option><option>결제·취소</option><option>계정</option><option>업체 입점·심사</option><option>신고·정지</option><option>기타</option></select></div>
+        <div class="table-box"><table class="table">
+          <thead><tr><th>분류</th><th>제목</th><th>회원</th><th>문의일</th><th>상태</th></tr></thead>
+          <tbody>
+            <tr class="is-on"><td>결제·취소</td><td class="l"><b>공연 1일 전에 취소하면 플랫폼 이용료도 돌려받나요?</b><small>가을밤 밴드 공연</small></td><td>가을밤밴드<small>사용자</small></td><td>11.17</td><td><span class="state">답변 대기</span></td></tr>
+            <tr><td>신고·정지</td><td class="l"><b>정지 사유를 자세히 알고 싶어요</b></td><td>업체 B<small>업체 · 정지</small></td><td>11.14</td><td><span class="state">답변 대기</span></td></tr>
+            <tr class="is-off"><td>계정</td><td class="l"><b>닉네임을 바꾸고 싶어요</b></td><td>가을밤밴드<small>사용자</small></td><td>11.13</td><td><span class="state state--done">답변 완료</span></td></tr>
+          </tbody></table></div>
+      </div>
+      <aside class="side-box">
+        <div class="side-box__sec"><p class="side-box__title">결제·취소 · 가을밤밴드</p><p class="small muted">11월 17일 10:24 · 관련 공연: 가을밤 밴드 공연 (11월 28일, 결제 완료)</p><b class="mt-12" style="display:block">공연 1일 전에 취소하면 플랫폼 이용료도 돌려받나요?</b><p class="cs-q mt-8">11월 28일 공연인데 사정이 생겨 27일에 취소할 수도 있어요.
+위약금 말고 플랫폼 이용료 92,500원도 내야 하는지 궁금해요.</p></div>
+        <form class="side-box__sec cs-form" onsubmit="return false"><label class="side-box__title" for="ans">답변</label><textarea class="textarea mt-8" id="ans">사용자 사정으로 취소하면 플랫폼 이용료는 돌려 드리지 않아요. 공연 1일 전 취소는 업체 금액(1,850,000원)의 70%인 1,295,000원이 위약금이고, 555,000원을 돌려 드려요.</textarea><p class="field__hint mt-4">저장하면 회원에게 알림이 가고 상태가 답변 완료로 바뀌어요.</p><button class="btn btn--primary btn--block mt-12" type="submit">답변 저장</button></form>
+      </aside>
+    </div>
+  </section>
+
+  <section id="c2" class="mt-24" hidden>
+    <div class="with-aside" style="--sd-aside:400px">
+      <div>
+        <div class="table-box"><table class="table">
+          <thead><tr><th>분류</th><th>제목</th><th>게시일</th><th>고정</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag">안내</span></td><td class="l"><b>포트폴리오 시연 서비스 안내</b></td><td>11.10</td><td><span class="status status--pass"><span data-icon="check"></span>고정</span></td><td><button class="btn btn--xs" type="button">수정</button></td></tr>
+            <tr><td><span class="tag">안내</span></td><td class="l"><b>커뮤니티 이용 규칙</b></td><td>11.10</td><td><span class="status status--pass"><span data-icon="check"></span>고정</span></td><td><button class="btn btn--xs" type="button">수정</button></td></tr>
+            <tr><td><span class="tag">점검</span></td><td class="l"><b>11월 20일(목) 02:00~04:00 서버 점검</b></td><td>11.17</td><td>-</td><td><button class="btn btn--xs" type="button">수정</button></td></tr>
+            <tr><td><span class="tag">정책</span></td><td class="l"><b>견적서 최소 금액 10,000원 적용</b></td><td>11.16</td><td>-</td><td><button class="btn btn--xs" type="button">수정</button></td></tr>
+          </tbody></table></div>
+      </div>
+      <aside class="side-box">
+        <form class="side-box__sec nt-form" onsubmit="return false"><p class="side-box__title">새 공지</p>
+          <div class="field mt-12"><label class="field__label" for="n-cat">분류</label><select class="select" id="n-cat"><option>안내</option><option>점검</option><option>정책</option></select></div>
+          <div class="field mt-12"><label class="field__label" for="n-title">제목</label><input class="input" id="n-title" maxlength="100"></div>
+          <div class="field mt-12"><label class="field__label" for="n-body">내용</label><textarea class="textarea" id="n-body"></textarea></div>
+          <label class="check mt-12"><input type="checkbox">목록 맨 위에 고정</label>
+          <button class="btn btn--primary btn--block mt-16" type="submit">공지 올리기</button>
+        </form>
+      </aside>
+    </div>
+  </section>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

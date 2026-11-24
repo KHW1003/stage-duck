@@ -1,0 +1,207 @@
+"""취소·위약금·업체 사정 취소 (T4-07 #52, FR-PAY-03, AC-F5-08·09·10, D-39·D-53·D-57). 묶음 4.
+
+금액은 payment/calc 의 순수 함수(cancel_phase·cancel_amounts)만 쓴다. 장부는 추가만 한다.
+공연 상태(CANCELLED)·단계 다시 열기는 2번 묶음 약속 함수(performance_cancelled·reopen_stage)로 바꾼다.
+"""
+from dataclasses import dataclass
+from datetime import datetime
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.errors import invalid_state, not_found
+from app.models.payment import Cancellation, LedgerEntry, Order
+from app.models.request import Performance, Stage
+from app.models.supplier import Supplier
+from app.models.user import User
+from app.notification import service as notification
+from app.payment import calc, deadline
+from app.payment.deadline import SUPPLIER_CANCEL_EXTRA_HOURS
+from app.payment.service import _move_order, supplier_names
+from app.policy import service as policy_service
+from app.request import rejection
+from app.request import service as request_service
+
+PAID_STATUSES = ("PAID",)  # 정산 예정(공연 끝) 뒤에는 취소하지 않는다
+CANCELABLE_PERF = ("PUBLISHED", "ASSIGNING", "AWAITING_PAYMENT", "CONFIRMED")
+
+
+@dataclass(frozen=True)
+class CancelQuote:
+    """GET /performances/{id}/cancel-quote 응답 (api-contract.md 6.1)."""
+
+    amounts: calc.CancelAmounts
+    by_supplier: list[tuple[int, str, int]]  # (업체 id, 상호, 위약금 몫)
+
+
+def _owned(db: Session, user: User, performance_id: int, *, lock: bool = False) -> Performance:
+    perf = db.get(Performance, performance_id, with_for_update=lock)
+    if perf is None or perf.user_id != user.id:
+        raise not_found()
+    return perf
+
+
+def _live_order(db: Session, performance_id: int, *, lock: bool = False) -> Order | None:
+    stmt = select(Order).where(Order.performance_id == performance_id, Order.status.in_(("ISSUED", "PAID")))
+    return db.scalar(stmt.with_for_update() if lock else stmt)
+
+
+def _quote(db: Session, perf: Performance, order: Order | None, phase: str) -> CancelQuote:
+    paid = order is not None and order.status in PAID_STATUSES
+    lines = order.lines if paid else []
+    amounts = calc.cancel_amounts([ln.amount for ln in lines], order.platform_fee if paid else 0, phase)
+    names = supplier_names(db, [ln.supplier_id for ln in lines])
+    by_supplier = [(ln.supplier_id, names.get(ln.supplier_id, ""), share) for ln, share in zip(lines, amounts.penalty_by_line)]
+    return CancelQuote(amounts, by_supplier)
+
+
+def _ended(perf: Performance, now: datetime) -> bool:
+    """공연이 끝났는가 — 당일이라도 끝났으면 (정산 예정) 누구도 취소하지 않는다."""
+    return now >= datetime.combine(perf.show_date, perf.show_end)
+
+
+def _user_phase(perf: Performance, order: Order | None, now: datetime) -> str:
+    if _ended(perf, now):
+        raise ValueError("공연이 끝난 뒤에는 취소하지 않는다")
+    paid_at = order.paid_at if order is not None and order.status in PAID_STATUSES else None
+    return calc.cancel_phase(perf.show_date, now, paid_at=paid_at)
+
+
+def cancel_quote(db: Session, user: User, performance_id: int, *, now: datetime) -> CancelQuote:
+    """AC-F5-08·09: 지금 취소하면 내는 금액·환불 예정액 미리보기. 내 공연만 (남은 404)."""
+    perf = _owned(db, user, performance_id)
+    order = _live_order(db, perf.id)
+    try:
+        phase = _user_phase(perf, order, now)
+    except ValueError:
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
+    return _quote(db, perf, order, phase)
+
+
+def _record(db: Session, perf: Performance, order: Order | None, q: CancelQuote, *, requested_by: str,
+            fault_supplier_id: int | None, actor_id: int | None, now: datetime) -> Cancellation:
+    a = q.amounts
+    paid = order is not None and order.status in PAID_STATUSES
+    if order is not None:
+        _move_order(db, order, "CANCELLED", actor_id)
+    if paid:
+        db.add_all(LedgerEntry(order_id=order.id, supplier_id=sid, entry_type="PENALTY", amount=share, memo="취소 위약금 (업체 몫)")
+                   for sid, _, share in q.by_supplier if share)
+        if a.refund_total:
+            db.add(LedgerEntry(order_id=order.id, supplier_id=None, entry_type="REFUND", amount=-a.refund_total,
+                               memo="사용자 환불 예정"))
+    c = Cancellation(performance_id=perf.id, order_id=order.id if order else None, requested_by=requested_by,
+                     fault_supplier_id=fault_supplier_id, phase=a.phase, rate_percent=a.rate_percent,
+                     penalty_total=a.penalty_total, refund_total=a.refund_total, created_at=now)
+    db.add(c)
+    db.flush()
+    return c
+
+
+def _user_cancelled(db: Session, performance_id: int) -> bool:
+    """사용자가 이미 취소한 공연 (업체 사정 취소 뒤 다시 모집·결제한 공연은 사용자 취소 가능)."""
+    stmt = select(Cancellation.id).where(Cancellation.performance_id == performance_id, Cancellation.requested_by == "USER")
+    return db.scalar(stmt.limit(1)) is not None
+
+
+def cancel_by_user(
+    db: Session, user: User, performance_id: int, *, now: datetime, expected: dict[str, int | str] | None = None,
+) -> tuple[Cancellation, CancelQuote]:
+    """AC-F5-08·09: 사용자 취소. 결제 전이면 0원 + (견적서를 받은 공연이면) 반려 기록 (D-53·D-57),
+    결제 후면 시점별 위약금을 업체 금액 비율로 나누고 나머지를 환불 예정으로 장부에 남긴다."""
+    perf = _owned(db, user, performance_id, lock=True)
+    if perf.status not in CANCELABLE_PERF or _user_cancelled(db, perf.id):
+        raise invalid_state("지금 상태에서는 취소할 수 없습니다. 공연 상태를 다시 확인해 주십시오.")
+    order = _live_order(db, perf.id, lock=True)
+    try:
+        phase = _user_phase(perf, order, now)
+    except ValueError:
+        raise invalid_state("공연 날짜가 지나 취소할 수 없습니다.") from None
+    q = _quote(db, perf, order, phase)
+    if expected is not None and any(getattr(q.amounts, field) != value for field, value in expected.items()):
+        raise invalid_state("취소 금액이 변경되었습니다. 새 위약금과 환불 예정액을 확인해 주십시오.")
+    if phase == "BEFORE_PAYMENT":
+        rejection.record_rejection(db, perf.id, now=now)
+    c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id, now=now)
+    request_service.performance_cancelled(db, perf.id, actor_id=user.id)  # 공연도 취소로 (2번 약속)
+    _notify_user_cancel(db, perf, q)
+    db.commit()
+    return c, q
+
+
+def _notify_user_cancel(db: Session, perf: Performance, q: "CancelQuote") -> None:
+    """#45 확정 업체 모두에게 CANCELLED_BY_USER. 위약금은 그 업체 몫만 (0원 구간이면 "위약금은 없어요", D-57)."""
+    penalty: dict[int, int] = {}
+    for sid, _, share in q.by_supplier:  # 한 업체가 여러 단계를 맡았으면 합친다
+        penalty[sid] = penalty.get(sid, 0) + share
+    for supplier_id, user_id in db.execute(select(Supplier.id, Supplier.user_id).where(Supplier.id.in_(penalty))).all():
+        share = penalty[supplier_id]
+        notification.notify(
+            db, user_id, "CANCELLED_BY_USER", link="/supplier/reservations",
+            params={"title": perf.title, "penalty": f"위약금 {notification.won(share)}원 정산 예정" if share else "위약금은 없습니다"},
+            payload={"performanceId": perf.id},
+        )
+
+
+def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: str, now: datetime) -> tuple[Cancellation, CancelQuote]:
+    """AC-F5-10: 확정 업체가 자기 사정으로 취소 → 그 업체 경고 1회. 확정 업체가 아니면 404.
+
+    - 결제 후: 이용료까지 전액 환불 (장부 REFUND) + 그 단계만 다시 모집, 결제 마감은 취소 시각부터 다시 센다.
+      공연 5일 전 0시가 지났으면 다시 모집할 시간이 없어 공연을 취소한다.
+    - 결제 전 (D-57): 그 단계만 다시 모집(2번 reopen_stage) + 발행된 청구서 취소 + 결제 마감 자동 48시간 연장
+      (취소 기록 order_id=NULL 한 건마다 48시간, deadline.deadline_for 가 센다). 낸 돈이 없어 금액은 모두 0원.
+    """
+    supplier = db.scalar(select(Supplier).where(Supplier.user_id == user.id))
+    perf = db.get(Performance, performance_id, with_for_update=True)
+    if perf is None or supplier is None:
+        raise not_found()
+    told: list[int] = []  # 공연이 통째로 취소될 때 알릴 남은 확정 업체
+    order = _live_order(db, performance_id, lock=True)
+    if order is not None and order.status in PAID_STATUSES:
+        if supplier.id not in {ln.supplier_id for ln in order.lines}:
+            raise not_found()
+        if _ended(perf, now):  # 스케줄러가 정산 예정으로 바꾸기 전 1분 사이에도 환불하지 않는다
+            raise invalid_state("공연이 끝나 취소할 수 없습니다.")
+        q = _quote(db, perf, order, "SUPPLIER_FAULT")
+        policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소: {reason}", report_id=None)
+        c = _record(db, perf, order, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id, now=now)
+        stage_ids = [ln.stage_id for ln in order.lines if ln.supplier_id == supplier.id]
+        if now < deadline.deadline_cap(perf.show_date):
+            request_service.reopen_stage(db, min(stage_ids, key=lambda sid: db.get(Stage, sid).seq), actor_id=user.id)
+            refund = (f"전액 환불 예정 · 해당 단계만 다시 모집하실 수 있습니다 · "
+                      f"새 결제 마감 {deadline.label(deadline.deadline_for(db, perf))}")
+        else:
+            request_service.performance_cancelled(db, perf.id, actor_id=user.id)
+            refund = "전액 환불 예정 · 공연까지 남은 날이 적어 다시 모집할 수 없으므로 공연이 취소되었습니다"
+            told = list(db.scalars(select(Supplier.user_id).where(
+                Supplier.id.in_({ln.supplier_id for ln in order.lines} - {supplier.id}))))
+    else:
+        mine = sorted((ln for ln in request_service.confirmed_lines(db, perf.id) if ln.supplier_id == supplier.id),
+                      key=lambda ln: db.get(Stage, ln.stage_id).seq)
+        if not mine:
+            raise not_found()
+        if perf.status not in ("ASSIGNING", "AWAITING_PAYMENT") or _ended(perf, now):
+            raise invalid_state("지금 상태에서는 업체 사정으로 취소할 수 없습니다.")
+        q = _quote(db, perf, None, "SUPPLIER_FAULT")  # 결제 전 — 모두 0원
+        policy_service._warn(db, user.id, actor_id=user.id, reason=f"업체 사정 취소(결제 전): {reason}", report_id=None)
+        if order is not None:
+            _move_order(db, order, "CANCELLED", user.id)  # 금액이 바뀌므로 청구서는 다시 발행한다
+        c = _record(db, perf, None, q, requested_by="SUPPLIER", fault_supplier_id=supplier.id, actor_id=user.id, now=now)
+        request_service.reopen_stage(db, mine[0].stage_id, actor_id=user.id)
+        stage_ids = [ln.stage_id for ln in mine]
+        refund = f"결제 전이라 환불할 금액은 없습니다 · 결제 마감이 {SUPPLIER_CANCEL_EXTRA_HOURS}시간 늘었습니다 · 해당 단계만 다시 모집하실 수 있습니다"
+    # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
+    stage_types = sorted({db.get(Stage, sid).stage_type for sid in stage_ids})
+    notification.notify(
+        db, perf.user_id, "CANCELLED_BY_SUPPLIER", link=f"/performances/{perf.id}",
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types), "refund": refund},
+        payload={"performanceId": perf.id},
+    )
+    notification.notify_many(
+        db, told, "CANCELLED_BY_SUPPLIER", link="/supplier/reservations",
+        params={"company": supplier.company_name, "stage": "·".join(notification.stage_label(t) for t in stage_types),
+                "refund": f"{perf.title} · 공연이 취소되었습니다"},
+        payload={"performanceId": perf.id},
+    )
+    db.commit()
+    return c, q

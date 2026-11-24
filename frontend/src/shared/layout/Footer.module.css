@@ -1,0 +1,17 @@
+.footer { background: var(--sd-footer-bg); color: var(--sd-footer-ink); font-size: var(--sd-text-small); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 22px 0; border-bottom: 1px solid var(--sd-footer-line); }
+.top img { height: 22px; width: auto; }
+.links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+.links li { display: inline-flex; align-items: center; }
+.links li + li::before { content: ""; display: inline-block; width: 1px; height: 10px; margin: 0 12px; background: var(--sd-footer-line); }
+.links a { color: inherit; }
+.links a:hover { text-decoration: underline; }
+.biz { padding: 18px 0 28px; color: var(--sd-footer-muted); line-height: 1.85; }
+
+/* 모바일: 누르는 영역 44px (CLAUDE.md 6.2) */
+@media (max-width: 767px) {
+  /* 줄이 바뀌면 구분선이 줄 맨 앞에 남으니 모바일에서는 선 대신 간격으로 나눈다 */
+  .links { gap: 0 16px; }
+  .links li + li::before { display: none; }
+  .links a { display: inline-flex; align-items: center; min-height: var(--sd-touch); }
+}

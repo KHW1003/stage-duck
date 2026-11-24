@@ -1,0 +1,64 @@
+# 시연 서버 (EC2 1대) 구성. 개발용 DB만 있는 docker-compose.yml(저장소 맨 위)과 따로 쓴다.
+# 실행 (서버의 저장소 맨 위에서): docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+# 자세한 순서: specs/deploy.md
+name: stageduck
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - caddy-data:/data          # 인증서 (지우면 다시 받는다 — 자주 지우면 발급 제한에 걸림)
+      - caddy-config:/config
+      - uploads:/uploads:ro       # /media 공개 사진만 읽는다
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    restart: unless-stopped
+    env_file: .env                # deploy/.env (커밋하지 않음, env.prod.example 참고)
+    environment:
+      DATABASE_URL: mariadb+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}?charset=utf8mb4
+    volumes:
+      - uploads:/uploads
+    expose:
+      - "8000"                    # 바깥에는 열지 않는다. Caddy만 접근
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+09:00", "--innodb-buffer-pool-size=256M"]
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    # ports 없음: DB는 서버 밖에서 접속할 수 없다
+
+volumes:
+  db-data:
+  uploads:
+  caddy-data:
+  caddy-config:

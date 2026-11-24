@@ -1,0 +1,306 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { AppRoutes } from "../src/App";
+import { dDay } from "../src/features/home/NowPanel";
+import { monthCells } from "../src/features/home/PartnerDashboard";
+import type { Me, MyPerformances, PerformanceSummary, SupplierApplication } from "../src/shared/api/types";
+
+/** 메인(/)·업체 메인(/partner) — 목업 mockup/home.html · partner.html 을 옮긴 화면 */
+
+const USER: Me = {
+  id: 3, role: "USER", status: "ACTIVE", email: "a@stageduck.test", name: "김공연", phone: "01000000000",
+  nickname: "가을밤밴드", supplierReviewStatus: null, landing: "/me/performances",
+};
+const SUPPLIER: Me = { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/partner" };
+const PENDING: Me = { ...SUPPLIER, supplierReviewStatus: "PENDING" };
+
+const PERF: PerformanceSummary = {
+  id: 5, title: "80명이 함께할 밴드 공연", form: "BAND", status: "ASSIGNING", showDate: "2026-11-28",
+  rehearsalStart: "17:00:00", showStart: "19:00:00", showEnd: "21:00:00", audience: 80,
+  sido: "광주", sigungu: "동구", currentVersion: 1,
+  stages: [
+    { id: 1, stageType: "VENUE", seq: 1, status: "CONFIRMED", quoteCount: 3 },
+    { id: 2, stageType: "EQUIPMENT", seq: 2, status: "NEGOTIATING", quoteCount: 2 },
+    { id: 3, stageType: "ENGINEER", seq: 3, status: "WAITING", quoteCount: null },
+  ],
+  nextAction: "NEGOTIATE", nextStageId: 2,
+};
+
+const APP: SupplierApplication = {
+  businessType: "SOLE_PROPRIETOR", companyName: "업체 D", representativeName: "김대표", businessRegNo: "1234567890",
+  businessAddress: "광주", mainPhone: "0620000000", mailOrderNo: null, categories: ["EQUIPMENT", "ENGINEER"],
+  reviewStatus: "PENDING", rejectReason: null, appliedAt: "2026-11-12T14:20:00",
+};
+
+type Reply = { status: number; body?: unknown };
+
+function mockServer(routes: Record<string, Reply>) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const r = routes[`${(init?.method ?? "GET").toUpperCase()} ${url}`] ?? { status: 401, body: { code: "UNAUTHORIZED", message: "", fieldErrors: [] } };
+      return new Response(JSON.stringify(r.body ?? {}), { status: r.status });
+    }),
+  );
+}
+
+function Where() {
+  const l = useLocation();
+  return <p data-testid="where">{l.pathname + l.search}</p>;
+}
+
+function renderAt(path: string) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+        <Routes>
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("메인 (/)", () => {
+  it("방문자는 목업과 같은 구역(히어로·공간·이용 방법·FAQ)과 메인 바닥글을 본다", async () => {
+    mockServer({});
+    renderAt("/");
+    expect(await screen.findByRole("heading", { level: 1, name: /공연할 공간부터/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "업체신가요?" })).toHaveAttribute("href", "/partner");
+    expect(screen.getByRole("heading", { name: "어떤 공간에서 공연하고 싶나요?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "공연 준비, 이렇게 진행돼요." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "자주 묻는 질문" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "푸터 메뉴" })).toBeInTheDocument();
+  });
+
+  it("슬라이드는 다음·이전 버튼으로 넘기고, 멈춤 버튼은 재생 버튼으로 바뀐다", async () => {
+    mockServer({});
+    renderAt("/");
+    const carousel = await screen.findByRole("region", { name: "STAGE DUCK 소개" }).catch(() => screen.getByLabelText("STAGE DUCK 소개"));
+    const count = () => within(carousel).getByText((_, el) => el?.tagName === "SPAN" && /^\d \/ 5$/.test(el.textContent ?? "")).textContent;
+    expect(count()).toMatch(/^\d \/ 5$/); // 처음엔 1 / 5 — 그리는 데 5초가 넘으면 이미 넘어갔을 수 있다
+    // 자동 넘김(5초)을 먼저 멈춘다 — 느린 PC·CI 에서 테스트 중에 슬라이드가 저절로 넘어가지 않게
+    await userEvent.click(within(carousel).getByRole("button", { name: "자동 넘김 멈추기" }));
+    expect(within(carousel).getByRole("button", { name: "자동 넘김 시작" })).toBeInTheDocument();
+    const start = Number(count()!.split(" / ")[0]);
+    const at = (n: number) => `${((start - 1 + n + 5) % 5) + 1} / 5`;
+    await userEvent.click(within(carousel).getByRole("button", { name: "다음 슬라이드" }));
+    expect(count()).toBe(at(1));
+    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
+    await userEvent.click(within(carousel).getByRole("button", { name: "이전 슬라이드" }));
+    expect(count()).toBe(at(-1));
+  });
+
+  it("이용 방법 단계를 누르면 그 단계 미리보기만 보인다", async () => {
+    mockServer({});
+    renderAt("/");
+    const tabs = await screen.findByRole("tablist", { name: "이용 단계" });
+    await userEvent.click(within(tabs).getByRole("tab", { name: /업체별 컨펌/ }));
+    expect(within(tabs).getByRole("tab", { name: /업체별 컨펌/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("견적 내역 확인");
+  });
+
+  it("공간 찾기는 고른 지역·관객 수를 쿼리로 넘긴다", async () => {
+    mockServer({});
+    renderAt("/");
+    const search = await screen.findByRole("search");
+    await userEvent.click(within(search).getByRole("combobox", { name: "지역" }));
+    await userEvent.click(screen.getByRole("option", { name: "광주" }));
+    await userEvent.click(within(search).getByRole("combobox", { name: "관객 수" }));
+    await userEvent.click(screen.getByRole("option", { name: "50~150명" }));
+    await userEvent.click(within(search).getByRole("button", { name: "공간 찾기" }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/venues?sido=%EA%B4%91%EC%A3%BC&audience=50%7E150%EB%AA%85");
+  });
+
+  it("로그인한 사용자는 진행 중인 공연의 단계(컨펌·지금·대기)를 본다", async () => {
+    const mine: MyPerformances = { active: [PERF], draft: [], past: [] };
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER }, "GET /api/v1/performances?mine=true": { status: 200, body: mine } });
+    renderAt("/");
+    expect(await screen.findByText("가을밤밴드님, 다시 오셨네요")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "80명이 함께할 밴드 공연" })).toBeInTheDocument();
+    expect(screen.getByText("견적서 2장 도착")).toBeInTheDocument();
+    expect(screen.getByText("장비를 컨펌하면 공고가 열려요")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "비교하기" })).toHaveAttribute("href", "/performances/5");
+    expect(screen.getByLabelText("3단계 중 1단계 컨펌")).toBeInTheDocument();
+    expect(screen.queryByLabelText("STAGE DUCK 소개")).not.toBeInTheDocument();
+  });
+
+  it("처음 가입했거나 진행 중인 공연이 없으면 '시작' 문구와 진행 순서 미리보기, 요청서 쓰기로 안내한다 (11/19 피드백)", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER }, "GET /api/v1/performances?mine=true": { status: 200, body: { active: [], draft: [], past: [] } } });
+    renderAt("/");
+    expect(await screen.findByText("아직 준비 중인 공연이 없어요")).toBeInTheDocument();
+    expect(screen.getByText("가을밤밴드님, 반가워요")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("공연 준비,시작해 볼까요?");
+    expect(screen.queryByRole("link", { name: "받은 견적 비교하기" })).not.toBeInTheDocument();
+    const preview = within(screen.getByRole("list", { name: "요청서를 쓰면 진행되는 순서" }));
+    expect(preview.getAllByRole("listitem").map((li) => li.querySelector("b")?.textContent)).toEqual(["공연장", "장비", "엔지니어", "통합 결제"]);
+    const writes = screen.getAllByRole("link", { name: /새 공연 요청서 쓰기/ });
+    expect(writes.length).toBeGreaterThanOrEqual(2);
+    writes.forEach((a) => expect(a).toHaveAttribute("href", "/performances/new"));
+    expect(screen.getByRole("link", { name: /업체 먼저 둘러보기/ })).toHaveAttribute("href", "/board");
+  });
+});
+
+describe("메인 커뮤니티 최신 글", () => {
+  const post = (id: number) => ({
+    id, category: "QUESTION", title: `글 ${id}`, author: { name: "가을밤밴드", kind: "USER" }, viewCount: 1,
+    commentCount: id === 4 ? 2 : 0, helpfulCount: 0, hasPhotos: false, createdAt: "2026-11-16T14:20:00",
+  });
+  const page = (items: unknown[]): Reply => ({ status: 200, body: { items, total: items.length, page: 1, pageSize: 20 } });
+
+  it("방문자도 최신 글 3개와 전체 보기를 본다", async () => {
+    mockServer({ "GET /api/v1/free-posts": page([post(4), post(3), post(2), post(1)]) });
+    renderAt("/");
+    const section = await screen.findByRole("region", { name: "커뮤니티" });
+    expect(await within(section).findByRole("link", { name: /글 4/ })).toHaveAttribute("href", "/community/4");
+    expect(within(section).getByRole("link", { name: /글 2/ })).toBeInTheDocument();
+    expect(within(section).queryByText("글 1")).not.toBeInTheDocument();
+    expect(within(section).getByText("[2]")).toBeInTheDocument();
+    expect(within(section).queryByText("가을밤밴드")).not.toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: /전체 보기/ })).toHaveAttribute("href", "/community");
+  });
+
+  it.each<[string, Reply]>([
+    ["글이 0개면", page([])],
+    ["불러오지 못하면", { status: 500, body: { code: "INTERNAL_ERROR", message: "", fieldErrors: [] } }],
+  ])("%s 구역을 숨기고 나머지는 그대로다", async (_, reply) => {
+    mockServer({ "GET /api/v1/free-posts": reply });
+    renderAt("/");
+    await screen.findByRole("region", { name: "커뮤니티" }); // 불러오는 동안에는 자리를 잡아 둔다
+    await waitFor(() => expect(screen.queryByRole("region", { name: "커뮤니티" })).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "어떤 공간에서 공연하고 싶나요?" })).toBeInTheDocument();
+  });
+});
+
+describe("업체 메인 (/partner)", () => {
+  it("방문자는 입점 안내와 입점 3단계를 본다", async () => {
+    mockServer({});
+    renderAt("/partner");
+    expect(await screen.findByRole("heading", { level: 1, name: /공연이 필요한 곳에/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "입점은 3단계예요." })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "입점 신청하기" })[0]).toHaveAttribute("href", "/signup/supplier");
+    expect(screen.getByRole("link", { name: "사용자 홈" })).toHaveAttribute("href", "/");
+  });
+
+  it("심사 중 업체는 내 신청 내용과 함께 심사 화면을 본다", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: PENDING }, "GET /api/v1/supplier/application": { status: 200, body: APP } });
+    renderAt("/partner");
+    expect(await screen.findByRole("heading", { name: "입점 심사 중이에요" })).toBeInTheDocument();
+    expect(await screen.findByText("음향 장비 · 엔지니어")).toBeInTheDocument();
+    expect(screen.getByText("개인사업자")).toBeInTheDocument();
+    expect(screen.getByText("11월 12일 14:20")).toBeInTheDocument();
+  });
+
+  it("업체 첫 화면의 최근 알림: 채팅 알림은 읽음 처리하고 지금 화면에서 채팅 창을 연다 (/chats 는 없는 화면)", async () => {
+    const note = { id: 8, type: "CHAT_STARTED", category: "QUOTE_CHAT", title: "채팅이 시작됐어요", body: null, link: "/chats/31", read: false, createdAt: "2099-11-29T10:00:00" };
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/me/notifications": { status: 200, body: { items: [note, { ...note, id: 9, title: "견적 요청이 왔어요", link: "/supplier/offers", read: true }], nextBefore: null } },
+      "GET /api/v1/chat-rooms": { status: 200, body: [] },
+      "POST /api/v1/me/notifications/read": { status: 200 },
+    });
+    renderAt("/partner");
+    const notes = await screen.findByRole("region", { name: /최근 알림/ });
+    expect(await within(notes).findByRole("link", { name: "견적 요청이 왔어요" })).toHaveAttribute("href", "/supplier/offers");
+    const link = within(notes).getByRole("link", { name: "채팅이 시작됐어요" });
+    expect(link).toHaveAttribute("href", "/partner?chat=31");
+    await userEvent.click(link);
+    expect(await screen.findByRole("dialog", { name: "채팅" })).toBeInTheDocument();
+    expect(screen.getByTestId("where")).toHaveTextContent("/partner");
+    const read = vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/me/notifications/read"));
+    expect(read.map(([, init]) => JSON.parse(String(init!.body)))).toEqual([{ ids: [8] }]);
+  });
+
+  it("승인 업체 첫 화면은 실제 데이터로 할 일·요약·새 공고·일정·계정을 보여 준다", async () => {
+    const future = "2099-12-24";
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/supplier/offers": {
+        status: 200,
+        body: [
+          { offerId: 1, stageId: 11, stageType: "EQUIPMENT", stageOpen: true, performanceId: 5, title: "연말 합동 공연", showDate: future, sido: "광주광역시", sigungu: "북구", audience: 120, nickname: "가을밤밴드", message: null, status: "PENDING", declineReason: null, expiresAt: "2099-12-01T10:00:00", createdAt: "2099-11-29T10:00:00" },
+          { offerId: 2, stageId: 12, stageType: "EQUIPMENT", stageOpen: true, performanceId: 6, title: "지난 요청", showDate: future, sido: "광주광역시", sigungu: "동구", audience: 50, nickname: "다른팀", message: null, status: "DECLINED", declineReason: "ETC", expiresAt: "2099-12-01T10:00:00", createdAt: "2099-11-29T10:00:00" },
+        ],
+      },
+      "GET /api/v1/postings": {
+        status: 200,
+        body: [{ stageId: 21, performanceId: 7, stageType: "EQUIPMENT", status: "OPEN", performanceVersion: 1, title: "봄맞이 버스킹", showDate: future, sido: "광주광역시", sigungu: "서구", nickname: "봄밴드", rejectionCount: 0, usageCount: 0 }],
+      },
+      "GET /api/v1/supplier/reservations": {
+        status: 200,
+        body: [{ performanceId: 9, title: "재즈 트리오 공연", showDate: future, showStart: "19:00:00", showEnd: "21:00:00", sido: "광주광역시", sigungu: "남구", status: "PAID", stageTypes: ["EQUIPMENT"], amount: 700000 }],
+      },
+      "GET /api/v1/chat-rooms": {
+        status: 200,
+        body: [{ roomId: 31, stageId: 11, stageType: "EQUIPMENT", performanceId: 5, partnerName: "가을밤밴드", startedAt: null, pinnedAt: null, unreadCount: 2, lastMessage: null }],
+      },
+      "GET /api/v1/me/notifications": { status: 200, body: { items: [{ id: 1, type: "OFFER_RECEIVED", category: "QUOTE", title: "견적 요청이 왔어요", body: null, link: "/supplier/offers", read: false, createdAt: "2099-11-29T10:00:00" }], nextBefore: null } },
+      "GET /api/v1/supplier/warnings": { status: 200, body: { warningCount: 1, suspendAt: 3 } },
+      "GET /api/v1/pr-posts/mine": { status: 200, body: { items: [] } },
+    });
+    renderAt("/partner");
+    expect(await screen.findByRole("heading", { level: 1, name: /업체 D님, 오늘 확인할 일이 3건 있어요/ })).toBeInTheDocument(); // 견적 요청 · 새 메시지 · 소개 글 없음
+    // 할 일: 기다리는 견적 요청(거절한 것은 빼고) · 안 읽은 메시지 · 소개 글 없음
+    const todo = screen.getByRole("region", { name: /지금 할 일/ });
+    expect(within(todo).getByText("가을밤밴드님이 견적을 요청했어요")).toBeInTheDocument();
+    expect(within(todo).getAllByRole("link", { name: "견적 쓰기" })[0]).toHaveAttribute("href", "/supplier/postings/11/quote");
+    expect(within(todo).getByText("가을밤밴드님의 메시지 2개")).toBeInTheDocument();
+    expect(within(todo).getByRole("link", { name: "소개 글 쓰기" })).toHaveAttribute("href", "/supplier/posts");
+    expect(within(todo).queryByText(/다른팀/)).not.toBeInTheDocument();
+    // 요약
+    const kpis = screen.getByRole("region", { name: "요약" });
+    expect(within(kpis).getByRole("link", { name: /답할 견적 요청\s*1/ })).toHaveAttribute("href", "/supplier/offers");
+    expect(within(kpis).getByRole("link", { name: /안 읽은 메시지\s*2/ })).toBeInTheDocument();
+    // 새 공고 · 다가오는 공연 · 계정 · 알림
+    expect(screen.getByRole("link", { name: "봄맞이 버스킹" })).toHaveAttribute("href", "/supplier/postings/21");
+    expect(screen.getByText("재즈 트리오 공연")).toBeInTheDocument();
+    expect(screen.getByText("1회 · 3회면 이용 정지")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /견적 요청이 왔어요/ })).toHaveAttribute("href", "/supplier/offers");
+  });
+
+  it("공연 달력은 < > 로 다른 달을 넘겨 보고, 공연 있는 날에 공연 수를 알린다", async () => {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+    const iso = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-15`;
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/supplier/reservations": {
+        status: 200,
+        body: [{ performanceId: 9, title: "다음 달 공연", showDate: iso, showStart: "19:00:00", showEnd: "21:00:00", sido: "광주광역시", sigungu: "남구", status: "PAID", stageTypes: ["EQUIPMENT"], amount: 700000 }],
+      },
+    });
+    renderAt("/partner");
+    expect(await screen.findByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "다음 달" }));
+    const grid = screen.getByRole("grid", { name: `${next.getFullYear()}년 ${next.getMonth() + 1}월 공연 일정` });
+    expect(within(grid).getByLabelText(`${next.getMonth() + 1}월 15일, 공연 1건`)).toBeInTheDocument();
+    expect(screen.getByText("공연 1건")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "이번 달" }));
+    expect(screen.getByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "이전 달" }));
+    expect(screen.queryByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).not.toBeInTheDocument();
+  });
+});
+
+describe("메인 계산", () => {
+  it("D-day 는 오늘부터 공연일까지 남은 날, 지난 공연은 표시하지 않는다", () => {
+    const today = new Date(2026, 10, 13);
+    expect(dDay("2026-11-28", today)).toBe("D-15");
+    expect(dDay("2026-11-13", today)).toBe("D-DAY");
+    expect(dDay("2026-11-12", today)).toBeNull();
+  });
+
+  it("2026년 11월 달력은 일요일 1일부터 7칸씩 5줄", () => {
+    const cells = monthCells(2026, 10);
+    expect(cells).toHaveLength(35);
+    expect(cells[0]).toBe(1);
+    expect(cells[29]).toBe(30);
+    expect(cells.slice(30)).toEqual([null, null, null, null, null]);
+  });
+});

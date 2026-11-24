@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티 글쓰기 E · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 시안 E 안내형: 말머리를 고르면 무엇을 쓰면 좋은지 바로 아래에 알려 주고, 내 공연 정보를 한 줄로 붙일 수 있다. 올리기 버튼은 아래 고정 바 */
+  .we { max-width: 760px; margin: 0 auto; padding-bottom: 96px; }
+  .we h1 { font-size: 24px; letter-spacing: -.6px; }
+  .we__label { display: block; margin: 32px 0 10px; font-size: var(--sd-text-desc); font-weight: 700; }
+  .we__label .req { color: var(--sd-conflict-text); margin-left: 2px; }
+  .we__label small { margin-left: 6px; color: var(--sd-muted); font-weight: 400; }
+  /* 말머리: 네 칸 + 한 줄 설명 */
+  .cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .cats label { display: block; padding: 14px 16px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); cursor: pointer; transition: border-color .15s, opacity .15s; }
+  .cats input { position: absolute; opacity: 0; }
+  .cats b { display: block; font-size: var(--sd-text-body); }
+  .cats small { display: block; margin-top: 4px; font-size: var(--sd-text-small); color: var(--sd-muted); line-height: 1.5; }
+  .cats label:has(input:checked) { border-color: var(--sd-ink); }
+  .cats:has(input:checked) label:not(:has(input:checked)) { opacity: .7; }
+  .cats label:has(input:focus-visible) { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
+  /* 말머리별 도움말 */
+  .tip { display: flex; gap: 10px; margin-top: 12px; padding: 14px 16px; border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
+  .tip > .icon { flex: none; margin-top: 3px; color: var(--sd-blue); }
+  .tip ul { margin-top: 2px; padding-left: 16px; list-style: disc; color: var(--sd-muted); }
+  .title-in { height: 52px; font-size: 18px; font-weight: 600; }
+  .body-in { min-height: 300px; padding: 16px; line-height: 1.8; }
+  .cnt { margin-top: 6px; font-size: var(--sd-text-small); color: var(--sd-muted); text-align: right; }
+  /* 내 공연 붙이기: 연락처 없이 날짜·공간·인원·구성만 */
+  .perf { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); }
+  .perf > .icon { flex: none; color: var(--sd-muted); }
+  .perf div { flex: 1; min-width: 0; font-size: var(--sd-text-desc); }
+  .perf small { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .perf--empty { border-style: dashed; color: var(--sd-muted); }
+  /* 사진 */
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; }
+  .photos__add, .photos__item { position: relative; width: 96px; height: 96px; border-radius: var(--sd-r-box); }
+  .photos__add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px dashed var(--sd-line-strong); background: var(--sd-bg); color: var(--sd-muted); font-size: var(--sd-text-small); cursor: pointer; }
+  .photos__item { background: var(--img) center / cover; }
+  .photos__item button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+  .photos__item button .icon { width: 12px; height: 12px; }
+  /* 아래 고정 바 */
+  .we-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; border-top: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
+  .we-bar__in { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 760px; height: 68px; margin: 0 auto; padding: 0 16px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+  .we-bar__in .btns { gap: 8px; }
+  .we-err .input, .we-err .textarea { border-color: var(--sd-conflict-text); }
+</style>
+</head>
+<!-- 시안 E (Claude): 커뮤니티 글쓰기 안내형 · FR-COMM-02 · D-47
+     - 말머리 네 칸에 한 줄 설명. 고른 말머리에 따라 "이렇게 쓰면 답이 빨라요" 도움말이 바뀐다 (질문: 날짜·인원·구성, 정보: 출처·지역, 자유: 규칙, 공연 소식: 날짜·장소)
+     - [내 공연 붙이기](선택): 내 공연에서 날짜·공간·관객 수·구성만 한 줄로 붙인다. 연락처·금액은 붙지 않는다 (명세에 없음 → 고르면 추가)
+     - 올리기·취소는 화면 아래 고정 바. 연락처 검사 경고는 칸 아래 -->
+<body data-layout="user" data-nav="community">
+
+<div class="mock-switch" data-group="st" style="bottom:80px">
+  <span>목업 보기</span>
+  <button type="button" data-value="ok" aria-pressed="true">쓰는 중</button>
+  <button type="button" data-value="err">연락처 경고</button>
+</div>
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li><a href="community-list-a.html">커뮤니티</a></li><li>글쓰기</li></ol></div></div></div>
+
+<main class="container main">
+  <form class="we" onsubmit="return false">
+    <h1>글쓰기</h1>
+
+    <span class="we__label">말머리<span class="req">*</span></span>
+    <div class="cats" role="radiogroup" aria-label="말머리">
+      <label><input type="radio" name="cat" value="q" checked><b>질문</b><small>준비하다 막힌 것</small></label>
+      <label><input type="radio" name="cat" value="info"><b>정보</b><small>알게 된 것 나누기</small></label>
+      <label><input type="radio" name="cat" value="free"><b>자유</b><small>공연 이야기</small></label>
+      <label><input type="radio" name="cat" value="news"><b>공연 소식</b><small>내 공연 알리기</small></label>
+    </div>
+    <div class="tip" data-tip="q"><span data-icon="bulb"></span><div><b>이렇게 쓰면 답이 빨라요</b><ul><li>공연 날짜, 관객 수, 공간 크기</li><li>팀 구성 (예: 보컬 1, 기타 2, 베이스 1, 드럼 1)</li><li>이미 받은 견적서 내용 중 궁금한 부분</li></ul></div></div>
+    <div class="tip" data-tip="info" hidden><span data-icon="bulb"></span><div><b>정보 글은 이렇게</b><ul><li>어느 지역, 어느 공간 이야기인지</li><li>직접 해 본 것인지, 들은 것인지</li><li>업체를 알리는 글은 PR 게시판에 올려 주세요</li></ul></div></div>
+    <div class="tip" data-tip="free" hidden><span data-icon="bulb"></span><div><b>자유 글도 규칙은 같아요</b><ul><li>다른 회원을 깎아내리거나 업체를 알리는 글은 가려져요</li><li>연락처 대신 채팅이나 댓글로 이야기해 주세요</li></ul></div></div>
+    <div class="tip" data-tip="news" hidden><span data-icon="bulb"></span><div><b>공연 소식은 이렇게</b><ul><li>공연 날짜·시간·장소</li><li>예매 링크나 연락처는 쓸 수 없어요. 공연 이름으로 찾아오게 적어 주세요</li></ul></div></div>
+
+    <label class="we__label" for="t">제목<span class="req">*</span></label>
+    <div class="we-err-wrap" data-when="st:ok"><input class="input title-in" id="t" maxlength="100" value="관객 80명 소극장인데 모니터 스피커는 몇 개가 적당할까요?"><p class="cnt">31 / 100</p></div>
+    <div class="we-err" data-when="st:err"><input class="input title-in" maxlength="100" value="관객 80명 소극장인데 모니터 스피커는 몇 개가 적당할까요?" aria-invalid="true"><p class="cnt">31 / 100</p></div>
+
+    <label class="we__label" for="b">내용<span class="req">*</span></label>
+    <div data-when="st:ok"><textarea class="textarea body-in" id="b" maxlength="5000">11월 28일에 공간 C에서 첫 공연을 해요.
+장비 업체 견적서를 받아 보니 모니터 스피커가 2개로 적혀 있었는데, 다섯 명이 나눠 듣기에 충분한지 궁금해요.
+비슷한 규모로 해 보신 분들은 몇 개 쓰셨나요?</textarea><p class="cnt">96 / 5,000</p></div>
+    <div class="we-err" data-when="st:err"><textarea class="textarea body-in" maxlength="5000" aria-invalid="true" aria-describedby="e-b">11월 28일에 공간 C에서 첫 공연을 해요.
+자세한 건 010-0000-0000으로 문자 주세요.</textarea><p class="field__error mt-4" id="e-b"><span data-icon="warn" class="icon--sm"></span>전화번호로 보이는 글자가 있어요 ("010-0000-0000"). 연락처는 쓸 수 없어요. 지우고 올려 주세요.</p></div>
+
+    <span class="we__label">내 공연 붙이기<small>선택 · 날짜·공간·인원·구성만 보여요</small></span>
+    <div class="perf" data-perf="on"><span data-icon="calendar"></span><div><b>가을밤 밴드 공연</b><small>11월 28일(토) · 공간 C · 관객 80명 · 보컬 1, 기타 2, 베이스 1, 드럼 1</small></div><button class="btn btn--sm btn--ghost" type="button" onclick="perf(false)">빼기</button></div>
+    <button class="perf perf--empty" type="button" data-perf="off" hidden onclick="perf(true)" style="width:100%;text-align:left;background:none;cursor:pointer"><span data-icon="calendar"></span><div>내 공연을 골라 붙이면 읽는 사람이 상황을 바로 알 수 있어요</div><span class="link link--point small">고르기</span></button>
+
+    <span class="we__label">사진<small>선택 · 최대 5장, 한 장 10MB</small></span>
+    <div class="photos">
+      <button class="photos__add" type="button"><span data-icon="upload"></span>2 / 5</button>
+      <div class="photos__item" style="--img:url('../../mockup/assets/photos/photo-1524368535928-5b5e00ddc76b.jpg')"><button type="button" aria-label="사진 빼기"><span data-icon="x"></span></button></div>
+      <div class="photos__item" style="--img:url('../../mockup/assets/photos/photo-1598488035139-bdbb2231ce04.jpg')"><button type="button" aria-label="사진 빼기"><span data-icon="x"></span></button></div>
+    </div>
+  </form>
+</main>
+
+<div class="we-bar"><div class="we-bar__in"><span>전화번호·계좌번호·외부 링크는 쓸 수 없어요</span><div class="btns"><a class="btn" href="community-list-a.html">취소</a><button class="btn btn--primary" type="button" data-when="st:ok" onclick="location.href='community-post-a.html'">올리기</button><button class="btn btn--primary" type="button" data-when="st:err" disabled>올리기</button></div></div></div>
+
+<script src="../layout.js"></script>
+<script src="community-nav.js"></script>
+<script>
+  /* 목업 전용: 고른 말머리에 맞는 도움말만 보여 주고, 내 공연 붙이기·빼기 */
+  document.querySelectorAll('.cats input').forEach(function (r) { r.addEventListener('change', function () { document.querySelectorAll('[data-tip]').forEach(function (t) { t.hidden = t.dataset.tip !== r.value; }); }); });
+  function perf(on) { document.querySelector('[data-perf="on"]').hidden = !on; document.querySelector('[data-perf="off"]').hidden = on; }
+</script>
+</body>
+</html>

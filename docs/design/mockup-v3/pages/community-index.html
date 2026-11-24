@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커뮤니티·문의 시안 모아보기 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* 시안 모아보기 — 실제 화면을 줄여서 나란히 본다 (목업 전용) */
+  .gal { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
+  .gal--2 { --cols: 2; }
+  .shot { display: flex; flex-direction: column; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); overflow: hidden; background: var(--sd-bg); }
+  .shot:hover { border-color: var(--sd-ink); }
+  .shot.is-pick { border-color: var(--sd-ink); }
+  .shot__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--sd-line); }
+  .shot__name { font-size: var(--sd-text-desc); font-weight: 700; }
+  .shot__name small { display: block; margin-top: 2px; color: var(--sd-muted); font-weight: 400; font-size: var(--sd-text-small); }
+  .shot__frame { position: relative; aspect-ratio: 1280 / 900; overflow: hidden; background: var(--sd-soft); }
+  .shot__frame iframe { position: absolute; top: 0; left: 0; width: 1280px; height: 900px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .shot__foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--sd-line); color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+  .jump { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+</style>
+</head>
+<!-- 커뮤니티·1:1 문의 제안 시안 모아보기 (스펙에 아직 없음 — 해원 승인 전). 파일 하나 = 시안 하나.
+     카드를 누르면 그 시안 파일이 새 탭에서 열린다. 사용 예정: 목록 A · 글 보기 A·B · 공유 창 C (2026-11-16 목산) -->
+<body data-layout="user">
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>목업 v3</li><li>제안 시안</li></ol><h1>커뮤니티 · 1:1 문의 시안 모아보기</h1><p class="page-top__desc">A·B·C는 Claude, D는 Codex(gpt-6-astra) 시안이에요. 카드를 누르면 그 시안 파일이 열려요. 모두 제안용이라 스펙 승인 전이에요.</p>
+  <div class="jump"><a class="btn btn--sm" href="#list">목록</a><a class="btn btn--sm" href="#write">글쓰기</a><a class="btn btn--sm" href="#post">글 보기</a><a class="btn btn--sm" href="#share">공유 창</a><a class="btn btn--sm" href="#inquiry">1:1 문의</a></div></div></div></div>
+
+<main class="container main" style="padding-top:0">
+  <p class="legend mt-24"><span><span class="tag tag--fill">사용 예정</span> 고른 시안</span><span><span class="tag">Claude</span> A·B·C</span><span><span class="tag tag--point">Codex</span> D</span></p>
+
+  <section class="sec" id="list"><div class="sec-head"><h2>목록</h2></div>
+    <div class="gal">
+      <a class="shot is-pick" href="community-list-a.html" target="_blank"><div class="shot__head"><p class="shot__name">A 표 목록<small>community-list-a.html</small></p><span class="tag tag--fill">사용 예정</span></div><div class="shot__frame"><iframe src="community-list-a.html" title="목록 A" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>번호·말머리·제목 한 줄씩</span></div></a>
+      <a class="shot" href="community-list-b.html" target="_blank"><div class="shot__head"><p class="shot__name">B 줄 목록<small>community-list-b.html</small></p></div><div class="shot__frame"><iframe src="community-list-b.html" title="목록 B" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>미리보기 + 오른쪽 칸</span></div></a>
+      <a class="shot" href="community-list-c.html" target="_blank"><div class="shot__head"><p class="shot__name">C 카드 2열<small>community-list-c.html</small></p></div><div class="shot__frame"><iframe src="community-list-c.html" title="목록 C" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>글마다 카드</span></div></a>
+      <a class="shot" href="community-codex.html" target="_blank"><div class="shot__head"><p class="shot__name">D 날짜 묶음<small>community-codex.html</small></p></div><div class="shot__frame"><iframe src="community-codex.html" title="목록 D" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>세로 말머리 + 오늘/어제</span></div></a>
+    </div></section>
+
+  <section class="sec" id="write"><div class="sec-head"><h2>글쓰기</h2></div>
+    <div class="gal">
+      <a class="shot" href="community-write-a.html" target="_blank"><div class="shot__head"><p class="shot__name">A 한 줄 폼<small>community-write-a.html</small></p></div><div class="shot__frame"><iframe src="community-write-a.html" title="글쓰기 A" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>가운데 좁은 폭</span></div></a>
+      <a class="shot" href="community-write-b.html" target="_blank"><div class="shot__head"><p class="shot__name">B 표 폼 + 안내<small>community-write-b.html</small></p></div><div class="shot__frame"><iframe src="community-write-b.html" title="글쓰기 B" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>이름-값 표 + 규칙</span></div></a>
+      <a class="shot" href="community-write-c.html" target="_blank"><div class="shot__head"><p class="shot__name">C 쓰기 판<small>community-write-c.html</small></p></div><div class="shot__frame"><iframe src="community-write-c.html" title="글쓰기 C" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>칩 + 큰 제목 + 본문 판</span></div></a>
+      <a class="shot" href="community-codex-write.html" target="_blank"><div class="shot__head"><p class="shot__name">D 미리보기 폼<small>community-codex-write.html</small></p></div><div class="shot__frame"><iframe src="community-codex-write.html" title="글쓰기 D" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>목록 미리보기가 따라옴</span></div></a>
+      <a class="shot" href="community-write-e.html" target="_blank"><div class="shot__head"><p class="shot__name">E 안내형<small>community-write-e.html</small></p></div><div class="shot__frame"><iframe src="community-write-e.html" title="글쓰기 E" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>말머리별 도움말 + 내 공연 붙이기 + 아래 고정 바</span></div></a>
+      <a class="shot" href="community-write-f.html" target="_blank"><div class="shot__head"><p class="shot__name">F 문서형<small>community-write-f.html</small></p></div><div class="shot__frame"><iframe src="community-write-f.html" title="글쓰기 F" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>글 보기와 같은 모양에 바로 쓰기</span></div></a>
+    </div></section>
+
+  <section class="sec" id="post"><div class="sec-head"><h2>글 보기</h2></div>
+    <div class="gal">
+      <a class="shot is-pick" href="community-post-a.html" target="_blank"><div class="shot__head"><p class="shot__name">A 게시판 표준<small>community-post-a.html</small></p><span class="tag tag--fill">사용 예정</span></div><div class="shot__frame"><iframe src="community-post-a.html" title="글 보기 A" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>본문 → 댓글 → 이전·다음</span></div></a>
+      <a class="shot is-pick" href="community-post-b.html" target="_blank"><div class="shot__head"><p class="shot__name">B 오른쪽 칸<small>community-post-b.html</small></p><span class="tag tag--fill">사용 예정</span></div><div class="shot__frame"><iframe src="community-post-b.html" title="글 보기 B" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>글쓴이·공감 따라옴</span></div></a>
+      <a class="shot" href="community-post-c.html" target="_blank"><div class="shot__head"><p class="shot__name">C 읽기형<small>community-post-c.html</small></p></div><div class="shot__frame"><iframe src="community-post-c.html" title="글 보기 C" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>가운데 720px</span></div></a>
+      <a class="shot" href="community-codex-post.html" target="_blank"><div class="shot__head"><p class="shot__name">D 이전·다음 바<small>community-codex-post.html</small></p></div><div class="shot__frame"><iframe src="community-codex-post.html" title="글 보기 D" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>들여쓰기 답글</span></div></a>
+    </div></section>
+
+  <section class="sec" id="share"><div class="sec-head"><h2>공유 창</h2></div>
+    <div class="gal">
+      <a class="shot" href="community-share-a.html" target="_blank"><div class="shot__head"><p class="shot__name">A 가운데 창<small>community-share-a.html</small></p></div><div class="shot__frame"><iframe src="community-share-a.html" title="공유 A" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>기존 모달 그대로</span></div></a>
+      <a class="shot" href="community-share-b.html" target="_blank"><div class="shot__head"><p class="shot__name">B 아래 판<small>community-share-b.html</small></p></div><div class="shot__frame"><iframe src="community-share-b.html" title="공유 B" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>큰 타일 + QR</span></div></a>
+      <a class="shot is-pick" href="community-share-c.html" target="_blank"><div class="shot__head"><p class="shot__name">C 작은 창 + 알림<small>community-share-c.html</small></p><span class="tag tag--fill">사용 예정</span></div><div class="shot__frame"><iframe src="community-share-c.html" title="공유 C" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>버튼 아래 메뉴</span></div></a>
+      <a class="shot" href="community-codex-post.html?share=d" target="_blank"><div class="shot__head"><p class="shot__name">D 펼침 패널<small>community-codex-post.html?share=d</small></p></div><div class="shot__frame"><iframe src="community-codex-post.html?share=d#share-button" title="공유 D" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>링크 칸 + 복사 상태</span></div></a>
+    </div></section>
+
+  <section class="sec" id="inquiry"><div class="sec-head"><h2>1:1 문의</h2></div>
+    <p class="desc muted">왼쪽은 Claude, 오른쪽은 Codex 시안이에요. 쓰기 화면은 둘 다 글쓰기 C(쓰기 판)를 바탕으로 했어요.</p>
+    <div class="gal gal--2">
+      <a class="shot" href="inquiry-list.html" target="_blank"><div class="shot__head"><p class="shot__name">목록<small>inquiry-list.html</small></p></div><div class="shot__frame"><iframe src="inquiry-list.html" title="문의 목록 Claude" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>요약 3칸 + 표</span></div></a>
+      <a class="shot" href="inquiry-codex.html" target="_blank"><div class="shot__head"><p class="shot__name">목록<small>inquiry-codex.html</small></p></div><div class="shot__frame"><iframe src="inquiry-codex.html" title="문의 목록 Codex" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>유형 필터 + 상태 배지</span></div></a>
+      <a class="shot" href="inquiry-write.html" target="_blank"><div class="shot__head"><p class="shot__name">쓰기<small>inquiry-write.html</small></p></div><div class="shot__frame"><iframe src="inquiry-write.html" title="문의 쓰기 Claude" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>유형 칩 + 쓰기 판</span></div></a>
+      <a class="shot" href="inquiry-codex-write.html" target="_blank"><div class="shot__head"><p class="shot__name">쓰기<small>inquiry-codex-write.html</small></p></div><div class="shot__frame"><iframe src="inquiry-codex-write.html" title="문의 쓰기 Codex" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>관련 공연 먼저 고르기</span></div></a>
+      <a class="shot" href="inquiry-post.html?ans=done" target="_blank"><div class="shot__head"><p class="shot__name">보기 (답변 완료)<small>inquiry-post.html?ans=done</small></p></div><div class="shot__frame"><iframe src="inquiry-post.html?ans=done" title="문의 보기 Claude" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag">Claude</span><span>문의 + 운영자 답변</span></div></a>
+      <a class="shot" href="inquiry-codex-post.html" target="_blank"><div class="shot__head"><p class="shot__name">보기 (답변 완료)<small>inquiry-codex-post.html</small></p></div><div class="shot__frame"><iframe src="inquiry-codex-post.html" title="문의 보기 Codex" loading="lazy" tabindex="-1"></iframe></div><div class="shot__foot"><span class="tag tag--point">Codex</span><span>?state=wait 대기 화면</span></div></a>
+    </div></section>
+</main>
+<script src="../layout.js"></script>
+<script>
+  /* 목업 전용: 1280px 화면을 카드 폭에 맞춰 줄인다 */
+  function fit() { document.querySelectorAll('.shot__frame').forEach(function (f) { var i = f.querySelector('iframe'); if (i) i.style.transform = 'scale(' + (f.clientWidth / 1280) + ')'; }); }
+  window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* 사용자 가입 (mockup-v4/pages/signup.html 의 인라인 style 을 클래스로). 모바일 공통 배치는 shared/styles/kit-mobile.css */
+.signup__req { color: var(--sd-conflict-text); }
+.form-table .signup__short { max-width: 280px; }
+.form-table .signup__email { max-width: 360px; }
+
+.signup__cancel { min-width: 160px; }
+.signup__submit { min-width: 240px; }
+
+@media (max-width: 760px) {
+  .form-table .signup__short, .form-table .signup__email { max-width: none; }
+}

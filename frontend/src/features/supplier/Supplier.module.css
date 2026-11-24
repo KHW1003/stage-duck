@@ -1,0 +1,58 @@
+/* 업체 가입·입점 신청 화면 (#26). 출처: docs/design/mockup-v3/pages/p-onboarding.html. 색·크기는 토큰만 쓴다 */
+.wrap { max-width: 720px; padding-top: 32px; padding-bottom: var(--sd-inner-section); }
+
+/* 단계 표시: 01 계정 → 02 사업자 정보 → 심사 → 03 서비스 등록 */
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 28px; }
+.step { padding-top: 10px; border-top: 3px solid var(--sd-line); color: var(--sd-muted); font-size: var(--sd-text-small); }
+.step b { display: block; color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; }
+.done { border-top-color: var(--sd-pass-text); }
+.now { border-top-color: var(--sd-blue); }
+.now b { color: var(--sd-blue); }
+
+.form { display: flex; flex-direction: column; gap: 20px; }
+.section { display: flex; flex-direction: column; gap: 16px; padding-top: 24px; border-top: 1px solid var(--sd-line); }
+.section:first-child { padding-top: 0; border-top: 0; }
+.sectionTitle { font-size: var(--sd-text-sub); font-weight: 700; }
+.sectionDesc { margin-top: -10px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* 사업자 유형·서비스 부문 고르기 (라디오·체크 상자를 카드처럼) */
+.choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; }
+.choices4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.legend { margin-bottom: 8px; padding: 0; font-size: var(--sd-text-desc); font-weight: 700; }
+.choice { position: relative; display: flex; flex-direction: column; gap: 2px; min-height: var(--sd-touch); padding: 12px 14px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); cursor: pointer; }
+.choice input { position: absolute; opacity: 0; }
+.choice b { font-size: var(--sd-text-body); }
+.choice span { color: var(--sd-muted); font-size: var(--sd-text-small); }
+.choice:has(input:checked) { border-color: var(--sd-ink); background: var(--sd-th); }
+.choice:has(input:focus-visible) { outline: 3px solid var(--sd-focus); outline-offset: 2px; }
+
+.check { display: flex; align-items: center; gap: 10px; min-height: var(--sd-touch); font-size: var(--sd-text-desc); cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--sd-ink); }
+.check a { margin-left: auto; color: var(--sd-muted); text-decoration: underline; }
+.fieldError { color: var(--sd-conflict-text); font-size: var(--sd-text-small); }
+
+.actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 8px; }
+
+/* 안내 상자: 반려 사유 / 심사 중 / 승인 */
+.notice { margin-bottom: 24px; padding: 16px 18px; border-left: 3px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
+.notice b { display: block; font-size: var(--sd-text-body); }
+.rejected { border-left-color: var(--sd-conflict-text); }
+.approved { border-left-color: var(--sd-pass-text); }
+
+.summary { display: grid; grid-template-columns: 120px 1fr; border-top: 1px solid var(--sd-line); margin-top: 20px; }
+.summary dt, .summary dd { padding: 12px 0; border-bottom: 1px solid var(--sd-line); font-size: var(--sd-text-desc); }
+.summary dt { color: var(--sd-muted); }
+
+@media (max-width: 767px) {
+  .row2 { grid-template-columns: 1fr; }
+  .choices, .choices4 { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .actions { flex-direction: column-reverse; }
+  .actions > * { width: 100%; }
+}
+
+/* 칸 옆 버튼 ([중복 확인]) */
+.withButton { display: flex; gap: 8px; align-items: center; }
+.withButton > input { flex: 1; min-width: 0; }
+.withButton > button { flex: none; }

@@ -1,4 +1,4 @@
-# stage-link (가칭)
+# STAGE DUCK
 
 > 공연 공간을 고르고, 그 공간에 맞는 **음향 장비·설치·엔지니어** 제안을 받아 비교한 뒤
 > 한 사이트에서 섭외와 결제까지 진행하는 **소규모 공연 준비 중개 플랫폼**
@@ -37,14 +37,14 @@
 
 ## MVP 범위
 
-- 공연 요청 작성 · 전국 가상 공간 탐색 · 업체 초대
+- 공연 요청 작성·공고 게시 · 전국 가상 공간 탐색 (승인된 공급자가 공고를 보고 견적 제출)
 - 가상 공급자 7곳의 입점 신청 · 관리자 승인 · 견적 작성
 - 전문 공연장 패키지 vs 이색 공간 + 외부 음향 조합 **비교**
 - 기본 제공 장비 반영, 부족 수량 · 일정 충돌 · 기사 중복 표시, 기술 확인 기록
 - 업체별 수락/거절, 수정 견적 재합의, 테스트 결제, 최종 일정표
 - 역할·소유권 기반 접근 제한과 상태 변경 이력
 
-보류(후속): 공개 입찰, 버스킹 장비 별도 대여·회수, 실시간 재고, 실결제·환불·정산, 전자계약, 채팅, 후기, AI 자동 구성
+보류(후속): 특정 업체 지정 초대, 버스킹 장비 별도 대여·회수, 실시간 재고, 실결제·환불·정산, 전자계약, 채팅, 후기, AI 자동 구성
 
 ## 팀 · 담당 영역
 
@@ -62,22 +62,70 @@
 
 ## 기술 스택
 
-추후 결정 → 결정되면 [docs/decisions](docs/decisions/)에 기록하고 이 표를 갱신합니다.
+[ADR 0002](docs/decisions/0002-기술스택-선정.md) 참고.
 
 | 영역 | 선택 |
 |---|---|
-| Frontend | TBD |
-| Backend | TBD |
-| DB | TBD |
-| 결제(테스트) | TBD |
-| 배포 | TBD |
+| Frontend | React + Vite (TypeScript) |
+| Backend | FastAPI (Python) + SQLAlchemy |
+| DB | MariaDB |
+| 테스트 | pytest / Vitest + React Testing Library |
+| 결제(테스트) | 자체 에스크로형 모의 결제 |
+| 배포 | Docker Compose + Caddy, 시연 서버 AWS EC2 1대, main 머지 시 자동 배포 ([specs/deploy.md](specs/deploy.md)) |
+
+## 개발 환경 실행
+
+> **처음 세팅하는 팀원은 [docs/guides/로컬_개발환경_세팅.md](docs/guides/로컬_개발환경_세팅.md)를 따라 한다** (설치 → DB → 백엔드 → 프론트 → Claude Code → 자주 나는 오류). 아래는 요약이다.
+
+### 준비물
+Python 3.12, Node 22, MariaDB 11.4 (직접 설치 또는 `docker compose up -d mariadb`)
+
+### 1. DB 만들기 (최초 1번, MariaDB root로 접속해서)
+```sql
+CREATE DATABASE stageduck CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'stageduck'@'localhost' IDENTIFIED BY '원하는_비밀번호';
+GRANT ALL PRIVILEGES ON stageduck.* TO 'stageduck'@'localhost';
+```
+
+### 2. 백엔드 (FastAPI)
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements-dev.txt
+copy .env.example .env             # macOS/Linux: cp .env.example .env  → DATABASE_URL 비밀번호 수정
+alembic upgrade head               # 테이블 만들기
+python -m app.cli create-admin --email admin@stageduck.test   # 관리자 계정
+uvicorn app.main:app --reload      # http://localhost:8000
+```
+- API 문서: http://localhost:8000/docs
+- **관리자 화면: http://localhost:8000/admin** (SQLAdmin — 업체 심사, 회원 경고, 이력)
+- 테스트: `pytest` (DB 설정 없이 실행하면 임시 SQLite, `TEST_DATABASE_URL`을 주면 MariaDB)
+
+### 3. 프론트엔드 (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev     # http://localhost:5173  (/api, /admin 은 8000으로 프록시)
+npm test        # Vitest
+```
+
+### 폴더
+| 경로 | 내용 |
+|---|---|
+| `backend/app/<영역>/` | 영역별 `router.py` · `schemas.py` · `service.py` (specs/plan.md 3장) |
+| `backend/app/admin/` | SQLAdmin 관리자 화면 — 액션은 서비스 함수만 호출 |
+| `backend/tests/f1 … f5/` | 테스트 이름에 AC ID (`test_ac_f1_19_...`) |
+| `frontend/src/shared/` | API 클라이언트, StatusBadge |
 
 ## 문서
 
 | 문서 | 내용 |
 |---|---|
 | [docs/기획서_총계획서.md](docs/기획서_총계획서.md) | 사업 개요, 시나리오, 검증 규칙, 역할 분담 전체 |
+| [docs/요구사항_명세서.md](docs/요구사항_명세서.md) | MVP 기능·비기능 요구사항, 상태 흐름, 대표 시나리오 추적표 |
 | [docs/research](docs/research/) | 시장 조사 (수요·공급, 유사 서비스) |
+| [docs/naming](docs/naming/네이밍_자료.md) | 서비스 네이밍 자료 (후보안, 점수표, 결정 절차) |
 | [docs/advisory](docs/advisory/) | 현장 전문가 자문 기록 |
 | [docs/meetings](docs/meetings/) | 회의록 |
 | [docs/decisions](docs/decisions/) | 기술·설계 결정 기록 |

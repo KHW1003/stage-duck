@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1:1 문의 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  /* InquiryListPage.module.css — 게시판 표 + 상태 글자 */
+  .sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); margin: 24px 0; }
+  .sum > div { padding: 18px 24px; }
+  .sum > div + div { border-left: 1px solid var(--sd-line); }
+  .sum dt { color: var(--sd-muted); font-size: var(--sd-text-desc); }
+  .sum dd { margin-top: 4px; font-size: 24px; font-weight: 700; }
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .bbs { width: 100%; border-collapse: collapse; }
+  .bbs th { height: 44px; border-top: 1px solid var(--sd-rule); border-bottom: 1px solid var(--sd-line-strong); color: var(--sd-muted); font-weight: 500; font-size: var(--sd-text-desc); }
+  .bbs td { height: 56px; border-bottom: 1px solid var(--sd-line); color: var(--sd-muted); font-size: var(--sd-text-desc); text-align: center; white-space: nowrap; }
+  .bbs td.t { text-align: left; color: var(--sd-ink); font-size: var(--sd-text-body); white-space: normal; }
+  .bbs td.t a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .bbs td.t small { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+  .lock { margin-right: 6px; color: var(--sd-muted); vertical-align: -2px; }
+</style>
+</head>
+<!-- 시안: 문의 게시판 목록
+     화면: 1:1 문의 목록 · 제안 화면 (스펙에 아직 없음 — 해원 승인 전). 바닥글 '1:1 문의'에서 들어온다.
+     React(안): pages/InquiryListPage.tsx = InquirySummary + InquiryTable + Pagination. 내 문의만 보인다 (남의 문의는 404). -->
+<body data-layout="user">
+
+<div class="page-top"><div class="container page-top__inner"><div><ol class="page-top__crumb"><li>1:1 문의</li></ol><h1>1:1 문의</h1><p class="page-top__desc">STAGE DUCK 운영자에게 묻는 곳이에요. 내가 남긴 문의만 보이고, 답변이 오면 알림으로 알려 드려요.</p></div><div class="page-top__actions"><a class="btn btn--primary" href="inquiry-write.html"><span data-icon="edit" class="icon--sm"></span>문의하기</a></div></div></div>
+
+<main class="container main" style="padding-top:0">
+  <dl class="sum"><div><dt>전체 문의</dt><dd>4</dd></div><div><dt>답변 대기</dt><dd>1</dd></div><div><dt>답변 완료</dt><dd>3</dd></div></dl>
+
+  <div class="bar">
+    <div class="filters"><button type="button" aria-pressed="true">전체</button><button type="button" aria-pressed="false">답변 대기</button><button type="button" aria-pressed="false">답변 완료</button></div>
+    <select class="select select--sm" aria-label="문의 유형"><option>모든 유형</option><option>결제·환불</option><option>견적·확정</option><option>업체 이용</option><option>계정</option><option>기타</option></select>
+  </div>
+
+  <table class="bbs">
+    <colgroup><col style="width:72px"><col style="width:120px"><col><col style="width:120px"><col style="width:120px"></colgroup>
+    <thead><tr><th>번호</th><th>유형</th><th style="text-align:left">제목</th><th>문의일</th><th>상태</th></tr></thead>
+    <tbody>
+      <tr><td>4</td><td>결제·환불</td><td class="t"><span data-icon="lock" class="icon--sm lock"></span><a href="inquiry-post.html">공연을 하루 앞두고 취소하면 위약금은 어떻게 나뉘나요?</a><small>가을밤 밴드 공연 · 11월 22일</small></td><td>11.16</td><td><span class="state state--on">답변 대기</span></td></tr>
+      <tr><td>3</td><td>견적·확정</td><td class="t"><span data-icon="lock" class="icon--sm lock"></span><a href="inquiry-post.html?ans=done">최종 견적이 만료됐어요. 다시 받을 수 있나요?</a><small>가을밤 밴드 공연 · 11월 22일</small></td><td>11.14</td><td><span class="state state--done">답변 완료</span></td></tr>
+      <tr><td>2</td><td>계정</td><td class="t"><span data-icon="lock" class="icon--sm lock"></span><a href="inquiry-post.html?ans=done">닉네임을 바꾸면 업체에게도 바뀐 이름으로 보이나요?</a></td><td>11.10</td><td><span class="state state--done">답변 완료</span></td></tr>
+      <tr><td>1</td><td>기타</td><td class="t"><span data-icon="lock" class="icon--sm lock"></span><a href="inquiry-post.html?ans=done">요청서는 공연 며칠 전까지 올려야 하나요?</a></td><td>11.02</td><td><span class="state state--done">답변 완료</span></td></tr>
+    </tbody>
+  </table>
+  <nav class="pagination" aria-label="쪽"><span aria-current="page">1</span></nav>
+</main>
+<script src="../layout.js"></script>
+</body>
+</html>

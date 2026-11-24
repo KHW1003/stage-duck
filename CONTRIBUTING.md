@@ -8,14 +8,14 @@
 main        ← 발표·배포 가능한 상태만. 직접 push 금지
  └ develop  ← 통합 브랜치. 모든 작업 PR은 여기로
     ├ feat/request-공연요청서-작성
-    ├ feat/supplier-견적-작성
-    ├ fix/compare-일정충돌-계산
+    ├ feat/quote-견적서-작성
+    ├ fix/check-일정충돌-계산
     └ docs/research-수요조사
 ```
 
 | 브랜치 | 용도 | 만드는 곳 → 합치는 곳 |
 |---|---|---|
-| `main` | 최종본 (마일스톤·발표 시점) | `develop` → `main` (팀 합의 후) |
+| `main` | 최종본 (마일스톤·발표 시점) | `develop` → `main` (팀 합의 후, 해원 승인 필수) |
 | `develop` | 개발 통합 | - |
 | `feat/<영역>-<설명>` | 기능 개발 | `develop` → `develop` |
 | `fix/<영역>-<설명>` | 버그 수정 | `develop` → `develop` |
@@ -23,13 +23,13 @@ main        ← 발표·배포 가능한 상태만. 직접 push 금지
 | `chore/<설명>` | 설정·빌드·의존성 | `develop` → `develop` |
 | `hotfix/<설명>` | main 긴급 수정 | `main` → `main` + `develop` |
 
-`<영역>`: `request` · `supplier` · `compare` · `payment` · `common`
+`<영역>`: 모듈 이름 — `auth` · `supplier` · `board` · `offer` · `profile` · `request` · `quote` · `chat` · `notification` · `check` · `payment` · `policy` · `admin` · `demo` · `common` (묶음별 모듈은 [CLAUDE.md](CLAUDE.md) 5장)
 
 브랜치 이름에는 **이슈 번호**를 붙여도 좋습니다: `feat/12-request-공연요청서-작성`
 
 ## 2. 작업 순서
 
-1. **이슈 만들기** — 템플릿 선택, 담당 영역 라벨(`area:*`) 붙이기, 자기 자신 Assign
+1. **이슈 만들기** — 템플릿 선택, 묶음 라벨(`area:1-…` ~ `area:4-…`, `area:common`) 붙이기, 자기 자신 Assign
 2. **브랜치 만들기** — 항상 최신 `develop`에서
    ```bash
    git switch develop
@@ -68,7 +68,7 @@ main        ← 발표·배포 가능한 상태만. 직접 push 금지
 예시
 ```
 feat(request): 공연 요청서 작성 API 추가
-fix(compare): 설치 완료 시각과 리허설 충돌 판정 오류 수정
+fix(check): 설치 완료 시각과 리허설 충돌 판정 오류 수정
 docs(research): 소규모 공연장 공급 현황 조사 추가
 chore(common): ESLint 설정 추가
 ```
@@ -80,6 +80,10 @@ chore(common): ESLint 설정 추가
 - 템플릿의 체크리스트를 채우고, 화면 변경은 스크린샷 첨부
 - 리뷰어 1명 이상 승인 필요. 리뷰어는 **다른 영역 담당자**로 지정해 서로의 코드를 알게 합니다
 - 리뷰 요청을 받으면 **24시간 안에** 확인
+- 승인 후 새 커밋을 올리면 승인이 취소됩니다 → 다시 리뷰 요청
+- 머지 방식은 GitHub 룰셋으로 고정되어 있습니다
+  - 작업 브랜치 → `develop`: **Squash and merge** (작업 하나 = 커밋 하나)
+  - `develop` → `main`: **Create a merge commit** (squash하면 develop과 main 이력이 어긋나 다음 반영 때 충돌)
 - 다른 영역의 파일(특히 공통 코드·DB 스키마)을 수정했으면 해당 담당자를 리뷰어에 추가
 
 ## 5. 영역 간 약속 (공통 코드)
@@ -100,12 +104,42 @@ chore(common): ESLint 설정 추가
 - `git push --force` (내 개인 브랜치에서만, 그것도 꼭 필요할 때만)
 - 실제 업체·공간 이름이나 실제 개인정보를 시드 데이터에 사용 (전부 가상 데이터)
 
-## 7. GitHub 저장소 설정 (관리자 1회)
+## 7. GitHub 저장소 보호 (룰셋)
 
-- Settings → Branches → `main`, `develop` 보호 규칙
-  - Require a pull request before merging (Approvals: 1)
-  - Do not allow bypassing / force push 금지
-- Settings → General → Pull Requests: **Allow squash merging만 체크**, Automatically delete head branches 체크
-- Default branch: `develop`
-- 라벨 생성: `bash scripts/setup-labels.sh` (gh CLI 필요)
-- Projects(보드) 생성: `Backlog / Todo / In Progress / In Review / Done`
+Settings → Rules → Rulesets 에 적용되어 있습니다. 바꾸려면 팀 합의 후 관리자가 수정합니다.
+
+| 규칙 | `develop` | `main` |
+|---|---|---|
+| 직접 push | ❌ PR만 가능 | ❌ PR만 가능 |
+| 필요한 승인 | 다른 사람 1명 | **코드 오너(@KHW1003)** 1명 |
+| 승인 후 새 커밋 | 승인 취소 | 승인 취소 |
+| 마지막 push는 다른 사람이 승인 | ✅ | ✅ |
+| 리뷰 대화 모두 해결 | ✅ | ✅ |
+| 머지 방식 | Squash만 | Merge commit만 |
+| force push · 브랜치 삭제 | ❌ | ❌ |
+| CI `test` 통과 | ✅ 필수 | ✅ 필수 |
+| 예외(bypass) | 관리자 — PR을 통해서만 | 관리자 — PR을 통해서만 |
+
+룰셋은 세 개입니다: `develop 보호`, `main 보호`, `테스트 필수`.
+
+- 관리자(@KHW1003)는 승인·CI 없이 자기 PR을 머지할 수 있습니다. 관리자 작업은 로컬에서 테스트를 마친 뒤 올립니다.
+- 팀원 PR은 승인과 CI `test` 통과가 모두 필요합니다.
+- 직접 push는 관리자도 불가하며, 가능하면 관리자도 팀원 리뷰를 받고 머지합니다.
+
+### 자동 머지 (auto-merge)
+
+PR 화면에서 **Enable auto-merge** 를 눌러 두면, 조건(승인 + 테스트 통과)이 채워지는 순간 GitHub가 자동으로 머지합니다.
+- PR마다 따로 켭니다. 켜지 않은 PR은 지금처럼 직접 머지 버튼을 누릅니다.
+- 리뷰에서 수정 요청이 오거나 테스트가 실패하면 머지되지 않고 기다립니다.
+
+### CI (자동 검사)
+
+`.github/workflows/ci.yml` — PR을 올리거나 커밋을 추가할 때마다 실행됩니다.
+- 현재: 머지 충돌 표시 검사, GitHub 설정 YAML 문법 검사
+- 기술 스택 결정 후: 실제 애플리케이션 테스트로 교체 (job 이름 `test`는 유지 — 룰셋이 이 이름으로 검사합니다)
+
+저장소 설정
+- Default branch: `develop`, 머지된 브랜치 자동 삭제, 자동 머지 허용
+- Secret scanning push protection: 켜짐 (API 키 등이 포함된 push 거부)
+- 라벨: `bash scripts/setup-labels.sh` (gh CLI 필요)
+- 기술 스택 결정 후 추가 예정: Dependabot

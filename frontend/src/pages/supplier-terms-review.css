@@ -1,0 +1,38 @@
+.supplier-terms-panel {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--sd-line-strong);
+  border-radius: var(--sd-r-btn);
+}
+
+.supplier-terms-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.supplier-terms-panel__head h2 {
+  font-size: 18px;
+}
+
+.supplier-terms-panel__head p,
+.supplier-terms-step {
+  margin: 4px 0 0;
+  color: var(--sd-muted);
+  font-size: 14px;
+}
+
+.supplier-terms-panel__documents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transaction-terms-end {
+  height: 1px;
+}

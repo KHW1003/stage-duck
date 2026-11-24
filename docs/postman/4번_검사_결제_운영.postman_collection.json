@@ -1,0 +1,3550 @@
+{
+  "info": {
+    "name": "STAGE DUCK 4번 검사·결제·운영",
+    "description": "4번 묶음 API 확인용. docs/verify/4번_검사_결제_운영.md 와 함께 본다.\n\n- 서버는 APP_ENV=test 로 켜야 /dev/switch-account(가짜 로그인)가 켜진다.\n- 시드 계정 id는 DB에 맞게 바꾼다.\n- 0번 폴더부터 순서대로 돌린다.\n- 결제는 모두 테스트 결제 — 실제 청구되지 않는다.\n- 비밀번호·토큰을 넣지 않는다.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 로그인·준비",
+      "item": [
+        {
+          "name": "0-1 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0-2 요청서 만들기 (2번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"가을밤 밴드 공연\",\n  \"form\": \"BAND\",\n  \"lineup\": [\n    {\n      \"part\": \"보컬\",\n      \"count\": 1\n    },\n    {\n      \"part\": \"기타\",\n      \"count\": 2\n    },\n    {\n      \"part\": \"베이스\",\n      \"count\": 1\n    },\n    {\n      \"part\": \"드럼\",\n      \"count\": 1\n    }\n  ],\n  \"showDate\": \"{{showDate}}\",\n  \"rehearsalStart\": \"17:00\",\n  \"showStart\": \"19:00\",\n  \"showEnd\": \"21:00\",\n  \"audience\": 80,\n  \"sido\": \"광주광역시\",\n  \"sigungu\": \"동구\",\n  \"contactPhone\": null,\n  \"needs\": {\n    \"venue\": {\n      \"needed\": true,\n      \"types\": [\n        \"CULTURE_SPACE\"\n      ],\n      \"capacity\": 80,\n      \"mustHave\": [\n        \"BAND_ALLOWED\"\n      ]\n    },\n    \"equipment\": {\n      \"needed\": true,\n      \"proposalWanted\": true,\n      \"items\": [\n        {\n          \"name\": \"보컬 마이크\",\n          \"qty\": 4\n        }\n      ],\n      \"services\": [\n        \"TRANSPORT\",\n        \"INSTALL\"\n      ],\n      \"owned\": []\n    },\n    \"engineer\": {\n      \"needed\": true,\n      \"tasks\": [\n        \"FOH\",\n        \"INSTALL_ASSIST\"\n      ],\n      \"conditions\": [\n        \"BAND_EXPERIENCE\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 공연일은 오늘+14일 이후여야 한다 (D-53). 비어 있으면 오늘+30일로 채운다.",
+                  "if (!pm.collectionVariables.get(\"showDate\")) {",
+                  "  const d = new Date(Date.now() + 30 * 864e5);",
+                  "  pm.collectionVariables.set(\"showDate\", d.toISOString().slice(0, 10));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"DRAFT v1\", () => { pm.expect(b.status).to.eql(\"DRAFT\"); pm.expect(b.currentVersion).to.eql(1); });",
+                  "pm.collectionVariables.set(\"performanceId\", b.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0-3 공고 올리기 (2번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "publish"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "const venue = pm.response.json().stages.find(s => s.stageType === \"VENUE\");",
+                  "pm.test(\"공연장 단계 OPEN\", () => pm.expect(venue.status).to.eql(\"OPEN\"));",
+                  "pm.collectionVariables.set(\"stageId\", venue.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0-4 업체 C로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierCUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0-5 내 공간 목록 (업체 C)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/venues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "venues"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"공간이 하나 이상\", () => pm.expect(list.length).to.be.above(0));",
+                  "pm.collectionVariables.set(\"venueId\", list[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0-6 공연장 견적서 보내기 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{stageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{stageId}}",
+                "quotes"
+              ]
+            },
+            "description": "공간 C 500,000원, 설치 가능 15:00.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": {{venueId}},\n  \"checkinTime\": \"15:00\",\n  \"setupAvailableTime\": \"15:00\",\n  \"items\": [\n    {\n      \"name\": \"공간 C 대관\",\n      \"category\": \"VENUE\",\n      \"qty\": 1,\n      \"unitPrice\": 500000,\n      \"amount\": 500000\n    }\n  ],\n  \"staff\": [],\n  \"setupStart\": \"15:00\",\n  \"setupMinutes\": 60,\n  \"teardownMinutes\": 60,\n  \"includes\": {\n    \"equipment\": false,\n    \"engineer\": false,\n    \"install\": false,\n    \"transport\": false\n  },\n  \"amounts\": {\n    \"items\": 500000,\n    \"transport\": 0,\n    \"install\": 0,\n    \"labor\": 0,\n    \"etc\": 0\n  },\n  \"discountAmount\": 0,\n  \"totalAmount\": 500000,\n  \"extraCostNote\": \"주차비 별도\",\n  \"techNote\": \"전원 위치 확인 필요\",\n  \"label\": \"기본형\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"quoteCId\", b.quoteId); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"roomId\", b.chatRoomId); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 견적 비교·자동 검사",
+      "item": [
+        {
+          "name": "1-1 오류: 업체가 비교 보기 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{stageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{stageId}}",
+                "quotes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-2 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-3 공연장 비교 (AC-F3-20)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{stageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{stageId}}",
+                "quotes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CHK-02 통과 (120분)\", () => { const b = pm.response.json(); const q = b.find(x => x.quoteId == pm.collectionVariables.get(\"quoteCId\")); pm.expect(q.checks.find(x => x.id === \"CHK-02\").result).to.eql(\"PASS\"); });",
+                  "pm.test(\"연락처 칸 없음\", () => pm.expect(pm.response.text()).to.not.match(/\"(phone|email|birthDate|mainPhone)\"/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-4 오류: 확정 전 청구서 409 (AC-F5-04)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 INVALID_STATE\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"INVALID_STATE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-5 채팅 시작 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat-rooms/{{roomId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat-rooms",
+                "{{roomId}}",
+                "start"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-6 업체 C로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierCUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-7 최종 견적 보내기 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteCId}}/confirm-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotes",
+                "{{quoteCId}}",
+                "confirm-requests"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"confirmRequestId\", b.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-8 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-9 내역서 열람 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confirm-requests/{{confirmRequestId}}/view",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm-requests",
+                "{{confirmRequestId}}",
+                "view"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-10 확정하기 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confirm-requests/{{confirmRequestId}}/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm-requests",
+                "{{confirmRequestId}}",
+                "accept"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"단계 CONFIRMED\", () => { const b = pm.response.json(); pm.expect(b.stageStatus).to.eql(\"CONFIRMED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-11 다음 단계 열기 (2번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{stageId}}/advance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{stageId}}",
+                "advance"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"OPEN_NEXT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"eqStageId\", b.next.stageId); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-12 업체 D로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierDUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-13 장비 견적서 v1: 1,250,000원, 90분 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{eqStageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{eqStageId}}",
+                "quotes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"기본형\",\n  \"venueId\": null,\n  \"items\": [\n    {\n      \"name\": \"음향 장비 한 벌\",\n      \"category\": \"SOUND\",\n      \"qty\": 1,\n      \"unitPrice\": 600000,\n      \"amount\": 600000\n    }\n  ],\n  \"staff\": [\n    {\n      \"role\": \"ENGINEER\",\n      \"count\": 1,\n      \"start\": \"15:00\",\n      \"end\": \"22:00\"\n    }\n  ],\n  \"setupStart\": \"15:00\",\n  \"setupMinutes\": 90,\n  \"teardownMinutes\": 60,\n  \"includes\": {\n    \"equipment\": true,\n    \"engineer\": true,\n    \"install\": true,\n    \"transport\": true\n  },\n  \"amounts\": {\n    \"items\": 600000,\n    \"transport\": 150000,\n    \"install\": 200000,\n    \"labor\": 300000,\n    \"etc\": 0\n  },\n  \"totalAmount\": 1250000,\n  \"extraCostNote\": \"\",\n  \"validUntil\": \"{{showDate}}\",\n  \"techNote\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"quoteDId\", b.quoteId); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"roomId\", b.chatRoomId); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-14 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-15 장비 비교: 16:30 완료 통과 (AC-F3-21)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{eqStageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{eqStageId}}",
+                "quotes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CHK-05 통과\", () => { const b = pm.response.json(); const q = b.find(x => x.quoteId == pm.collectionVariables.get(\"quoteDId\")); pm.expect(q.checks.find(x => x.id === \"CHK-05\").result).to.eql(\"PASS\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-16 업체 D로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierDUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-17 장비 견적서 v2: 1,350,000원, 15:45 완료 (3번 API)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteDId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotes",
+                "{{quoteDId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venueId\": null,\n  \"items\": [\n    {\n      \"name\": \"음향 장비 한 벌\",\n      \"category\": \"SOUND\",\n      \"qty\": 1,\n      \"unitPrice\": 700000,\n      \"amount\": 700000\n    }\n  ],\n  \"staff\": [\n    {\n      \"role\": \"ENGINEER\",\n      \"count\": 1,\n      \"start\": \"15:00\",\n      \"end\": \"22:00\"\n    }\n  ],\n  \"setupStart\": \"15:00\",\n  \"setupMinutes\": 45,\n  \"teardownMinutes\": 60,\n  \"includes\": {\n    \"equipment\": true,\n    \"engineer\": true,\n    \"install\": true,\n    \"transport\": true\n  },\n  \"amounts\": {\n    \"items\": 700000,\n    \"transport\": 150000,\n    \"install\": 200000,\n    \"labor\": 300000,\n    \"etc\": 0\n  },\n  \"totalAmount\": 1350000,\n  \"extraCostNote\": \"\",\n  \"validUntil\": \"{{showDate}}\",\n  \"techNote\": \"\",\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-18 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-19 장비 비교: v2 통과 (AC-F3-24 일부)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{eqStageId}}/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{eqStageId}}",
+                "quotes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"CHK-05 통과\", () => { const b = pm.response.json(); const q = b.find(x => x.quoteId == pm.collectionVariables.get(\"quoteDId\")); pm.expect(q.checks.find(x => x.id === \"CHK-05\").result).to.eql(\"PASS\"); });",
+                  "pm.test(\"1,350,000원\", () => { const b = pm.response.json(); pm.expect(b.find(x => x.quoteId == pm.collectionVariables.get(\"quoteDId\")).totalAmount).to.eql(1350000); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-20 채팅 시작 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat-rooms/{{roomId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chat-rooms",
+                "{{roomId}}",
+                "start"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-21 업체 D로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierDUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-22 최종 견적 보내기 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteDId}}/confirm-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotes",
+                "{{quoteDId}}",
+                "confirm-requests"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"confirmRequestId\", b.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-23 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-24 내역서 열람 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confirm-requests/{{confirmRequestId}}/view",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm-requests",
+                "{{confirmRequestId}}",
+                "view"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-25 확정하기 (3번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confirm-requests/{{confirmRequestId}}/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm-requests",
+                "{{confirmRequestId}}",
+                "accept"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"단계 CONFIRMED\", () => { const b = pm.response.json(); pm.expect(b.stageStatus).to.eql(\"CONFIRMED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1-26 엔지니어 건너뛰기 (AC-F3-23, 2번 API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stages/{{eqStageId}}/advance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stages",
+                "{{eqStageId}}",
+                "advance"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"SKIP_NEXT\",\n  \"acknowledgement\": \"STAGE_SKIP_OWNED\",\n  \"noticeVersion\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"결제 대기\", () => { const b = pm.response.json(); pm.expect(b.performanceStatus).to.eql(\"AWAITING_PAYMENT\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 기술 확인",
+      "item": [
+        {
+          "name": "2-1 기술 확인 목록 (사용자)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"사용자는 추가 불가\", () => { const b = pm.response.json(); pm.expect(b.canAdd).to.eql(false); });",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"supplierCId\", b.owners[0].supplierId); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-2 오류: 사용자 항목 추가 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item\": \"무대 전원 위치\",\n  \"detail\": \"콘센트 개수\",\n  \"ownerSupplierId\": {{supplierCId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"오류 FORBIDDEN\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"FORBIDDEN\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-3 업체 D로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierDUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-4 항목 추가 (업체 D, 담당 C)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item\": \"무대 전원 위치\",\n  \"detail\": \"콘센트 개수\",\n  \"ownerSupplierId\": {{supplierCId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"techCheckId\", b.id); }",
+                  "pm.test(\"담당은 D가 아님\", () => { const b = pm.response.json(); pm.expect(b.mine).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-5 오류: 확정 안 된 담당 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item\": \"무대 전원 위치\",\n  \"detail\": \"콘센트 개수\",\n  \"ownerSupplierId\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 VALIDATION_FAILED\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"VALIDATION_FAILED\"); });",
+                  "pm.test(\"fieldErrors ownerSupplierId\", () => { const b = pm.response.json(); pm.expect(b.fieldErrors.map(x => x.field)).to.include(\"ownerSupplierId\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-6 오류: 담당 아닌 업체 답변 404 (AC-F3-25)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tech-checks/{{techCheckId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tech-checks",
+                "{{techCheckId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"OK\",\n  \"memo\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-7 업체 C로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierCUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-8 담당 업체 답변 (AC-F3-25)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tech-checks/{{techCheckId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tech-checks",
+                "{{techCheckId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"CONDITIONAL\",\n  \"memo\": \"무대 왼쪽 2구\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"답변 저장\", () => { const b = pm.response.json(); pm.expect(b.answer).to.eql(\"CONDITIONAL\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-9 오류: 항목을 정하는 업체가 아니면 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item\": \"무대 전원 위치\",\n  \"detail\": \"콘센트 개수\",\n  \"ownerSupplierId\": {{supplierCId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-10 업체 B로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierBUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2-11 오류: 확정 안 된 업체 목록 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/tech-checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "tech-checks"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 통합 청구서·테스트 결제·담당표",
+      "item": [
+        {
+          "name": "3-1 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-2 오류: 발행 전 청구서 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-3 통합 청구서 발행 (AC-F5-03)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"185만 + 92,500 = 1,942,500\", () => { const b = pm.response.json(); pm.expect(b.itemsTotal).to.eql(1850000);pm.expect(b.platformFee).to.eql(92500);pm.expect(b.totalAmount).to.eql(1942500); });",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"orderId\", b.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-4 다시 발행해도 같은 청구서 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"같은 id\", () => { const b = pm.response.json(); pm.expect(b.id).to.eql(Number(pm.collectionVariables.get(\"orderId\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-5 청구서 보기: 결제 마감 (AC-F5-22 일부)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"185만 + 92,500 = 1,942,500\", () => { const b = pm.response.json(); pm.expect(b.itemsTotal).to.eql(1850000);pm.expect(b.platformFee).to.eql(92500);pm.expect(b.totalAmount).to.eql(1942500); });",
+                  "pm.test(\"결제 마감 있음\", () => { const b = pm.response.json(); pm.expect(b.paymentDeadline).to.be.a(\"string\"); });",
+                  "pm.test(\"장부 상태 없음\", () => { const b = pm.response.json(); b.lines.forEach(l => pm.expect(l.ledgerState).to.eql(null)); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-6 담당표: 결제 전 연락처 없음 (AC-F5-12 연결)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/sheet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "sheet"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"contacts 비어 있음\", () => { const b = pm.response.json(); pm.expect(b.paid).to.eql(false);pm.expect(b.contacts).to.eql([]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-7 결제 전 취소 미리보기 0원 (AC-F5-09 일부)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel-quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel-quote"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"0원\", () => { const b = pm.response.json(); pm.expect(b.phase).to.eql(\"BEFORE_PAYMENT\");pm.expect(b.penaltyTotal).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-8 오류: 금액 조작 400 AMOUNT_MISMATCH (AC-F5-05)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 AMOUNT_MISMATCH\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"AMOUNT_MISMATCH\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-9 오류: Idempotency-Key 없음 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 VALIDATION_FAILED\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"VALIDATION_FAILED\"); });",
+                  "pm.test(\"fieldErrors Idempotency-Key\", () => { const b = pm.response.json(); pm.expect(b.fieldErrors.map(x => x.field)).to.include(\"Idempotency-Key\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-10 테스트 결제 실패",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"FAIL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"FAILED, 청구서 그대로\", () => { const b = pm.response.json(); pm.expect(b.status).to.eql(\"FAILED\");pm.expect(b.orderStatus).to.eql(\"ISSUED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-11 테스트 결제 성공",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{payKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"payKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"SUCCEEDED, PAID\", () => { const b = pm.response.json(); pm.expect(b.status).to.eql(\"SUCCEEDED\");pm.expect(b.orderStatus).to.eql(\"PAID\"); });",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"paymentId\", b.paymentId); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-12 같은 키로 다시 결제 (AC-F5-06)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{payKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"처음 결제 그대로\", () => { const b = pm.response.json(); pm.expect(b.paymentId).to.eql(Number(pm.collectionVariables.get(\"paymentId\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-13 오류: 새 키로 또 결제 409 (AC-F5-06)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 INVALID_STATE\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"INVALID_STATE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-14 오류: 모르는 providerTxId 콜백 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/mock/callback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "mock",
+                "callback"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerTxId\": \"mock-none\",\n  \"result\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-15 청구서: 보관 중 (AC-F5-07 일부)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "order"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"업체별 HOLD\", () => { const b = pm.response.json(); pm.expect(b.status).to.eql(\"PAID\");b.lines.forEach(l => pm.expect(l.ledgerState).to.eql(\"HOLD\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-16 담당표: 결제 뒤 연락처 (AC-F5-11)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/sheet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "sheet"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"연락처 3명\", () => { const b = pm.response.json(); pm.expect(b.paid).to.eql(true);pm.expect(b.contacts.length).to.eql(3); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-17 업체 B로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierBUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-18 오류: 미확정 업체 담당표 404 (AC-F5-11)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/sheet",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "sheet"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3-19 오류: 업체가 결제 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "payments"
+              ]
+            },
+            "description": "테스트 결제 — 실제 청구되지 않습니다",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1942500,\n  \"mockResult\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"idemKey\", pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 취소",
+      "item": [
+        {
+          "name": "4-1 오류: 미확정 업체 사정 취소 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel-by-supplier",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel-by-supplier"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"시설 고장\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-2 업체 C로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{supplierCUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 SUPPLIER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"SUPPLIER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-3 내 예약 목록 (업체 C)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "reservations"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"이 공연 있음\", () => { const b = pm.response.json(); pm.expect(b.map(x => x.performanceId)).to.include(Number(pm.collectionVariables.get(\"performanceId\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-4 지금 경고 수 (AC-F5-10)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/warnings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "warnings"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"3회째 정지\", () => { const b = pm.response.json(); pm.expect(b.suspendAt).to.eql(3);pm.expect(b.warningCount).to.be.a(\"number\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-5 오류: 사유 없는 업체 사정 취소 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel-by-supplier",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel-by-supplier"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 VALIDATION_FAILED\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"VALIDATION_FAILED\"); });",
+                  "pm.test(\"fieldErrors reason\", () => { const b = pm.response.json(); pm.expect(b.fieldErrors.map(x => x.field)).to.include(\"reason\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-6 오류: 업체가 사용자 취소 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-7 사용자로 전환",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dev/switch-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "switch-account"
+              ]
+            },
+            "description": "시연 계정 전환 (APP_ENV=test 에서만). 비밀번호 없음.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{hostUserId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"역할 USER\", () => { const b = pm.response.json(); pm.expect(b.role).to.eql(\"USER\"); });",
+                  "pm.collectionVariables.set(\"csrfToken\", pm.cookies.get(\"csrf_token\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-8 오류: 사용자가 경고 수 보기 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier/warnings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier",
+                "warnings"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"오류 NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-9 취소 미리보기: 결제 후 12시간 (D-57)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel-quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel-quote"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"0%, 이용료까지 전액\", () => { const b = pm.response.json(); pm.expect(b.phase).to.eql(\"GRACE_12H\");pm.expect(b.penaltyTotal).to.eql(0);pm.expect(b.refundTotal).to.eql(1942500); });",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqPhase\", b.phase); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqRate\", b.ratePercent); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqPaid\", b.paid); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqPenalty\", b.penaltyTotal); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqFee\", b.feeRefunded); }",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"cqRefund\", b.refundTotal); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-10 오류: 확인한 금액과 다르면 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phase\": \"{{cqPhase}}\",\n  \"ratePercent\": {{cqRate}},\n  \"paid\": {{cqPaid}},\n  \"penaltyTotal\": {{cqPenalty}},\n  \"feeRefunded\": {{cqFee}},\n  \"refundTotal\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 INVALID_STATE\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"INVALID_STATE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-11 사용자 취소",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phase\": \"{{cqPhase}}\",\n  \"ratePercent\": {{cqRate}},\n  \"paid\": {{cqPaid}},\n  \"penaltyTotal\": {{cqPenalty}},\n  \"feeRefunded\": {{cqFee}},\n  \"refundTotal\": {{cqRefund}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"취소 기록·환불 예정액\", () => { const b = pm.response.json(); pm.expect(b.cancellationId).to.be.a(\"number\");pm.expect(b.refundTotal).to.eql(1942500); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4-12 오류: 두 번 취소 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/performances/{{performanceId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "performances",
+                "{{performanceId}}",
+                "cancel"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phase\": \"{{cqPhase}}\",\n  \"ratePercent\": {{cqRate}},\n  \"paid\": {{cqPaid}},\n  \"penaltyTotal\": {{cqPenalty}},\n  \"feeRefunded\": {{cqFee}},\n  \"refundTotal\": {{cqRefund}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"오류 INVALID_STATE\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"INVALID_STATE\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 신고",
+      "item": [
+        {
+          "name": "5-1 회원 신고",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"USER\",\n  \"targetId\": {{supplierCUserId}},\n  \"reason\": \"시험용 신고입니다\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300) { const b = pm.response.json(); pm.collectionVariables.set(\"reportId\", b.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-2 같은 대상 다시 신고: 같은 번호",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"USER\",\n  \"targetId\": {{supplierCUserId}},\n  \"reason\": \"시험용 신고입니다\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"같은 번호\", () => { const b = pm.response.json(); pm.expect(b.id).to.eql(Number(pm.collectionVariables.get(\"reportId\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-3 오류: 사유 없음 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"USER\",\n  \"targetId\": {{supplierCUserId}},\n  \"reason\": \" \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 VALIDATION_FAILED\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"VALIDATION_FAILED\"); });",
+                  "pm.test(\"fieldErrors reason\", () => { const b = pm.response.json(); pm.expect(b.fieldErrors.map(x => x.field)).to.include(\"reason\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5-4 오류: 허용 안 된 대상 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"NONE\",\n  \"targetId\": {{supplierCUserId}},\n  \"reason\": \"시험용 신고입니다\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"상태 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"오류 VALIDATION_FAILED\", () => { const b = pm.response.json(); pm.expect(b.code).to.eql(\"VALIDATION_FAILED\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1"
+    },
+    {
+      "key": "hostUserId",
+      "value": "1",
+      "description": "시연 사용자 (새 DB에 시드만 넣으면 1)"
+    },
+    {
+      "key": "supplierBUserId",
+      "value": "3",
+      "description": "업체 B"
+    },
+    {
+      "key": "supplierCUserId",
+      "value": "4",
+      "description": "업체 C"
+    },
+    {
+      "key": "supplierDUserId",
+      "value": "5",
+      "description": "업체 D"
+    },
+    {
+      "key": "showDate",
+      "value": "",
+      "description": "비우면 0-2가 오늘+30일로 채운다"
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "performanceId",
+      "value": ""
+    },
+    {
+      "key": "stageId",
+      "value": ""
+    },
+    {
+      "key": "eqStageId",
+      "value": ""
+    },
+    {
+      "key": "venueId",
+      "value": ""
+    },
+    {
+      "key": "quoteCId",
+      "value": ""
+    },
+    {
+      "key": "quoteDId",
+      "value": ""
+    },
+    {
+      "key": "roomId",
+      "value": ""
+    },
+    {
+      "key": "confirmRequestId",
+      "value": ""
+    },
+    {
+      "key": "supplierCId",
+      "value": ""
+    },
+    {
+      "key": "techCheckId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "reportId",
+      "value": ""
+    },
+    {
+      "key": "idemKey",
+      "value": ""
+    },
+    {
+      "key": "payKey",
+      "value": ""
+    },
+    {
+      "key": "cqPhase",
+      "value": ""
+    },
+    {
+      "key": "cqRate",
+      "value": ""
+    },
+    {
+      "key": "cqPaid",
+      "value": ""
+    },
+    {
+      "key": "cqPenalty",
+      "value": ""
+    },
+    {
+      "key": "cqFee",
+      "value": ""
+    },
+    {
+      "key": "cqRefund",
+      "value": ""
+    }
+  ]
+}

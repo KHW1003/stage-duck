@@ -1,0 +1,2 @@
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.strong { font-size: var(--sd-text-price); font-weight: 700; letter-spacing: -0.4px; }

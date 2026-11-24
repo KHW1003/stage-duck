@@ -1,0 +1,35 @@
+/* 공간 찾기 (mockup-v4/pages/spaces.html <style> 과 인라인 style 그대로) */
+.cond { border-top: 0; }
+.cond > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }
+.cond__th { display: flex; align-items: center; padding: 0 18px; background: var(--sd-th); font-size: var(--sd-text-desc); font-weight: 700; }
+.cond__td { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; min-height: 52px; padding: 8px 18px; }
+.cond__foot { display: flex; justify-content: center; gap: 8px; padding: 18px 0 0; }
+.list-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-line); margin-bottom: 24px; }
+.cond__unit { width: 180px; }
+
+.cond__reset { min-width: 120px; }
+.cond__submit { min-width: 200px; }
+.spaces__cta { min-width: 240px; }
+
+/* 반응형 (목업 v4 는 웹만 그렸다) */
+@media (max-width: 760px) {
+  .cat-tiles { --cols: 3 !important; }
+  .cat-tiles > *:nth-child(3n + 1) { border-left: 0; }
+  .cat-tiles > *:nth-child(n + 4) { border-top: 1px solid var(--sd-line); }
+  /* 1fr 는 최소 폭이 내용(min-content)이라 날짜 칸이 휴대폰 폭을 밀어냈다 (CI 리눅스 375px 에서 397px, 11/24) */
+  .cond > div { grid-template-columns: minmax(0, 1fr); }
+  .cond__td > * { min-width: 0; max-width: 100%; }
+  .cond__th { padding: 12px 16px 0; background: transparent; }
+  .cond__td { min-height: 0; padding: 8px 16px 12px; }
+  .cond .filters { flex-wrap: wrap; }
+  .list-top { flex-direction: column; align-items: flex-start; }
+  .feature-row { --cols: 1 !important; }
+}
+@media (max-width: 560px) {
+  .cat-tiles > * { min-height: 84px; }
+  .cond__unit { width: 100%; }
+  .cond__foot { flex-direction: column-reverse; }
+  .cond__reset, .cond__submit, .spaces__cta { min-width: 0; width: 100%; }
+  .list-top .filters { width: 100%; }
+  .list-top .filters button { flex: 1; padding: 0 6px; }
+}

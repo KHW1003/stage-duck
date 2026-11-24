@@ -1,0 +1,44 @@
+/* 로그인·비밀번호 찾기 화면 (mockup-v4 login.html · password.html 의 <style> 그대로).
+   이 화면에만 쓰는 클래스라 이름이 겹치지 않게 login__·pw__ 로 시작한다. 반응형은 목업에 없어 760·560px 를 더했다. */
+.login { max-width: 440px; margin: 0 auto; padding: 64px 0 96px; }
+.login h1 { font-size: 28px; font-weight: 700; letter-spacing: -.8px; text-align: center; }
+.login > p { margin-top: 6px; text-align: center; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.login__form { margin-top: 32px; padding-top: 28px; border-top: 2px solid var(--sd-rule); }
+.login__opts { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: var(--sd-text-desc); }
+.login__or { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; font-size: var(--sd-text-small); color: var(--sd-muted); }
+.login__or::before, .login__or::after { content: ""; flex: 1; height: 1px; background: var(--sd-line); }
+.naver, .kakao { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: var(--sd-button-lg); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-btn); background: var(--sd-bg); font-size: 15px; font-weight: 600; cursor: pointer; }
+.kakao { margin-top: 8px; } /* 카카오 버튼은 목업에 없어(기본 꺼짐) 네이버 버튼 모양을 그대로 쓴다 — 내용 미정 */
+.naver span, .kakao span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: var(--sd-r-tag); background: var(--sd-ink); color: var(--sd-on-blue); font-size: 12px; font-weight: 800; }
+.login__links { display: flex; justify-content: center; margin-top: 24px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.login__opts a, .login__links a { display: inline-flex; align-items: center; min-height: var(--sd-touch); }
+.login__links a + a::before { content: ""; display: inline-block; width: 1px; height: 11px; margin: 0 12px; background: var(--sd-line-strong); }
+.auth-split .login { width: 100%; max-width: none; padding: 48px 48px 40px; }
+.login__input { height: 52px; }
+
+.pw { width: 100%; padding: 48px 48px 40px; }
+.pw h1 { font-size: 28px; font-weight: 700; letter-spacing: -.8px; text-align: center; }
+.pw > p { margin-top: 6px; text-align: center; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.pw__form { margin-top: 32px; }
+.pw__ico { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 18px; border-radius: 50%; background: var(--sd-th); }
+.pw__ico .icon { width: 26px; height: 26px; color: var(--sd-ink); }
+.pw__links { display: flex; justify-content: center; margin-top: 24px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.pw__links a + a::before { content: ""; display: inline-block; width: 1px; height: 11px; margin: 0 12px; background: var(--sd-line-strong); }
+.pw__note { margin-top: 20px; font-size: var(--sd-text-small); color: var(--sd-muted); text-align: center; line-height: 1.6; }
+/* 시연용 링크 (테스트 환경만, D-55) — 목업 password.html 의 .dev */
+.pw__dev { margin-top: 28px; padding: 14px 16px; border-radius: var(--sd-r-box); background: var(--sd-th); font-size: var(--sd-text-small); }
+.pw__dev code { display: block; margin-top: 6px; overflow-wrap: anywhere; color: var(--sd-muted); }
+
+/* 반응형 (목업 v4 는 웹만 그렸다. DESIGN.md 2.5 대로 760·560px) */
+@media (max-width: 760px) {
+  .auth-split { grid-template-columns: 1fr; min-height: 0; margin: 24px 0 56px; }
+  .auth-visual { min-height: 220px; padding: 28px; }
+  .auth-visual h2 { font-size: 22px; }
+}
+@media (max-width: 560px) {
+  .auth-split { margin: 0 calc(var(--sd-page-pad) * -1) 40px; border-left: 0; border-right: 0; border-radius: 0; }
+  .auth-visual { min-height: 0; padding: 24px var(--sd-page-pad); }
+  .auth-visual ul { display: none; }
+  .auth-split .login, .pw { padding: 32px var(--sd-page-pad) 32px; }
+  .login h1, .pw h1 { font-size: 24px; }
+}

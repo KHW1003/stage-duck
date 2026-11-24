@@ -1,0 +1,70 @@
+# 시연 서버 앞단 (specs/deploy.md 3장)
+# SITE_ADDRESS 예: 13-125-1-2.sslip.io (도메인이 없을 때 무료 주소) 또는 stageduck.example.com
+# 주소가 도메인이면 Caddy가 Let's Encrypt 인증서를 알아서 받고 갱신한다.
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# API·실시간·관리자 → FastAPI
+	@api path /api/* /ws /ws/* /admin /admin/*
+	handle @api {
+		reverse_proxy api:8000
+	}
+
+	# 공개 사진 (uploads.md 3장). 비공개 파일은 /api/v1/files/{id} 로만 나간다
+	handle_path /media/* {
+		root * /uploads/public
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# 빌드된 정적 파일 (파일 이름에 해시가 있어 오래 캐시)
+	@assets path /assets/*
+	handle @assets {
+		root * /srv/web
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# 빌드 결과 중 파일이 있는 주소(사진·글꼴·로고 등)는 Caddy 가 바로 보낸다. index.html 은 빼고 FastAPI 로
+	@static {
+		file {
+			root /srv/web
+			try_files {path}
+		}
+		not path / /index.html
+	}
+	handle @static {
+		root * /srv/web
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	# 그 밖의 모든 주소(화면·robots.txt·sitemap.xml) = FastAPI 가 index.html 의 head 를 채워 보낸다 (specs/seo.md D-50)
+	# 없는 글은 404 + noindex, 로그인 뒤 화면은 noindex. 화면 자체는 React 가 그린다
+	handle {
+		reverse_proxy api:8000
+	}
+
+	# 보안 헤더
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	# 업로드 한 번 최대 12MB (uploads.md 2장)
+	request_body {
+		max_size 12MB
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

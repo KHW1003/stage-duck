@@ -1,0 +1,44 @@
+# FastAPI 서버 이미지 (시연 서버용). 빌드: 저장소 맨 위에서 docker compose -f deploy/docker-compose.prod.yml build
+# 화면 빌드(index.html)도 함께 넣는다: 화면 주소는 FastAPI 가 head(제목·공유 미리보기)를 채워 보낸다 (specs/seo.md D-50)
+
+# 1단계: React 빌드 (Dockerfile.web 과 같은 방법)
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# 2단계: FastAPI
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TZ=Asia/Seoul
+
+WORKDIR /app
+
+# 패키지 먼저 (코드만 바뀌면 이 층은 다시 받지 않는다)
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/ ./
+COPY --from=web /web/dist /app/web
+# app/core/config.py frontend_dist — index.html·robots.txt 옆 파일을 여기서 읽는다
+ENV FRONTEND_DIST=/app/web
+# 업로드는 볼륨(/uploads)에 저장한다. 없으면 기본값 "uploads"(= /app/uploads)에 쌓여 컨테이너를 다시 만들면 사라지고
+# Caddy 의 /media(/uploads/public)는 빈 폴더만 본다 (11/24 배포 점검)
+ENV UPLOAD_DIR=/uploads
+# 서명 키가 기본값이거나 32바이트보다 짧으면 서버가 시작하지 않는다 (config.py check_secrets)
+ENV REQUIRE_STRONG_SECRETS=true
+
+# root가 아닌 사용자로 실행. 업로드 폴더는 볼륨으로 붙는다 (specs/uploads.md)
+RUN useradd --create-home --uid 1000 app && mkdir -p /uploads/public /uploads/private && chown -R app:app /app /uploads
+USER app
+
+EXPOSE 8000
+
+# 1) 마이그레이션 적용 2) 서버 시작
+# --workers 1: WebSocket 연결과 APScheduler가 한 프로세스에 있어야 한다 (plan.md 5.5·5.7)
+# --proxy-headers: 앞의 Caddy가 붙인 X-Forwarded-* 를 믿는다 (https 판단·접속 IP)
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips='*'"]

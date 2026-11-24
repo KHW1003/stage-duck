@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문의 쓰기 · STAGE DUCK</title>
+<link rel="preload" href="../../mockup/assets/fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  .inquiry { max-width: 1000px; }
+  .inquiry .btn { min-height: 44px; border-radius: 8px; }
+  .inquiry .btn--primary { background: var(--sd-ink); border-color: var(--sd-ink); color: var(--sd-bg); }
+  .inquiry .btn--primary:hover { background: var(--sd-blue-button); }
+  .write-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 14px; color: var(--sd-muted); }
+  .write-preview button[aria-pressed="true"] { background: var(--sd-band); border-color: var(--sd-ink); }
+  .write-summary { margin-bottom: 24px; border: 1px solid var(--sd-conflict-text); border-radius: 8px; padding: 18px 24px; background: var(--sd-bg); }
+  .write-summary h2 { font-size: 17px; color: var(--sd-conflict-text); }
+  .write-summary a { display: flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+  .write-board { border: 1px solid var(--sd-line-strong); border-radius: 8px; padding: 32px; }
+  .write-board fieldset { min-width: 0; border: 0; margin: 0 0 28px; padding: 0; }
+  .write-board legend { margin-bottom: 12px; font-size: 15px; font-weight: 700; }
+  .type-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .type-chip { position: relative; cursor: pointer; }
+  .type-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .type-chip span { display: flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--sd-line-strong); border-radius: 8px; font-size: 15px; }
+  .type-chip input:checked + span { border-color: var(--sd-ink); background: var(--sd-band); font-weight: 700; }
+  .type-chip input:focus-visible + span { outline: 1px solid var(--sd-ink); outline-offset: 3px; }
+  .write-performance { max-width: 440px; margin-bottom: 32px; }
+  .write-performance .select { appearance: auto; background: var(--sd-bg); min-height: 48px; }
+  .write-title { margin-bottom: 24px; }
+  .write-title .input { height: 72px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--sd-line-strong); border-radius: 0; font-size: clamp(24px, 4vw, 30px); font-weight: 700; letter-spacing: -.6px; }
+  .write-title .input:focus { border-color: var(--sd-ink); }
+  .write-title .input::placeholder, .write-body::placeholder { color: var(--sd-muted); }
+  .write-editor { border: 1px solid var(--sd-line-strong); border-radius: 8px; overflow: hidden; }
+  .write-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 60px; padding: 8px 12px; background: var(--sd-band); border-bottom: 1px solid var(--sd-line); }
+  .write-toolbar > span { margin-right: auto; font-size: 14px; color: var(--sd-muted); }
+  .write-toolbar button { min-height: 44px; }
+  .write-body { display: block; width: 100%; min-height: 300px; padding: 24px; border: 0; background: var(--sd-bg); color: var(--sd-ink); line-height: 1.9; font-size: 16px; resize: vertical; }
+  .write-body:focus-visible { outline: 1px solid var(--sd-ink); outline-offset: -4px; }
+  .write-count { padding: 8px 16px; font-size: 14px; color: var(--sd-muted); text-align: right; }
+  .write-attachments { margin-top: 28px; }
+  .write-attachments h2 { margin-bottom: 12px; font-size: 15px; }
+  .write-attachments li { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--sd-line); font-size: 14px; overflow-wrap: anywhere; }
+  .write-attachments li span { flex: 1; }
+  .write-guide { margin-top: 24px; }
+  .write-actions { position: sticky; bottom: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 24px; padding: 16px 0; border-top: 1px solid var(--sd-line-strong); background: var(--sd-bg); }
+  .write-actions p { font-size: 14px; color: var(--sd-muted); }
+  .write-actions .btns { margin-left: auto; }
+  .inquiry .field__error { font-size: 14px; margin-top: 6px; }
+  .write-board [aria-invalid="true"], .write-board fieldset[aria-invalid="true"] .type-chip span { border-color: var(--sd-conflict-text); }
+  .write-editor:has([aria-invalid="true"]) { border-color: var(--sd-conflict-text); }
+  .write-board [id], .write-summary { scroll-margin-top: 100px; }
+  @media (max-width: 600px) { .inquiry { padding-left: 20px; padding-right: 20px; } .write-board { padding: 20px 16px; } .write-body { padding: 16px; } .write-actions { padding-right: 64px; } .write-actions p { display: none; } }
+</style>
+</head>
+<!-- 제안용 목업: C안 쓰기 판의 유형 칩, 큰 제목, 도구 줄과 본문, 하단 버튼 순서를 사용해요. -->
+<body data-layout="user">
+<div class="page-top">
+  <div class="container inquiry page-top__inner"><div>
+    <ol class="page-top__crumb"><li><a href="inquiry-codex.html">1:1 문의</a></li><li>문의 쓰기</li></ol>
+    <h1 id="write-heading">문의 쓰기</h1><p class="page-top__desc">궁금한 점을 남겨 주세요. 운영자가 확인하고 답변해요.</p>
+  </div></div>
+</div>
+<main class="container inquiry main">
+  <div class="write-preview" role="group" aria-label="쓰기 화면 목업 보기">
+    <span>목업 보기</span><button class="btn" type="button" data-sample="normal" aria-pressed="true">기본</button><button class="btn" type="button" data-sample="bad" aria-pressed="false">입력 오류</button>
+  </div>
+  <section class="write-summary" id="error-summary" tabindex="-1" role="alert" hidden>
+    <h2>입력한 내용을 다시 확인해 주세요</h2>
+    <ul id="error-links"></ul>
+  </section>
+  <form id="inquiry-form" novalidate>
+    <div class="write-board">
+      <fieldset id="type-field" aria-describedby="type-error">
+        <legend>문의 유형 <span class="muted">(필수)</span></legend>
+        <div class="type-chips">
+          <label class="type-chip"><input type="radio" name="type" value="결제·환불" required><span>결제·환불</span></label>
+          <label class="type-chip"><input type="radio" name="type" value="견적·컨펌"><span>견적·컨펌</span></label>
+          <label class="type-chip"><input type="radio" name="type" value="업체 이용"><span>업체 이용</span></label>
+          <label class="type-chip"><input type="radio" name="type" value="계정"><span>계정</span></label>
+          <label class="type-chip"><input type="radio" name="type" value="기타"><span>기타</span></label>
+        </div>
+        <p class="field__error" id="type-error" hidden>! 문의 유형을 골라 주세요.</p>
+      </fieldset>
+      <div class="field write-performance">
+        <label class="field__label" for="performance">관련 공연 <span class="opt">선택</span></label>
+        <select class="select" id="performance" name="performance"><option value="없음">없음</option><option>가을밤 밴드 공연 · 11월 22일</option></select>
+      </div>
+      <div class="field write-title">
+        <label class="field__label" for="inquiry-title">제목 <span class="muted">(필수)</span></label>
+        <input class="input" id="inquiry-title" name="title" placeholder="어떤 점이 궁금하세요?" maxlength="100" required aria-describedby="title-error">
+        <p class="field__error" id="title-error" hidden>! 제목을 적어 주세요.</p>
+      </div>
+      <div class="field">
+        <label class="field__label" for="inquiry-body">문의 내용 <span class="muted">(필수)</span></label>
+        <div class="write-editor">
+          <div class="write-toolbar" role="group" aria-label="본문 도구">
+            <span>글쓰기 도구</span><button class="btn" type="button" data-insert="paragraph">문단 나누기</button><button class="btn" type="button" data-insert="list"><span data-icon="list"></span>목록</button>
+          </div>
+          <textarea class="write-body" id="inquiry-body" name="body" maxlength="3000" required placeholder="이용 중인 화면과 궁금한 내용을 자세히 적어 주세요." aria-describedby="privacy-guide body-error body-count"></textarea>
+          <p class="write-count" id="body-count">0 / 3,000자</p>
+        </div>
+        <p class="field__error" id="body-error" hidden></p>
+      </div>
+      <section class="write-attachments" aria-labelledby="attachment-heading">
+        <h2 id="attachment-heading">첨부 <span class="muted">(선택)</span></h2>
+        <div class="btns"><button class="btn" type="button" id="add-photo"><span data-icon="image"></span>사진 첨부</button><button class="btn" type="button" id="add-file"><span data-icon="clip"></span>파일 첨부</button></div>
+        <input id="photo-input" type="file" accept="image/*" multiple hidden><input id="file-input" type="file" multiple hidden>
+        <p class="field__hint mt-8">첨부한 이름만 이 목업에서 확인해요. 파일은 전송되지 않아요.</p>
+        <ul id="attachment-list" aria-live="polite"></ul>
+      </section>
+    </div>
+    <div class="notice write-guide" id="privacy-guide"><span data-icon="shield"></span><p>연락처·계좌번호는 적지 말아 주세요. 답변은 이 화면과 알림으로 드려요.</p></div>
+    <div class="write-actions"><p>작성한 사용자와 운영자만 볼 수 있어요.</p><div class="btns"><a class="btn" href="inquiry-codex.html">취소</a><button class="btn btn--primary" type="submit">문의 보내기</button></div></div>
+  </form>
+</main>
+<script src="../layout.js"></script>
+<script>
+  (function () {
+    var form = document.getElementById('inquiry-form');
+    var title = document.getElementById('inquiry-title'), body = document.getElementById('inquiry-body');
+    var summary = document.getElementById('error-summary'), errors = document.getElementById('error-links');
+    var files = [], checking = false;
+    var phone = /01[016789][ -]?\d{3,4}[ -]?\d{4}/g;
+    function count() { document.getElementById('body-count').textContent = body.value.length.toLocaleString('ko-KR') + ' / 3,000자'; }
+    function validate(masked) {
+      errors.replaceChildren();
+      var selected = form.querySelector('input[name="type"]:checked');
+      var bodyMessage = masked ? '! 본문에 연락처가 있어 [연락처 가림]으로 바꿨어요. 내용을 확인해 주세요.' : (!body.value.trim() ? '! 문의 내용을 적어 주세요.' : '');
+      var fields = [
+        ['type-field', 'type-error', !selected, '문의 유형을 골라 주세요.'],
+        ['inquiry-title', 'title-error', !title.value.trim(), '제목을 적어 주세요.'],
+        ['inquiry-body', 'body-error', !!bodyMessage, bodyMessage.replace(/^! /, '')]
+      ];
+      document.getElementById('body-error').textContent = bodyMessage;
+      fields.forEach(function (entry) {
+        document.getElementById(entry[0]).setAttribute('aria-invalid', String(entry[2]));
+        document.getElementById(entry[1]).hidden = !entry[2];
+        if (entry[2]) {
+          var li = document.createElement('li'), link = document.createElement('a');
+          link.href = '#' + entry[0]; link.textContent = entry[3];
+          link.addEventListener('click', function () { document.getElementById(entry[0]).querySelector('input')?.focus(); });
+          li.append(link); errors.append(li);
+        }
+      });
+      summary.hidden = !errors.children.length;
+      return summary.hidden;
+    }
+    function sample(bad) {
+      form.reset(); files = []; renderFiles(); checking = bad;
+      body.value = bad ? '결제 내역을 확인하고 싶어요. 연락처는 [연락처 가림]이에요.' : '';
+      document.querySelectorAll('[data-sample]').forEach(function (button) { button.setAttribute('aria-pressed', String((button.dataset.sample === 'bad') === bad)); });
+      if (bad) validate(true);
+      else { summary.hidden = true; form.querySelectorAll('.field__error').forEach(function (el) { el.hidden = true; }); form.querySelectorAll('[aria-invalid]').forEach(function (el) { el.removeAttribute('aria-invalid'); }); }
+      count();
+    }
+    document.querySelectorAll('[data-sample]').forEach(function (button) { button.addEventListener('click', function () { sample(button.dataset.sample === 'bad'); }); });
+    body.addEventListener('input', count);
+    form.addEventListener('input', function () { if (checking) validate(false); });
+    document.querySelectorAll('[data-insert]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var insertion = button.dataset.insert === 'list' ? '\n• ' : '\n\n';
+        if (body.value.length - (body.selectionEnd - body.selectionStart) + insertion.length > 3000) return;
+        body.setRangeText(insertion, body.selectionStart, body.selectionEnd, 'end'); body.focus(); count();
+      });
+    });
+    function renderFiles() {
+      var list = document.getElementById('attachment-list'); list.replaceChildren();
+      files.forEach(function (name, index) {
+        var li = document.createElement('li'), label = document.createElement('span'), remove = document.createElement('button');
+        label.textContent = name; remove.type = 'button'; remove.className = 'btn'; remove.textContent = '삭제'; remove.setAttribute('aria-label', name + ' 삭제');
+        remove.addEventListener('click', function () { files.splice(index, 1); renderFiles(); });
+        li.append(label, remove); list.append(li);
+      });
+    }
+    ['photo', 'file'].forEach(function (kind) {
+      var input = document.getElementById(kind + '-input');
+      document.getElementById('add-' + kind).addEventListener('click', function () { input.click(); });
+      input.addEventListener('change', function () { files = files.concat(Array.from(input.files, function (file) { return file.name; })); input.value = ''; renderFiles(); });
+    });
+    form.addEventListener('submit', function (event) {
+      event.preventDefault(); checking = true;
+      var original = body.value; body.value = original.replace(phone, '[연락처 가림]'); count();
+      if (!validate(original !== body.value)) { summary.focus(); return; }
+      var draft = { title: title.value.trim(), body: body.value.trim(), type: form.querySelector('input[name="type"]:checked').value, performance: document.getElementById('performance').value, files: files };
+      try { sessionStorage.setItem('inquiry-codex-draft', JSON.stringify(draft)); location.href = 'inquiry-codex-post.html?state=wait&preview=1'; }
+      catch (error) { summary.hidden = false; errors.replaceChildren(); var li = document.createElement('li'); li.textContent = '이 브라우저에서는 목업 내용을 잠시 저장할 수 없어요. 입력 내용은 그대로 있으니 다시 시도해 주세요.'; errors.append(li); summary.focus(); }
+    });
+    var query = new URLSearchParams(location.search);
+    sample(query.get('err') === 'bad');
+    if (query.get('edit') === '1' || query.get('followup') === '1') {
+      try {
+        var previous = JSON.parse(sessionStorage.getItem('inquiry-codex-current') || 'null');
+        if (previous) {
+          form.querySelectorAll('input[name="type"]').forEach(function (radio) { radio.checked = radio.value === previous.type; });
+          document.getElementById('performance').value = previous.performance;
+          title.value = query.has('edit') ? previous.title : '추가 문의: ' + previous.title;
+          body.value = query.has('edit') ? previous.body : '';
+          files = query.has('edit') ? (previous.files || []) : []; renderFiles(); count();
+          document.getElementById('write-heading').textContent = query.has('edit') ? '문의 수정' : '추가 문의';
+        }
+      } catch (error) { /* 저장된 목업이 없어도 새 문의를 쓸 수 있어요. */ }
+    }
+    document.querySelectorAll('.footer__links a').forEach(function (link) { if (link.textContent.trim() === '1:1 문의') link.href = 'inquiry-codex.html'; });
+  })();
+</script>
+</body>
+</html>

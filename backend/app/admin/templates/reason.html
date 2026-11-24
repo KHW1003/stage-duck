@@ -1,0 +1,21 @@
+{% extends "sqladmin/layout.html" %}
+{% block content %}
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">{{ title }}</h3>
+    </div>
+    <div class="card-body">
+      <p>대상: {{ pks | join(", ") }} ({{ pks | length }}건)</p>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label" for="reason">사유 (필수 — 상대방 화면과 이력에 남아요)</label>
+          <textarea class="form-control" id="reason" name="reason" rows="3" maxlength="500" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">처리</button>
+        <a href="javascript:history.back()" class="btn btn-secondary">취소</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
