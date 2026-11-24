@@ -23,6 +23,23 @@ table { border-collapse: collapse; width: 100%; }
 :focus-visible { outline: 2px solid var(--sd-ink); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
+/* 누르는 것과 읽는 것을 정확히 나눈다 (11/24 해원)
+   - 누를 수 있는 것: 손가락 커서. 못 누르는 상태(disabled·aria-disabled): 금지 커서
+   - 버튼·탭·메뉴·칩·체크 글자는 끌어서 선택되지 않게 (빠르게 두 번 눌러도 파랗게 칠해지지 않게)
+   - 본문·말풍선·금액·표 글자와 입력칸은 그대로 선택·복사 가능 */
+a[href], button:not(:disabled), summary, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="switch"],
+select:not(:disabled), input:is([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"]):not(:disabled),
+label:has(input:is([type="checkbox"], [type="radio"], [type="file"]):not(:disabled)) { cursor: pointer; }
+button:disabled, select:disabled, input:disabled, textarea:disabled, [aria-disabled="true"],
+label:has(input:is([type="checkbox"], [type="radio"]):disabled) { cursor: not-allowed; }
+button, summary, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="switch"],
+label:has(input:is([type="checkbox"], [type="radio"], [type="file"])), nav a { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+/* 아이콘·장식 그림은 끌리지 않게 (누르면 감싼 링크·버튼이 받는다) */
+svg.icon { pointer-events: none; }
+/* #구역으로 이동할 때 머리줄(sticky) 바로 아래에 맞춘다 (메인 home.module.css 와 같은 값) */
+html { scroll-padding-top: var(--sd-gnb-height, 72px); }
+
 /* 스크롤 막대: 얇게, 막대(thumb)만 — 화살표·바탕 길 없음 (11/19 피드백, 채팅 창·목록·표 모두 같게).
    크롬·사파리·엣지는 ::-webkit-scrollbar, 그것을 모르는 브라우저(파이어폭스)만 scrollbar-width.
    (크롬은 scrollbar-width 를 쓰면 ::-webkit-scrollbar 를 무시하므로 둘을 나눈다) */

@@ -1,6 +1,7 @@
 import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorToast, showErrorToast } from "./shared/ui/ErrorToast";
+import { ScrollOnNavigate } from "./shared/layout/ScrollOnNavigate";
 import { CommunityPage } from "./pages/CommunityPage";
 import { CommunityPostPage } from "./pages/CommunityPostPage";
 import { CommunitySavedPage } from "./pages/CommunitySavedPage";
@@ -144,6 +145,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollOnNavigate />
         <AppRoutes />
         <ErrorToast />
       </BrowserRouter>
