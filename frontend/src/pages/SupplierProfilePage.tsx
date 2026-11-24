@@ -30,7 +30,7 @@ const photoStyle = (url: string | null) => (url ? ({ "--img": `url('${url}')` } 
 function InfoTable({ s }: { s: SupplierProfile }) {
   return (
     <div className="table-box">
-      <table className="info-table">
+      <table className="info-table info-table--pairs">
         <tbody>
           <tr>
             <th scope="row">승인 부문</th>
