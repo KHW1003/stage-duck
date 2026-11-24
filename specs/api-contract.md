@@ -44,6 +44,7 @@
 | 400 | `UNDER_AGE` · `TERMS_REQUIRED` · `INVALID_BUSINESS_NO` | 가입·입점 규칙 |
 | 401 | `UNAUTHENTICATED` · `LOGIN_LOCKED` | 로그인 필요 / 5회 실패 잠금 |
 | 403 | `SUPPLIER_NOT_APPROVED` · `ACCOUNT_SUSPENDED` · `POSTING_RATE_LIMITED` · `CHAT_NOT_STARTED` · `CATEGORY_NOT_APPROVED` | 내 리소스지만 지금 할 수 없음 |
+| 403 | `CSRF_FAILED` | 상태를 바꾸는 요청에 `X-CSRF-Token` 헤더가 없거나 쿠키 `csrf_token` 과 다름 ("요청을 확인하지 못했어요. 새로고침한 뒤 다시 시도해 주세요.", `auth/csrf.py`) |
 | 404 | `NOT_FOUND` | 없음 또는 권한 없음 |
 | 409 | `INVALID_STATE` · `STAGE_NOT_OPEN` · `STAGE_ALREADY_CONFIRMED` · `VERSION_CONFLICT` · `CHECK_CONFLICT` · `OFFER_LIMIT` · `ACTIVE_POST_EXISTS` · `ORDER_EXISTS` | 상태 흐름 위반 |
 | 422 | `CONFIRM_REQUEST_STALE` · `DETAIL_NOT_VIEWED` · `CONFIRM_REQUEST_EXPIRED` | 다른 버전·미열람·만료 카드로 컨펌 |

@@ -78,7 +78,7 @@
 | `PAYMENT_REMINDER` | 사용자 | 결제 | 결제 마감까지 {남은 시간} 남았어요 | {공연명} · {마감 일시}까지 (업체 선택이 남았으면 "남은 업체 선택과 결제") | 남은 단계 있으면 `/performances/{id}`, 없으면 `/performances/{id}/order` | 4 (스케줄러, 일반 24h·3h 전 / 임박 12h·3h 전, payload `round` 1·2로 회차당 1번) | F5-22 |
 | `HOLD_EXPIRED` | 사용자, 컨펌된 업체 모두 | 결제 | 결제 기한이 지나 컨펌한 일정이 풀렸어요 | {공연명} · 다시 진행하려면 업체 일정을 확인해 주세요 | 사용자 `/performances/{id}`, 업체 `/supplier/postings/{id}` | 4 (스케줄러, 마감 시각, 해제 완료 뒤) | F5-22 |
 | `CANCELLED_BY_SUPPLIER` | 사용자 (+ 공연이 취소되면 남은 확정 업체) | 결제 | {업체} 사정으로 {단계} 단계가 취소되었습니다 | 본문은 `{refund}` 하나로 cancel.py 가 상황별로 넣는다 (#252). 결제 전: "결제 전이라 환불할 금액은 없습니다 · 결제 마감이 48시간 늘었습니다 · 해당 단계만 다시 모집하실 수 있습니다" / 결제 후 다시 모집: "전액 환불 예정 · …해당 단계만 다시 모집하실 수 있습니다" / 결제 후 다시 모집할 시간이 없음: 사용자 "전액 환불 예정 · 공연까지 남은 날이 적어 다시 모집할 수 없으므로 공연이 취소되었습니다", 남은 업체 "{공연명} · 공연이 취소되었습니다" (D-57, #239·#252) | 사용자 `/performances/{id}`, 남은 업체 `/supplier/reservations` | 4 | F5-10 |
-| `SETTLEMENT_SCHEDULED` | 컨펌된 업체 | 결제 | 공연이 끝나 정산 예정이에요 | {공연명} · {금액}원 | `/supplier/postings/{id}` | 4 (스케줄러) | F5-07 |
+| `SETTLEMENT_SCHEDULED` | 확정 업체 (업체마다 한 번, 여러 단계를 맡았으면 금액 합침) | 결제 | 공연이 종료되어 정산 예정입니다 | {공연명} · {금액}원 | `/supplier/reservations` | 4 (스케줄러, 공연이 끝나 청구서가 정산 예정으로 바뀔 때, #261) | F5-07 |
 
 ### 3.5 운영
 
@@ -171,7 +171,7 @@ WebSocket `notification` 이벤트 payload를 `{ id, type, category, title, body
 | 3 | `QUOTE_RECEIVED` · `QUOTE_UPDATED`(채팅 시작한 사이만) · `CHAT_STARTED` · `CONFIRM_REQUESTED` · `CONFIRMED` · `NOT_SELECTED` · `CONFIRM_EXPIRED` | quote/service, chat/service start_chat, confirm/service (#43) |
 | 4 | `PAID` · `CANCELLED_BY_USER` · `CANCELLED_BY_SUPPLIER` · `WARNING_ISSUED` · `ACCOUNT_SUSPENDED` · `PAYMENT_DEADLINE_SET` · `PAYMENT_READY` · `PAYMENT_REMINDER` · `HOLD_EXPIRED` | payment/service·cancel·deadline (1분 스케줄러 `core/scheduler.py`), confirm/service, policy/service _warn |
 
-- 아직 없는 기능에 딸린 알림은 그 기능을 만들 때 붙인다: 최종 견적 기한 6시간 전(`CONFIRM_EXPIRING`, 스케줄러), 정산(`SETTLEMENT_SCHEDULED`), 공고 수정·내리기(`POSTING_UPDATED`·`POSTING_CLOSED`), 정지 해제(`ACCOUNT_UNSUSPENDED`).
+- 아직 없는 기능에 딸린 알림은 그 기능을 만들 때 붙인다: 최종 견적 기한 6시간 전(`CONFIRM_EXPIRING`, 스케줄러), 공고 수정·내리기(`POSTING_UPDATED`·`POSTING_CLOSED`), 정지 해제(`ACCOUNT_UNSUSPENDED`).
 - `INVOICE_READY`는 보내지 않는다. 청구서는 사용자가 직접 [청구서 보기]를 눌러 만들므로 1장 규칙 2(내가 한 일)에 걸린다.
 - 화면 문구는 "견적 요청" (11/19 팀 결정). 탭 이름도 "견적 요청".
 - `QUOTE_RECEIVED` 이동 주소는 실제 라우트 `/performances/{id}/compare`.
