@@ -65,11 +65,18 @@
 
 /* 다가오는 공연: 작은 달력 + 목록 */
 .cal { padding: 14px 0 6px; }
-.calHead { margin: 0 0 8px; font-size: var(--sd-text-desc); font-weight: 700; }
+.calHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.calHead p { display: inline-flex; align-items: baseline; gap: 8px; margin: 0; font-size: var(--sd-text-desc); font-weight: 700; font-variant-numeric: tabular-nums; }
+.calCount { color: var(--sd-blue); font-size: var(--sd-text-small); font-weight: 700; }
+.calNav { display: flex; align-items: center; gap: 2px; }
+.calBtn { display: grid; place-items: center; width: var(--sd-touch); height: var(--sd-touch); border: 0; border-radius: var(--sd-r-btn); background: transparent; color: var(--sd-ink); cursor: pointer; }
+.calBtn:hover { background: var(--sd-band); }
+.calToday { min-height: var(--sd-touch); padding: 0 8px; border: 0; background: transparent; color: var(--sd-muted); font-size: var(--sd-text-small); cursor: pointer; }
+.calToday:hover { color: var(--sd-ink); text-decoration: underline; text-underline-offset: 3px; }
 .calGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; text-align: center; }
 .calDow { padding-bottom: 4px; color: var(--sd-muted); font-size: var(--sd-text-meta); }
 .calDay { position: relative; display: grid; place-items: center; height: 32px; border-radius: var(--sd-r-tag); font-size: var(--sd-text-small); font-variant-numeric: tabular-nums; }
-.calToday { outline: 1px solid var(--sd-ink); outline-offset: -1px; font-weight: 700; }
+.calIsToday { outline: 1px solid var(--sd-ink); outline-offset: -1px; font-weight: 700; }
 .calHas { font-weight: 700; }
 .calHas::after { content: ""; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--sd-blue); }
 .schedule { margin: 0; padding: 0; list-style: none; }

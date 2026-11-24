@@ -6,7 +6,7 @@
  * 화면은 판정·금액 계산을 하지 않는다 (CLAUDE.md 12). 개수 세기·날짜 정렬만 한다.
  * 모양: 카드·그림자·파스텔 없이 얇은 선과 여백으로 묶고, 상태는 아이콘 + 글자 + 색 (DESIGN.md 8장). 불러오는 중에는 회색 자리.
  */
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useMyPrPosts } from "../board/api";
 import { useChatRooms } from "../chat/api";
@@ -167,16 +167,37 @@ function buildTodos(
   return list;
 }
 
-function Calendar({ today, marked }: { today: Date; marked: Set<string> }) {
-  const y = today.getFullYear();
-  const m = today.getMonth();
+/** 공연 달력: < > 로 다른 달을 본다 (11/24 해원). 공연이 있는 날에 점, 오늘은 테두리. 그 달 공연 수를 제목 옆에 */
+function Calendar({ today, marked }: { today: Date; marked: Map<string, number> }) {
+  const [offset, setOffset] = useState(0);
+  const view = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const y = view.getFullYear();
+  const m = view.getMonth();
   const cells = monthCells(y, m);
+  const prefix = `${y}-${String(m + 1).padStart(2, "0")}-`;
+  const monthCount = [...marked.entries()].filter(([d]) => d.startsWith(prefix)).reduce((n, [, c]) => n + c, 0);
+  const isThisMonth = offset === 0;
   return (
     <div className={s.cal}>
-      <p className={s.calHead}>
-        {y}년 {m + 1}월
-      </p>
-      <div className={s.calGrid} role="grid" aria-label={`${m + 1}월 공연 일정`}>
+      <div className={s.calHead}>
+        <p aria-live="polite">
+          {y}년 {m + 1}월{monthCount > 0 && <span className={s.calCount}>공연 {monthCount}건</span>}
+        </p>
+        <div className={s.calNav}>
+          {!isThisMonth && (
+            <button type="button" className={s.calToday} onClick={() => setOffset(0)}>
+              이번 달
+            </button>
+          )}
+          <button type="button" className={s.calBtn} aria-label="이전 달" onClick={() => setOffset((o) => o - 1)}>
+            <Ico name="left" sm />
+          </button>
+          <button type="button" className={s.calBtn} aria-label="다음 달" onClick={() => setOffset((o) => o + 1)}>
+            <Ico name="right" sm />
+          </button>
+        </div>
+      </div>
+      <div className={s.calGrid} role="grid" aria-label={`${y}년 ${m + 1}월 공연 일정`}>
         {WEEKDAY.map((w) => (
           <span key={w} className={s.calDow} aria-hidden="true">
             {w}
@@ -185,13 +206,13 @@ function Calendar({ today, marked }: { today: Date; marked: Set<string> }) {
         {cells.map((d, i) => {
           if (d === null) return <span key={`e${i}`} />;
           const iso = ymd(new Date(y, m, d));
-          const isToday = d === today.getDate();
-          const has = marked.has(iso);
+          const isToday = iso === ymd(today);
+          const count = marked.get(iso) ?? 0;
           return (
             <span
               key={iso}
-              className={[s.calDay, isToday && s.calToday, has && s.calHas].filter(Boolean).join(" ")}
-              aria-label={`${m + 1}월 ${d}일${has ? ", 공연 있음" : ""}${isToday ? ", 오늘" : ""}`}
+              className={[s.calDay, isToday && s.calIsToday, count > 0 && s.calHas].filter(Boolean).join(" ")}
+              aria-label={`${m + 1}월 ${d}일${count > 0 ? `, 공연 ${count}건` : ""}${isToday ? ", 오늘" : ""}`}
             >
               {d}
             </span>
@@ -232,7 +253,12 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
 
   const loading = offers.isLoading || reservations.isLoading || rooms.isLoading || myPosts.isLoading;
   const todos = loading ? [] : buildTodos(pending, resList, roomList, bumpable, myPosts.isSuccess && posts.length === 0, today);
-  const marked = new Set(upcoming.map((r) => r.showDate.slice(0, 10)));
+  // 달력 점: 취소되지 않은 예약 모두 (지난 달·다음 달도 넘겨 보므로 지난 공연도 넣는다)
+  const marked = new Map<string, number>();
+  for (const r of resList.filter((x) => x.status !== "CANCELLED")) {
+    const d = r.showDate.slice(0, 10);
+    marked.set(d, (marked.get(d) ?? 0) + 1);
+  }
 
   const kpis: { label: string; value: number | null; sub: string; tone?: Tone; to: string }[] = [
     { label: "답할 견적 요청", value: offers.isLoading ? null : pending.length, sub: soonCount ? `24시간 안 마감 ${soonCount}건` : "마감 임박 없음", tone: soonCount ? "warn" : undefined, to: "/supplier/offers" },

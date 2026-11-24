@@ -243,6 +243,29 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByText("1회 · 3회면 이용 정지")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /견적 요청이 왔어요/ })).toHaveAttribute("href", "/supplier/offers");
   });
+
+  it("공연 달력은 < > 로 다른 달을 넘겨 보고, 공연 있는 날에 공연 수를 알린다", async () => {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+    const iso = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-15`;
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/supplier/reservations": {
+        status: 200,
+        body: [{ performanceId: 9, title: "다음 달 공연", showDate: iso, showStart: "19:00:00", showEnd: "21:00:00", sido: "광주광역시", sigungu: "남구", status: "PAID", stageTypes: ["EQUIPMENT"], amount: 700000 }],
+      },
+    });
+    renderAt("/partner");
+    expect(await screen.findByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "다음 달" }));
+    const grid = screen.getByRole("grid", { name: `${next.getFullYear()}년 ${next.getMonth() + 1}월 공연 일정` });
+    expect(within(grid).getByLabelText(`${next.getMonth() + 1}월 15일, 공연 1건`)).toBeInTheDocument();
+    expect(screen.getByText("공연 1건")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "이번 달" }));
+    expect(screen.getByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "이전 달" }));
+    expect(screen.queryByRole("grid", { name: `${now.getFullYear()}년 ${now.getMonth() + 1}월 공연 일정` })).not.toBeInTheDocument();
+  });
 });
 
 describe("메인 계산", () => {
