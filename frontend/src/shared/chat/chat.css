@@ -193,3 +193,6 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .room__msgs.is-editing > * { opacity: .25; transition: opacity .15s; }
 .chat-panel .room__msgs.is-editing > .msg--editing { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .chat-panel .room__msgs.is-editing > * { transition: none; } }
+/* 말풍선 + 읽음·시간 한 줄 (11/25): 답장 인용이 넓어도 시간은 말풍선에 붙는다 */
+.chat-panel .msg__line { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; min-width: 0; }
+.chat-panel .msg--me .msg__line { flex-direction: row-reverse; }
