@@ -59,7 +59,7 @@ function Sent({ p, body, result, again }: { p: PostingDetail; body: QuoteIn; res
     <div className={`sd-container ${styles.wrap}`}>
       <DoneView
         title="견적서를 보냈어요"
-        desc="사용자 견적함에 도착했어요. 사용자가 채팅을 시작하면 이야기를 나눌 수 있어요."
+        desc="사용자의 내 공연에 도착했어요. 사용자가 채팅을 시작하면 이야기를 나눌 수 있어요."
         rows={[
           ["공고", p.title],
           ["견적서 이름", body.label],

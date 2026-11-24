@@ -61,7 +61,7 @@ export const ACCOUNT_LINKS: Record<LayoutKind, AccountLink[]> = {
     { label: "관심 업체", to: "/favorites", icon: "heart" }, // 목업 favorites.html — 1번 offer (#32)
     { label: "1:1 문의", to: "/inquiries", icon: "chat" }, // FR-CS-01, plan.md 6장
     // 11/23 디자인 검수: 없는 주소(404)로 가던 두 항목을 뺐다. 견적서는 공연별 [단계별 비교], 담당표는 공연 상세의 [최종 담당표]로 들어간다.
-    // - 견적함(목업 inbox-list.html, 3번 묶음): 모든 공연의 견적서를 모아 보는 화면이 생기면 다시 넣는다
+    // - 견적함(목업 inbox-list.html): 만들지 않는다 (11/24 해원). 받은 견적서는 내 공연 상세의 단계 카드에서 < > 로 넘겨 본다
     // - 최종 담당표: plan.md 는 공연별 /performances/:id/sheet 뿐이라 계정 메뉴에 둘 주소가 없다
   ],
   partner: [

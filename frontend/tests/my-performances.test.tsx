@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { Me, MyPerformances, PerformanceDetail, PerformanceSummary } from "../src/shared/api/types";
@@ -167,6 +168,61 @@ describe("내 공연 상세 (/performances/:id)", () => {
     const info = screen.getByRole("table");
     expect(within(info).getByText("밴드 · 보컬 1")).toBeInTheDocument();
     expect(within(info).getByText(/공연장 \(복합문화공간\) · 장비 \(업체 제안 받기\) · 엔지니어 \(메인 음향\)/)).toBeInTheDocument();
+  });
+
+  it("11/24 진행 중 단계에 받은 견적서 카드를 2장씩 보이고, 더 있으면 < > 로 넘긴다 (견적함 대신)", async () => {
+    const user = userEvent.setup();
+    const q = (id: number, name: string, amount: number, extra: object = {}) => ({
+      quoteId: id, supplierId: id, companyName: name, roomId: 30 + id, chatStarted: false, label: "기본형", status: "SENT", version: 1,
+      basedOnPerfVersion: 1, totalAmount: amount, venueId: null, venueType: null, venueName: null, maxCapacity: null, checkinTime: null,
+      setupAvailableTime: null, checkoutTime: null, includesEquipment: false, includesEngineer: true, isFullSpec: false, offered: false,
+      overall: "PASS", checks: [{ id: "CHK-05", result: "PASS", message: "설치 15:45에 끝나요" }], ...extra,
+    });
+    mockServer({
+      ...ME,
+      "GET /api/v1/performances/5": { status: 200, body: detail({ nextAction: "NEGOTIATE", nextStageId: 2, stages: [
+        { id: 1, stageType: "VENUE", seq: 1, status: "CONFIRMED", quoteCount: 0 },
+        { id: 2, stageType: "EQUIPMENT", seq: 2, status: "NEGOTIATING", quoteCount: 3 },
+        { id: 3, stageType: "ENGINEER", seq: 3, status: "WAITING", quoteCount: null },
+      ] }) },
+      "GET /api/v1/stages/1/quotes": { status: 200, body: [] },
+      "GET /api/v1/stages/2/quotes": { status: 200, body: [
+        q(1, "업체 D", 1350000, { chatStarted: true, version: 2 }),
+        q(2, "업체 E", 980000, { includesEngineer: false, overall: "NEEDS_INFO", checks: [{ id: "CHK-11", result: "NEEDS_INFO", message: "무선 마이크 수량을 물어보세요" }] }),
+        q(3, "업체 F", 1100000),
+      ] },
+    });
+    // 카드 줄이 화면보다 넓다고 흉내 (jsdom 은 배치를 계산하지 않는다)
+    const sizes = [
+      Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth"),
+      Object.getOwnPropertyDescriptor(Element.prototype, "scrollWidth"),
+    ];
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, get: () => 600 });
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get: () => 900 });
+    const scrollBy = vi.fn();
+    Element.prototype.scrollBy = scrollBy;
+    try {
+      renderAt("/performances/5");
+      const list = await screen.findByRole("list", { name: "장비 받은 견적서" });
+      expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+      const d = within(list).getByRole("article", { name: "업체 D 견적서" });
+      expect(within(d).getByText("채팅 중")).toBeInTheDocument();
+      expect(within(d).getByRole("link", { name: "채팅 열기" })).toHaveAttribute("href", "/performances/5?chat=31");
+      expect(within(d).getByText("+370,000원")).toBeInTheDocument();
+      const e = within(list).getByRole("article", { name: "업체 E 견적서" });
+      expect(within(e).getByText("채팅 전")).toBeInTheDocument();
+      expect(within(e).getByText("엔지니어 없음")).toBeInTheDocument();
+      expect(within(e).getByText("받은 견적서 중 가장 낮아요")).toBeInTheDocument();
+      expect(within(e).getByText("무선 마이크 수량을 물어보세요")).toBeInTheDocument();
+      expect(within(e).getByRole("link", { name: "견적서" })).toHaveAttribute("href", "/quotes/2");
+
+      expect(screen.getByRole("button", { name: "이전 견적서" })).toBeDisabled();
+      await user.click(screen.getByRole("button", { name: "다음 견적서" }));
+      expect(scrollBy).toHaveBeenCalledWith({ left: 600, behavior: "smooth" });
+    } finally {
+      if (sizes[0]) Object.defineProperty(HTMLElement.prototype, "clientWidth", sizes[0]);
+      if (sizes[1]) Object.defineProperty(Element.prototype, "scrollWidth", sizes[1]);
+    }
   });
 
   it("AC-F3-02 [장비 업체 모집 시작]은 Idempotency-Key 와 함께 다음 단계를 연다", async () => {

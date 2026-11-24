@@ -5,7 +5,8 @@
  *   (처음: 진행 중 단계만 열림, 확정·대기는 닫힘. 여러 개를 동시에 열 수 있다)
  * - 확정 단계: 확정한 견적서(공간·금액·버전), 진행 중: 할 일 + 받은 견적서 수 + [단계별 비교], 다음 단계로(OPEN_NEXT)면 패널
  * - 요청서 요약 표
- * 업체별 비교표(목업 .cmp)는 단계별 비교 화면(#48 /performances/:id/compare)에 있다 — 여기서는 [단계별 비교]로 보낸다.
+ * 진행 중 단계에는 받은 견적서 카드(목업 .cmp, QuoteCards)를 2장씩, 더 있으면 < > 로 넘겨 본다 (11/24: 견적함 화면 대신 여기서).
+ * 항목별로 나란히 보는 표는 단계별 비교 화면(#48 /performances/:id/compare).
  */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -18,6 +19,7 @@ import { usePerformance, useWithdraw } from "../features/performance/api";
 import { ConfirmModal } from "../features/performance/ConfirmModal";
 import { dateLabel, hm, nextActionText, STAGE_NAME, STAGE_STATUS } from "../features/performance/labels";
 import { NextStagePanel } from "../features/performance/NextStagePanel";
+import { QuoteCards } from "../features/performance/QuoteCards";
 import { FavoriteSuggest } from "../features/offer/FavoriteSuggest";
 import { PerformanceReviews } from "../features/review/PerformanceReviews";
 import { DDay, RqSteps, Thumb, splitFirst } from "../features/performance/v4";
@@ -140,6 +142,7 @@ function StepRow({ p, s, index, last }: { p: PerformanceDetail; s: StageSummary;
                     받은 견적서<b>{s.quoteCount ?? 0}건</b>
                   </span>
                 </p>
+                {(s.quoteCount ?? 0) > 0 && <QuoteCards stage={s} />}
                 <p className="muted mt-12" style={{ fontSize: 13 }}>
                   한 단계에서 여러 업체와 채팅할 수 있지만, 확정은 한 업체만 할 수 있어요.
                 </p>
