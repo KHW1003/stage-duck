@@ -307,3 +307,49 @@ def test_profile_photo_does_not_block_demo_reset(db):
 
     assert db.scalar(select(User).where(User.role == "USER")).profile_file_id is None
     assert len(db.scalars(select(Venue)).all()) == 3
+
+
+SUP_URL = "/api/v1/supplier/profile"
+
+
+def test_fr_profile_01_supplier_sets_replaces_and_removes_image(client, db):
+    """11/24: 승인 업체가 대표 이미지를 바꾸고 빼면, 공개 프로필에도 그대로 보인다. 예전 사진은 DELETED."""
+    s = make_supplier(db, review_status="APPROVED")
+    first = _file(db, s.user.id, "SUPPLIER_IMAGE")
+    login_as(client, s.user)
+
+    res = client.patch(SUP_URL, json={"imageFileId": first.id})
+    assert res.status_code == 200, res.text
+    assert res.json()["imageUrl"]
+    assert client.get(f"/api/v1/suppliers/{s.id}/profile").json()["imageUrl"] == res.json()["imageUrl"]
+
+    second = _file(db, s.user.id, "SUPPLIER_IMAGE")
+    assert client.patch(SUP_URL, json={"imageFileId": second.id}).status_code == 200
+    db.expire_all()
+    assert (db.get(StoredFile, first.id).status, db.get(StoredFile, second.id).status) == ("DELETED", "ATTACHED")
+
+    res = client.patch(SUP_URL, json={"imageFileId": None})
+    assert res.status_code == 200 and res.json()["imageUrl"] is None
+    db.expire_all()
+    assert db.get(StoredFile, second.id).status == "DELETED"
+
+
+def test_fr_profile_01_image_must_be_my_temp_supplier_image(client, db):
+    s = make_supplier(db, review_status="APPROVED")
+    others = _file(db, make_supplier(db, review_status="APPROVED").user.id, "SUPPLIER_IMAGE")
+    wrong_purpose = _file(db, s.user.id, "PROFILE")
+    login_as(client, s.user)
+    for file_id in (others.id, wrong_purpose.id, 999_999):
+        res = client.patch(SUP_URL, json={"imageFileId": file_id})
+        assert res.status_code == 400, file_id
+        assert res.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_fr_profile_01_only_approved_supplier_can_change_image(client, db):
+    pending = make_supplier(db, review_status="PENDING")
+    photo = _file(db, pending.user.id, "SUPPLIER_IMAGE")
+    login_as(client, pending.user)
+    assert client.patch(SUP_URL, json={"imageFileId": photo.id}).status_code == 404
+    user = make_user(db)
+    login_as(client, user)
+    assert client.patch(SUP_URL, json={"imageFileId": None}).status_code == 404

@@ -56,3 +56,11 @@ class MyProfileIn(BaseModel):
 
     nickname: str | None = Field(default=None, max_length=30)
     profile_file_id: int | None = None
+
+
+class SupplierProfileIn(BaseModel):
+    """PATCH /supplier/profile — 업체 대표 이미지 (FR-PROFILE-01, 11/24). imageFileId 에 null 을 보내면 사진을 뺀다."""
+
+    model_config = _IN
+
+    image_file_id: int | None = None

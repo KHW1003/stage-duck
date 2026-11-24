@@ -124,6 +124,31 @@ describe("업체 프로필 (/suppliers/:id)", () => {
     expect(calls.some(({ url }) => url === "/api/v1/suppliers/5/profile")).toBe(false);
   });
 
+  it("FR-PROFILE-01 내 업체 프로필에서 대표 사진을 고르면 SUPPLIER_IMAGE 로 올리고 바로 저장한다 (남의 프로필에는 버튼 없음)", async () => {
+    const user = userEvent.setup();
+    const withImage = { ...SUPPLIER, imageUrl: "/media/supplier_image/x_t.webp" };
+    const calls = mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER_D },
+      "GET /api/v1/supplier/profile": [{ status: 200, body: SUPPLIER }, { status: 200, body: withImage }],
+      "POST /api/v1/files": { status: 201, body: { id: 77, purpose: "SUPPLIER_IMAGE", url: "/media/x.webp", thumbUrl: "/media/x_t.webp" } },
+      "PATCH /api/v1/supplier/profile": { status: 200, body: withImage },
+    });
+    renderAt("/supplier/profile");
+    const input = await screen.findByLabelText("대표 사진 바꾸기");
+    await user.upload(input, new File(["x"], "logo.png", { type: "image/png" }));
+    await waitFor(() => expect(calls.some((c) => c.method === "PATCH" && c.url === "/api/v1/supplier/profile")).toBe(true));
+    expect(calls.find((c) => c.method === "POST" && c.url === "/api/v1/files")!.body).toMatchObject({ purpose: "SUPPLIER_IMAGE" });
+    expect(calls.find((c) => c.method === "PATCH")!.body).toEqual({ imageFileId: 77 });
+    expect(await screen.findByRole("button", { name: "사진 빼기" })).toBeInTheDocument();
+  });
+
+  it("FR-PROFILE-01 남의 업체 프로필에는 대표 사진 바꾸기가 없다", async () => {
+    mockServer({ "GET /api/v1/suppliers/5/profile": { status: 200, body: SUPPLIER } });
+    renderAt("/suppliers/5");
+    expect(await screen.findByRole("heading", { level: 1, name: "업체 D" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("대표 사진 바꾸기")).not.toBeInTheDocument();
+  });
+
   it("소개 글 상세의 업체 이름을 누르면 업체 프로필로 간다", async () => {
     const user = userEvent.setup();
     const post: PrPost = { ...SUPPLIER.posts[0], body: "소개", photos: [], createdAt: "2026-11-01T10:00:00" };

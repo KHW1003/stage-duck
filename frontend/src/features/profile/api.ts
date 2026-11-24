@@ -55,3 +55,21 @@ export function useUploadProfilePhoto() {
     },
   });
 }
+
+/** 업체 대표 이미지 (FR-PROFILE-01): 고르면 바로 올리고(SUPPLIER_IMAGE) 바로 저장. null 이면 사진 빼기 */
+export function useChangeSupplierImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File | null) => {
+      let imageFileId: number | null = null;
+      if (file) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("purpose", "SUPPLIER_IMAGE");
+        imageFileId = (await api<UploadedFile>("/files", { method: "POST", body: form })).id;
+      }
+      return api<SupplierProfile>("/supplier/profile", { method: "PATCH", body: JSON.stringify({ imageFileId }) });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile", "supplier"] }),
+  });
+}
