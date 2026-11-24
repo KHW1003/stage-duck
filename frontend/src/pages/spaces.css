@@ -3,6 +3,7 @@
 .cond > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); border-bottom: 1px solid var(--sd-line); }
 .cond__th { display: flex; align-items: center; padding: 0 18px; background: var(--sd-th); font-size: var(--sd-text-desc); font-weight: 700; }
 .cond__td { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; min-height: 52px; padding: 8px 18px; }
+.cond .filters { flex-wrap: wrap; }
 .cond__foot { display: flex; justify-content: center; gap: 8px; padding: 18px 0 0; }
 .list-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--sd-line); margin-bottom: 24px; }
 .cond__unit { width: 180px; }
@@ -21,7 +22,6 @@
   .cond__td > * { min-width: 0; max-width: 100%; }
   .cond__th { padding: 12px 16px 0; background: transparent; }
   .cond__td { min-height: 0; padding: 8px 16px 12px; }
-  .cond .filters { flex-wrap: wrap; }
   .list-top { flex-direction: column; align-items: flex-start; }
   .feature-row { --cols: 1 !important; }
 }

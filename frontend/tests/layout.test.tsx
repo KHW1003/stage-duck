@@ -267,6 +267,14 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
     ]);
   });
 
+  it("이용 정지 계정에는 채팅 창을 띄우지 않는다 (채팅 API·실시간 연결이 막혀 401·재연결만 되풀이하므로)", async () => {
+    const calls = mockServer({ "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED" } } });
+    renderAt("/me/performances");
+    expect(await screen.findByRole("heading", { name: "이용이 정지된 계정이에요" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /채팅 열기/ })).not.toBeInTheDocument();
+    expect(calls.some((c) => c.url.startsWith("/api/v1/chat-rooms"))).toBe(false);
+  });
+
   it("AC-F5-18 이용 정지 계정도 1:1 문의 화면에는 들어간다 (api-contract.md 6.1)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: { ...USER, status: "SUSPENDED" } } });
     renderAt("/inquiries/new");

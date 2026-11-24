@@ -34,6 +34,16 @@ for (const { path, h1 } of PAGES) {
   });
 }
 
+test("/venues 중간 폭(761·768·1024·1100px)에서 가로 넘침이 없다", async ({ page }) => {
+  for (const width of [761, 768, 1024, 1100]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/venues");
+    await expect(page.getByRole("group", { name: "지역" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expectNoHorizontalScroll(page);
+  }
+});
+
 test("서버가 head 를 채워 보낸다 — 공개 화면 제목·canonical, 시연 서버는 검색 제외(noindex)", async ({ request }) => {
   const res = await request.get("/community", { headers: { Accept: "text/html" } });
   expect(res.status()).toBe(200);
