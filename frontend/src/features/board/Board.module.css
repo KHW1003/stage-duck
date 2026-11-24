@@ -124,3 +124,12 @@
 .sideCol { align-self: stretch; }
 .sideCol > .side { position: sticky; z-index: 1; background: var(--sd-bg); }
 @media (max-width: 760px) { .sideCol > .side { position: static; } }
+
+/* ── 소개 글 상세 간격을 커뮤니티 글 상세와 같게 (11/23 해원: "자유게시판만큼") ──
+   머리 아래 24px · 메타 위 16px(사이 점) · 사진 위 32px · 본문 위아래 40px + 최소 높이 200px · 본문 16px/1.75 */
+.postHead { padding: 0 0 24px; }
+.meta { gap: 8px; margin-top: 16px; }
+.meta > span:first-child { color: var(--sd-ink); font-weight: 600; }
+.meta > span + span::before { content: "·"; margin-right: 8px; color: var(--sd-line-strong); }
+.gallery { margin-top: 32px; }
+.postBody { padding: 40px 0; min-height: 200px; font-size: var(--sd-text-lg); line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere; }
