@@ -17,8 +17,15 @@ export function collectErrors(page: Page): string[] {
 export async function expectNoHorizontalScroll(page: Page) {
   // 휴대폰 흉내에서는 innerWidth 도 내용만큼 늘어나 넘침을 놓친다 → 정해 둔 화면 폭과 비교
   const width = page.viewportSize()!.width;
-  const scroll = await page.evaluate(() => document.documentElement.scrollWidth);
-  expect(scroll, `가로 넘침: scrollWidth ${scroll} > 화면 폭 ${width}`).toBeLessThanOrEqual(width);
+  const { scroll, over } = await page.evaluate((w) => ({
+    scroll: document.documentElement.scrollWidth,
+    over: [...document.querySelectorAll("body *")]
+      .map((e) => ({ e, r: e.getBoundingClientRect() }))
+      .filter(({ r }) => r.width > 0 && r.right > w + 0.5)
+      .slice(0, 12)
+      .map(({ e, r }) => `${e.tagName}.${e.getAttribute("class") ?? ""} ${Math.round(r.left)}~${Math.round(r.right)}`),
+  }), width);
+  expect(scroll, `가로 넘침: scrollWidth ${scroll} > 화면 폭 ${width} · ${over.join(" | ")}`).toBeLessThanOrEqual(width);
 }
 
 export const E2E_USER = { email: "host@stageduck.test", password: "e2e-pass-1234" };
