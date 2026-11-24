@@ -583,7 +583,7 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
       )}
       <div className="chat-panel__body">
         <div
-          className="room__msgs"
+          className={editTarget ? "room__msgs is-editing" : "room__msgs"}
           ref={listRef}
           onClick={(e) => {
             // 휴대폰: 꾹 눌러 연 아이콘은 다른 곳을 누르면 닫는다
