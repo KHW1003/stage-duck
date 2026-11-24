@@ -301,7 +301,7 @@ function PostEditor({ post }: { post: MyPrPost }) {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    update.mutate(payload(d.draft), {
+    update.mutate({ ...payload(d.draft), category: post.category as PrCategory }, {
       onSuccess: (saved) => navigate(`/board/${saved.id}`, { state: { contactWarning: saved.contactWarning } }),
     });
   }

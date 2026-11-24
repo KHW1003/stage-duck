@@ -48,11 +48,11 @@ export function useMyPrPosts() {
   return useQuery({ queryKey: MY_PR_POSTS_KEY, queryFn: () => api<MyPrPostList>("/pr-posts/mine") });
 }
 
-/** AC-F4-03·10: 고치기 (말머리는 못 바꿈). 블라인드 중이면 서버가 409 */
+/** AC-F4-03·10: 고치기. 말머리는 못 바꾸지만 계약서대로 원래 말머리를 같이 보낸다 (서버가 바뀌었는지 검사). 블라인드 중이면 서버가 409 */
 export function useUpdatePrPost(id: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Omit<PrPostRequest, "category">) => api<PrPostSaved>(`/pr-posts/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    mutationFn: (body: PrPostRequest) => api<PrPostSaved>(`/pr-posts/${id}`, { method: "PUT", body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PR_POSTS_KEY }),
   });
 }

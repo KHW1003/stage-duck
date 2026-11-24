@@ -111,7 +111,7 @@ describe("내 소개 글 (/supplier/posts)", () => {
     expect(screen.getByRole("option", { name: "[엔지니어]" })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("AC-F4-03 고쳐서 저장하면 말머리 없이 PUT 하고, 올린 소개 글로 간다", async () => {
+  it("AC-F4-03 고쳐서 저장하면 원래 말머리를 그대로 담아 PUT 하고, 올린 소개 글로 간다", async () => {
     const user = userEvent.setup();
     const calls = asSupplier([MINE], {
       "PUT /api/v1/pr-posts/11": { status: 200, body: { ...MINE, title: "밴드 공연 음향 맡아요", contactWarning: false } },
@@ -125,6 +125,7 @@ describe("내 소개 글 (/supplier/posts)", () => {
 
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/board/11"));
     expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
+      category: "EQUIPMENT",
       title: "밴드 공연 음향 맡아요",
       body: "관객 50~150명 밴드 공연을 주로 해요.",
       sido: "광주광역시",
