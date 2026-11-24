@@ -8,7 +8,7 @@ from app.admin import setup_admin
 from app.auth.csrf import CSRFMiddleware
 from app.auth.router import me_router
 from app.auth.router import router as auth_router
-from app.core.config import get_settings
+from app.core.config import get_settings, check_secrets
 from app.core.errors import register_error_handlers
 from app.dev.router import router as dev_router
 from app.supplier.router import router as supplier_router
@@ -41,6 +41,7 @@ from app.core import scheduler  # noqa: E402
 
 
 def create_app() -> FastAPI:
+    check_secrets(get_settings())  # 서버(Docker)에서 약한 서명 키로 뜨지 않게 (config.py)
     app = FastAPI(title="STAGE DUCK API", version="0.1.0")
     register_error_handlers(app)
     app.add_middleware(CSRFMiddleware)  # #24: /api/v1 의 POST·PUT·PATCH·DELETE 는 X-CSRF-Token 필요 (해원 승인)

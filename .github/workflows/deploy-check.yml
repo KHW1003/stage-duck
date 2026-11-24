@@ -38,8 +38,10 @@ jobs:
       - name: api 이미지 안에 화면 빌드가 있는지
         run: docker run --rm --entrypoint sh stageduck-api:check -c 'test -f "$FRONTEND_DIST/index.html" && grep -q "app-head" "$FRONTEND_DIST/index.html"'
 
+      # 이미지는 서명 키가 약하면 시작하지 않는다 (REQUIRE_STRONG_SECRETS) — 아래 실행에 점검용 임시 키를 그 자리에서 만들어 넣는다
       - name: api 이미지로 화면 주소·robots.txt·API 응답 확인 (임시 SQLite, deploy/smoke_check.py)
         run: |
           docker run --rm -e DATABASE_URL=sqlite:////tmp/check.db -e PYTHONPATH=/app \
+            -e JWT_SECRET="$(openssl rand -hex 32)" -e ADMIN_SESSION_SECRET="$(openssl rand -hex 32)" \
             -v "$PWD/deploy/smoke_check.py:/tmp/smoke_check.py:ro" \
             --entrypoint python stageduck-api:check /tmp/smoke_check.py
