@@ -570,3 +570,11 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
   .gnb__menu--open .gnb__home { display: flex; }
   .gnb__inner { grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* 메뉴가 많은(업체 6개) 머리는 1280px 아래에서 간격을 줄여 로고·파트너 표시와 겹치지 않게 (11/24) */
+@media (max-width: 1279px) {
+  .gnb__menu:has(> :nth-child(7)) { gap: 24px; }
+}
+@media (max-width: 1279px) {
+  .logo .partner-chip { display: none; } /* 파란 파트너 로고로 업체 화면인 걸 알 수 있다. 메뉴와 겹치지 않게 좁은 화면에서는 뺀다 */
+}

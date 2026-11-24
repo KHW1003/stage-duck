@@ -166,15 +166,51 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByText("11월 12일 14:20")).toBeInTheDocument();
   });
 
-  it("승인 업체는 첫 화면을 보고, 공고 필터를 누르면 받은 견적 요청만 남는다", async () => {
-    mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
+  it("승인 업체 첫 화면은 실제 데이터로 할 일·요약·새 공고·일정·계정을 보여 준다", async () => {
+    const future = "2099-12-24";
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/supplier/offers": {
+        status: 200,
+        body: [
+          { offerId: 1, stageId: 11, stageType: "EQUIPMENT", stageOpen: true, performanceId: 5, title: "연말 합동 공연", showDate: future, sido: "광주광역시", sigungu: "북구", audience: 120, nickname: "가을밤밴드", message: null, status: "PENDING", declineReason: null, expiresAt: "2099-12-01T10:00:00", createdAt: "2099-11-29T10:00:00" },
+          { offerId: 2, stageId: 12, stageType: "EQUIPMENT", stageOpen: true, performanceId: 6, title: "지난 요청", showDate: future, sido: "광주광역시", sigungu: "동구", audience: 50, nickname: "다른팀", message: null, status: "DECLINED", declineReason: "ETC", expiresAt: "2099-12-01T10:00:00", createdAt: "2099-11-29T10:00:00" },
+        ],
+      },
+      "GET /api/v1/postings": {
+        status: 200,
+        body: [{ stageId: 21, performanceId: 7, stageType: "EQUIPMENT", status: "OPEN", performanceVersion: 1, title: "봄맞이 버스킹", showDate: future, sido: "광주광역시", sigungu: "서구", nickname: "봄밴드", rejectionCount: 0, usageCount: 0 }],
+      },
+      "GET /api/v1/supplier/reservations": {
+        status: 200,
+        body: [{ performanceId: 9, title: "재즈 트리오 공연", showDate: future, showStart: "19:00:00", showEnd: "21:00:00", sido: "광주광역시", sigungu: "남구", status: "PAID", stageTypes: ["EQUIPMENT"], amount: 700000 }],
+      },
+      "GET /api/v1/chat-rooms": {
+        status: 200,
+        body: [{ roomId: 31, stageId: 11, stageType: "EQUIPMENT", performanceId: 5, partnerName: "가을밤밴드", startedAt: null, pinnedAt: null, unreadCount: 2, lastMessage: null }],
+      },
+      "GET /api/v1/me/notifications": { status: 200, body: { items: [{ id: 1, type: "OFFER_RECEIVED", category: "QUOTE", title: "견적 요청이 왔어요", body: null, link: "/supplier/offers", read: false, createdAt: "2099-11-29T10:00:00" }], nextBefore: null } },
+      "GET /api/v1/supplier/warnings": { status: 200, body: { warningCount: 1, suspendAt: 3 } },
+      "GET /api/v1/pr-posts/mine": { status: 200, body: { items: [] } },
+    });
     renderAt("/partner");
-    expect(await screen.findByRole("heading", { level: 1, name: /업체 D님, 오늘 확인할 일이/ })).toBeInTheDocument();
-    const filter = screen.getByRole("tablist", { name: "공고 필터" });
-    expect(screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"))).toHaveLength(3);
-    await userEvent.click(within(filter).getByRole("tab", { name: /받은 견적 요청/ }));
-    const titles = screen.getAllByRole("heading", { level: 3 }).filter((h) => h.textContent?.includes("공연 ·"));
-    expect(titles.map((h) => h.textContent)).toEqual(["연말 합동 공연 · 광주 북구 · 관객 120명"]);
+    expect(await screen.findByRole("heading", { level: 1, name: /업체 D님, 오늘 확인할 일이 3건 있어요/ })).toBeInTheDocument(); // 견적 요청 · 새 메시지 · 소개 글 없음
+    // 할 일: 기다리는 견적 요청(거절한 것은 빼고) · 안 읽은 메시지 · 소개 글 없음
+    const todo = screen.getByRole("region", { name: /지금 할 일/ });
+    expect(within(todo).getByText("가을밤밴드님이 견적을 요청했어요")).toBeInTheDocument();
+    expect(within(todo).getAllByRole("link", { name: "견적 쓰기" })[0]).toHaveAttribute("href", "/supplier/postings/11/quote");
+    expect(within(todo).getByText("가을밤밴드님의 메시지 2개")).toBeInTheDocument();
+    expect(within(todo).getByRole("link", { name: "소개 글 쓰기" })).toHaveAttribute("href", "/supplier/posts");
+    expect(within(todo).queryByText(/다른팀/)).not.toBeInTheDocument();
+    // 요약
+    const kpis = screen.getByRole("region", { name: "요약" });
+    expect(within(kpis).getByRole("link", { name: /답할 견적 요청\s*1/ })).toHaveAttribute("href", "/supplier/offers");
+    expect(within(kpis).getByRole("link", { name: /안 읽은 메시지\s*2/ })).toBeInTheDocument();
+    // 새 공고 · 다가오는 공연 · 계정 · 알림
+    expect(screen.getByRole("link", { name: "봄맞이 버스킹" })).toHaveAttribute("href", "/supplier/postings/21");
+    expect(screen.getByText("재즈 트리오 공연")).toBeInTheDocument();
+    expect(screen.getByText("1회 · 3회면 이용 정지")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /견적 요청이 왔어요/ })).toHaveAttribute("href", "/supplier/offers");
   });
 });
 
