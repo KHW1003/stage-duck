@@ -1,4 +1,5 @@
 """신고·경고·정지 서비스 (FR-POL-04, Q-34). 경고 3회면 이용 정지."""
+from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import select
@@ -104,6 +105,35 @@ def suspension_reason(db: Session, user_id: int) -> str | None:
         .order_by(Sanction.created_at.desc(), Sanction.id.desc())
         .limit(1)
     )
+
+
+@dataclass(frozen=True)
+class SuspensionSummary:
+    suspended_at: datetime
+    reason: str
+    last_warning_reason: str | None
+
+
+def suspension_summary(db: Session, user_id: int) -> SuspensionSummary | None:
+    """[약속 4 → 1] 정지 화면(mockup-v4 error.html suspended)의 정지일·사유·마지막 경고. 정지 기록이 없으면 None.
+
+    쓰는 곳: 1번 GET /me (정지 계정일 때만 부른다).
+    """
+    last = db.execute(
+        select(Sanction.created_at, Sanction.reason)
+        .where(Sanction.user_id == user_id, Sanction.type == "SUSPENSION")
+        .order_by(Sanction.created_at.desc(), Sanction.id.desc())
+        .limit(1)
+    ).first()
+    if last is None:
+        return None
+    warning = db.scalar(
+        select(Sanction.reason)
+        .where(Sanction.user_id == user_id, Sanction.type == "WARNING")
+        .order_by(Sanction.created_at.desc(), Sanction.id.desc())
+        .limit(1)
+    )
+    return SuspensionSummary(suspended_at=last.created_at, reason=last.reason, last_warning_reason=warning)
 
 
 def report(db: Session, *, reporter_id: int, target_type: str, target_id: int, reason: str | None) -> int:

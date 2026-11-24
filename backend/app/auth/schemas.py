@@ -2,7 +2,7 @@
 
 가입 칸은 일부러 모두 비어도 받는다 — 빈 칸 검사는 서비스(calc.signup_field_errors)가 하고, 칸마다 한국어 이유를 돌려준다 (AC-F1-01).
 """
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -126,6 +126,16 @@ class AuthOut(BaseModel):
     landing: str
 
 
+class SuspensionOut(BaseModel):
+    """GET /me 의 정지 정보 — 정지 화면(mockup-v4 error.html suspended)의 정지일·마지막 경고 (AC-F5-18)."""
+
+    model_config = _OUT
+
+    suspended_at: datetime
+    reason: str
+    last_warning_reason: str | None
+
+
 class MeOut(BaseModel):
     """GET /me — 본인 정보라 이름·이메일·전화번호를 돌려준다 (CLAUDE.md 20의 예외)."""
 
@@ -140,3 +150,4 @@ class MeOut(BaseModel):
     nickname: str | None
     supplier_review_status: str | None
     landing: str
+    suspension: SuspensionOut | None = None  # 정지 계정일 때만

@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Me } from "../api/types";
-import { ME_KEY, layoutKindOf } from "../auth/useMe";
+import { ME_KEY, layoutKindOf, useLogout } from "../auth/useMe";
 import { Ico, type KitIconName } from "../ui/Ico";
 import { HOME } from "./menus";
 import "./error-view.css";
@@ -48,6 +48,7 @@ export function ErrorView({ kind, traceId, rows, onRetry }: Props) {
   // 내 정보는 이미 받아 둔 값만 읽는다. 여기서 다시 불러오면 내 정보 오류 화면이 "불러오는 중 ↔ 오류"를 되풀이한다
   const home = HOME[layoutKindOf(useQueryClient().getQueryData<Me | null>(ME_KEY))];
   const t = TEXT[kind];
+  const logout = useLogout();
   const retry = (
     <button className="btn btn--sm btn--primary" type="button" onClick={onRetry ?? (() => window.location.reload())}>
       <Ico name="refresh" sm />
@@ -112,9 +113,14 @@ export function ErrorView({ kind, traceId, rows, onRetry }: Props) {
           </>
         )}
         {kind === "suspended" && (
-          <Link className="btn btn--sm btn--primary" to="/inquiries/new">
-            1:1 문의
-          </Link>
+          <>
+            <Link className="btn btn--sm btn--primary" to="/inquiries/new">
+              1:1 문의
+            </Link>
+            <button className="btn btn--sm" type="button" onClick={() => logout.mutate()} disabled={logout.isPending}>
+              로그아웃
+            </button>
+          </>
         )}
         {kind === "500" && (
           <>

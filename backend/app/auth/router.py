@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.auth import calc, reset, service, social
-from app.auth.deps import current_user, unauthenticated
+from app.auth.deps import current_member, unauthenticated
 from app.auth.schemas import (
     AuthOut,
     AvailabilityIn,
@@ -40,7 +40,7 @@ from app.core.errors import AppError, not_found
 from app.models.user import User
 
 SOCIAL_EXTRA_PAGE = "/signup/extra"  # 추가 정보 화면 (user-flow.md, plan.md 8장)
-SOCIAL_FAILED_PAGE = "/login?social=failed"  # state 불일치·소셜 서버 실패·탈퇴·정지
+SOCIAL_FAILED_PAGE = "/login?social=failed"  # state 불일치·소셜 서버 실패·탈퇴 (정지 계정은 로그인된다, AC-F5-18)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 me_router = APIRouter(tags=["auth"])
@@ -254,8 +254,11 @@ def social_complete(
 
 
 @me_router.get("/me", response_model=MeOut)
-def me(response: Response, user: User = Depends(current_user), db: Session = Depends(get_db)) -> MeOut:
-    """AC-F1-11: 내 정보·역할·업체 심사 상태. 개인 정보라 브라우저가 저장하지 않게 한다 (AC-F1-12)."""
+def me(response: Response, user: User = Depends(current_member), db: Session = Depends(get_db)) -> MeOut:
+    """AC-F1-11: 내 정보·역할·업체 심사 상태. 개인 정보라 브라우저가 저장하지 않게 한다 (AC-F1-12).
+
+    정지 계정도 본다 — 화면이 status 로 정지 안내를 띄운다 (AC-F5-18).
+    """
     response.headers["Cache-Control"] = "no-store"
     review = service.supplier_review_status(db, user)
     return MeOut(
@@ -268,4 +271,5 @@ def me(response: Response, user: User = Depends(current_user), db: Session = Dep
         nickname=user.nickname,
         supplier_review_status=review,
         landing=service.landing(db, user),
+        suspension=service.suspension(db, user),
     )

@@ -17,6 +17,14 @@ export interface Me {
   nickname: string | null;
   supplierReviewStatus: SupplierReviewStatus | null;
   landing: string;
+  /** 정지 계정일 때만 — 정지 화면의 정지일·마지막 경고 (AC-F5-18) */
+  suspension?: Suspension | null;
+}
+
+export interface Suspension {
+  suspendedAt: string;
+  reason: string;
+  lastWarningReason: string | null;
 }
 
 /** 업체 1단계 가입 응답·로그인 응답 (POST /auth/signup/supplier, POST /auth/login) */
