@@ -19,13 +19,13 @@ API 경로의 `/api/v1`은 생략했다.
 | F1-01 | 필수 항목 비면 가입 안 됨 | AUTH-01 | POST /auth/signup | users | /signup | BE, FE |
 | F1-02 | 마케팅 미동의 가입 가능 | AUTH-01 | POST /auth/signup | terms_agreements | /signup | BE |
 | F1-03 | 만 14세 미만 거부 | AUTH-01 | POST /auth/signup (`UNDER_AGE`) | users.birth_date | /signup | BE |
-| F1-04 | 네이버 로그인 → 추가 정보 / 내 공연 | AUTH-02 | GET /auth/naver/start·callback | social_accounts | /login, /signup/extra | BE (OAuth 목업) ⚠️ #25 대기 |
-| F1-05 | 선택 동의 해제해도 직접 입력해 가입 | AUTH-02·04 | POST /auth/social/complete | users | /signup/extra | BE ⚠️ #25 대기 |
-| F1-06 | 소셜 값 미리 채움·수정 가능 | AUTH-04 | GET callback → signupToken | — | /signup/extra | FE ⚠️ #25 대기 |
-| F1-07 | 우리 약관 미동의 시 미완료 | AUTH-04 | POST /auth/social/complete (`TERMS_REQUIRED`) | terms_agreements | /signup/extra | BE ⚠️ #25 대기 |
-| F1-08 | 카카오 꺼짐 → 거부, 버튼 없음 | AUTH-03 | GET /auth/kakao/* → 404 | — | /login | BE, FE ⚠️ #25 대기 |
-| F1-09 | 카카오 켜면 가입·로그인 | AUTH-03 | GET /auth/kakao/callback | social_accounts | /login | BE (설정 켬) ⚠️ #25 대기 |
-| F1-10 | 같은 이메일 자동 병합 안 함 | AUTH-05 | GET /auth/naver/callback | social_accounts UNIQUE(provider, provider_user_id) | — | BE ⚠️ #25 대기 |
+| F1-04 | 네이버 로그인 → 추가 정보 / 내 공연 | AUTH-02 | GET /auth/naver/start·callback | social_accounts | /login, /signup/extra | BE (OAuth 목업) (#237) |
+| F1-05 | 선택 동의 해제해도 직접 입력해 가입 | AUTH-02·04 | POST /auth/social/complete | users | /signup/extra | BE (#237) |
+| F1-06 | 소셜 값 미리 채움·수정 가능 | AUTH-04 | GET callback → signupToken | — | /signup/extra | FE (#237) |
+| F1-07 | 우리 약관 미동의 시 미완료 | AUTH-04 | POST /auth/social/complete (`TERMS_REQUIRED`) | terms_agreements | /signup/extra | BE (#237) |
+| F1-08 | 카카오 꺼짐 → 거부, 버튼 없음 | AUTH-03 | GET /auth/kakao/* → 404 | — | /login | BE, FE (#237) |
+| F1-09 | 카카오 켜면 가입·로그인 | AUTH-03 | GET /auth/kakao/callback | social_accounts | /login | BE (설정 켬) (#237) |
+| F1-10 | 같은 이메일 자동 병합 안 함 | AUTH-05 | GET /auth/naver/callback | social_accounts UNIQUE(provider, provider_user_id) | — | BE (#237) |
 | F1-11 | 역할별 첫 화면 | AUTH-06 | POST /auth/login (`landing`), GET /me | users.role | /login | BE, FE |
 | F1-12 | 로그아웃 후 뒤로 가기 정보 안 보임 | AUTH-06 | POST /auth/logout | — | 전체 (보호 라우트, 캐시 삭제) | FE, E2E |
 | F1-13 | 남의 공연·채팅방 → 404 | AUTH-07 | GET /performances/{id}, /chat-rooms/{id}/messages | — | — | BE |
@@ -152,9 +152,9 @@ API 경로의 `/api/v1`은 생략했다.
 
 | 항목 | 결과 |
 |---|---|
-| 수용 기준 109개 중 API가 연결된 것 | 화면 동작인 F2-09 와 소셜 로그인 7개(F1-04~10, #25 대기 — develop 에 아직 구현 없음)를 뺀 나머지 전부 |
+| 수용 기준 109개 중 API가 연결된 것 | 화면 동작인 F2-09 를 뺀 나머지 전부 (소셜 로그인 F1-04~10 은 #237 로 연결, 2026-11-24) |
 | 테이블이 연결된 것 | 97개 (나머지 11개는 권한·화면 동작) |
-| 테스트가 정해진 것 | **102개** (2026-11-23 대조, AC 번호가 붙은 테스트 기준). 없는 것: 소셜 로그인 F1-05·06·07·09·10 (#25 대기). F1-04·08 은 번호만 붙어 있고 기능이 없어 #25 에서 다시 붙인다 |
+| 테스트가 정해진 것 | **107개** (2026-11-24 대조, AC 번호가 붙은 테스트 기준). 소셜 로그인 F1-04~10 은 #237 의 `backend/tests/f1/test_social_login.py`·`frontend/tests/social-login.test.tsx` 로 채움 |
 | 스펙에 없는데 계획에 들어간 것 | `POST /auth/refresh`, `GET /chat-rooms`, `notifications`(종류·API는 [notifications.md](notifications.md)), `idempotency_keys`(만들지 않음 — 결제는 `payments.idempotency_key`) — 기존 수용 기준을 구현하기 위한 보조 기능이라 범위 이탈 아님 |
 | 계획에서 빠진 스펙 | 없음 |
 
