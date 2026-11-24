@@ -30,6 +30,7 @@
   --sd-muted: #9a8e88;
   --sd-accent-text: #ff8a57;            /* 어두운 바탕 위 주황 글자는 조금 밝게 */
   --sd-accent-soft: rgba(250, 79, 0, 0.12);
+  --sd-off-text: #ff8f87;               /* 반려·정지·블라인드 */
 }
 
 /* 라이트 */
@@ -42,6 +43,7 @@
   --sd-muted: #7a6e68;
   --sd-accent-text: #c63f00;
   --sd-accent-soft: rgba(250, 79, 0, 0.08);
+  --sd-off-text: #c42b22;
 }
 
 :root[data-bs-theme] {
@@ -295,3 +297,20 @@ a { text-underline-offset: 2px; }
   border-color: var(--sd-accent);
 }
 .form-check-input:focus { border-color: var(--sd-accent); box-shadow: 0 0 0 3px var(--sd-accent-soft); }
+
+/* ---------- 상태 배지: 점 + 한글 (색만으로 구분하지 않게) · 11/24 ---------- */
+.sd-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.sd-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.sd-status--wait { color: var(--sd-accent-text); }
+.sd-status--ok { color: var(--sd-text); }
+.sd-status--off { color: var(--sd-off-text); }
+.sd-status--info { color: var(--sd-muted); }
+.sd-none { color: var(--sd-muted); }
+.table td { font-variant-numeric: tabular-nums; }
+
+/* 상세: 왼쪽 항목 이름은 좁고 흐리게, 내용은 줄바꿈 허용 */
+.card-body .table-bordered td:first-child { width: 180px; color: var(--sd-muted); font-weight: 500; }
+.card-body .table-bordered td:last-child { white-space: normal; }
+
+/* 빈 목록 안내 (empty.js) */
+.sd-empty { padding: 48px 16px !important; text-align: center; color: var(--sd-muted); font-size: 14px; }

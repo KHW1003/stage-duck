@@ -8,7 +8,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+import sqladmin.application as sqladmin_app
 from sqladmin import Admin
+
+from app.admin.display import ko_gettext, ko_ngettext
 
 from app.admin.auth import AdminAuth
 from app.admin.views import (
@@ -51,6 +54,9 @@ def setup_admin(app: FastAPI) -> Admin:
         authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret),
         templates_dir=TEMPLATES_DIR,
     )
+    # SQLAdmin 기본 문구를 한국어로. 저장 버튼은 눌린 값(번역된 글자)을 application.gettext 로 비교하므로 같이 바꾼다
+    admin.templates.env.install_gettext_callables(ko_gettext, ko_ngettext, newstyle=True)
+    sqladmin_app.gettext = ko_gettext
     for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, FreePostAdmin, FreeCommentAdmin, PrPostAdmin, PerformanceAdmin, NoticeAdmin, InquiryAdmin):
         admin.add_view(view)
     admin.add_base_view(ReasonView)
