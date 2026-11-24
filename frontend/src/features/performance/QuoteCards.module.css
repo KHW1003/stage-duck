@@ -1,0 +1,39 @@
+/* 내 공연 상세 — 받은 견적서 카드 (목업 v4 performance.html .cmp). 2장씩, 넘치면 < > (11/24) */
+.wrap { margin-top: 24px; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.title { margin: 0; font-size: var(--sd-text-desc); font-weight: 700; }
+.nav { display: flex; gap: 4px; }
+.navBtn { display: grid; place-items: center; width: var(--sd-touch); height: var(--sd-touch); border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-btn); background: var(--sd-bg); color: var(--sd-ink); cursor: pointer; }
+.navBtn:disabled { color: var(--sd-photo-text); border-color: var(--sd-line); cursor: default; }
+
+/* 가로로 넘기는 줄: 휴대폰은 손가락으로도 넘긴다. 스크롤 막대는 숨긴다 */
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 12px) / 2); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.track::-webkit-scrollbar { display: none; }
+.slide { scroll-snap-align: start; min-width: 0; display: flex; }
+
+.card { display: flex; flex-direction: column; width: 100%; border-radius: var(--sd-r-box); background: var(--sd-th); font-size: var(--sd-text-desc); line-height: 1.6; }
+.head { padding: 22px 24px 16px; }
+.row { padding: 16px 24px; border-top: 1px solid var(--sd-line); }
+.name { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--sd-text-body); font-weight: 700; letter-spacing: -.3px; }
+.name :global(.tag) { font-weight: 500; }
+.meta { margin: 2px 0 0; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.flag { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; color: var(--sd-muted); font-size: var(--sd-text-small); font-weight: 600; }
+.flag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.on { color: var(--sd-blue); }
+.price { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.diff { display: block; margin-top: 2px; color: var(--sd-muted); font-size: var(--sd-text-small); font-variant-numeric: tabular-nums; }
+.diff b { color: var(--sd-ink); font-weight: 600; }
+.inc { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; }
+.inc span::before { content: "✓"; margin-right: 4px; color: var(--sd-pass-text); font-weight: 700; }
+.inc .no { color: var(--sd-photo-text); }
+.inc .no::before { content: "–"; color: var(--sd-photo-text); }
+.note { display: block; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.acts { display: flex; gap: 8px; margin-top: auto; padding-bottom: 22px; }
+.skeleton { height: 320px; margin-top: 24px; border-radius: var(--sd-r-box); background: var(--sd-band); }
+
+@media (max-width: 760px) {
+  .track { grid-auto-columns: 100%; }
+  .head { padding: 18px 18px 14px; }
+  .row { padding: 14px 18px; }
+  .acts { padding-bottom: 18px; }
+}
