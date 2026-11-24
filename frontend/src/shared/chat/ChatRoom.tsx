@@ -542,7 +542,10 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
 
   const partnerRead = thread.data?.partnerLastReadMessageId ?? 0;
   // 머리줄 아래 [견적서 보기]: 불러온 메시지 가운데 가장 최근 QUOTE 의 refId(견적서 버전). 없으면 숨긴다
-  const latestQuoteVersion = messages.reduce<number | null>((found, m) => (m.type === "QUOTE" && m.refId ? m.refId : found), null);
+  // [견적서 보기]: 서버가 준 그 방의 최신 견적서 버전 (대화가 길어 견적서 카드가 예전 대화로 밀려나도 늘 열린다, 11/25).
+  // 목록을 아직 다시 받지 않았으면 불러온 메시지의 가장 최근 견적서 카드로
+  const latestQuoteVersion =
+    room.latestQuoteVersionId ?? messages.reduce<number | null>((found, m) => (m.type === "QUOTE" && m.refId ? m.refId : found), null);
   const started = room.startedAt !== null;
   let lastDay = "";
 
@@ -580,6 +583,7 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
       {latestQuoteVersion !== null && (
         <div className="chat-panel__quote">
           <Link to={`/quotes/by-version/${latestQuoteVersion}`} onClick={onClose}>
+            <Ico name="file" sm />
             견적서 보기
           </Link>
         </div>

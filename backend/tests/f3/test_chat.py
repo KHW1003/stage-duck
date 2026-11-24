@@ -348,3 +348,13 @@ def test_delete_keeps_row_and_hides_content_and_reply_quote(client, db):
     # 지운 메시지는 다시 고치거나 지울 수 없다
     assert d.patch(f"{API}/chat-rooms/{room_id}/messages/{original}", json={"body": "되살리기"}).status_code == 404
     assert d.delete(f"{API}/chat-rooms/{room_id}/messages/{original}").status_code == 404
+
+
+def test_room_list_has_latest_quote_version_for_quote_button(client, db):
+    """11/25 [견적서 보기]: 채팅 목록 한 줄에 그 방의 가장 최근 견적서 버전 — 견적서 카드가 예전 대화로 밀려나도 열 수 있게."""
+    user, d, room_id, _, _ = _room(client, db)
+    quote_card = next(m for m in user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"] if m["type"] == "QUOTE")
+    row = next(r for r in user.get(f"{API}/chat-rooms").json() if r["roomId"] == room_id)
+    assert row["latestQuoteVersionId"] == quote_card["refId"]
+    supplier_row = next(r for r in d.get(f"{API}/chat-rooms").json() if r["roomId"] == room_id)
+    assert supplier_row["latestQuoteVersionId"] == quote_card["refId"]

@@ -34,7 +34,7 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 
 /* 대화방 머리줄 아래 [견적서 보기] 고정 줄 (스크롤 밖이라 대화가 길어도 보인다) */
 .chat-panel__quote { display: flex; justify-content: flex-end; flex: none; padding: 0 8px; border-bottom: 1px solid var(--sd-line); background: var(--sd-bg); }
-.chat-panel__quote a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 8px; color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; text-decoration: none; }
+.chat-panel__quote a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border-radius: 8px; color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 600; text-decoration: none; }
 .chat-panel__quote a:hover { background: var(--sd-band); }
 .chat-panel__quote a:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: -2px; }
 
