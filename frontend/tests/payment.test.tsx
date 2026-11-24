@@ -162,6 +162,17 @@ describe("통합 청구서 (/performances/:id/order)", () => {
     expect(await screen.findByText("아직 확정하지 않은 단계가 있어요.")).toBeInTheDocument();
   });
 
+  it("취소된 공연의 청구서는 오류와 함께 공연으로 돌아가는 링크를 보여 준다", async () => {
+    mockServer({
+      ...BASE, "GET /api/v1/performances/5": { status: 200, body: { ...PERF, status: "CANCELLED", nextAction: "NONE" } },
+      "POST /api/v1/performances/5/order": { status: 409, body: { code: "INVALID_STATE", message: "취소된 공연입니다.", fieldErrors: [] } },
+    });
+    renderAt("/performances/5/order");
+    expect(await screen.findByText("취소된 공연입니다.")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "공연으로 돌아가기" })).toHaveAttribute("href", "/performances/5");
+    expect(screen.queryByRole("link", { name: "결제하기" })).not.toBeInTheDocument();
+  });
+
   it("AC-F5-07 결제 뒤에는 보관 중, 공연 뒤에는 업체별 정산 예정", async () => {
     mockServer({ ...BASE, "GET /api/v1/performances/5/order": { status: 200, body: order({ status: "SETTLEMENT_SCHEDULED", paidAt: "2026-11-13T15:20:00" }) } });
     renderAt("/performances/5/order");

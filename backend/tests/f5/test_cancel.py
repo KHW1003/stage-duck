@@ -461,3 +461,25 @@ def test_ac_f5_10_concurrent_invoice_and_supplier_cancel(client, db):
     ])
     assert got in ([200, 201], [200, 409])
     assert db.scalar(select(func.count()).select_from(Order).where(Order.status != "CANCELLED")) == 0
+
+
+@pytest.mark.parametrize("paid", [True, False])
+@pytest.mark.parametrize("same_supplier", [True, False])
+def test_ac_f5_10_compare_shows_only_current_confirmed_quote(client, db, paid, same_supplier):
+    """업체 취소 → 다시 모집 → 새로 확정하면 비교 화면에 확정은 하나다 (같은 업체가 다시 보낸 견적서도)."""
+    if paid:
+        user, perf_id, _, (c, _) = _paid(client, db)
+    else:
+        user, perf_id, (c, _) = _ready(client, db)
+    stage_id = db.scalar(select(Stage.id).where(Stage.performance_id == perf_id, Stage.stage_type == "VENUE"))
+    url = f"/api/v1/stages/{stage_id}/quotes"
+    assert _supplier_cancel(db, perf_id, c).status_code == 200
+    assert [q["status"] for q in user.get(url).json()] == ["CONFIRMED"]  # 다시 모집 중엔 그대로 → 화면이 "업체 사정 취소"로 보인다
+    _confirm(db, perf_id, "VENUE", 700000)
+    if same_supplier:
+        db.scalar(select(Quote).where(Quote.stage_id == stage_id).order_by(Quote.id.desc())).supplier_id = c
+        db.commit()
+
+    assert [(q["totalAmount"], q["status"]) for q in user.get(url).json()] == [(500000, "CLOSED"), (700000, "CONFIRMED")]
+    db.expire_all()
+    assert [q.status for q in db.scalars(select(Quote).where(Quote.stage_id == stage_id))] == ["CONFIRMED", "CONFIRMED"]  # 저장된 상태는 바꾸지 않는다
