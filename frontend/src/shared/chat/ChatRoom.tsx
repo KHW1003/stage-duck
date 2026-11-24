@@ -100,6 +100,32 @@ interface MsgActions {
   onEdit: (id: number, body: string) => Promise<unknown>;
   onDelete: (id: number) => void;
   busy: boolean;
+  /** 휴대폰: 꾹 누른 말풍선의 아이콘만 연다 (11/25). PC 는 마우스를 올리면 */
+  openId: number | null;
+  onLongPress: (id: number | null) => void;
+}
+
+const LONG_PRESS_MS = 450;
+
+/** 꾹 누르기: 손가락을 0.45초 떼지 않으면 onLong. 움직이거나 일찍 떼면 취소 (스크롤과 구분) */
+function useLongPress(onLong: () => void) {
+  const timer = useRef<number | null>(null);
+  const clear = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  return {
+    onTouchStart: () => {
+      clear();
+      timer.current = window.setTimeout(() => {
+        timer.current = null;
+        onLong();
+      }, LONG_PRESS_MS);
+    },
+    onTouchMove: clear,
+    onTouchEnd: clear,
+    onTouchCancel: clear,
+  };
 }
 
 /** 내 글 메시지 고치기: 말풍선 자리에서 바로 (Enter 저장, Esc 취소) */
@@ -154,6 +180,7 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   acts: MsgActions;
 }) {
   const [editing, setEditing] = useState(false);
+  const press = useLongPress(() => acts.onLongPress(m.id));
   if (m.senderId === null) {
     if (m.type === "QUOTE") {
       return (
@@ -210,8 +237,15 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   const who = (id: number | null) => (id === meId ? "나" : partner);
   return (
     <>
-      <div className={mine ? "msg msg--me" : "msg"} data-msg-id={m.id}>
-        <div className="msg__col">
+      <div
+        className={["msg", mine && "msg--me", acts.openId === m.id && "msg--acts"].filter(Boolean).join(" ")}
+        data-msg-id={m.id}
+        onContextMenu={(e) => {
+          // 휴대폰에서 꾹 누르면 뜨는 기본 메뉴 대신 답장·수정·삭제
+          if (acts.openId === m.id) e.preventDefault();
+        }}
+      >
+        <div className="msg__col" {...(m.deleted ? {} : press)}>
           {quoted && (
             <button type="button" className="msg__quote" onClick={() => acts.onJump(quoted.id)} aria-label={`${who(quoted.senderId)}의 메시지로 이동: ${replyText(quoted)}`}>
               <span className="msg__quote-who">
@@ -229,12 +263,18 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
               <Ico name="reply" sm />
             </button>
             {mine && m.type === "TEXT" && (
-              <button type="button" className="msg__act" aria-label="수정" title="수정" disabled={acts.busy} onClick={() => setEditing(true)}>
+              <button type="button" className="msg__act" aria-label="수정" title="수정" disabled={acts.busy} onClick={() => {
+                setEditing(true);
+                acts.onLongPress(null);
+              }}>
                 <Ico name="edit" sm />
               </button>
             )}
             {mine && (
-              <button type="button" className="msg__act" aria-label="삭제" title="삭제" disabled={acts.busy} onClick={() => acts.onDelete(m.id)}>
+              <button type="button" className="msg__act" aria-label="삭제" title="삭제" disabled={acts.busy} onClick={() => {
+                acts.onLongPress(null);
+                acts.onDelete(m.id);
+              }}>
                 <Ico name="trash" sm />
               </button>
             )}
@@ -380,17 +420,23 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
   const thread = useChatThread(roomId);
   const [menuOpen, setMenuOpen] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMsg | null>(null);
+  const [openActs, setOpenActs] = useState<number | null>(null); // 휴대폰: 꾹 눌러 아이콘을 연 말풍선
   const listRef = useRef<HTMLDivElement>(null);
   const editMsg = useEditMessage(roomId);
   const deleteMsg = useDeleteMessage(roomId);
   const acts: MsgActions = {
-    onReply: setReplyTo,
+    onReply: (m) => {
+      setReplyTo(m);
+      setOpenActs(null);
+    },
     onJump: (id) => jumpTo(id),
     onEdit: (id, body) => editMsg.mutateAsync({ id, body }),
     onDelete: (id) => {
       if (window.confirm("이 메시지를 삭제할까요? 상대방 화면에서도 \"삭제된 메시지예요\"로 바뀌어요.")) deleteMsg.mutate(id);
     },
     busy: editMsg.isPending || deleteMsg.isPending,
+    openId: openActs,
+    onLongPress: setOpenActs,
   };
   // 예전 대화: 위 끝에 닿으면 50개씩 더. 처음 받은 것이 50개보다 적으면 더 없음
   const [older, setOlder] = useState<{ loading: boolean; done: boolean | null; error: unknown }>({ loading: false, done: null, error: null });
@@ -549,6 +595,10 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
         <div
           className="room__msgs"
           ref={listRef}
+          onClick={(e) => {
+            // 휴대폰: 꾹 눌러 연 아이콘은 다른 곳을 누르면 닫는다
+            if (openActs !== null && !(e.target as Element).closest(".msg--acts")) setOpenActs(null);
+          }}
           onScroll={(e) => {
             const el = e.currentTarget;
             stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
