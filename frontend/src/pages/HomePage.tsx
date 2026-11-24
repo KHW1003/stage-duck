@@ -1,7 +1,8 @@
 /**
- * 메인 (/). 목업: docs/design/mockup/home.html — 히어로 → 공간 둘러보기 → 이용 방법 → 자주 묻는 질문.
+ * 메인 (/). 목업: docs/design/mockup/home.html — 히어로 → 공간 둘러보기 → 커뮤니티 최신 글 → 이용 방법 → 자주 묻는 질문.
  * 머리·바닥글은 features/home/HomeLayout. 로그인한 사용자는 히어로 오른쪽에 진행 중인 공연이 보인다.
  */
+import { CommunitySection } from "../features/home/CommunitySection";
 import { FaqSection } from "../features/home/FaqSection";
 import { FlowSection } from "../features/home/FlowSection";
 import { Hero } from "../features/home/Hero";
@@ -23,6 +24,7 @@ export function HomePage() {
     <>
       {user ? <UserHero name={user.nickname ?? user.name} /> : <Hero />}
       <SpacesSection />
+      <CommunitySection />
       <FlowSection />
       <FaqSection id="faq" title="자주 묻는 질문" desc="찾는 답이 없으면 1:1 문의를 남겨주세요." ask="1:1 문의하기" items={HOME_FAQ} />
     </>
