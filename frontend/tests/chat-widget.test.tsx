@@ -443,6 +443,23 @@ describe("대화방", () => {
     expect(within(panel).queryByRole("button", { name: "예전 대화 더 보기" })).not.toBeInTheDocument();
   });
 
+  it("11/25 휴대폰: 말풍선을 꾹 누르면 그 말풍선의 아이콘이 열리고, 다른 곳을 누르면 닫힌다", async () => {
+    mockServer({ ...AS_USER });
+    renderAt("/faq");
+    const { panel } = await openRoom("업체 D");
+    const bubble = (await within(panel).findByText("드럼 마이크도 추가돼요?")).closest(".msg") as HTMLElement;
+    fireEvent.touchStart(bubble.querySelector(".msg__col")!);
+    await waitFor(() => expect(bubble).toHaveClass("msg--acts"), { timeout: 2000 });
+    // 짧게 눌렀다 떼면(스크롤) 열리지 않는다
+    const other = within(panel).getByText("안녕하세요").closest(".msg") as HTMLElement;
+    fireEvent.touchStart(other.querySelector(".msg__col")!);
+    fireEvent.touchEnd(other.querySelector(".msg__col")!);
+    await new Promise((r) => setTimeout(r, 600));
+    expect(other).not.toHaveClass("msg--acts");
+    fireEvent.click(panel.querySelector(".room__msgs")!);
+    expect(bubble).not.toHaveClass("msg--acts");
+  });
+
   it("11/24 답장은 [답장 취소]나 Esc 로 그만둔다", async () => {
     mockServer({ ...AS_USER });
     renderAt("/faq");
