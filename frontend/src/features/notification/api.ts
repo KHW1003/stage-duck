@@ -72,6 +72,12 @@ export function useMarkRead() {
   });
 }
 
+/** 알림이 가는 곳. 채팅 알림은 지금 화면(pathname)에서 채팅 창만 연다 */
+export function notificationTo(link: string, pathname: string): string {
+  const chat = /^\/chats\/(\d+)$/.exec(link);
+  return chat ? `${pathname}?chat=${chat[1]}` : link;
+}
+
 /** 알림을 누르면: 읽음 처리 → 링크로. 채팅 알림은 지금 화면에서 채팅 창만 연다 */
 export function useOpenNotification() {
   const read = useMarkRead();
@@ -79,9 +85,7 @@ export function useOpenNotification() {
   const { pathname } = useLocation();
   return (n: NotificationItem) => {
     if (!n.read) read.mutate({ ids: [n.id] });
-    const chat = /^\/chats\/(\d+)$/.exec(n.link);
-    if (chat) navigate({ pathname, search: `?chat=${chat[1]}` });
-    else navigate(n.link);
+    navigate(notificationTo(n.link, pathname));
   };
 }
 

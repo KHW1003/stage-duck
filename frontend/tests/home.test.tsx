@@ -197,6 +197,26 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByText("11월 12일 14:20")).toBeInTheDocument();
   });
 
+  it("업체 첫 화면의 최근 알림: 채팅 알림은 읽음 처리하고 지금 화면에서 채팅 창을 연다 (/chats 는 없는 화면)", async () => {
+    const note = { id: 8, type: "CHAT_STARTED", category: "QUOTE_CHAT", title: "채팅이 시작됐어요", body: null, link: "/chats/31", read: false, createdAt: "2099-11-29T10:00:00" };
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: SUPPLIER },
+      "GET /api/v1/me/notifications": { status: 200, body: { items: [note, { ...note, id: 9, title: "견적 요청이 왔어요", link: "/supplier/offers", read: true }], nextBefore: null } },
+      "GET /api/v1/chat-rooms": { status: 200, body: [] },
+      "POST /api/v1/me/notifications/read": { status: 200 },
+    });
+    renderAt("/partner");
+    const notes = await screen.findByRole("region", { name: /최근 알림/ });
+    expect(await within(notes).findByRole("link", { name: "견적 요청이 왔어요" })).toHaveAttribute("href", "/supplier/offers");
+    const link = within(notes).getByRole("link", { name: "채팅이 시작됐어요" });
+    expect(link).toHaveAttribute("href", "/partner?chat=31");
+    await userEvent.click(link);
+    expect(await screen.findByRole("dialog", { name: "채팅" })).toBeInTheDocument();
+    expect(screen.getByTestId("where")).toHaveTextContent("/partner");
+    const read = vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/me/notifications/read"));
+    expect(read.map(([, init]) => JSON.parse(String(init!.body)))).toEqual([{ ids: [8] }]);
+  });
+
   it("승인 업체 첫 화면은 실제 데이터로 할 일·요약·새 공고·일정·계정을 보여 준다", async () => {
     const future = "2099-12-24";
     mockServer({

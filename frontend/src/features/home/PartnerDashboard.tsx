@@ -7,10 +7,10 @@
  * 모양: 카드·그림자·파스텔 없이 얇은 선과 여백으로 묶고, 상태는 아이콘 + 글자 + 색 (DESIGN.md 8장). 불러오는 중에는 회색 자리.
  */
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useMyPrPosts } from "../board/api";
 import { useChatRooms } from "../chat/api";
-import { useNotifications } from "../notification/api";
+import { notificationTo, useMarkRead, useNotifications } from "../notification/api";
 import { useReceivedOffers, type ReceivedOffer } from "../offer/api";
 import { useSupplierReservations, useSupplierWarnings, type SupplierReservation } from "../payment/api";
 import { STAGE_NAME, hm } from "../performance/labels";
@@ -229,6 +229,8 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
   const postings = usePostings("");
   const reservations = useSupplierReservations(me.data?.id);
   const rooms = useChatRooms();
+  const { pathname } = useLocation();
+  const read = useMarkRead();
   const notes = useNotifications(null);
   const warnings = useSupplierWarnings(true);
   const myPosts = useMyPrPosts();
@@ -467,7 +469,7 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
               <ul className={s.notes}>
                 {noteList.map((n) => (
                   <li key={n.id} className={n.read ? "" : s.unread}>
-                    <Link to={n.link}>
+                    <Link to={notificationTo(n.link, pathname)} onClick={() => !n.read && read.mutate({ ids: [n.id] })}>
                       <b>{n.title}</b>
                       {n.body && <span>{n.body}</span>}
                     </Link>
