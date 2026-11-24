@@ -26,6 +26,7 @@ import { InvoicePage } from "./pages/InvoicePage";
 import { PaymentPage } from "./pages/PaymentPage";
 import { CancelPage } from "./pages/CancelPage";
 import { SheetPage } from "./pages/SheetPage";
+import { ChatLinkPage } from "./pages/ChatLinkPage";
 import { HomeLayout } from "./features/home/HomeLayout";
 import { MyPerformancesPage } from "./pages/MyPerformancesPage";
 import { MyPostPage } from "./pages/MyPostPage";
@@ -93,6 +94,7 @@ export function AppRoutes() {
           <Route path="/inquiries/new" element={<InquiryWritePage />} />
           <Route path="/inquiries/:id" element={<InquiryPostPage />} />
           <Route path="/inquiries/:id/edit" element={<InquiryWritePage />} />
+          <Route path="/chats/:id" element={<ChatLinkPage />} />
           <Route path="/performances/:id/sheet" element={<SheetPage />} />
           <Route path="/quotes/:quoteId" element={<QuoteSheetPage />} />
           <Route path="/quotes/by-version/:versionId" element={<QuoteSheetPage />} />
