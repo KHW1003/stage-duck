@@ -144,9 +144,10 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* ---------- 답장 (11/24): 말풍선 옆 꺾인 화살표, 말풍선 위 인용, 입력창 위 인용 ---------- */
 .chat-panel .msg__col { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 .chat-panel .msg--me .msg__col { align-items: flex-end; }
-/* 답장·수정·삭제: 말풍선 위에 떠 있는 작은 막대 — 자리를 차지하지 않아 "읽음"·시간은 늘 말풍선에 붙어 있다 (11/25) */
-.chat-panel .msg { position: relative; }
-.chat-panel .msg__acts { position: absolute; bottom: calc(100% - 6px); left: 0; z-index: 2; display: inline-flex; gap: 0; padding: 2px;
+/* 답장·수정·삭제: "읽음"·시간 칸 바로 위에 떠 있는 작은 막대 (11/25). 말풍선을 가리지 않고 자리도 차지하지 않는다.
+   내 말풍선은 시간 칸이 왼쪽이라 왼쪽으로, 상대 말풍선은 오른쪽으로 펼쳐진다 */
+.chat-panel .msg__t { position: relative; }
+.chat-panel .msg__acts { position: absolute; bottom: calc(100% + 2px); left: 0; z-index: 2; display: inline-flex; gap: 0; padding: 2px;
   border: 1px solid var(--sd-line); border-radius: 999px; background: var(--sd-bg); opacity: 0; pointer-events: none; }
 .chat-panel .msg--me .msg__acts { left: auto; right: 0; }
 .chat-panel .msg:hover .msg__acts, .chat-panel .msg__acts:focus-within { opacity: 1; pointer-events: auto; }
