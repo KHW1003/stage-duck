@@ -6,6 +6,8 @@
  * AC-F3-15: contactWarning 메시지 아래 플랫폼 밖 거래 경고
  * AC-F3-08: [사진 보내기](jpg·png·webp → IMAGE)·[파일 보내기](pdf → FILE), 10MB. 사진은 누르면 새 창에서 크게 보기
  * 최종 견적 카드·확정(#43)은 여기서 만들지 않는다.
+ * 링크(11/24): 글 속 http·https·www. 주소는 눌러서 새 창으로 연다
+ * 답장(11/24): 말풍선 옆 꺾인 화살표 → 입력창 위에 인용 → 보내면 말풍선 위에 원문. 인용을 누르면 원래 메시지로 이동
  */
 import { OUTSIDE_PAYMENT_NOTICE } from "../../features/support/terms";
 import { ConfirmRequestCard, ConfirmedCard } from "../../features/confirm/ConfirmCards";
@@ -49,8 +51,43 @@ function quoteLink(room: Room, role: Props["role"], versionId: number | null) {
   return role === "USER" ? `/performances/${room.performanceId}/compare` : `/supplier/postings/${room.stageId}`;
 }
 
-function Bubble({ m, mine, read, partner, room, role, onLeave }: {
-  m: ChatMsg; mine: boolean; read: boolean; partner: string; room: Room; role: Props["role"]; onLeave: () => void;
+/**
+ * 글 속 링크(http·https·www.)를 눌러 열 수 있게 (11/24). 새 창으로 열고 이 사이트 정보는 넘기지 않는다 (noopener noreferrer).
+ * 끝에 붙은 마침표·쉼표·괄호는 링크에서 뺀다. 다른 형식(javascript: 등)은 글자 그대로 둔다.
+ */
+const URL_RE = /((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+export function Linkified({ text }: { text: string }) {
+  const parts = text.split(URL_RE);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (i % 2 === 0) return part;
+        const trail = /[.,!?)\]}'"…]+$/.exec(part)?.[0] ?? "";
+        const url = trail ? part.slice(0, -trail.length) : part;
+        const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        return (
+          <Fragment key={i}>
+            <a className="msg__link" href={href} target="_blank" rel="noopener noreferrer">
+              {url}
+            </a>
+            {trail}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+/** 답장 인용에 보이는 원문 한 줄 */
+function replyText(r: { type: ChatMsg["type"]; body: string | null }): string {
+  if (r.type === "IMAGE") return "사진";
+  if (r.type === "FILE") return r.body ? `파일 · ${r.body}` : "파일";
+  return r.body ?? "";
+}
+
+function Bubble({ m, mine, read, partner, meId, room, role, onLeave, onReply, onJump }: {
+  m: ChatMsg; mine: boolean; read: boolean; partner: string; meId: number; room: Room; role: Props["role"]; onLeave: () => void;
+  onReply: (m: ChatMsg) => void; onJump: (id: number) => void;
 }) {
   if (m.senderId === null) {
     if (m.type === "QUOTE") {
@@ -98,12 +135,28 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
       </div>
     );
   } else {
-    content = <p className="msg__b">{m.type === "IMAGE" ? "사진" : m.body}</p>;
+    content = <p className="msg__b">{m.type === "IMAGE" ? "사진" : <Linkified text={m.body ?? ""} />}</p>;
   }
+  const quoted = m.replyTo;
+  const who = (id: number | null) => (id === meId ? "나" : partner);
   return (
     <>
-      <div className={mine ? "msg msg--me" : "msg"}>
-        {content}
+      <div className={mine ? "msg msg--me" : "msg"} data-msg-id={m.id}>
+        <div className="msg__col">
+          {quoted && (
+            <button type="button" className="msg__quote" onClick={() => onJump(quoted.id)} aria-label={`${who(quoted.senderId)}의 메시지로 이동: ${replyText(quoted)}`}>
+              <span className="msg__quote-who">
+                <Ico name="reply" sm />
+                {who(quoted.senderId)}에게 답장
+              </span>
+              <span className="msg__quote-text">{replyText(quoted)}</span>
+            </button>
+          )}
+          {content}
+        </div>
+        <button type="button" className="msg__reply" aria-label="답장" title="답장" onClick={() => onReply(m)}>
+          <Ico name="reply" sm />
+        </button>
         <span className="msg__t">
           {mine && read && <span className="msg__read">읽음</span>}
           {msgTime(m.createdAt)}
@@ -119,12 +172,19 @@ function Bubble({ m, mine, read, partner, room, role, onLeave }: {
   );
 }
 
-function Composer({ roomId }: { roomId: number }) {
+function Composer({ roomId, replyTo, replyName, onClearReply }: {
+  roomId: number; replyTo: ChatMsg | null; replyName: string; onClearReply: () => void;
+}) {
   const [text, setText] = useState("");
   const [pickError, setPickError] = useState<string | null>(null);
   const send = useSendMessage(roomId);
   const attach = useSendAttachment(roomId);
   const photoInput = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  // 답장을 고르면 바로 입력창으로
+  useEffect(() => {
+    if (replyTo) textRef.current?.focus();
+  }, [replyTo]);
   const fileInput = useRef<HTMLInputElement>(null);
   const busy = send.isPending || attach.isPending;
   const clearErrors = () => {
@@ -136,7 +196,12 @@ function Composer({ roomId }: { roomId: number }) {
     const body = text.trim();
     if (!body || busy) return;
     clearErrors();
-    send.mutate({ type: "TEXT", body }, { onSuccess: () => setText("") });
+    send.mutate(replyTo ? { type: "TEXT", body, replyToId: replyTo.id } : { type: "TEXT", body }, {
+      onSuccess: () => {
+        setText("");
+        onClearReply();
+      },
+    });
   };
   /** AC-F3-08: 고른 파일을 형식·크기로 먼저 보고, 맞으면 올린 뒤 메시지로 보낸다 */
   const onPick = (type: AttachType) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +214,7 @@ function Composer({ roomId }: { roomId: number }) {
       setPickError(problem);
       return;
     }
-    attach.mutate({ type, file });
+    attach.mutate({ type, file, replyToId: replyTo?.id ?? null }, { onSuccess: onClearReply });
   };
   const error = send.error ?? attach.error;
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -173,6 +238,18 @@ function Composer({ roomId }: { roomId: number }) {
           <ErrorNotice error={error} />
         </div>
       )}
+      {replyTo && (
+        <div className="composer__reply" role="status">
+          <Ico name="reply" sm />
+          <div className="composer__reply-main">
+            <b>{replyName}에게 답장</b>
+            <span>{replyText(replyTo)}</span>
+          </div>
+          <button type="button" className="icon-btn" aria-label="답장 취소" onClick={onClearReply}>
+            <Ico name="x" sm />
+          </button>
+        </div>
+      )}
       {attach.isPending && (
         <p className="composer__status" role="status">
           올리는 중이에요…
@@ -187,7 +264,10 @@ function Composer({ roomId }: { roomId: number }) {
         </button>
         <input ref={photoInput} type="file" hidden accept={ATTACH_RULES.IMAGE.accept} aria-label="사진 고르기" onChange={onPick("IMAGE")} />
         <input ref={fileInput} type="file" hidden accept={ATTACH_RULES.FILE.accept} aria-label="파일 고르기" onChange={onPick("FILE")} />
-        <textarea rows={1} placeholder="메시지를 입력하세요" aria-label="메시지" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} />
+        <textarea ref={textRef} rows={1} placeholder={replyTo ? "답장을 입력하세요" : "메시지를 입력하세요"} aria-label="메시지" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => {
+          if (e.key === "Escape" && replyTo) onClearReply();
+          onKey(e);
+        }} />
         <button className="btn btn--primary" type="button" aria-label="보내기" disabled={busy || !text.trim()} onClick={submit}>
           <Ico name="send" sm />
         </button>
@@ -213,7 +293,16 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
   const qc = useQueryClient();
   const thread = useChatThread(roomId);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatMsg | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  /** 인용을 누르면 원래 메시지로 스크롤하고 잠깐 강조 */
+  const jumpTo = (id: number) => {
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-msg-id="${id}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.classList.add("msg--flash");
+    window.setTimeout(() => el.classList.remove("msg--flash"), 1200);
+  };
   const readSent = useRef(0);
   const messages = thread.data?.messages ?? [];
   const lastId = messages[messages.length - 1]?.id ?? 0;
@@ -331,16 +420,24 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
                   mine={m.senderId === meId}
                   read={m.id <= partnerRead}
                   partner={room.partnerName}
+                  meId={meId}
                   room={room}
                   role={role}
                   onLeave={onClose}
+                  onReply={setReplyTo}
+                  onJump={jumpTo}
                 />
               </Fragment>
             );
           })}
         </div>
         {started ? (
-          <Composer roomId={roomId} />
+          <Composer
+            roomId={roomId}
+            replyTo={replyTo}
+            replyName={replyTo && replyTo.senderId === meId ? "나" : room.partnerName}
+            onClearReply={() => setReplyTo(null)}
+          />
         ) : role === "USER" ? (
           <StartBar roomId={roomId} />
         ) : (

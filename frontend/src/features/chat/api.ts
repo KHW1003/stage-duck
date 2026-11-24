@@ -94,12 +94,13 @@ export function attachmentProblem(type: AttachType, file: File): string | null {
 export function useSendAttachment(roomId: number) {
   const onSuccess = useAddSent(roomId);
   return useMutation({
-    mutationFn: async ({ type, file }: { type: AttachType; file: File }) => {
+    mutationFn: async ({ type, file, replyToId }: { type: AttachType; file: File; replyToId?: number | null }) => {
       const form = new FormData();
       form.append("file", file);
       form.append("purpose", "CHAT");
       const uploaded = await api<UploadedFile>("/files", { method: "POST", body: form });
-      return postMessage(roomId, type === "FILE" ? { type, fileId: uploaded.id, body: file.name } : { type, fileId: uploaded.id });
+      const base = type === "FILE" ? { type, fileId: uploaded.id, body: file.name } : { type, fileId: uploaded.id };
+      return postMessage(roomId, replyToId ? { ...base, replyToId } : base);
     },
     onSuccess,
   });

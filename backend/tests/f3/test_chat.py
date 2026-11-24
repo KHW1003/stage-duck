@@ -276,3 +276,27 @@ def test_ac_f3_27_unpinned_order_by_last_message(client, db):
     rows = user.get(f"{API}/chat-rooms").json()
     assert [r["roomId"] for r in rows] == [room_a, room_b]
     assert rows[0]["lastMessage"]["body"] == "A에 새 글"
+
+
+def test_reply_quotes_original_message_in_same_room(client, db):
+    """11/24 답장: replyToId 로 같은 방 메시지에 답하면 응답·목록에 원문(번호·보낸 사람·앞부분)이 붙는다."""
+    user, d, room_id, _, supplier = _room(client, db)
+    original = _send(d, room_id, "드럼 마이크도 포함이에요. " + "가" * 100).json()
+    res = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "TEXT", "body": "좋아요!", "replyToId": original["id"]})
+    assert res.status_code == 201, res.text
+    ref = res.json()["replyTo"]
+    assert (ref["id"], ref["type"], ref["senderUserId"]) == (original["id"], "TEXT", supplier.user_id)
+    assert ref["body"].startswith("드럼 마이크도 포함이에요.") and ref["body"].endswith("…") and len(ref["body"]) == 81
+    listed = user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"]
+    assert listed[-1]["replyTo"]["id"] == original["id"]
+    assert next(m for m in listed if m["id"] == original["id"])["replyTo"] is None
+
+
+def test_reply_to_other_room_or_missing_message_is_400(client, db):
+    _, other_d, other_room, _, _ = _room(client, db)  # 먼저 만든 다른 방 (client 는 마지막 로그인으로 바뀐다)
+    foreign = _send(other_d, other_room, "다른 방").json()["id"]
+    user, _, room_id, _, _ = _room(client, db)
+    for target in (foreign, 999_999):
+        res = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "TEXT", "body": "답장", "replyToId": target})
+        assert res.status_code == 400, target
+        assert res.json()["fieldErrors"][0]["field"] == "replyToId"

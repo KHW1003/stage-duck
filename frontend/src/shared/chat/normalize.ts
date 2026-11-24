@@ -2,7 +2,7 @@
  * 채팅 메시지를 화면에서 한 모양으로 쓴다.
  * REST 는 보낸 사람이 senderUserId, WebSocket(api-contract.md 7장)은 senderId 라서 여기서 senderId 하나로 맞춘다.
  */
-import type { ChatMessageOut, ChatMessageType, ChatMessagesOut, WsChatMessage } from "../api/types";
+import type { ChatMessageOut, ChatMessageType, ChatMessagesOut, ChatReplyRef, WsChatMessage } from "../api/types";
 
 export interface ChatMsg {
   id: number;
@@ -13,7 +13,11 @@ export interface ChatMsg {
   contactWarning: boolean;
   createdAt: string;
   attachmentUrl: string | null;
+  replyTo: { id: number; type: ChatMessageType; senderId: number | null; body: string | null } | null; // 답장이면 원래 메시지
 }
+
+const replyOf = (r: ChatReplyRef | null | undefined): ChatMsg["replyTo"] =>
+  r ? { id: r.id, type: r.type, senderId: r.senderUserId, body: r.body } : null;
 
 /** 한 방의 메시지 캐시 (쿼리 키 ["chat-rooms", roomId, "messages"]) */
 export interface ChatThread {
@@ -24,14 +28,14 @@ export interface ChatThread {
 export function fromRest(m: ChatMessageOut): ChatMsg {
   return {
     id: m.id, type: m.type, body: m.body, senderId: m.senderUserId, refId: m.refId,
-    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null,
+    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null, replyTo: replyOf(m.replyTo),
   };
 }
 
 export function fromWs(m: WsChatMessage): ChatMsg {
   return {
     id: m.id, type: m.type, body: m.body, senderId: m.senderId, refId: m.refId,
-    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null,
+    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null, replyTo: replyOf(m.replyTo),
   };
 }
 

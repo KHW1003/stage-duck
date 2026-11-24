@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base, BigID, DateTime3
 from app.models.user import _in
@@ -45,6 +45,9 @@ class ChatMessage(Base):
     ref_id: Mapped[int | None] = mapped_column(BigID)  # quote_version_id 또는 confirm_request_id
     contact_warning: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))  # AC-F3-15
     created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
+    # 답장한 원래 메시지 (같은 방, 11/24). 원래 메시지가 지워지면 NULL
+    reply_to_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("chat_messages.id", ondelete="SET NULL"))
+    reply_to: Mapped["ChatMessage | None"] = relationship(remote_side=[id], lazy="selectin")
 
 
 class ChatRead(Base):

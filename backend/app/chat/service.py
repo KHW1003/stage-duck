@@ -233,6 +233,11 @@ def send_message(db: Session, user: User, room_id: int, body: MessageIn, *, now:
         if stored.mime_type not in ATTACHMENT_MIME[body.type]:
             raise _bad("type", "사진은 [사진]으로, PDF는 [파일]로 보내 주세요.")
         file_id = stored.id
+    reply_to = None
+    if body.reply_to_id is not None:  # 답장: 같은 방 메시지만 (다른 방·없는 번호는 400)
+        reply_to = db.get(ChatMessage, body.reply_to_id)
+        if reply_to is None or reply_to.room_id != room.id:
+            raise _bad("replyToId", "답장할 메시지를 찾을 수 없어요.")
     message = ChatMessage(
         room_id=room.id,
         sender_user_id=user.id,
@@ -240,6 +245,8 @@ def send_message(db: Session, user: User, room_id: int, body: MessageIn, *, now:
         body=text,
         file_id=file_id,
         contact_warning=has_contact_pattern(text or ""),
+        reply_to_id=reply_to.id if reply_to else None,
+        reply_to=reply_to,
     )
     db.add(message)
     _publish_message(db, room, message)

@@ -266,7 +266,7 @@
 | PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
-| POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true` | F3-06, F3-08, F3-15 |
+| POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true`. 답장은 `"replyToId"`(같은 방 메시지, 아니면 `400`) → 응답·`message.created` 에 `replyTo: { id, type, senderUserId, body(앞 80자) }` (11/24) | F3-06, F3-08, F3-15 |
 | POST | `/chat-rooms/{roomId}/read` | P | `{ "lastMessageId": 120 }` | F3-08 |
 | POST | `/reports` | P | 채팅방 신고는 공통 신고 API 로: `{ "targetType": "CHAT_ROOM", "targetId": roomId, "reason" }` (5장) | F4-03 |
 

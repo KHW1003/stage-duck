@@ -19,6 +19,7 @@ class MessageIn(BaseModel):
     type: Literal["TEXT", "IMAGE", "FILE"]
     body: str | None = None
     file_id: int | None = Field(default=None, ge=1)
+    reply_to_id: int | None = Field(default=None, ge=1)  # 답장할 메시지 (같은 방만, 11/24)
 
 
 class ReadIn(BaseModel):
@@ -27,6 +28,26 @@ class ReadIn(BaseModel):
     model_config = _IN
 
     last_message_id: int = Field(ge=1)
+
+
+REPLY_PREVIEW = 80  # 답장 인용에 보이는 원문 글자 수
+
+
+class ReplyRefOut(BaseModel):
+    """답장 인용: 원래 메시지 번호·보낸 사람·종류·앞부분만 (11/24)."""
+
+    model_config = _OUT
+
+    id: int
+    type: str
+    sender_user_id: int | None
+    body: str | None
+
+    @model_validator(mode="after")
+    def _preview(self) -> "ReplyRefOut":
+        if self.body and len(self.body) > REPLY_PREVIEW:
+            self.body = self.body[:REPLY_PREVIEW] + "…"
+        return self
 
 
 class MessageOut(BaseModel):
@@ -41,6 +62,7 @@ class MessageOut(BaseModel):
     created_at: datetime
     file_id: int | None = Field(default=None, exclude=True)
     attachment_url: str | None = None  # IMAGE·FILE 이면 /api/v1/files/{id} (그 방 참여자만 열림)
+    reply_to: ReplyRefOut | None = None  # 답장이면 원래 메시지 (11/24)
 
     @model_validator(mode="after")
     def _attachment(self) -> "MessageOut":

@@ -366,6 +366,42 @@ describe("대화방", () => {
     expect(within(panel).queryByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).not.toBeInTheDocument();
   });
 
+  it("11/24 답장: 말풍선의 꺾인 화살표 → 입력창 위 인용 → replyToId 로 보내고, 말풍선 위에 원문을 보여 준다", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "POST /api/v1/chat-rooms/31/messages": {
+        status: 201,
+        body: msg(121, 12, "네 부탁드려요", { replyTo: { id: 120, type: "TEXT", senderUserId: 7, body: "드럼 마이크도 추가돼요?" } }),
+      },
+    });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const original = await within(panel).findByText("드럼 마이크도 추가돼요?");
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    expect(within(panel).getByText("업체 D에게 답장")).toBeInTheDocument();
+    const box = within(panel).getByRole("textbox", { name: "메시지" });
+    expect(box).toHaveFocus();
+    await user.type(box, "네 부탁드려요");
+    await user.click(within(panel).getByRole("button", { name: "보내기" }));
+    expect(await within(panel).findByText("네 부탁드려요")).toBeInTheDocument();
+    expect(calls.find((c) => c.key === "POST /api/v1/chat-rooms/31/messages")?.body).toEqual({ type: "TEXT", body: "네 부탁드려요", replyToId: 120 });
+    expect(within(panel).queryByRole("button", { name: "답장 취소" })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: /업체 D의 메시지로 이동: 드럼 마이크도 추가돼요\?/ })).toBeInTheDocument();
+  });
+
+  it("11/24 답장은 [답장 취소]나 Esc 로 그만둔다", async () => {
+    mockServer({ ...AS_USER });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const original = await within(panel).findByText("드럼 마이크도 추가돼요?");
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    await user.click(within(panel).getByRole("button", { name: "답장 취소" }));
+    expect(within(panel).queryByText("업체 D에게 답장")).not.toBeInTheDocument();
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    await user.keyboard("{Escape}");
+    expect(within(panel).queryByText("업체 D에게 답장")).not.toBeInTheDocument();
+  });
+
   it("AC-F3-08 방을 열면 읽음을 보내고, 글을 보내면 말풍선이 생기고, WebSocket 으로 온 메시지·읽음이 새로고침 없이 반영된다", async () => {
     const calls = mockServer({
       ...AS_USER,
