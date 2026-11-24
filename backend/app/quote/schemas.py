@@ -107,7 +107,7 @@ class QuoteSentOut(BaseModel):
 
     quote_id: int
     version: int
-    chat_room_id: int | None = None  # #42에서 채팅방 연결
+    chat_room_id: int | None = None  # 견적서를 보내거나 고치면 연결된 채팅방 번호 (service.send_quote·update_quote)
     checks: list[dict] = Field(default_factory=list)  # 자동 검사 결과 (api-contract.md 4.1 checks[])
 
 
