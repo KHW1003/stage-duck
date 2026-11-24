@@ -333,6 +333,7 @@
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
+| PATCH | `/supplier/profile` | S(승인) | 업체 대표 이미지 바꾸기·빼기 `{ "imageFileId": number\|null }` (먼저 `POST /files` purpose `SUPPLIER_IMAGE`). 내 TEMP 파일이 아니면 `400`, 승인 전이면 `404`. 응답은 공개 프로필 (11/24) | F5-15 |
 | POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` — targetType: `CHAT_ROOM` · `PR_POST` · `FREE_POST` · `FREE_COMMENT` · `USER` | F4-03, F4-15 |
 | GET | `/free-posts` | 🌐 | 커뮤니티 `?category=&sort=&field=&q=&page=` (category: FREE · QUESTION · INFO · NEWS, sort: latest · comments · views, field: all · title · author) — 20개, 정지 회원·블라인드 글 제외 | F4-12, F4-13 |
 | GET | `/free-posts/{id}` | 🌐 | 글 + 댓글·답글 목록(`comments[].replies`) + 이전·다음 글(`prevId`·`nextId`·`prevTitle`·`nextTitle`), 조회수 +1. 로그인했으면 내 도움 돼요·저장 여부(`myHelpful`·`bookmarked`) 포함. 블라인드 글은 작성자만(사유 포함), 나머지 404 | F4-12 |

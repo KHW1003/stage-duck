@@ -7,7 +7,7 @@
 import type { CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PR_CATEGORY_LABEL, monthDay } from "../features/board/labels";
-import { useSupplierProfile } from "../features/profile/api";
+import { useChangeSupplierImage, useSupplierProfile } from "../features/profile/api";
 import { categoriesLabel, initialOf, yearMonth } from "../features/profile/labels";
 import "../features/profile/profile.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -16,7 +16,7 @@ import { shortSido, venuePhotos, won } from "../features/venue/view";
 import { ApiError } from "../shared/api/client";
 import type { SupplierProfile } from "../shared/api/types";
 import { NotFound } from "../shared/layout/NotFound";
-import { ErrorNotice } from "../shared/ui/ErrorText";
+import { ErrorNotice, errorMessageOf } from "../shared/ui/ErrorText";
 import { Ico } from "../shared/ui/Ico";
 import { SupplierReviews } from "../features/review/SupplierReviews";
 import { useReviewSummaries } from "../features/review/api";
@@ -58,6 +58,42 @@ function InfoTable({ s }: { s: SupplierProfile }) {
           </tr>
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** 내 업체 프로필에서만: 대표 이미지 바꾸기·빼기 (FR-PROFILE-01, 11/24). 고르면 바로 올리고 저장한다 */
+function ImageControls({ hasImage }: { hasImage: boolean }) {
+  const change = useChangeSupplierImage();
+  return (
+    <div className="profile-image-actions">
+      <label className="btn btn--sm profile-photo">
+        <input
+          type="file"
+          className="sr-only"
+          accept="image/jpeg,image/png,image/webp"
+          aria-label="대표 사진 바꾸기"
+          disabled={change.isPending}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) change.mutate(file);
+          }}
+        />
+        <Ico name="upload" sm />
+        {change.isPending ? "올리는 중" : "대표 사진 바꾸기"}
+      </label>
+      {hasImage && (
+        <button type="button" className="btn btn--sm btn--ghost" disabled={change.isPending} onClick={() => change.mutate(null)}>
+          사진 빼기
+        </button>
+      )}
+      {change.isError && (
+        <p className="field__error" role="alert">
+          <Ico name="warn" sm />
+          {errorMessageOf(change.error)}
+        </p>
+      )}
     </div>
   );
 }
@@ -114,6 +150,7 @@ export function SupplierProfilePage({ own = false }: { own?: boolean }) {
                   </span>
                 )}
               </div>
+              {own && <ImageControls hasImage={Boolean(s.imageUrl)} />}
             </div>
           </div>
         </div>

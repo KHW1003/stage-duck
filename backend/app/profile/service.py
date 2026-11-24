@@ -16,7 +16,7 @@ from app.files import service as files
 from app.models.file import StoredFile
 from app.models.supplier import CATEGORIES, Supplier
 from app.models.user import User
-from app.profile.schemas import MyProfileIn, SupplierProfileOut, UserProfileOut
+from app.profile.schemas import MyProfileIn, SupplierProfileIn, SupplierProfileOut, UserProfileOut
 from app.request import rejection
 from app.request import service as request_service
 from app.supplier import service as supplier_service
@@ -122,3 +122,24 @@ def update_my_profile(db: Session, user: User, body: MyProfileIn, *, now: dateti
     if old_photo is not None:
         files.remove_stored(old_photo)
     return _user_profile(db, user, now)
+
+
+def update_supplier_image(db: Session, user: User, body: SupplierProfileIn, *, now: datetime) -> SupplierProfileOut:
+    """FR-PROFILE-01: 업체 대표 이미지 바꾸기·빼기. 내가 올린 TEMP SUPPLIER_IMAGE 파일만 (남의 파일·다른 용도는 files 가 400).
+    승인 업체만 (프로필이 공개되는 업체). 예전 사진은 DELETED 로 바꾸고 커밋 뒤 저장소에서 지운다 (내 프로필 사진과 같은 방식)."""
+    supplier = supplier_service.get_application(db, user)
+    if supplier.review_status != "APPROVED":
+        raise not_found()
+    old: StoredFile | None = None
+    if body.image_file_id != supplier.image_file_id:
+        if body.image_file_id is not None:
+            files.attach_files(db, owner_id=user.id, file_ids=[body.image_file_id], purpose="SUPPLIER_IMAGE", now=now)
+        if supplier.image_file_id is not None:
+            old = db.get(StoredFile, supplier.image_file_id)
+            if old is not None:
+                old.status = "DELETED"
+        supplier.image_file_id = body.image_file_id
+        db.commit()
+    if old is not None:
+        files.remove_stored(old)
+    return supplier_profile(db, supplier.id)
