@@ -2,7 +2,7 @@
  * [다음 단계로] (/performances/:id/next). 목업: mockup-v4/pages/next.html · FR-CHAT-04 · FR-ASSIGN-03 · AC-F3-02·04·05
  * 결과(방금 확정한 단계) + 단계 칸 + 다음에 할 일 고르기. 공연 상태로 세 경우 중 하나를 그린다:
  * - 다음 할 일이 OPEN_NEXT (단계를 확정했고 다음 단계가 남음): [모집 시작] / [이미 있어요 · 건너뛰기] 고르기 + 전부 구했어요
- * - 다음 할 일이 PAY / DONE (모든 단계를 정함): 단계별 정리 + [통합 결제하기]
+ * - 다음 할 일이 PAY (모든 단계를 정함): 단계별 정리 + [통합 결제하기] / DONE (결제 끝): [청구서 보기] · [최종 담당표 보기]
  * - 그 밖: 공연 상세로 돌려보낸다
  * 버튼은 Idempotency-Key 를 넘기고 응답이 올 때까지 끈다 (같은 시도를 다시 보내면 같은 키).
  * 업체 이름·금액은 확정 견적서 함수(3·4번 묶음)가 생기면 결과 줄과 정리 표에 더한다.
@@ -11,6 +11,7 @@ import { useRef, useState, type CSSProperties } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAdvance, useDeclareAllSecured, usePerformance } from "../features/performance/api";
 import { STAGE_NAME } from "../features/performance/labels";
+import { SkipSuggest } from "../features/performance/SkipSuggest";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { ApiError } from "../shared/api/client";
 import type { PerformanceDetail, StageSummary, StageType } from "../shared/api/types";
@@ -86,6 +87,7 @@ function Choose({ perf, done, next }: { perf: PerformanceDetail; done: StageSumm
           다음은 {name}예요
         </h2>
       </div>
+      <SkipSuggest performance={perf} next={next} />
       <div className="choice choice--col" role="radiogroup" aria-label="다음에 할 일">
         <label className="choice__item">
           <input type="radio" name="next" checked={choice === "OPEN_NEXT"} onChange={() => setChoice("OPEN_NEXT")} />
@@ -188,6 +190,7 @@ function Choose({ perf, done, next }: { perf: PerformanceDetail; done: StageSumm
 }
 
 function AllSet({ perf }: { perf: PerformanceDetail }) {
+  const paid = perf.nextAction === "DONE";
   return (
     <section className="sec mt-40">
       <div className="invoice">
@@ -205,7 +208,7 @@ function AllSet({ perf }: { perf: PerformanceDetail }) {
         ))}
         <div className="invoice__total">
           <span>
-            결제할 금액 <small className="muted next__fee">플랫폼 이용료 포함</small>
+            {paid ? "결제한 금액" : "결제할 금액"} <small className="muted next__fee">플랫폼 이용료 포함</small>
           </span>
           <b>통합 청구서에서 확인</b>
         </div>
@@ -214,8 +217,13 @@ function AllSet({ perf }: { perf: PerformanceDetail }) {
         <Link className="btn btn--lg next__sub" to={`/performances/${perf.id}`}>
           내 공연으로
         </Link>
+        {paid && (
+          <Link className="btn btn--lg next__sub" to={`/performances/${perf.id}/sheet`}>
+            최종 담당표 보기
+          </Link>
+        )}
         <Link className="btn btn--primary btn--lg next__main" to={`/performances/${perf.id}/order`}>
-          통합 결제하기
+          {paid ? "청구서 보기" : "통합 결제하기"}
         </Link>
       </div>
     </section>
@@ -242,8 +250,8 @@ export function NextStagePage() {
         <span className="result__icon">
           <Ico name="check" />
         </span>
-        <h1>{allSet ? "모든 단계를 정했어요" : `${OBJ[done.stageType]} 확정했어요`}</h1>
-        <p>{allSet ? "통합 청구서로 한 번에 결제하면 섭외가 끝나요." : `${p.title} · 다음은 ${STAGE_NAME[next.stageType]} 단계예요.`}</p>
+        <h1>{p.nextAction === "DONE" ? "테스트 결제가 끝났어요" : allSet ? "모든 단계를 정했어요" : `${OBJ[done.stageType]} 확정했어요`}</h1>
+        <p>{p.nextAction === "DONE" ? "청구서와 최종 담당표를 확인해 주세요. 실제 청구되지 않습니다." : allSet ? "통합 청구서로 한 번에 결제하면 섭외가 끝나요." : `${p.title} · 다음은 ${STAGE_NAME[next.stageType]} 단계예요.`}</p>
       </div>
       <Track stages={stages} upcoming={allSet ? undefined : next} />
       {allSet ? <AllSet perf={p} /> : <Choose perf={p} done={done} next={next} />}

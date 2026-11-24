@@ -474,6 +474,63 @@ describe("다음 단계로 (/performances/:id/next)", () => {
   });
 });
 
+describe("건너뛰기 제안·결제 뒤 (/performances/:id/next, 공연 화면)", () => {
+  const stage = (id: number, stageType: string, status: string) => ({ id, stageType, seq: id, status, quoteCount: status === "WAITING" ? null : 1 });
+  const perf = (over: object) => ({
+    id: 5, title: "가을밤 밴드 공연", form: "BAND", status: "ASSIGNING", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00",
+    showEnd: "21:00:00", audience: 80, sido: "광주광역시", sigungu: "동구", currentVersion: 1, lineup: [], hasContactPhone: true, publishedAt: null,
+    needs: {
+      venue: { needed: true, proposalWanted: false, types: [], capacity: 80, budget: null, checkinWish: null, checkoutWish: null, mustHave: [], note: "" },
+      equipment: { needed: true, proposalWanted: true, items: [], services: [], budget: null, owned: [], note: "" },
+      engineer: { needed: true, tasks: ["FOH"], conditions: [], etc: "", note: "" }, ownedVenue: null,
+    },
+    nextAction: "OPEN_NEXT", nextStageId: 2,
+    stages: [stage(1, "VENUE", "CONFIRMED"), stage(2, "EQUIPMENT", "CONFIRMED"), stage(3, "ENGINEER", "WAITING")], ...over,
+  });
+  const quote = (over: object) => ({ quoteId: 1, status: "CONFIRMED", label: "기본형", version: 1, totalAmount: 1350000, venueName: null, overall: "PASS", checks: [], isFullSpec: false, includesEngineer: false, ...over });
+  const serve = (p: object, venue: object, equipment: object) =>
+    mockServer({
+      "GET /api/v1/me": { status: 200, body: USER }, "GET /api/v1/performances/5": { status: 200, body: p },
+      "GET /api/v1/stages/1/quotes": { status: 200, body: [quote(venue)] }, "GET /api/v1/stages/2/quotes": { status: 200, body: [quote(equipment)] },
+    });
+  const SUGGEST = /엔지니어 단계는 건너뛰는 것을 제안해요/;
+
+  it.each(["/performances/5/next", "/performances/5"])("AC-F3-23 엔지니어가 포함된 장비 견적서를 확정하면 %s 에서 경고와 함께 건너뛰기를 제안한다", async (path) => {
+    serve(perf({}), {}, { isFullSpec: true, includesEngineer: true });
+    renderAt(path);
+    expect(await screen.findByText(SUGGEST)).toHaveTextContent("경고");
+  });
+
+  it("AC-F3-23 확정하지 않은 견적서나 엔지니어가 없는 견적서로는 제안하지 않는다", async () => {
+    serve(perf({}), { status: "CLOSED", includesEngineer: true }, {});
+    renderAt("/performances/5/next");
+    await screen.findByRole("button", { name: "엔지니어 업체 모집 시작" });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByText(SUGGEST)).not.toBeInTheDocument();
+  });
+
+  it("AC-F3-05 풀스펙 공연장을 확정하면 장비 단계 건너뛰기를 제안한다", async () => {
+    serve(perf({ nextStageId: 1, stages: [stage(1, "VENUE", "CONFIRMED"), stage(2, "EQUIPMENT", "WAITING"), stage(3, "ENGINEER", "WAITING")] }), { isFullSpec: true, includesEngineer: true }, {});
+    renderAt("/performances/5/next");
+    expect(await screen.findByText(/장비 단계는 건너뛰는 것을 제안해요/)).toBeInTheDocument();
+  });
+
+  it("결제가 끝나면 [통합 결제하기] 대신 청구서·담당표로 간다", async () => {
+    serve(perf({ status: "CONFIRMED", nextAction: "DONE", nextStageId: null }), {}, {});
+    renderAt("/performances/5/next");
+    expect(await screen.findByRole("link", { name: "청구서 보기" })).toHaveAttribute("href", "/performances/5/order");
+    expect(screen.getByRole("link", { name: "최종 담당표 보기" })).toHaveAttribute("href", "/performances/5/sheet");
+    expect(screen.queryByRole("link", { name: "통합 결제하기" })).not.toBeInTheDocument();
+  });
+
+  it("취소된 공연은 결제 버튼 없이 공연 화면으로 간다", async () => {
+    serve(perf({ status: "CANCELLED", nextAction: "NONE", nextStageId: null }), {}, {});
+    renderAt("/performances/5/next");
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/performances\/5$/));
+    expect(screen.queryByRole("link", { name: /통합 결제하기|청구서 보기/ })).not.toBeInTheDocument();
+  });
+});
+
 describe("현장 준비 확인 (/supplier/tech/:performanceId)", () => {
   const SUP = { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" };
   const row = (id: number, item: string, mine: boolean, answer: string, memo: string | null) => ({

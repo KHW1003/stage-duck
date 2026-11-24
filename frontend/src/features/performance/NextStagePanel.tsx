@@ -10,6 +10,7 @@ import { ErrorNotice } from "../../shared/ui/ErrorText";
 import { useAdvance, useDeclareAllSecured } from "./api";
 import { ConfirmModal } from "./ConfirmModal";
 import { STAGE_NAME } from "./labels";
+import { SkipSuggest } from "./SkipSuggest";
 import styles from "./Performance.module.css";
 
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
@@ -38,6 +39,8 @@ export function NextStagePanel({ performance }: { performance: PerformanceDetail
   }
 
   return (
+    <>
+    <SkipSuggest performance={performance} next={next} />
     <div className={styles.noticeActions}>
       <Button variant="primary" onClick={() => send("OPEN_NEXT")} loading={advance.isPending && advance.variables?.action === "OPEN_NEXT"}>
         {nextName} 업체 모집 시작
@@ -80,5 +83,6 @@ export function NextStagePanel({ performance }: { performance: PerformanceDetail
         </ConfirmModal>
       )}
     </div>
+    </>
   );
 }
