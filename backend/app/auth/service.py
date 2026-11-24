@@ -15,6 +15,7 @@ from app.models.social import SocialAccount
 from app.models.supplier import Supplier
 from app.models.terms import TermsAgreement
 from app.models.user import User
+from app.policy import service as policy_service
 
 TERMS_VERSION = "v1"
 _BAD_LOGIN = "이메일이나 비밀번호가 맞지 않아요. 다시 확인해 주세요."
@@ -50,6 +51,13 @@ def supplier_review_status(db: Session, user: User) -> str | None:
     if user.role != "SUPPLIER":
         return None
     return db.scalar(select(Supplier.review_status).where(Supplier.user_id == user.id))
+
+
+def suspension(db: Session, user: User):
+    """AC-F5-18: 정지 계정이면 정지일·사유·마지막 경고 (4번 policy.service), 아니면 None."""
+    if user.status != "SUSPENDED":
+        return None
+    return policy_service.suspension_summary(db, user.id)
 
 
 def landing(db: Session, user: User) -> str:
@@ -89,7 +97,7 @@ def signup(db: Session, body: SignupIn, *, now: datetime) -> User:
 def social_user(db: Session, profile: SocialProfile) -> User | None:
     """AC-F1-04·10: 소셜 연결은 (provider, 고유 식별값)으로만 찾는다. 같은 이메일 계정이 있어도 합치지 않는다.
 
-    연결이 없으면 None (→ 추가 정보 화면). 탈퇴 계정은 이메일 로그인과 같은 401, 정지 계정은 403.
+    연결이 없으면 None (→ 추가 정보 화면). 탈퇴 계정은 이메일 로그인과 같은 401. 정지 계정도 로그인된다 (AC-F5-18).
     연결이 없는데 같은 이메일로 가입한 계정이 있으면 EMAIL_TAKEN — 콜백은 /login?social=failed 로 보낸다 (계약서 2.1).
     """
     user = db.scalar(
@@ -103,9 +111,7 @@ def social_user(db: Session, profile: SocialProfile) -> User | None:
         return None
     if user.status == "WITHDRAWN":
         raise _bad_login()
-    if user.status == "SUSPENDED":
-        raise _suspended()
-    return user
+    return user  # 정지 계정도 로그인은 된다 — 화면이 /me 의 status 로 정지 안내를 띄운다 (AC-F5-18)
 
 
 def social_complete(db: Session, profile: SocialProfile, body: SocialCompleteIn, *, now: datetime) -> User:
@@ -251,7 +257,8 @@ def login(db: Session, email: str, password: str, *, now: datetime) -> User:
     """FR-AUTH-06: 연속 5회 틀리면 10분 잠금. 맞히면 실패 횟수를 0으로.
 
     없는 이메일·탈퇴 계정·틀린 비밀번호는 모두 같은 응답이라, 어떤 이메일이 가입됐는지 알 수 없다.
-    정지(SUSPENDED) 계정은 로그인하지 못한다 (403 ACCOUNT_SUSPENDED, #24 결정).
+    정지(SUSPENDED) 계정도 로그인은 된다 (api-contract.md 6.1, D-48, AC-F5-18). /me·1:1 문의 말고는 쓸 수 없고,
+    화면이 정지 안내를 띄운다. 비밀번호가 틀리면 다른 계정과 같은 답이라 정지 여부를 알 수 없다.
     """
     settings = get_settings()
     user = db.scalar(select(User).where(User.email == normalize_email(email)).with_for_update())
@@ -274,14 +281,7 @@ def login(db: Session, email: str, password: str, *, now: datetime) -> User:
     user.failed_login_count = 0
     user.locked_until = None
     db.commit()
-    if user.status == "SUSPENDED":
-        # 비밀번호가 맞을 때만 알려 준다 — 남이 정지 여부를 알아낼 수 없게
-        raise _suspended()
     return user
-
-
-def _suspended() -> AppError:
-    return AppError(403, "ACCOUNT_SUSPENDED", "이용이 정지된 계정이라 로그인할 수 없어요.")
 
 
 def active_user(db: Session, user_id: int | None) -> User | None:

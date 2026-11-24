@@ -144,6 +144,18 @@ def test_ac_f1_04_linked_account_logs_in_to_my_performances(client, db, provider
     assert SIGNUP_COOKIE not in res.cookies
 
 
+def test_ac_f5_18_suspended_linked_account_also_logs_in(client, db, provider_returns):
+    """정지 계정도 네이버로 로그인은 된다 (이메일 로그인과 같은 규칙). 화면이 정지 안내를 띄운다."""
+    user = make_user(db, status="SUSPENDED")
+    db.add(SocialAccount(user_id=user.id, provider="NAVER", provider_user_id=NAVER_ID, connected_at=NOW))
+    db.commit()
+    provider_returns(_profile())
+
+    res = _callback(client)
+    assert res.status_code == 302, res.text
+    assert read_access_token(res.cookies[ACCESS_COOKIE]) == user.id
+
+
 @pytest.mark.parametrize(("state", "cookie_state"), [("other-state", "state-1"), ("state-1", None)])
 def test_ac_f1_04_state_mismatch_is_refused(client, db, provider_returns, state, cookie_state):
     """NFR-SEC-10: state 가 쿠키와 다르거나 쿠키가 없으면 네이버를 부르지 않고 로그인 화면으로 돌려보낸다."""

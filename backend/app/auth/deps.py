@@ -22,14 +22,26 @@ def unauthenticated() -> AppError:
     return AppError(401, "UNAUTHENTICATED", "로그인이 필요해요. 다시 로그인해 주세요.")
 
 
-def current_user(access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> User:
-    """FR-AUTH-07: 쿠키가 없거나, 위조·만료됐거나, 계정이 없거나 탈퇴·정지됐으면 401.
-
-    정지 계정은 로그인 자체를 막으므로(#24), 이미 받은 쿠키로도 들어올 수 없다. 사유는 로그인할 때 보여 준다.
-    """
+def _load_member(access_token: str | None, db: Session) -> User:
     user_id = read_access_token(access_token)
     user = db.get(User, user_id) if user_id is not None else None
-    if user is None or user.status in ("WITHDRAWN", "SUSPENDED"):
+    if user is None or user.status == "WITHDRAWN":
+        raise unauthenticated()
+    return user
+
+
+def current_member(access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> User:
+    """로그인 확인 — 정지(SUSPENDED) 계정도 통과한다. 쿠키가 없거나, 위조·만료됐거나, 계정이 없거나 탈퇴했으면 401.
+
+    정지 계정이 쓸 수 있는 곳(/me, 1:1 문의 사진)에만 쓴다 (api-contract.md 6.1, D-48, AC-F5-18).
+    """
+    return _load_member(access_token, db)
+
+
+def current_user(access_token: str | None = Cookie(default=None), db: Session = Depends(get_db)) -> User:
+    """FR-AUTH-07: current_member 에 더해 정지 계정도 401. 그 밖의 모든 API 가 쓴다 (채팅 WebSocket 도 직접 부른다)."""
+    user = _load_member(access_token, db)
+    if user.status == "SUSPENDED":
         raise unauthenticated()
     return user
 
