@@ -16,11 +16,14 @@ def switch_account(db: Session, user_id: int) -> tuple[User, str | None]:
 
     고른 계정과 (업체라면) 심사 상태를 돌려준다. 없거나 탈퇴한 계정, 시연 계정이 아닌
     (이메일이 @stageduck.test 로 끝나지 않는) 계정은 404 — 실제 회원의 개인정보가 /me 로 보이지 않게 한다.
+    관리자 계정도 404 (11/25 보안 점검): 비밀번호 없이 관리자 권한(비공개 파일 열람 등)을 얻지 못하게.
+    관리자 화면(/admin)은 원래 비밀번호 로그인만 받는다.
     """
     if not get_settings().is_test_env:
         raise not_found()
     user = db.get(User, user_id)
-    if user is None or user.status == "WITHDRAWN" or not user.email.lower().endswith(DEMO_EMAIL_DOMAIN):
+    if (user is None or user.status == "WITHDRAWN" or user.role == "ADMIN"
+            or not user.email.lower().endswith(DEMO_EMAIL_DOMAIN)):
         raise not_found()
     review_status = None
     if user.role == "SUPPLIER":

@@ -48,11 +48,10 @@ def test_ac_f1_16_switch_service_refused_in_prod_settings(db, monkeypatch):
         ("user", "USER", None),
         ("supplier_approved", "SUPPLIER", "APPROVED"),
         ("supplier_pending", "SUPPLIER", "PENDING"),
-        ("admin", "ADMIN", None),
     ],
 )
 def test_ac_f1_16_switch_account_in_test_env(client, db, kind, expected_role, expected_review):
-    """테스트 환경에서는 네 역할 모두 전환된다. access_token 은 httpOnly, csrf_token 은 화면이 읽을 수 있다."""
+    """테스트 환경에서는 사용자·업체(승인·심사 중)로 전환된다 (관리자는 아래 테스트에서 404). access_token 은 httpOnly, csrf_token 은 화면이 읽을 수 있다."""
     if kind == "user":
         user = make_user(db)
     elif kind == "admin":
@@ -136,12 +135,20 @@ def test_ac_f1_16_switch_real_email_account_is_404(client, db, role, email):
 
 @pytest.mark.parametrize(
     ("role", "email"),
-    [("USER", "demo-user@stageduck.test"), ("ADMIN", "admin@stageduck.test"), ("USER", "Demo-Upper@StageDuck.Test")],
+    [("USER", "demo-user@stageduck.test"), ("USER", "Demo-Upper@StageDuck.Test")],
 )
 def test_ac_f1_16_switch_demo_email_account(client, db, role, email):
-    """@stageduck.test 시연 계정은 (관리자 포함) 전환된다. 도메인 대소문자는 가리지 않는다."""
+    """@stageduck.test 시연 계정은 전환된다. 도메인 대소문자는 가리지 않는다."""
     user = make_user(db, role=role, email=email)
     res = client.post(URL, json={"userId": user.id})
     assert res.status_code == 200, res.text
     assert res.json()["role"] == role
     assert read_access_token(res.cookies.get(ACCESS_COOKIE)) == user.id
+
+
+def test_switch_to_admin_is_404_even_for_demo_email(client, db):
+    """11/25 보안 점검: 관리자는 시연 계정(@stageduck.test)이어도 비밀번호 없이 전환되지 않는다 → 404, 쿠키 없음."""
+    user = make_user(db, role="ADMIN", email="admin@stageduck.test")
+    res = client.post(URL, json={"userId": user.id})
+    assert res.status_code == 404
+    assert res.headers.get_list("set-cookie") == []
