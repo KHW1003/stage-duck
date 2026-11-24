@@ -544,6 +544,8 @@ export interface CompareQuote {
   companyName: string;
   /** 그 단계 × 업체 채팅방 (없으면 null) */
   roomId: number | null;
+  /** 사용자가 채팅을 시작했는지. 시작 전이면 비교 카드 상태가 "견적 받음" */
+  chatStarted: boolean;
   label: string;
   status: string;
   version: number;

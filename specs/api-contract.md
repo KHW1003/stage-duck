@@ -244,7 +244,7 @@
 ### 4.1 견적함·비교·검사
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/stages/{stageId}/quotes` | U | 단계별 견적 비교: 견적서 + 자동 검사 + 풀스펙 배지 + 오퍼 여부 + 업체 상호(`companyName`)·채팅방(`roomId`, 없으면 null) | F3-20~24 |
+| GET | `/stages/{stageId}/quotes` | U | 단계별 견적 비교: 견적서 + 자동 검사 + 풀스펙 배지 + 오퍼 여부 + 업체 상호(`companyName`)·채팅방(`roomId`, 없으면 null)·채팅 시작 여부(`chatStarted`) | F3-20~24 |
 | ~~GET~~ | ~~`/quotes/{quoteId}/checks`~~ | | 따로 두지 않는다. 자동 검사 결과는 `GET /stages/{stageId}/quotes` 응답의 견적서마다 `checks`·`overall` 로 함께 온다 | F3-21~24 |
 
 **검사 결과 형식**

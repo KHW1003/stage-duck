@@ -29,7 +29,10 @@ export function nextActionText(action: NextAction, stage?: StageSummary): string
     case "PUBLISH":
       return "보내지 않은 요청서예요. 이어서 써서 게시해 주세요.";
     case "WAIT_QUOTES":
-      return `${name} 업체의 견적서를 기다리고 있어요. 견적서가 오면 알림으로 알려 드려요.`;
+      // 견적서가 이미 왔으면 "기다리고 있어요" 대신 비교를 권한다 (11/24 제보: "견적 2건"과 같이 나왔다)
+      return stage && (stage.quoteCount ?? 0) > 0
+        ? `${name} 견적서가 ${stage.quoteCount}건 왔어요. 비교해 보고 마음에 드는 업체와 채팅을 시작해 주세요.`
+        : `${name} 업체의 견적서를 기다리고 있어요. 견적서가 오면 알림으로 알려 드려요.`;
     case "NEGOTIATE":
       return `${name} 업체와 채팅으로 조율하고 있어요. 견적서를 비교하고 확정해 주세요.`;
     case "RECHECK":

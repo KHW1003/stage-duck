@@ -27,7 +27,7 @@ const PERF = {
 
 function quote(over: Partial<CompareQuote>): CompareQuote {
   return {
-    quoteId: 1, supplierId: 1, companyName: "", roomId: null, label: "기본형", status: "SENT", version: 1, basedOnPerfVersion: 1, totalAmount: 500000,
+    quoteId: 1, supplierId: 1, companyName: "", roomId: null, chatStarted: false, label: "기본형", status: "SENT", version: 1, basedOnPerfVersion: 1, totalAmount: 500000,
     venueId: 3, venueType: "CULTURE_SPACE", venueName: "공간 C", maxCapacity: 120, checkinTime: "14:00", setupAvailableTime: "15:00", checkoutTime: "23:00",
     includesEquipment: false, includesEngineer: false, isFullSpec: false, offered: false, overall: "PASS",
     checks: [
@@ -94,6 +94,9 @@ describe("단계별 견적 비교 (/performances/:id/compare)", () => {
 
     const c = screen.getByRole("article", { name: "공간 C · 기본형" });
     expect(within(c).getByLabelText("검사 결과: 통과 2")).toBeInTheDocument();
+    // 11/24 제보: 채팅 시작 전에는 "조율 중"이 아니라 "견적 받음"
+    expect(within(c).getByText("견적 받음")).toBeInTheDocument();
+    expect(within(c).queryByText("조율 중")).not.toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "공연장 견적서 항목별 비교" });
     expect(within(table).getByText("200명")).toBeInTheDocument();

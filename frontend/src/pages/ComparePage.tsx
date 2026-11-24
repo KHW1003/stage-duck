@@ -114,7 +114,7 @@ function QuoteColumn({ q, stage, lowest, showDiff, rating }: ColumnProps) {
       </ul>
       <div className="q-col__foot">
         <span className="q-col__state">
-          <span className="state">{confirmed ? "확정" : cancelled ? "업체 사정 취소" : off ? "마감" : "조율 중"}</span>
+          <span className="state">{confirmed ? "확정" : cancelled ? "업체 사정 취소" : off ? "마감" : q.chatStarted ? "조율 중" : "견적 받음"}</span>
           {q.offered && <span className="small muted">견적 요청으로 받음</span>}
         </span>
         <span className="q-col__acts">
@@ -143,8 +143,11 @@ function SideBySide({ quotes, stage }: { quotes: CompareQuote[]; stage: StageSum
     ...[...new Set(quotes.flatMap((q) => q.checks.map((c) => c.id)))].map(
       (cid) => [CHECK_NAME[cid] ?? cid, (q: CompareQuote) => q.checks.find((c) => c.id === cid)?.message ?? "-"] as [string, (q: CompareQuote) => string],
     ),
-    ["요청서 버전", (q) => `v${q.basedOnPerfVersion} 기준`],
   ];
+  // 자동 검사에 요청서 버전(CHK-12) 줄이 있으면 같은 이름 줄을 또 넣지 않는다 (11/24 제보: 두 번 나왔다)
+  if (!quotes.some((q) => q.checks.some((c) => c.id === "CHK-12"))) {
+    rows.push(["요청서 버전", (q) => `v${q.basedOnPerfVersion} 기준`]);
+  }
   return (
     <div className="sp" role="table" aria-label={`${STAGE_NAME[stage.stageType]} 견적서 항목별 비교`} style={{ "--cols": quotes.length } as CSSProperties}>
       <div role="row" className="sp__row">

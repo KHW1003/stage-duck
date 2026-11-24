@@ -64,6 +64,18 @@ def test_ac_f3_20_compare_has_company_and_chat_room(venue_stage):
     assert len({q["roomId"] for q in rows}) == 3  # 업체가 다르면 방도 다르다
 
 
+def test_compare_chat_started_only_after_user_starts_chat(venue_stage):
+    """11/24 제보: 채팅 시작 전에도 "조율 중"으로 보였다 → chatStarted 로 구분한다."""
+    user, stage_id = venue_stage
+    rows = user.get(f"/api/v1/stages/{stage_id}/quotes").json()
+    assert {q["chatStarted"] for q in rows} == {False}
+
+    assert user.post(f"/api/v1/chat-rooms/{rows[0]['roomId']}/start").status_code == 200
+    after = {q["quoteId"]: q["chatStarted"] for q in user.get(f"/api/v1/stages/{stage_id}/quotes").json()}
+    assert after[rows[0]["quoteId"]] is True
+    assert sum(after.values()) == 1
+
+
 def test_ac_f3_20_other_user_gets_404(venue_stage, client, db):
     _, stage_id = venue_stage
     other = login_as(client, make_user(db))
