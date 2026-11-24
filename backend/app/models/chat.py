@@ -48,6 +48,13 @@ class ChatMessage(Base):
     # 답장한 원래 메시지 (같은 방, 11/24). 원래 메시지가 지워지면 NULL
     reply_to_id: Mapped[int | None] = mapped_column(BigID, ForeignKey("chat_messages.id", ondelete="SET NULL"))
     reply_to: Mapped["ChatMessage | None"] = relationship(remote_side=[id], lazy="selectin")
+    # 수정·삭제 (11/24). 지운 메시지는 행을 남기고 내용·첨부를 비운다
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime3)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime3)
+
+    @property
+    def deleted(self) -> bool:
+        return self.deleted_at is not None
 
 
 class ChatRead(Base):

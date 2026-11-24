@@ -56,7 +56,7 @@ def _participant_ids(db: Session, room: ChatRoom) -> list[int]:
     return [room.user_id, supplier_user_id]
 
 
-def _publish_message(db: Session, room: ChatRoom, message: ChatMessage) -> None:
+def _publish_message(db: Session, room: ChatRoom, message: ChatMessage, *, event: str = "message.created") -> None:
     """api-contract.md 7장 message.created. 보낸 사람의 다른 탭도 같은 이벤트를 받는다. 커밋한 뒤에 나간다.
 
     계약서 payload 는 senderId 라서 REST 응답(senderUserId)과 이름만 바꾼다.
@@ -65,7 +65,7 @@ def _publish_message(db: Session, room: ChatRoom, message: ChatMessage) -> None:
     payload = MessageOut.model_validate(message).model_dump(mode="json", by_alias=True)
     payload["senderId"] = payload.pop("senderUserId")
     realtime.publish_after_commit(
-        db, _participant_ids(db, room), "message.created", {"roomId": room.id, "message": payload}
+        db, _participant_ids(db, room), event, {"roomId": room.id, "message": payload}
     )
 
 
@@ -194,12 +194,17 @@ def start_chat(db: Session, user: User, room_id: int, *, now: datetime) -> ChatR
     return room
 
 
-def list_messages(db: Session, user: User, room_id: int, *, after: int | None, limit: int) -> dict[str, Any]:
-    """AC-F3-07·08: 방 메시지와 상대가 읽은 위치. after 가 있으면 그 뒤로 limit 개, 없으면 최근 limit 개 (오래된 순)."""
+def list_messages(
+    db: Session, user: User, room_id: int, *, after: int | None, limit: int, before: int | None = None
+) -> dict[str, Any]:
+    """AC-F3-07·08: 방 메시지와 상대가 읽은 위치. after 가 있으면 그 뒤로 limit 개, before 가 있으면 그 앞의 최근 limit 개
+    (위로 올려 예전 대화 보기, 11/24), 둘 다 없으면 최근 limit 개. 늘 오래된 순."""
     _room_for(db, user, room_id)
     stmt = select(ChatMessage).where(ChatMessage.room_id == room_id)
     if after is not None:
         messages = db.scalars(stmt.where(ChatMessage.id > after).order_by(ChatMessage.id).limit(limit)).all()
+    elif before is not None:
+        messages = list(reversed(db.scalars(stmt.where(ChatMessage.id < before).order_by(ChatMessage.id.desc()).limit(limit)).all()))
     else:
         messages = list(reversed(db.scalars(stmt.order_by(ChatMessage.id.desc()).limit(limit)).all()))
     partner_read = db.scalar(
@@ -250,6 +255,43 @@ def send_message(db: Session, user: User, room_id: int, body: MessageIn, *, now:
     )
     db.add(message)
     _publish_message(db, room, message)
+    db.commit()
+    return message
+
+
+def _my_message(db: Session, user: User, room_id: int, message_id: int) -> tuple[ChatRoom, ChatMessage]:
+    """내가 보낸, 지우지 않은 그 방 메시지. 남의 방·남의 메시지·시스템 메시지·없는 번호는 404."""
+    room = _room_for(db, user, room_id)
+    message = db.get(ChatMessage, message_id, with_for_update=True)
+    if message is None or message.room_id != room.id or message.sender_user_id != user.id or message.deleted_at is not None:
+        raise not_found()
+    return room, message
+
+
+def edit_message(db: Session, user: User, room_id: int, message_id: int, body: str, *, now: datetime) -> ChatMessage:
+    """메시지 수정 (11/24): 내가 보낸 글 메시지만. 연락처 경고(AC-F3-15)는 고친 글로 다시 본다. 상대에게 message.updated."""
+    room, message = _my_message(db, user, room_id, message_id)
+    if message.type != "TEXT":
+        raise _bad("body", "글 메시지만 고칠 수 있어요. 사진·파일은 지우고 다시 보내 주세요.")
+    text = body.strip()
+    if not text:
+        raise _bad("body", "고칠 내용을 적어 주세요.")
+    message.body = text
+    message.contact_warning = has_contact_pattern(text)
+    message.edited_at = now
+    _publish_message(db, room, message, event="message.updated")
+    db.commit()
+    return message
+
+
+def delete_message(db: Session, user: User, room_id: int, message_id: int, *, now: datetime) -> ChatMessage:
+    """메시지 삭제 (11/24): 내가 보낸 글·사진·파일. 행은 남기고(답장·읽음 위치 유지) 내용·첨부를 비운다. 상대에게 message.updated."""
+    room, message = _my_message(db, user, room_id, message_id)
+    message.body = None
+    message.file_id = None
+    message.contact_warning = False
+    message.deleted_at = now
+    _publish_message(db, room, message, event="message.updated")
     db.commit()
     return message
 

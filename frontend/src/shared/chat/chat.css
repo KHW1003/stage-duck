@@ -144,11 +144,13 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* ---------- 답장 (11/24): 말풍선 옆 꺾인 화살표, 말풍선 위 인용, 입력창 위 인용 ---------- */
 .chat-panel .msg__col { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 .chat-panel .msg--me .msg__col { align-items: flex-end; }
-.chat-panel .msg__reply { display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
-  background: transparent; color: var(--sd-muted); cursor: pointer; opacity: 0; }
-.chat-panel .msg:hover .msg__reply, .chat-panel .msg__reply:focus-visible { opacity: 1; }
-.chat-panel .msg__reply:hover { background: var(--sd-band); color: var(--sd-ink); }
-@media (hover: none) { .chat-panel .msg__reply { opacity: .6; } }
+.chat-panel .msg__acts { display: inline-flex; flex: none; align-self: center; gap: 0; opacity: 0; }
+.chat-panel .msg:hover .msg__acts, .chat-panel .msg__acts:focus-within { opacity: 1; }
+@media (hover: none) { .chat-panel .msg__acts { opacity: .6; } }
+.chat-panel .msg__act { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--sd-muted); cursor: pointer; }
+.chat-panel .msg__act:hover { background: var(--sd-band); color: var(--sd-ink); }
+.chat-panel .msg__act:disabled { cursor: default; opacity: .4; }
 .chat-panel .msg__quote { display: flex; flex-direction: column; gap: 2px; max-width: 100%; padding: 6px 10px; border: 0; border-left: 3px solid var(--sd-line-strong);
   border-radius: 4px; background: var(--sd-band); color: var(--sd-muted); font: inherit; font-size: var(--sd-text-small); text-align: left; cursor: pointer; }
 .chat-panel .msg__quote:hover { color: var(--sd-ink); }
@@ -162,3 +164,10 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 .chat-panel .composer__reply-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 메시지 속 링크 (11/24): 긴 주소도 말풍선 밖으로 나가지 않게 */
 .chat-panel .msg__link { color: inherit; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+/* 수정·삭제·예전 대화 (11/24) */
+.chat-panel .msg__b--deleted { color: var(--sd-muted); font-style: italic; user-select: none; }
+.chat-panel .msg__edited { color: var(--sd-muted); }
+.chat-panel .msg__edit { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+.chat-panel .msg__edit textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-field); font: inherit; resize: vertical; }
+.chat-panel .msg__edit-acts { display: flex; justify-content: flex-end; gap: 6px; }
+.chat-panel .room__older { display: flex; justify-content: center; padding: 4px 0 8px; color: var(--sd-muted); font-size: var(--sd-text-small); }
