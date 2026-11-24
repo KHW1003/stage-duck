@@ -2,7 +2,7 @@
  * 채팅 메시지를 화면에서 한 모양으로 쓴다.
  * REST 는 보낸 사람이 senderUserId, WebSocket(api-contract.md 7장)은 senderId 라서 여기서 senderId 하나로 맞춘다.
  */
-import type { ChatMessageOut, ChatMessageType, ChatMessagesOut, WsChatMessage } from "../api/types";
+import type { ChatMessageOut, ChatMessageType, ChatMessagesOut, ChatReplyRef, WsChatMessage } from "../api/types";
 
 export interface ChatMsg {
   id: number;
@@ -13,7 +13,13 @@ export interface ChatMsg {
   contactWarning: boolean;
   createdAt: string;
   attachmentUrl: string | null;
+  replyTo: { id: number; type: ChatMessageType; senderId: number | null; body: string | null; deleted: boolean } | null; // 답장이면 원래 메시지
+  editedAt: string | null; // 고친 시각 (11/24)
+  deleted: boolean; // 지운 메시지 (11/24)
 }
+
+const replyOf = (r: ChatReplyRef | null | undefined): ChatMsg["replyTo"] =>
+  r ? { id: r.id, type: r.type, senderId: r.senderUserId, body: r.body, deleted: r.deleted ?? false } : null;
 
 /** 한 방의 메시지 캐시 (쿼리 키 ["chat-rooms", roomId, "messages"]) */
 export interface ChatThread {
@@ -24,14 +30,16 @@ export interface ChatThread {
 export function fromRest(m: ChatMessageOut): ChatMsg {
   return {
     id: m.id, type: m.type, body: m.body, senderId: m.senderUserId, refId: m.refId,
-    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null,
+    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null, replyTo: replyOf(m.replyTo),
+    editedAt: m.editedAt ?? null, deleted: m.deleted ?? false,
   };
 }
 
 export function fromWs(m: WsChatMessage): ChatMsg {
   return {
     id: m.id, type: m.type, body: m.body, senderId: m.senderId, refId: m.refId,
-    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null,
+    contactWarning: m.contactWarning, createdAt: m.createdAt, attachmentUrl: m.attachmentUrl ?? null, replyTo: replyOf(m.replyTo),
+    editedAt: m.editedAt ?? null, deleted: m.deleted ?? false,
   };
 }
 
@@ -54,8 +62,9 @@ export function laterRead(a: number | null, b: number | null): number | null {
 }
 
 /** 목록·검색에 쓰는 마지막 메시지 글 */
-export function previewOf(m: { type: ChatMessageType; body: string | null } | null): string {
+export function previewOf(m: { type: ChatMessageType; body: string | null; deleted?: boolean } | null): string {
   if (!m) return "아직 메시지가 없어요";
+  if (m.deleted) return "삭제된 메시지예요";
   switch (m.type) {
     case "TEXT":
       return m.body ?? "";

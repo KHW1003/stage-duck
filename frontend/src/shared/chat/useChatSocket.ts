@@ -49,7 +49,7 @@ function handle(qc: QueryClient, e: WsChatEvent, meId: number) {
     return;
   }
   const key = messagesKey(e.data.roomId);
-  if (e.type === "message.created") {
+  if (e.type === "message.created" || e.type === "message.updated") {
     qc.setQueryData<ChatThread>(key, (old) =>
       addToThread(old, { messages: [fromWs(e.data.message)], partnerLastReadMessageId: null }),
     );

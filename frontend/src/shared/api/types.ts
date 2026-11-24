@@ -655,10 +655,19 @@ export interface ChatRoom {
   startedAt: string | null;
   pinnedAt: string | null;
   unreadCount: number;
-  lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string } | null;
+  lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string; deleted?: boolean } | null;
 }
 
 /** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */
+/** 답장 인용: 원래 메시지 번호·종류·보낸 사람·앞부분 80자 (11/24) */
+export interface ChatReplyRef {
+  id: number;
+  type: ChatMessageType;
+  senderUserId: number | null;
+  body: string | null;
+  deleted?: boolean;
+}
+
 export interface ChatMessageOut {
   id: number;
   type: ChatMessageType;
@@ -668,6 +677,9 @@ export interface ChatMessageOut {
   contactWarning: boolean;
   createdAt: string;
   attachmentUrl?: string | null;
+  replyTo?: ChatReplyRef | null;
+  editedAt?: string | null;
+  deleted?: boolean;
 }
 
 export interface ChatMessagesOut {
@@ -679,6 +691,7 @@ export interface ChatMessageIn {
   type: "TEXT" | "IMAGE" | "FILE";
   body?: string | null;
   fileId?: number | null;
+  replyToId?: number | null;
 }
 
 /** WebSocket message.created 의 message (REST 와 달리 보낸 사람이 senderId) */
@@ -691,11 +704,15 @@ export interface WsChatMessage {
   senderId: number | null;
   contactWarning: boolean;
   createdAt: string;
+  replyTo?: ChatReplyRef | null;
+  editedAt?: string | null;
+  deleted?: boolean;
 }
 
 /** GET /ws 받기 전용 이벤트 가운데 채팅 위젯이 쓰는 것 */
 export type WsChatEvent =
   | { type: "message.created"; data: { roomId: number; message: WsChatMessage } }
+  | { type: "message.updated"; data: { roomId: number; message: WsChatMessage } }
   | { type: "message.read"; data: { roomId: number; userId: number; lastMessageId: number } }
   | { type: "quote.updated"; data: { roomId: number; quoteId: number; version: number; changed: string[] } };
 

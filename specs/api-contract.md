@@ -265,8 +265,10 @@
 | GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순 | F3-26, F3-27 |
 | PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
-| GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` | F3-07 |
-| POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true` | F3-06, F3-08, F3-15 |
+| GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` · 위로 올려 예전 대화는 `?before={messageId}` (그 앞의 최근 limit 개, 11/24) | F3-07 |
+| POST | `/chat-rooms/{roomId}/messages` | P | `{ "type": "TEXT"|"IMAGE"|"FILE", "body", "fileId" }` — 시작 전 업체 → `403 CHAT_NOT_STARTED`. 연락처 패턴 → `contactWarning: true`. 답장은 `"replyToId"`(같은 방 메시지, 아니면 `400`) → 응답·`message.created` 에 `replyTo: { id, type, senderUserId, body(앞 80자) }` (11/24) | F3-06, F3-08, F3-15 |
+| PATCH | `/chat-rooms/{roomId}/messages/{messageId}` | P(보낸 사람) | 글 메시지 수정 `{ "body" }` → `editedAt`, 연락처 경고 다시 계산. 남의·시스템·지운 메시지 `404`, 사진·파일 `400`. 상대에게 `message.updated` (11/24) | |
+| DELETE | `/chat-rooms/{roomId}/messages/{messageId}` | P(보낸 사람) | 메시지 삭제 → 행은 남기고 `deleted: true`, body·첨부 비움 (답장 인용도 "삭제된 메시지"). 상대에게 `message.updated` (11/24) | |
 | POST | `/chat-rooms/{roomId}/read` | P | `{ "lastMessageId": 120 }` | F3-08 |
 | POST | `/reports` | P | 채팅방 신고는 공통 신고 API 로: `{ "targetType": "CHAT_ROOM", "targetId": roomId, "reason" }` (5장) | F4-03 |
 
@@ -333,6 +335,7 @@
 | GET | `/suppliers/{id}/profile` | 🌐 | 업체 프로필 — 연락처·사업자 서류 제외, 정지 업체는 404 | F5-15 |
 | GET | `/users/{id}/profile` | S(관계있는 업체), A | 개인 프로필 — 닉네임·사진·가입일·이용 횟수·반려 횟수. 공고·오퍼·채팅으로 만난 적 없으면 404 | F5-16, F5-17 |
 | PATCH | `/me/profile` | U | 닉네임(`409 NICKNAME_TAKEN`)·프로필 사진 변경 | F5-16 |
+| PATCH | `/supplier/profile` | S(승인) | 업체 대표 이미지 바꾸기·빼기 `{ "imageFileId": number\|null }` (먼저 `POST /files` purpose `SUPPLIER_IMAGE`). 내 TEMP 파일이 아니면 `400`, 승인 전이면 `404`. 응답은 공개 프로필 (11/24) | F5-15 |
 | POST | `/reports` | 로그인 | `{ "targetType": "PR_POST", "targetId": 3, "reason" }` — targetType: `CHAT_ROOM` · `PR_POST` · `FREE_POST` · `FREE_COMMENT` · `USER` | F4-03, F4-15 |
 | GET | `/free-posts` | 🌐 | 커뮤니티 `?category=&sort=&field=&q=&page=` (category: FREE · QUESTION · INFO · NEWS, sort: latest · comments · views, field: all · title · author) — 20개, 정지 회원·블라인드 글 제외 | F4-12, F4-13 |
 | GET | `/free-posts/{id}` | 🌐 | 글 + 댓글·답글 목록(`comments[].replies`) + 이전·다음 글(`prevId`·`nextId`·`prevTitle`·`nextTitle`), 조회수 +1. 로그인했으면 내 도움 돼요·저장 여부(`myHelpful`·`bookmarked`) 포함. 블라인드 글은 작성자만(사유 포함), 나머지 404 | F4-12 |
@@ -433,7 +436,8 @@
 
 | type | 언제 | payload |
 |---|---|---|
-| `message.created` | 새 메시지·카드 | `{ roomId, message: { id, type, body, attachmentUrl, refId, senderId, contactWarning, createdAt } }` |
+| `message.created` | 새 메시지·카드 | `{ roomId, message: { id, type, body, attachmentUrl, refId, senderId, contactWarning, createdAt, replyTo, editedAt, deleted } }` |
+| `message.updated` | 메시지 수정·삭제 (11/24) | `message.created` 와 같은 모양 — 화면은 같은 id 를 바꿔 넣는다 |
 | `message.read` | 상대가 읽음 | `{ roomId, userId, lastMessageId }` |
 | `quote.updated` | 견적서 새 버전 | `{ roomId, quoteId, version, changed: ["setupMinutes"] }` |
 | `confirm.updated` | 카드 상태 변경 | `{ roomId, confirmRequestId, status }` |

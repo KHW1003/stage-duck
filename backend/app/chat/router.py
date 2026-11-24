@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import current_user, require_role
 from app.auth.tokens import ACCESS_COOKIE
 from app.chat import realtime, service
-from app.chat.schemas import MessageIn, MessageOut, MessagesOut, PinOut, ReadIn, RoomOut, StartOut
+from app.chat.schemas import MessageEditIn, MessageIn, MessageOut, MessagesOut, PinOut, ReadIn, RoomOut, StartOut
 from app.core.db import get_db
 from app.core.errors import AppError
 from app.models.user import User
@@ -63,12 +63,13 @@ def start_chat(
 def list_messages(
     room_id: int,
     after: int | None = Query(default=None, ge=0),
+    before: int | None = Query(default=None, ge=1),
     limit: int = Query(default=50, ge=1, le=50),
     user: User = Depends(member),
     db: Session = Depends(get_db),
 ) -> MessagesOut:
     """AC-F3-07·08: 메시지 (?after=&limit=50) + 상대가 읽은 위치."""
-    return MessagesOut.model_validate(service.list_messages(db, user, room_id, after=after, limit=limit))
+    return MessagesOut.model_validate(service.list_messages(db, user, room_id, after=after, before=before, limit=limit))
 
 
 @router.post("/{room_id}/messages", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
@@ -81,6 +82,31 @@ def send_message(
 ) -> MessageOut:
     """AC-F3-06·08·15: 메시지 보내기 (TEXT·IMAGE·FILE)."""
     return MessageOut.model_validate(service.send_message(db, user, room_id, body, now=now))
+
+
+@router.patch("/{room_id}/messages/{message_id}", response_model=MessageOut)
+def edit_message(
+    room_id: int,
+    message_id: int,
+    body: MessageEditIn,
+    user: User = Depends(member),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> MessageOut:
+    """메시지 수정 (11/24): 내가 보낸 글 메시지만. 남의 메시지·지운 메시지 404."""
+    return MessageOut.model_validate(service.edit_message(db, user, room_id, message_id, body.body, now=now))
+
+
+@router.delete("/{room_id}/messages/{message_id}", response_model=MessageOut)
+def delete_message(
+    room_id: int,
+    message_id: int,
+    user: User = Depends(member),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> MessageOut:
+    """메시지 삭제 (11/24): 내 메시지만. 내용을 비우고 "삭제된 메시지"로 남긴다."""
+    return MessageOut.model_validate(service.delete_message(db, user, room_id, message_id, now=now))
 
 
 @router.post("/{room_id}/read", status_code=status.HTTP_204_NO_CONTENT)

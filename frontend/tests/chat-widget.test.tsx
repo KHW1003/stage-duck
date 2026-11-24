@@ -366,6 +366,96 @@ describe("대화방", () => {
     expect(within(panel).queryByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).not.toBeInTheDocument();
   });
 
+  it("11/24 답장: 말풍선의 꺾인 화살표 → 입력창 위 인용 → replyToId 로 보내고, 말풍선 위에 원문을 보여 준다", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "POST /api/v1/chat-rooms/31/messages": {
+        status: 201,
+        body: msg(121, 12, "네 부탁드려요", { replyTo: { id: 120, type: "TEXT", senderUserId: 7, body: "드럼 마이크도 추가돼요?" } }),
+      },
+    });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const original = await within(panel).findByText("드럼 마이크도 추가돼요?");
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    expect(within(panel).getByText("업체 D에게 답장")).toBeInTheDocument();
+    const box = within(panel).getByRole("textbox", { name: "메시지" });
+    expect(box).toHaveFocus();
+    await user.type(box, "네 부탁드려요");
+    await user.click(within(panel).getByRole("button", { name: "보내기" }));
+    expect(await within(panel).findByText("네 부탁드려요")).toBeInTheDocument();
+    expect(calls.find((c) => c.key === "POST /api/v1/chat-rooms/31/messages")?.body).toEqual({ type: "TEXT", body: "네 부탁드려요", replyToId: 120 });
+    expect(within(panel).queryByRole("button", { name: "답장 취소" })).not.toBeInTheDocument();
+    expect(within(panel).getByRole("button", { name: /업체 D의 메시지로 이동: 드럼 마이크도 추가돼요\?/ })).toBeInTheDocument();
+  });
+
+  it("11/24 내 글 메시지는 [수정]으로 고치고 '수정됨'이 붙는다. 상대 메시지에는 수정·삭제가 없다", async () => {
+    const calls = mockServer({
+      ...AS_USER,
+      "PATCH /api/v1/chat-rooms/31/messages/119": { status: 200, body: msg(119, 12, "안녕하세요! 문의드려요", { editedAt: "2026-11-13T13:25:00+09:00" }) },
+    });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const mineMsg = (await within(panel).findByText("안녕하세요")).closest(".msg") as HTMLElement;
+    const theirs = within(panel).getByText("드럼 마이크도 추가돼요?").closest(".msg") as HTMLElement;
+    expect(within(theirs).queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
+    expect(within(theirs).queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
+
+    await user.click(within(mineMsg).getByRole("button", { name: "수정" }));
+    const box = within(panel).getByRole("textbox", { name: "메시지 고치기" });
+    expect(box).toHaveValue("안녕하세요");
+    await user.clear(box);
+    await user.type(box, "안녕하세요! 문의드려요");
+    await user.click(within(panel).getByRole("button", { name: "저장" }));
+    expect(await within(panel).findByText("안녕하세요! 문의드려요")).toBeInTheDocument();
+    expect(calls.find((c) => c.key === "PATCH /api/v1/chat-rooms/31/messages/119")?.body).toEqual({ body: "안녕하세요! 문의드려요" });
+    expect(within(panel).getByText("수정됨")).toBeInTheDocument();
+  });
+
+  it("11/24 내 메시지를 [삭제]하면 확인 후 '삭제된 메시지예요'로 바뀐다", async () => {
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    const calls = mockServer({
+      ...AS_USER,
+      "DELETE /api/v1/chat-rooms/31/messages/119": { status: 200, body: msg(119, 12, null, { deleted: true }) },
+    });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const mineMsg = (await within(panel).findByText("안녕하세요")).closest(".msg") as HTMLElement;
+    await user.click(within(mineMsg).getByRole("button", { name: "삭제" }));
+    expect(await within(panel).findByText("삭제된 메시지예요")).toBeInTheDocument();
+    expect(calls.some((c) => c.key === "DELETE /api/v1/chat-rooms/31/messages/119")).toBe(true);
+    expect(within(panel).queryByText("안녕하세요")).not.toBeInTheDocument();
+  });
+
+  it("11/24 대화가 50개를 넘으면 [예전 대화 더 보기]로 그 앞을 불러오고, 끝까지 오면 버튼이 사라진다", async () => {
+    const page = (from: number, n: number) => Array.from({ length: n }, (_, i) => msg(from + i, 7, `메시지 ${from + i}`));
+    const calls = mockServer({
+      ...AS_USER,
+      "GET /api/v1/chat-rooms/31/messages": { status: 200, body: { messages: page(200, 50), partnerLastReadMessageId: 249 } },
+      "GET /api/v1/chat-rooms/31/messages?before=200&limit=50": { status: 200, body: { messages: page(190, 10), partnerLastReadMessageId: 249 } },
+    });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    await within(panel).findByText("메시지 249");
+    await user.click(within(panel).getByRole("button", { name: "예전 대화 더 보기" }));
+    expect(await within(panel).findByText("메시지 190")).toBeInTheDocument();
+    expect(calls.some((c) => c.key === "GET /api/v1/chat-rooms/31/messages?before=200&limit=50")).toBe(true);
+    expect(within(panel).queryByRole("button", { name: "예전 대화 더 보기" })).not.toBeInTheDocument();
+  });
+
+  it("11/24 답장은 [답장 취소]나 Esc 로 그만둔다", async () => {
+    mockServer({ ...AS_USER });
+    renderAt("/faq");
+    const { user, panel } = await openRoom("업체 D");
+    const original = await within(panel).findByText("드럼 마이크도 추가돼요?");
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    await user.click(within(panel).getByRole("button", { name: "답장 취소" }));
+    expect(within(panel).queryByText("업체 D에게 답장")).not.toBeInTheDocument();
+    await user.click(within(original.closest(".msg") as HTMLElement).getByRole("button", { name: "답장" }));
+    await user.keyboard("{Escape}");
+    expect(within(panel).queryByText("업체 D에게 답장")).not.toBeInTheDocument();
+  });
+
   it("AC-F3-08 방을 열면 읽음을 보내고, 글을 보내면 말풍선이 생기고, WebSocket 으로 온 메시지·읽음이 새로고침 없이 반영된다", async () => {
     const calls = mockServer({
       ...AS_USER,

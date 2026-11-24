@@ -276,3 +276,75 @@ def test_ac_f3_27_unpinned_order_by_last_message(client, db):
     rows = user.get(f"{API}/chat-rooms").json()
     assert [r["roomId"] for r in rows] == [room_a, room_b]
     assert rows[0]["lastMessage"]["body"] == "A에 새 글"
+
+
+def test_reply_quotes_original_message_in_same_room(client, db):
+    """11/24 답장: replyToId 로 같은 방 메시지에 답하면 응답·목록에 원문(번호·보낸 사람·앞부분)이 붙는다."""
+    user, d, room_id, _, supplier = _room(client, db)
+    original = _send(d, room_id, "드럼 마이크도 포함이에요. " + "가" * 100).json()
+    res = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "TEXT", "body": "좋아요!", "replyToId": original["id"]})
+    assert res.status_code == 201, res.text
+    ref = res.json()["replyTo"]
+    assert (ref["id"], ref["type"], ref["senderUserId"]) == (original["id"], "TEXT", supplier.user_id)
+    assert ref["body"].startswith("드럼 마이크도 포함이에요.") and ref["body"].endswith("…") and len(ref["body"]) == 81
+    listed = user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"]
+    assert listed[-1]["replyTo"]["id"] == original["id"]
+    assert next(m for m in listed if m["id"] == original["id"])["replyTo"] is None
+
+
+def test_reply_to_other_room_or_missing_message_is_400(client, db):
+    _, other_d, other_room, _, _ = _room(client, db)  # 먼저 만든 다른 방 (client 는 마지막 로그인으로 바뀐다)
+    foreign = _send(other_d, other_room, "다른 방").json()["id"]
+    user, _, room_id, _, _ = _room(client, db)
+    for target in (foreign, 999_999):
+        res = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "TEXT", "body": "답장", "replyToId": target})
+        assert res.status_code == 400, target
+        assert res.json()["fieldErrors"][0]["field"] == "replyToId"
+
+
+def test_before_loads_older_messages_page(client, db):
+    """11/24 위로 올려 예전 대화: ?before=id 면 그 앞의 최근 limit 개 (오래된 순)."""
+    user, d, room_id, _, _ = _room(client, db)
+    ids = [_send(d, room_id, f"메시지 {i}").json()["id"] for i in range(6)]
+    latest = user.get(f"{API}/chat-rooms/{room_id}/messages?limit=3").json()["messages"]
+    assert [m["id"] for m in latest] == ids[-3:]
+    older = user.get(f"{API}/chat-rooms/{room_id}/messages?limit=3&before={ids[3]}").json()["messages"]
+    assert [m["id"] for m in older] == ids[:3]
+
+
+def test_edit_my_text_message_rechecks_contact_and_marks_edited(client, db):
+    user, d, room_id, _, _ = _room(client, db)
+    mid = _send(user, room_id, "내일 뵐게요").json()["id"]
+    res = user.patch(f"{API}/chat-rooms/{room_id}/messages/{mid}", json={"body": "제 번호 010-1234-5678 로 연락 주세요"})
+    assert res.status_code == 200, res.text
+    out = res.json()
+    assert out["body"].startswith("제 번호") and out["editedAt"] and out["contactWarning"] is True
+    listed = user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"]
+    assert next(m for m in listed if m["id"] == mid)["editedAt"]
+
+
+def test_only_sender_can_edit_or_delete(client, db):
+    user, d, room_id, _, _ = _room(client, db)
+    mine = _send(user, room_id, "사용자가 보냄").json()["id"]
+    assert d.patch(f"{API}/chat-rooms/{room_id}/messages/{mine}", json={"body": "바꿔치기"}).status_code == 404
+    assert d.delete(f"{API}/chat-rooms/{room_id}/messages/{mine}").status_code == 404
+    system = user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"][0]  # 견적서 도착 (시스템)
+    assert system["senderUserId"] is None
+    assert user.delete(f"{API}/chat-rooms/{room_id}/messages/{system['id']}").status_code == 404
+
+
+def test_delete_keeps_row_and_hides_content_and_reply_quote(client, db):
+    user, d, room_id, _, _ = _room(client, db)
+    original = _send(d, room_id, "이 견적으로 괜찮을까요?").json()["id"]
+    reply = user.post(f"{API}/chat-rooms/{room_id}/messages", json={"type": "TEXT", "body": "네!", "replyToId": original}).json()["id"]
+    res = d.delete(f"{API}/chat-rooms/{room_id}/messages/{original}")
+    assert res.status_code == 200
+    assert (res.json()["deleted"], res.json()["body"]) == (True, None)
+    listed = user.get(f"{API}/chat-rooms/{room_id}/messages").json()["messages"]
+    gone = next(m for m in listed if m["id"] == original)
+    assert (gone["deleted"], gone["body"], gone["attachmentUrl"]) == (True, None, None)
+    quote = next(m for m in listed if m["id"] == reply)["replyTo"]
+    assert (quote["id"], quote["deleted"], quote["body"]) == (original, True, None)
+    # 지운 메시지는 다시 고치거나 지울 수 없다
+    assert d.patch(f"{API}/chat-rooms/{room_id}/messages/{original}", json={"body": "되살리기"}).status_code == 404
+    assert d.delete(f"{API}/chat-rooms/{room_id}/messages/{original}").status_code == 404

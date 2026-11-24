@@ -8,7 +8,7 @@ from app.auth.deps import require_role
 from app.core.db import get_db
 from app.models.user import User
 from app.profile import service
-from app.profile.schemas import MyProfileIn, SupplierProfileOut, UserProfileOut
+from app.profile.schemas import MyProfileIn, SupplierProfileIn, SupplierProfileOut, UserProfileOut
 
 router = APIRouter(tags=["profile"])
 
@@ -33,6 +33,17 @@ def my_supplier_profile(
     """로그인한 승인 업체 자신의 공개 프로필."""
     response.headers["Cache-Control"] = "no-store"
     return service.my_supplier_profile(db, user)
+
+
+@router.patch("/supplier/profile", response_model=SupplierProfileOut)
+def update_my_supplier_image(
+    body: SupplierProfileIn,
+    user: User = Depends(require_role("SUPPLIER")),
+    db: Session = Depends(get_db),
+    now: datetime = Depends(get_now),
+) -> SupplierProfileOut:
+    """FR-PROFILE-01: 업체 대표 이미지 바꾸기·빼기 (먼저 POST /files purpose=SUPPLIER_IMAGE)."""
+    return service.update_supplier_image(db, user, body, now=now)
 
 
 @router.get("/users/{user_id}/profile", response_model=UserProfileOut)

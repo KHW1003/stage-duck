@@ -19,6 +19,15 @@ class MessageIn(BaseModel):
     type: Literal["TEXT", "IMAGE", "FILE"]
     body: str | None = None
     file_id: int | None = Field(default=None, ge=1)
+    reply_to_id: int | None = Field(default=None, ge=1)  # 답장할 메시지 (같은 방만, 11/24)
+
+
+class MessageEditIn(BaseModel):
+    """메시지 수정 (11/24): 내가 보낸 글 메시지만."""
+
+    model_config = _IN
+
+    body: str = Field(min_length=1, max_length=2000)
 
 
 class ReadIn(BaseModel):
@@ -27,6 +36,29 @@ class ReadIn(BaseModel):
     model_config = _IN
 
     last_message_id: int = Field(ge=1)
+
+
+REPLY_PREVIEW = 80  # 답장 인용에 보이는 원문 글자 수
+
+
+class ReplyRefOut(BaseModel):
+    """답장 인용: 원래 메시지 번호·보낸 사람·종류·앞부분만 (11/24)."""
+
+    model_config = _OUT
+
+    id: int
+    type: str
+    sender_user_id: int | None
+    body: str | None
+    deleted: bool = False  # 원래 메시지가 지워졌으면 body 없이 "삭제된 메시지"
+
+    @model_validator(mode="after")
+    def _preview(self) -> "ReplyRefOut":
+        if self.deleted:
+            self.body = None
+        elif self.body and len(self.body) > REPLY_PREVIEW:
+            self.body = self.body[:REPLY_PREVIEW] + "…"
+        return self
 
 
 class MessageOut(BaseModel):
@@ -41,6 +73,9 @@ class MessageOut(BaseModel):
     created_at: datetime
     file_id: int | None = Field(default=None, exclude=True)
     attachment_url: str | None = None  # IMAGE·FILE 이면 /api/v1/files/{id} (그 방 참여자만 열림)
+    reply_to: ReplyRefOut | None = None  # 답장이면 원래 메시지 (11/24)
+    edited_at: datetime | None = None  # 수정한 시각 (11/24)
+    deleted: bool = False  # 지운 메시지 — body·첨부 없음 (11/24)
 
     @model_validator(mode="after")
     def _attachment(self) -> "MessageOut":
@@ -62,6 +97,7 @@ class LastMessageOut(BaseModel):
     type: str
     body: str | None
     created_at: datetime
+    deleted: bool = False
 
 
 class RoomOut(BaseModel):
