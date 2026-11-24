@@ -279,6 +279,8 @@ erDiagram
 | ref_id | BIGINT UNSIGNED | NULL — quote_version_id 또는 confirm_request_id |
 | contact_warning | BOOLEAN | DEFAULT FALSE — 연락처·계좌 패턴 감지 (AC-F3-15) |
 | reply_to_id | BIGINT UNSIGNED | FK chat_messages ON DELETE SET NULL, NULL 가능 — 답장한 원래 메시지 (같은 방만, 11/24, alembic 0028) |
+| edited_at | DATETIME(3) | NULL 가능 — 수정한 시각 (11/24, alembic 0029) |
+| deleted_at | DATETIME(3) | NULL 가능 — 지운 시각. 지우면 body·file_id 를 비우고 행은 남긴다 (11/24, alembic 0029) |
 
 ### chat_reads
 `room_id, user_id, last_read_message_id, pinned_at DATETIME(3) NULL` — PK (room_id, user_id). 읽음 표시 (AC-F3-08). `pinned_at`이 있으면 그 사람의 채팅 목록 맨 위에 고정 (사람마다 따로, AC-F3-27, D-56).

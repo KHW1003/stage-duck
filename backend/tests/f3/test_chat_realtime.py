@@ -100,7 +100,7 @@ def test_ac_f3_08_supplier_message_reaches_user_and_sender(client, db):
                 "message": {
                     "id": sent["id"], "type": "TEXT", "body": "드럼 마이크도 추가돼요?", "attachmentUrl": None,
                     "refId": None, "senderId": supplier.user_id, "contactWarning": False,
-                    "createdAt": sent["createdAt"], "replyTo": None,
+                    "createdAt": sent["createdAt"], "replyTo": None, "editedAt": None, "deleted": False,
                 },
             }
 
