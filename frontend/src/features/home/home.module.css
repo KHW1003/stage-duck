@@ -156,6 +156,18 @@
 .price { margin-top: 12px; font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .price small { font-size: var(--sd-text-small); color: var(--sd-muted); font-weight: 500; margin-left: 4px; }
 
+/* 3-1. 커뮤니티 최신 글 */
+.community { padding: 0 0 64px; }
+.post-list { --row: calc(var(--sd-touch) + 12px); border-top: 2px solid var(--sd-ink); list-style: none; margin: 0; padding: 0; }
+.post-list--loading { min-height: calc(var(--row) * 3 + 5px); }
+.post-list li { border-bottom: 1px solid var(--sd-line); }
+.post-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: var(--row); padding: 0 4px; font-size: var(--sd-text-body); }
+.post-row .muted { font-size: var(--sd-text-small); font-variant-numeric: tabular-nums; }
+.post-row__title { display: flex; min-width: 0; gap: 4px; }
+.post-row__title b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.post-row:hover b { color: var(--sd-blue); }
+.post-row__count { flex: none; color: var(--sd-blue); font-variant-numeric: tabular-nums; }
+
 /* 4. 이용 방법 */
 .flow { padding: 80px 0 88px; background: var(--sd-soft); }
 .flow__grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 48px; align-items: center; }

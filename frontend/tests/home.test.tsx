@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
@@ -144,6 +144,37 @@ describe("메인 (/)", () => {
     expect(writes.length).toBeGreaterThanOrEqual(2);
     writes.forEach((a) => expect(a).toHaveAttribute("href", "/performances/new"));
     expect(screen.getByRole("link", { name: /업체 먼저 둘러보기/ })).toHaveAttribute("href", "/board");
+  });
+});
+
+describe("메인 커뮤니티 최신 글", () => {
+  const post = (id: number) => ({
+    id, category: "QUESTION", title: `글 ${id}`, author: { name: "가을밤밴드", kind: "USER" }, viewCount: 1,
+    commentCount: id === 4 ? 2 : 0, helpfulCount: 0, hasPhotos: false, createdAt: "2026-11-16T14:20:00",
+  });
+  const page = (items: unknown[]): Reply => ({ status: 200, body: { items, total: items.length, page: 1, pageSize: 20 } });
+
+  it("방문자도 최신 글 3개와 전체 보기를 본다", async () => {
+    mockServer({ "GET /api/v1/free-posts": page([post(4), post(3), post(2), post(1)]) });
+    renderAt("/");
+    const section = await screen.findByRole("region", { name: "커뮤니티" });
+    expect(await within(section).findByRole("link", { name: /글 4/ })).toHaveAttribute("href", "/community/4");
+    expect(within(section).getByRole("link", { name: /글 2/ })).toBeInTheDocument();
+    expect(within(section).queryByText("글 1")).not.toBeInTheDocument();
+    expect(within(section).getByText("[2]")).toBeInTheDocument();
+    expect(within(section).queryByText("가을밤밴드")).not.toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: /전체 보기/ })).toHaveAttribute("href", "/community");
+  });
+
+  it.each<[string, Reply]>([
+    ["글이 0개면", page([])],
+    ["불러오지 못하면", { status: 500, body: { code: "INTERNAL_ERROR", message: "", fieldErrors: [] } }],
+  ])("%s 구역을 숨기고 나머지는 그대로다", async (_, reply) => {
+    mockServer({ "GET /api/v1/free-posts": reply });
+    renderAt("/");
+    await screen.findByRole("region", { name: "커뮤니티" }); // 불러오는 동안에는 자리를 잡아 둔다
+    await waitFor(() => expect(screen.queryByRole("region", { name: "커뮤니티" })).not.toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "어떤 공간에서 공연하고 싶나요?" })).toBeInTheDocument();
   });
 });
 
