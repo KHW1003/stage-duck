@@ -205,6 +205,56 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     expect(screen.getByLabelText("운반비")).toHaveValue("1,500,000");
   });
 
+  it("AC-F2-15 금액 칸에 최대값(4,294,967,295원)을 넘게 적으면 값을 바꾸지 않고 칸 아래에 안내하고, 보내지 않는다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer(EQUIP);
+    renderAt("/supplier/postings/2/quote");
+
+    await fillExample(user);
+    await typeIn(user, "운반비", "4294967296");
+    const transport = screen.getByLabelText("운반비");
+    // 4,294,967,295로 몰래 줄이지 않는다 (칸 밖이라 쉼표 모양)
+    expect(transport).toHaveValue("4,294,967,296");
+    expect(transport).toHaveAccessibleDescription(/4,294,967,295원 이하로 적어 주세요./);
+
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
+  });
+
+  it("AC-F2-17 칸마다 최대값 이하여도 합계가 최대값을 넘으면 보내기 전에 합계 아래에 안내한다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer(EQUIP);
+    renderAt("/supplier/postings/2/quote");
+
+    await fillExample(user);
+    await typeIn(user, "운반비", "4294967295");
+    expect(screen.getByLabelText("운반비")).not.toHaveAccessibleDescription(/이하로 적어 주세요/);
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+    const total = screen.getByTestId("quote-total-box");
+    expect(await within(total).findByText("항목 금액의 합이 너무 커요. 합계는 4,294,967,295원 이하여야 해요.")).toBeInTheDocument();
+    expect(calls.some((c) => c.key.startsWith("POST"))).toBe(false);
+  });
+
+  it("AC-F2-17 금액이 최대값(4,294,967,295원) 딱이면 그대로 보낸다", async () => {
+    const user = userEvent.setup({ delay: null });
+    const calls = mockServer({ ...VENUE, "POST /api/v1/stages/1/quotes": { status: 201, body: { ...SENT, chatRoomId: null } } });
+    renderAt("/supplier/postings/1/quote");
+
+    await screen.findByLabelText(/^대관료/);
+    await typeIn(user, /견적서 이름/, "대관");
+    await typeIn(user, /^대관료/, "4294967295");
+    expect(screen.getByLabelText(/^대관료/)).not.toHaveAccessibleDescription(/이하로 적어 주세요/);
+    await user.click(screen.getByRole("combobox", { name: /공간/ }));
+    await user.click(await screen.findByRole("option", { name: /공간 C/ }));
+    await typeIn(user, /^입실 시각/, "15:00");
+    await typeIn(user, /^설치 가능 시각/, "15:30");
+    await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
+
+    await screen.findByRole("heading", { name: "견적서를 보냈어요" });
+    const body = calls.find((c) => c.key === "POST /api/v1/stages/1/quotes")?.body as Record<string, unknown>;
+    expect(body).toMatchObject({ amounts: { items: 4294967295 }, totalAmount: 4294967295 });
+  });
+
   it("AC-F2-16 [다른 견적서 쓰기]로 같은 공고에 다른 이름의 견적서를 하나 더 보낼 수 있다", async () => {
     const user = userEvent.setup({ delay: null });
     const calls = mockServer({

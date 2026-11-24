@@ -29,6 +29,10 @@ const MSG_DISCOUNT = "업체할인은 항목 합계보다 클 수 없어요.";
 const MSG_MIN_TOTAL = "금액을 다시 확인해 주세요. 견적서 합계는 10,000원 이상이어야 해요.";
 /** 서버가 합계 칸 아래에 보여 줄 오류 코드 (api-contract.md 3.3) */
 const TOTAL_CODES = new Set(["TOTAL_MISMATCH", "TOTAL_TOO_LARGE"]);
+const MSG_MAX_AMOUNT = `${formatWon(MAX_AMOUNT)}원 이하로 적어 주세요.`;
+const MSG_MAX_LINE = `품목 금액(수량 × 단가)은 ${formatWon(MAX_AMOUNT)}원 이하로 적어 주세요.`;
+/** 서버 TOTAL_TOO_LARGE 와 같은 톤 (backend quote/calc.py) */
+const MSG_TOTAL_TOO_LARGE = `항목 금액의 합이 너무 커요. 합계는 ${formatWon(MAX_AMOUNT)}원 이하여야 해요.`;
 
 interface Line {
   name: string;
@@ -129,7 +133,7 @@ function digitsOf(raw: string, maxDigits: number): Money {
 interface NumberInputProps extends Partial<ControlProps> {
   value: Money;
   onChange: (v: Money) => void;
-  /** 금액: 천 단위 쉼표 + 최대 INT UNSIGNED */
+  /** 금액: 천 단위 쉼표. 최대값을 넘는 값도 그대로 두고 overMax 가 알린다 */
   money?: boolean;
   maxDigits?: number;
   "aria-label"?: string;
@@ -150,7 +154,7 @@ function NumberInput({ value, onChange, money = false, maxDigits = 5, ...rest }:
       onBlur={() => setFocused(false)}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
         const n = digitsOf(e.target.value, money ? 10 : maxDigits);
-        onChange(n !== null && money ? Math.min(n, MAX_AMOUNT) : n);
+        onChange(n);
       }}
     />
   );
@@ -174,6 +178,23 @@ function totals(f: FormState, isVenue: boolean) {
 
 type Errors = Record<string, string>;
 
+/** AC-F2-15: 최대값을 넘는 금액 칸. 값을 몰래 줄이지 않고 입력하는 동안 칸 아래에 바로 알린다 */
+function overMax(f: FormState, isVenue: boolean): Errors {
+  const e: Errors = {};
+  const over = (v: Money) => (v ?? 0) > MAX_AMOUNT;
+  if (isVenue) {
+    if (over(f.rentalFee)) e["amounts.items"] = MSG_MAX_AMOUNT;
+  } else {
+    f.lines.forEach((l, i) => {
+      if (over(l.unitPrice)) e[`items.${i}.unitPrice`] = MSG_MAX_AMOUNT;
+      else if (lineAmount(l) > MAX_AMOUNT) e[`items.${i}.unitPrice`] = MSG_MAX_LINE;
+    });
+    for (const a of AMOUNT_FIELDS) if (over(f[a.key])) e[`amounts.${a.key}`] = MSG_MAX_AMOUNT;
+  }
+  if (over(f.discount)) e.discountAmount = MSG_MAX_AMOUNT;
+  return e;
+}
+
 function validate(f: FormState, isVenue: boolean): Errors {
   const e: Errors = {};
   if (!f.label.trim()) e.label = MSG_REQUIRED;
@@ -189,7 +210,8 @@ function validate(f: FormState, isVenue: boolean): Errors {
     });
   }
   const t = totals(f, isVenue);
-  if (t.discount > t.subtotal) e.discountAmount = MSG_DISCOUNT;
+  if (t.subtotal > MAX_AMOUNT) e.totalAmount = MSG_TOTAL_TOO_LARGE;
+  else if (t.discount > t.subtotal) e.discountAmount = MSG_DISCOUNT;
   else if (t.total < MIN_TOTAL) e.totalAmount = MSG_MIN_TOTAL;
   return e;
 }
@@ -269,8 +291,9 @@ export function QuoteForm(props: Props) {
   const setLine = (i: number, patch: Partial<Line>) =>
     setF((prev) => ({ ...prev, lines: prev.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
 
-  /** 화면 검사 오류가 먼저, 없으면 서버 fieldErrors */
-  const errorOf = (field: string) => errors[field] ?? fieldErrorOf(error, field);
+  const live = overMax(f, isVenue);
+  /** 최대값 초과(입력 중 바로) → 보낼 때 화면 검사 → 서버 fieldErrors 순서 */
+  const errorOf = (field: string) => live[field] ?? errors[field] ?? fieldErrorOf(error, field);
   const apiCode = error instanceof ApiError ? error.body.code : undefined;
   const totalError = errors.totalAmount ?? (apiCode && TOTAL_CODES.has(apiCode) ? (error as ApiError).body.message : fieldErrorOf(error, "totalAmount"));
   const shownByField = apiCode !== undefined && TOTAL_CODES.has(apiCode);
@@ -282,7 +305,7 @@ export function QuoteForm(props: Props) {
     e.preventDefault();
     const next = validate(f, isVenue);
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0 || Object.keys(live).length > 0) return;
     const body = toBody(f, isVenue);
     if (props.mode === "edit") {
       const { label: _label, ...rest } = body;
