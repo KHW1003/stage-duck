@@ -21,6 +21,15 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* 머리줄 */
 .chat-panel__bar { display: flex; align-items: center; gap: 2px; flex: none; height: 64px; padding: 0 8px 0 20px; border-bottom: 1px solid var(--sd-line); background: var(--sd-bg); color: var(--sd-ink); }
 .chat-panel__bar--room { gap: 8px; padding-left: 6px; }
+/* 대화방 머리줄: 검정보다 살짝 연한 진회색 바탕 · 흰 글씨 (11/25) */
+.chat-panel__bar--room { --bar-bg: color-mix(in srgb, var(--sd-ink) 82%, #fff); border-bottom-color: var(--bar-bg); background: var(--bar-bg); color: #fff; }
+.chat-panel__bar--room .icon-btn { color: rgba(255, 255, 255, .8); }
+.chat-panel__bar--room .icon-btn:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.chat-panel__bar--room .icon-btn:focus-visible { outline-color: #fff; }
+.chat-panel__bar--room .chat-panel__who small { color: rgba(255, 255, 255, .7); }
+.chat-panel__bar--room .tag { border-color: rgba(255, 255, 255, .4); background: transparent; color: #fff; }
+.chat-panel__bar--room .avatar { background-color: rgba(255, 255, 255, .14); color: #fff; }
+.chat-panel__bar--room .cw-menu { color: var(--sd-ink); } /* [⋯] 펼침 메뉴는 원래대로 흰 바탕 */
 .chat-panel__bar .icon-btn { width: 36px; height: 36px; border-radius: 8px; color: var(--sd-muted); }
 .chat-panel__bar .icon-btn:hover { background: var(--sd-band); color: var(--sd-ink); }
 .chat-panel__bar .icon-btn .icon { width: 20px; height: 20px; }
