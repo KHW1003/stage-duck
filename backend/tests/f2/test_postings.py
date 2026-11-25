@@ -68,9 +68,10 @@ def test_ac_f2_11_venue_posting_only_for_venue_supplier(db):
     equipment = _approved(db, "EQUIPMENT", "INSTALL")
     engineer = _approved(db, "ENGINEER")
 
-    assert [(p["performanceId"], p["stageType"]) for p in _list(venue)] == [(perf_id, "VENUE")]
-    assert _list(equipment) == []
-    assert _list(engineer) == []
+    assert [(p["performanceId"], p["stageType"], p["status"]) for p in _list(venue)] == [(perf_id, "VENUE", "OPEN")]
+    # 11/25: 내 단계가 아직 대기여도 요청서는 미리 보인다 (status=WAITING, 견적서는 못 보냄)
+    assert [(p["stageType"], p["status"]) for p in _list(equipment)] == [("EQUIPMENT", "WAITING")]
+    assert [(p["stageType"], p["status"]) for p in _list(engineer)] == [("ENGINEER", "WAITING")]
 
 
 def test_ac_f2_12_pending_supplier_sees_empty_list(db):
@@ -81,13 +82,19 @@ def test_ac_f2_12_pending_supplier_sees_empty_list(db):
     assert _as(pending.user).get(f"/api/v1/postings/{_stage_id(db, perf_id, 'VENUE')}").status_code == 404
 
 
-def test_ac_f3_01_equipment_hidden_before_venue_confirmed(db, venue_snapshot):
+def test_ac_f3_01_equipment_waiting_before_venue_confirmed(db, venue_snapshot):
+    """앞 단계 확정 전에는 대기(읽기만, 견적서 409), 확정 뒤 열림."""
     _, perf_id = _publish(db)
     equipment = _approved(db, "EQUIPMENT", "INSTALL")
-    assert _list(equipment) == []
+    eq_stage = _stage_id(db, perf_id, "EQUIPMENT")
+    assert [(p["stageId"], p["status"]) for p in _list(equipment)] == [(eq_stage, "WAITING")]
+    c = _as(equipment.user)
+    assert c.get(f"/api/v1/postings/{eq_stage}").json()["status"] == "WAITING"
+    res = c.post(f"/api/v1/stages/{eq_stage}/quotes", json=_quote_body())
+    assert (res.status_code, res.json()["code"]) == (409, "STAGE_NOT_OPEN")
 
-    eq_stage = _venue_confirmed(db, perf_id)
-    assert [p["stageId"] for p in _list(equipment)] == [eq_stage]
+    assert _venue_confirmed(db, perf_id) == eq_stage
+    assert [(p["stageId"], p["status"]) for p in _list(equipment)] == [(eq_stage, "OPEN")]
 
 
 def test_postings_sido_filter_and_show_date_order(db):
@@ -106,7 +113,7 @@ def test_posting_detail_not_visible_is_404(db):
     c = _as(equipment.user)
 
     assert c.get(f"/api/v1/postings/{_stage_id(db, perf_id, 'VENUE')}").status_code == 404  # 다른 부문
-    assert c.get(f"/api/v1/postings/{_stage_id(db, perf_id, 'EQUIPMENT')}").status_code == 404  # 대기 단계
+    assert c.get(f"/api/v1/postings/{_stage_id(db, perf_id, 'EQUIPMENT')}").status_code == 200  # 대기 단계는 읽기만 (11/25)
     assert c.get("/api/v1/postings/999999").status_code == 404  # 없는 단계
 
 

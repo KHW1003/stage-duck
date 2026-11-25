@@ -1,6 +1,7 @@
 /**
  * 공고 목록 (/supplier/postings, #41). 승인된 업체만. 목업 p-jobs.html 의 "공고" 탭.
- * AC-F2-11·12: 서버가 내 부문 × 지금 열린 단계 공고만 준다 (심사 중·정지면 빈 목록). 화면은 거르지 않는다.
+ * AC-F2-11·12: 서버가 내 부문 × 열린 단계 + 아직 대기 중인 단계 공고를 준다 (심사 중·정지면 빈 목록). 화면은 거르지 않는다.
+ * 11/25: 대기 단계는 "모집 전" 표시. 요청서는 미리 읽고, 견적서는 단계가 열린 뒤 보낸다.
  * AC-F4-07: 사용자 닉네임 옆에 이용·반려 횟수. AC-F5-12: 연락처·실명은 보여 주지 않는다.
  */
 import { useSearchParams } from "react-router-dom";
@@ -12,6 +13,7 @@ import { Select } from "../shared/ui/Select";
 import { SIDO } from "../features/request/codes";
 import { usePostings } from "../features/quote/api";
 import { dateLabel, nicknameOf, stageTag, userCounts } from "../features/quote/labels";
+import { isQuotable } from "../features/quote/PostingBrief";
 import styles from "../features/quote/Quote.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 
@@ -26,6 +28,7 @@ function Row({ p }: { p: PostingSummary }) {
       <td>
         <span className={styles.title}>{p.title}</span>
         <span className={styles.tag}>{stageTag(p)}</span>
+        {!isQuotable(p) && <span className={styles.tagWait}>모집 전</span>}
         <small>
           {p.sido} {p.sigungu}
         </small>
@@ -53,7 +56,7 @@ export function PostingsPage() {
 
   return (
     <>
-      <PageTop title="공고 목록" desc="내 부문에서 지금 업체를 찾고 있는 공고예요. 공연일이 가까운 순으로 보여요." />
+      <PageTop title="공고 목록" desc="내 부문의 공고예요. 아직 내 단계 차례가 아닌 공고도 요청서는 미리 볼 수 있어요. 공연일이 가까운 순으로 보여요." />
       <div className={`sd-container ${styles.wrap}`}>
         <div className={styles.toolbar}>
           <Select size="sm" aria-label="지역" value={sido} options={SIDO_OPTIONS} onChange={changeSido} />
@@ -63,7 +66,7 @@ export function PostingsPage() {
         {postings.data && postings.data.length === 0 && (
           <div className={styles.notice} role="status">
             <b>지금 볼 수 있는 공고가 없어요</b>
-            <p>앞 단계가 확정돼 내 부문의 단계가 열리면 공고가 보여요.</p>
+            <p>사용자가 내 부문이 필요한 요청서를 올리면 공고가 보여요.</p>
           </div>
         )}
         {postings.data && postings.data.length > 0 && (
@@ -88,7 +91,7 @@ export function PostingsPage() {
           </div>
         )}
         <ul className={styles.bullets}>
-          <li>앞 단계가 아직 확정되지 않은 공고는 보이지 않아요. 단계가 열리면 알림이 가요.</li>
+          <li>"모집 전" 공고는 앞 단계가 아직 확정되지 않은 공고예요. 요청서는 볼 수 있고, 견적서는 단계가 열린 뒤 보낼 수 있어요. 열리면 알림이 가요.</li>
           <li>심사 중이거나 정지된 업체는 공고를 볼 수 없어요.</li>
           <li>사용자 연락처는 결제 뒤 최종 담당표에서 공개돼요.</li>
         </ul>
