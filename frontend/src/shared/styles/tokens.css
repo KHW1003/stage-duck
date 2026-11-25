@@ -132,11 +132,11 @@
   --sd-on-photo-muted: rgba(255,255,255,.82);
   --sd-dim: rgba(32, 46, 61, .5);
 
-  /* 바닥글 */
-  --sd-footer-bg: #d3d9df;
-  --sd-footer-ink: #1f2b37;
-  --sd-footer-muted: #44525f;
-  --sd-footer-line: #bcc5cd;
+  /* 바닥글 — 11/25 해원: 채팅 창 머리(chat.css .chat-panel__bar)와 같은 진한 색, 글자는 흰색 */
+  --sd-footer-bg: color-mix(in srgb, #1f2227 82%, #fff);
+  --sd-footer-ink: #ffffff;
+  --sd-footer-muted: rgba(255, 255, 255, .72);
+  --sd-footer-line: rgba(255, 255, 255, .2);
 
   /* 겹치는 순서 */
   --sd-star: #f5a524;   /* 별점 (디자인 검수 11/23: 화면 파일에 숫자로 있던 색을 토큰으로. 포인트 색과 다른 유일한 색 — 팀 확인) */
