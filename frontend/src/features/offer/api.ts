@@ -49,6 +49,8 @@ export interface Favorite {
   companyName: string;
   categories: string[];
   stageTypes: StageType[];
+  /** 업체 대표 이미지 (11/25) */
+  imageUrl?: string | null;
 }
 
 export const OFFER_STATUS_LABEL: Record<OfferStatus, string> = {

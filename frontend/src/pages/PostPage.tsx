@@ -122,8 +122,12 @@ export function PostPage() {
         <aside className={styles.side} aria-label="업체">
           <div className={styles.sideSec}>
             <div className={styles.who}>
-              <span className={styles.avatar} aria-hidden="true">
-                {p.companyName.replace(/^업체\s*/, "").slice(0, 1)}
+              <span
+                className={styles.avatar}
+                aria-hidden="true"
+                style={p.supplierImageUrl ? { backgroundImage: `url('${p.supplierImageUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+              >
+                {p.supplierImageUrl ? null : p.companyName.replace(/^업체\s*/, "").slice(0, 1)}
               </span>
               <div>
                 <b>

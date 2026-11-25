@@ -89,6 +89,7 @@ class FavoriteOut(BaseModel):
     company_name: str
     categories: list[str]
     stage_types: list[str]  # 이 업체에게 견적을 요청할 수 있는 단계 (VENUE·EQUIPMENT·ENGINEER)
+    image_url: str | None = None  # 업체 대표 이미지 (11/25)
 
 
 def _offer_out(o, company_name: str) -> OfferOut:
@@ -98,11 +99,13 @@ def _offer_out(o, company_name: str) -> OfferOut:
     )
 
 
-def _favorite_out(s: Supplier) -> FavoriteOut:
+def _favorite_out(db: Session, s: Supplier) -> FavoriteOut:
+    from app.files.service import avatar_url
+
     cats = sorted(c.category for c in s.categories)
     return FavoriteOut(
         supplier_id=s.id, company_name=s.company_name, categories=cats,
-        stage_types=sorted({CATEGORY_STAGE[c] for c in cats}),
+        stage_types=sorted({CATEGORY_STAGE[c] for c in cats}), image_url=avatar_url(db, s.image_file_id),
     )
 
 
@@ -155,7 +158,7 @@ def decline_offer(
 @router.get("/favorites", response_model=list[FavoriteOut])
 def list_favorites(user: User = Depends(require_role("USER")), db: Session = Depends(get_db)) -> list[FavoriteOut]:
     """AC-F3-19: 관심 업체 목록 (열린 단계 부문과 맞는 업체를 화면이 골라 "견적을 요청할까요?" 안내)."""
-    return [_favorite_out(s) for s in service.list_favorites(db, user)]
+    return [_favorite_out(db, s) for s in service.list_favorites(db, user)]
 
 
 @router.post("/favorites", status_code=status.HTTP_204_NO_CONTENT)

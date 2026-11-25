@@ -151,3 +151,4 @@ class MeOut(BaseModel):
     supplier_review_status: str | None
     landing: str
     suspension: SuspensionOut | None = None  # 정지 계정일 때만
+    avatar_url: str | None = None  # 머리줄 계정 버튼 사진: 사용자 프로필 사진 / 업체 대표 이미지 (11/25)

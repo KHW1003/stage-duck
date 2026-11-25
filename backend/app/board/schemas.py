@@ -65,6 +65,7 @@ class PrPostOut(BaseModel):
     price_range: str | None
     bumped_at: datetime
     created_at: datetime
+    supplier_image_url: str | None = None  # 글쓴 업체 대표 이미지 (11/25)
 
 
 class PrPostSavedOut(PrPostOut):

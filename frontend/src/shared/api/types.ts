@@ -19,6 +19,8 @@ export interface Me {
   landing: string;
   /** 정지 계정일 때만 — 정지 화면의 정지일·마지막 경고 (AC-F5-18) */
   suspension?: Suspension | null;
+  /** 머리줄 계정 버튼 사진: 사용자 프로필 사진 / 업체 대표 이미지 (11/25). 없으면 이름 첫 글자 */
+  avatarUrl?: string | null;
 }
 
 export interface Suspension {
@@ -507,6 +509,8 @@ export interface PrPost extends Omit<PrPostItem, "thumbUrl"> {
   body: string;
   photos: UploadedFile[];
   createdAt: string;
+  /** 글쓴 업체 대표 이미지 (11/25) */
+  supplierImageUrl?: string | null;
 }
 
 /** POST·PUT /pr-posts 응답 (#31, AC-F4-03): 전화번호·계좌번호·외부 링크가 있으면 저장은 하고 경고만 */
@@ -658,6 +662,8 @@ export interface ChatRoom {
   lastMessage: { id: number; type: ChatMessageType; body: string | null; createdAt: string; deleted?: boolean } | null;
   /** 그 방의 가장 최근 견적서 버전 → [견적서 보기] (11/25). 견적서가 없으면 null */
   latestQuoteVersionId?: number | null;
+  /** 상대 사진: 사용자가 보면 업체 대표 이미지, 업체가 보면 사용자 프로필 사진 (11/25) */
+  partnerImageUrl?: string | null;
 }
 
 /** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */

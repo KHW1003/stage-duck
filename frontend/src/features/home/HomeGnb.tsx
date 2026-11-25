@@ -88,8 +88,8 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
                 me={me}
                 kind={kind}
                 trigger={({ open: o, toggle }) => (
-                  <button type="button" className={s.avatar} aria-label={`${name} 계정 메뉴`} aria-haspopup="menu" aria-expanded={o} onClick={toggle}>
-                    {name.slice(0, 1)}
+                  <button type="button" className={s.avatar} aria-label={`${name} 계정 메뉴`} aria-haspopup="menu" aria-expanded={o} onClick={toggle} style={me.avatarUrl ? { backgroundImage: `url('${me.avatarUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+                    {me.avatarUrl ? null : name.slice(0, 1)}
                   </button>
                 )}
               />

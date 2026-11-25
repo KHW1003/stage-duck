@@ -3,7 +3,7 @@
  * - 저장한 업체 목록 (최근 저장 순) · 업체 프로필로 가기 · [빼기]
  * - 내 공연에 그 업체 부문의 단계가 열려 있으면 바로 [견적 요청하기] (AC-F3-19 "저장한 업체에 요청할까요?")
  */
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORY_STAGE, OFFER_STATUS_LABEL, useFavorites, useStageOffers, useToggleFavorite, type Favorite } from "../features/offer/api";
 import { OfferDialog } from "../features/offer/OfferParts";
@@ -32,8 +32,8 @@ function Row({ f, open }: { f: Favorite; open: OpenStage | undefined }) {
   const already = offers.data?.items.find((o) => o.supplierId === f.supplierId);
   return (
     <li>
-      <span className="avatar" aria-hidden="true">
-        {f.companyName.replace(/^업체\s*/, "").slice(0, 1)}
+      <span className="avatar" aria-hidden="true" style={f.imageUrl ? ({ "--img": `url('${f.imageUrl}')` } as CSSProperties) : undefined}>
+        {f.imageUrl ? null : f.companyName.replace(/^업체\s*/, "").slice(0, 1)}
       </span>
       <div className="grow">
         <Link to={`/suppliers/${f.supplierId}`}>

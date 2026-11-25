@@ -58,6 +58,12 @@ def file_url(f: StoredFile) -> str:
     return calc.public_url(f.storage_key) if f.visibility == "PUBLIC" else f"/api/v1/files/{f.id}"
 
 
+def avatar_url(db: Session, file_id: int | None) -> str | None:
+    """[다른 묶음용] 프로필 사진·업체 대표 이미지 주소 (작은 사진). 없거나 지운 파일이면 None (11/25: 사진이 보이는 모든 화면)."""
+    f = db.get(StoredFile, file_id) if file_id else None
+    return thumb_url(f) if f is not None and f.status == "ATTACHED" else None
+
+
 def thumb_url(f: StoredFile) -> str:
     return calc.public_url(f.thumb_key) if f.visibility == "PUBLIC" and f.thumb_key else file_url(f)
 
