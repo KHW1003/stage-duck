@@ -1,6 +1,6 @@
 """robots.txt · sitemap.xml · 화면 주소 → head 채운 index.html (specs/seo.md). main.py 에서 맨 마지막에 붙인다."""
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.routing import Match
 
@@ -39,6 +39,8 @@ def screen(path: str, request: Request, db: Session = Depends(get_db)) -> Respon
         if _method_not_allowed(request):
             raise AppError(405, "METHOD_NOT_ALLOWED", "허용하지 않는 요청이에요.")
         raise not_found()
+    if path == "admin":  # 관리자 화면(SQLAdmin)은 /admin/ 아래라 여기서 React 404 로 잡히지 않게 넘긴다
+        return RedirectResponse("/admin/")
     file = service.static_file(path)
     if file is not None:
         return FileResponse(file)

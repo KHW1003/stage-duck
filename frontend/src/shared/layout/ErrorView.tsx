@@ -49,6 +49,8 @@ export function ErrorView({ kind, desc, traceId, rows, onRetry }: Props) {
   const navigate = useNavigate();
   // 내 정보는 이미 받아 둔 값만 읽는다. 여기서 다시 불러오면 내 정보 오류 화면이 "불러오는 중 ↔ 오류"를 되풀이한다
   const home = HOME[layoutKindOf(useQueryClient().getQueryData<Me | null>(ME_KEY))];
+  const serverHome = home === HOME.admin; // SQLAdmin 화면은 새로 불러야 열린다
+  const goHome = () => (serverHome ? window.location.assign(home) : navigate(home));
   const t = TEXT[kind];
   const logout = useLogout();
   const retry = (
@@ -86,10 +88,10 @@ export function ErrorView({ kind, desc, traceId, rows, onRetry }: Props) {
       <div className="err__actions">
         {kind === "404" && (
           <>
-            <Link className="btn btn--sm btn--primary" to={home}>
+            <Link className="btn btn--sm btn--primary" to={home} reloadDocument={serverHome}>
               홈으로
             </Link>
-            <button className="btn btn--sm" type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(home))}>
+            <button className="btn btn--sm" type="button" onClick={() => (window.history.length > 1 ? navigate(-1) : goHome())}>
               이전 화면
             </button>
           </>
@@ -106,7 +108,7 @@ export function ErrorView({ kind, desc, traceId, rows, onRetry }: Props) {
         )}
         {kind === "403" && (
           <>
-            <Link className="btn btn--sm btn--primary" to={home}>
+            <Link className="btn btn--sm btn--primary" to={home} reloadDocument={serverHome}>
               홈으로
             </Link>
             <Link className="btn btn--sm" to="/inquiries/new">
@@ -127,7 +129,7 @@ export function ErrorView({ kind, desc, traceId, rows, onRetry }: Props) {
         {kind === "500" && (
           <>
             {retry}
-            <Link className="btn btn--sm" to={home}>
+            <Link className="btn btn--sm" to={home} reloadDocument={serverHome}>
               홈으로
             </Link>
           </>

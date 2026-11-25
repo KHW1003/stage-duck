@@ -167,3 +167,9 @@ def test_api_and_admin_not_shadowed(client, site):
     assert client.get("/api/v1/nope").status_code == 404
     assert client.get("/admin/login").status_code == 200
     assert client.get("/api/v1/auth/logout").status_code == 405  # POST 전용 API 에 GET → 405 그대로
+
+
+def test_admin_without_slash_goes_to_admin_screen(client):
+    """끝에 / 가 없는 /admin 은 React 404 가 아니라 관리자 화면(SQLAdmin)으로 간다."""
+    res = client.get("/admin", follow_redirects=False)
+    assert (res.status_code, res.headers.get("location")) == (307, "/admin/")

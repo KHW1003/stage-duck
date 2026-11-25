@@ -102,6 +102,18 @@ describe("로그인 (/login)", () => {
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/community"));
   });
 
+  it("AC-F1-11 관리자는 화면 안 이동이 아니라 새로 불러서 서버의 관리자 화면(/admin)으로 간다 (?next= 보다 먼저)", async () => {
+    mockServer({ "POST /api/v1/auth/login": { status: 200, body: { id: 1, role: "ADMIN", nickname: null, landing: "/admin" } } });
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, replace });
+    renderAt("/login?next=/me/performances");
+    await userEvent.type(screen.getByLabelText("이메일"), "a@stageduck.test");
+    await userEvent.type(screen.getByLabelText("비밀번호"), "password1");
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
+    expect(screen.getByTestId("where")).toHaveTextContent("/login");
+  });
+
   it("FR-AUTH-06 비밀번호가 틀리면 서버 문구가 입력칸 아래에, 5회 실패는 안내 상자로 보인다", async () => {
     mockServer({ "POST /api/v1/auth/login": { status: 401, body: err("UNAUTHENTICATED", "이메일이나 비밀번호가 맞지 않아요.") } });
     renderAt("/login");
