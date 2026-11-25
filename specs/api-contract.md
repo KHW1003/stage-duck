@@ -165,7 +165,7 @@
 | GET | `/supplier/venues` | S(VENUE) | 내 공간 목록 (숨긴 공간 포함, 등록 순, `VenueOut` 배열). 견적서 작성에서 공간 고르기 (#192) | F2-18 |
 | POST | `/supplier/venues` | S(VENUE) | 공간 등록 | F2-01, F2-02 |
 | PUT | `/supplier/venues/{venueId}` | S(본인) | 공간 수정 (확정 공연 스냅샷은 그대로) | F2-03 |
-| GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` | F5-01 |
+| GET | `/venues` | 🌐 | 탐색 `?sido=&sigungu=&minCapacity=&type=&bandAllowed=&sort=fee` (`sort`: fee·capacity·latest·views — views 는 조회수 많은 순, 11/25) | F5-01 |
 | GET | `/venues/{venueId}` | 🌐 | 상세 (미확인 조건 구분) | |
 | POST | `/files` | 로그인 | multipart `file`, `purpose` → `201 { "id", "url", "thumbUrl" }`. 용도별 형식·크기·공개 여부는 [uploads.md](uploads.md). 크기 초과 `413 FILE_TOO_LARGE` | |
 | GET · DELETE | `/files/{id}` | 비공개 파일 권한자 / 본인(TEMP) | 비공개 파일 내려받기(남의 것 404) / 올렸다 뺀 사진 지우기 | |
