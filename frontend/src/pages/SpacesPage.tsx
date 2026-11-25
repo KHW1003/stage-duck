@@ -74,7 +74,7 @@ export function SpacesPage() {
 
   return (
     <>
-      <KitPageTop title="공간 찾기" crumbs={[{ label: "공간 찾기" }]} desc="수용 인원과 입실 시각, 기본 장비를 먼저 살펴보세요." />
+      <KitPageTop title="공간 찾기" desc="수용 인원과 입실 시각, 기본 장비를 먼저 살펴보세요." />
       <main className="container main">
         <section className="sec">
           <div className="cat-tiles mb-16" role="group" aria-label="공간 유형">

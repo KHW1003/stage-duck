@@ -217,7 +217,6 @@ export function MyPerformancesPage() {
     <>
       <KitPageTop
         title="내 공연"
-        crumbs={[{ label: "내 공연" }]}
         desc="공연마다 섭외가 어디까지 왔는지와 지금 할 일을 확인하세요."
         actions={
           <Link className="btn btn--primary" to="/performances/new">
