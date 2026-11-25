@@ -277,7 +277,9 @@ function chatRoom(partnerName: string) {
     pinnedAt: null, unreadCount: 0, lastMessage: { id: 200, type: "CONFIRM_REQUEST", body: null, createdAt: "2026-11-19T10:00:00+09:00" },
   };
 }
-const NOTICE = "사용자가 다른 업체와 진행하기로 했어요. 이 공고의 견적서는 마감됐어요.";
+const NOTICE = "사용자가 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.";
+/** 안내 카드는 문장을 줄마다 나눠 그린다(11/25 시안 P3) — 문단 전체 글자로 찾는다 */
+const noticeText = (_: string, el: Element | null) => !!el?.classList.contains("c-card__text") && el.textContent === NOTICE;
 function roomServer(me: Me, partner: string, messages: unknown[], card: unknown) {
   return mockServer({
     "GET /api/v1/me": { status: 200, body: me },
@@ -311,7 +313,7 @@ describe("채팅방 안의 최종 견적 카드", () => {
     });
     renderAt("/faq?chat=31");
     const panel = await screen.findByRole("dialog", { name: "채팅" });
-    expect(await within(panel).findByText(NOTICE)).toBeInTheDocument();
+    expect(await within(panel).findByText(noticeText)).toBeInTheDocument();
     expect(within(panel).queryByRole("button", { name: "확정하기" })).not.toBeInTheDocument();
   });
 
@@ -324,6 +326,6 @@ describe("채팅방 안의 최종 견적 카드", () => {
       roomId: 31,
       message: { id: 201, type: "NOTICE", body: NOTICE, attachmentUrl: null, refId: null, senderId: null, contactWarning: false, createdAt: "2026-11-19T10:10:00+09:00" },
     });
-    expect(await within(panel).findByText(NOTICE)).toBeInTheDocument();
+    expect(await within(panel).findByText(noticeText)).toBeInTheDocument();
   });
 });
