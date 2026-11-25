@@ -7,7 +7,7 @@
  *   [견적 요청하기]는 POST /stages/{id}/offers (#32). 신고(공간)는 서버 API 가 아직 없어 창까지만 연다
  * 연락처는 보이지 않는다. 서버 GET /venues/{id} — 조건의 null 은 "미확인". 사진은 공간 유형별 기본 사진 (features/venue/view).
  */
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FavoriteButton, OfferPicker } from "../features/offer/OfferParts";
 import { useReviewSummaries } from "../features/review/api";
@@ -56,13 +56,15 @@ function Gallery({ name, photos }: { name: string; photos: string[] }) {
   );
 }
 
-/** 스크롤하면 지금 보이는 구역의 탭을 고른다 */
-function useActiveSection(ids: string[]): string {
+/** 스크롤하면 지금 보이는 구역의 탭을 고른다. 탭을 누르면 바로 그 탭을 고르고 고정 머리·탭 줄 아래로 스크롤한다 (11/25) */
+function useActiveSection(ids: string[]): [string, (id: string) => void] {
   const [active, setActive] = useState(ids[0]);
+  const lockUntil = useRef(0);
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       (entries) => {
+        if (Date.now() < lockUntil.current) return; // 탭을 눌러 스크롤하는 중에는 누른 탭 그대로
         const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
         if (top) setActive(top.target.id);
       },
@@ -72,9 +74,30 @@ function useActiveSection(ids: string[]): string {
       const el = document.getElementById(id);
       if (el) io.observe(el);
     });
-    return () => io.disconnect();
+    // 맨 아래까지 내리면 마지막 구역 (짧아서 위 감지 범위에 못 들어오는 경우)
+    const onScroll = () => {
+      if (Date.now() < lockUntil.current) return;
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) setActive(ids[ids.length - 1]);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [ids]);
-  return active;
+  const jump = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    setActive(id);
+    if (!el) return;
+    lockUntil.current = Date.now() + 900;
+    const gnb = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+    const bar = document.querySelector(".space__tabs")?.getBoundingClientRect().height ?? 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - gnb - bar - 8;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    window.history.replaceState(window.history.state, "", `#${id}`);
+  }, []);
+  return [active, jump];
 }
 
 function OfferBox({ v }: { v: VenueDetail }) {
@@ -144,7 +167,7 @@ export function SpaceDetailPage() {
   const venue = useVenue(id);
   const v = venue.data;
   usePageMeta(v ? `${v.name} · ${v.sigungu} ${v.maxCapacity}명 공연 공간` : null);
-  const active = useActiveSection(useMemo(() => TABS.map((t) => t.id), []));
+  const [active, jump] = useActiveSection(useMemo(() => TABS.map((t) => t.id), []));
   const [modal, setModal] = useState<{ kind: "report" } | null>(null);
   if (!Number.isInteger(id) || (venue.error instanceof ApiError && venue.error.status === 404)) return <NotFound />;
   if (!v) return <p className="sd-sr-only">불러오는 중이에요</p>;
@@ -246,7 +269,15 @@ export function SpaceDetailPage() {
           <div className="container">
             <nav className="tabs" aria-label="공간 정보">
               {TABS.map((t) => (
-                <a key={t.id} href={`#${t.id}`} aria-current={active === t.id ? "page" : undefined}>
+                <a
+                  key={t.id}
+                  href={`#${t.id}`}
+                  aria-current={active === t.id ? "page" : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    jump(t.id);
+                  }}
+                >
                   {t.label}
                 </a>
               ))}
