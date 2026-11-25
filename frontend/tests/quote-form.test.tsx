@@ -4,6 +4,7 @@ import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { Me, PostingDetail } from "../src/shared/api/types";
+import { pickOption } from "./pickOption";
 
 /** 업체 견적서 작성·보내기 (#41 화면 두 번째) — AC-F2-15·16·17·18·19, 응답 checks[], 409 STAGE_NOT_OPEN */
 
@@ -112,7 +113,7 @@ async function fillExample(user: UserEvent) {
   await typeIn(user, "인건비", "300000");
   await user.click(screen.getByLabelText(/설치 포함/));
   await user.click(screen.getByLabelText(/엔지니어 포함/));
-  await typeIn(user, "설치 시작", "15:00");
+  await pickOption(screen.getByLabelText("설치 시작"), "15:00");
   await typeIn(user, /설치 걸리는 시간/, "90");
 }
 
@@ -246,8 +247,8 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     expect(screen.getByLabelText(/^대관료/)).not.toHaveAccessibleDescription(/이하로 적어 주세요/);
     await user.click(screen.getByRole("combobox", { name: /공간/ }));
     await user.click(await screen.findByRole("option", { name: /공간 C/ }));
-    await typeIn(user, /^입실 시각/, "15:00");
-    await typeIn(user, /^설치 가능 시각/, "15:30");
+    await pickOption(screen.getByLabelText(/^입실 시각/), "15:00");
+    await pickOption(screen.getByLabelText(/^설치 가능 시각/), "15:30");
     await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
 
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });
@@ -356,8 +357,8 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     expect(screen.queryByRole("option", { name: /공간 A/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("option", { name: /공간 D/ })).not.toBeInTheDocument();
     await user.click(await screen.findByRole("option", { name: /공간 C/ }));
-    await typeIn(user, /^입실 시각/, "15:00");
-    await typeIn(user, /^설치 가능 시각/, "15:30");
+    await pickOption(screen.getByLabelText(/^입실 시각/), "15:00");
+    await pickOption(screen.getByLabelText(/^설치 가능 시각/), "15:30");
     await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
 
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });
@@ -389,8 +390,8 @@ describe("견적서 쓰기 (/supplier/postings/:stageId/quote)", () => {
     await typeIn(user, /^대관료/, "500000");
     await user.click(screen.getByRole("combobox", { name: /공간/ }));
     await user.click(await screen.findByRole("option", { name: /공간 C/ }));
-    await typeIn(user, /^입실 시각/, "15:00");
-    await typeIn(user, /^설치 가능 시각/, "15:30");
+    await pickOption(screen.getByLabelText(/^입실 시각/), "15:00");
+    await pickOption(screen.getByLabelText(/^설치 가능 시각/), "15:30");
     await user.click(screen.getByRole("button", { name: "견적서 보내기" }));
 
     await screen.findByRole("heading", { name: "견적서를 보냈어요" });

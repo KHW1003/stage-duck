@@ -158,6 +158,18 @@ describe("요청서 쓰기 (/performances/new)", () => {
     await user.click(screen.getByRole("combobox", { name: "공연 시작" }));
     expect(screen.getAllByRole("option")[0]).toHaveTextContent("18:00");
   });
+  it("입실·퇴실 희망은 30분 단위로 고르고, 다시 정하지 않음으로 지울 수 있다", async () => {
+    const user = userEvent.setup();
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderPage();
+    await goToStep2(user);
+
+    const wish = screen.getByRole("combobox", { name: "입실 희망" });
+    await pickOption(wish, "13:30");
+    expect(wish).toHaveTextContent("13:30");
+    await pickOption(wish, "정하지 않음");
+    expect(wish).toHaveTextContent("정하지 않음");
+  });
   it("#65 리허설 시작 칸에 설치·철수 순서 안내가 있다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderPage();
