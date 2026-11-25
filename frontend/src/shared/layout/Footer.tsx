@@ -1,10 +1,11 @@
 /**
  * 바닥글 (DESIGN.md 5장). 출처: docs/design/mockup-v3/layout.js 바닥글 — 같은 항목·순서.
  * 주소는 specs/plan.md 6장 라우트 표 (#94). 아직 없는 화면은 누르면 "찾을 수 없어요"가 나온다.
- * 사업자 정보는 D-49: 지어내지 않고 "포트폴리오 프로젝트 · 실제 사업자가 아니에요"로 둔다.
+ * 사업자 정보는 shared/site/company.ts 한 곳에서 읽는다. 빈 칸은 "준비 중" (D-49: 지어내지 않는다, 11/25).
  * FR-CS-01 1:1 문의 · FR-CS-02 공지사항 · FR-CS-03 자주 묻는 질문 · FR-CS-04 업체 이용 가이드(업체만)
  */
 import { Link } from "react-router-dom";
+import { bizRows, hasCompanyInfo } from "../site/company";
 import styles from "./Footer.module.css";
 
 interface FooterLink {
@@ -41,9 +42,17 @@ export function Footer({ partner = false }: { partner?: boolean }) {
           </nav>
         </div>
         <p className={styles.biz}>
-          포트폴리오 프로젝트 · 실제 사업자가 아니에요
+          {bizRows()
+            .map(([k, v]) => `${k} ${v}`)
+            .join(" · ")}
           <br />
-          STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니에요. © 2026 STAGE DUCK
+          {!hasCompanyInfo() && (
+            <>
+              포트폴리오·시연용 서비스입니다. 실제 결제는 이루어지지 않습니다.
+              <br />
+            </>
+          )}
+          STAGE DUCK은 통신판매중개자로서 거래 당사자가 아닙니다. © 2026 STAGE DUCK
         </p>
       </div>
     </footer>
