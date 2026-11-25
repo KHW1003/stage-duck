@@ -64,7 +64,7 @@
 .icon-btn svg { width: 21px; height: 21px; stroke-width: 2; }
 .icon-btn:hover { background: var(--sd-soft); }
 .icon-btn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--sd-conflict-text); border: 2px solid var(--sd-bg); }
-.avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sd-accent); color: var(--sd-blue); font-weight: 700; font-size: var(--sd-text-desc); }
+.avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--sd-line); border-radius: 50%; cursor: pointer; background: var(--sd-accent); color: var(--sd-blue); font-weight: 700; font-size: var(--sd-text-desc); }
 
 /* 2. 히어로 */
 .hero { padding: var(--sd-hero-top) 0 var(--sd-hero-bottom); }

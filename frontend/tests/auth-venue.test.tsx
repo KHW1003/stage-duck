@@ -330,7 +330,8 @@ function mockVenues(extra: Record<string, { status: number; body?: unknown }> = 
 
 describe("공간 찾기 (/venues)", () => {
   it("서버에는 지역·관객 수·밴드·정렬을 보내고, 유형 여러 개·나머지 조건은 받은 목록에서 거른다", () => {
-    expect(DEFAULT_COND.region).toBe("서울"); // 처음 지역은 서울 (11/19)
+    expect(DEFAULT_COND.region).toBe("전체"); // 처음엔 지역 전체·유형 전부 (11/25)
+    expect(DEFAULT_COND.types).toEqual(["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP", "GARDEN", "WAREHOUSE", "ETC"]);
     expect(toQuery({ ...DEFAULT_COND, region: "광주", audience: "80", conditions: ["밴드 공연 가능", "주차"] }, "price")).toEqual({
       sido: "광주광역시", minCapacity: 80, bandAllowed: true, sort: "fee",
     });
@@ -344,14 +345,15 @@ describe("공간 찾기 (/venues)", () => {
     expect(c).toMatchObject({ region: "광주", types: ["ROOFTOP"], audience: "150" });
   });
 
-  it("AC-F5-01 처음엔 서울·대관료 낮은 순(B → C → A), 카드에 입실 시각과 업체가 보인다", async () => {
+  it("AC-F5-01 처음엔 지역 전체·대관료 낮은 순(B → C → A), 카드에 입실 시각과 업체가 보인다", async () => {
     const urls = mockVenues();
     renderAt("/venues");
     const cards = await screen.findAllByRole("link", { name: /공간 [ABC]/ });
     expect(cards.map((a) => a.getAttribute("href"))).toEqual(["/venues/2", "/venues/3", "/venues/1"]);
     expect(within(cards[0]).getByText("17:00 입실")).toBeInTheDocument();
     expect(within(cards[2]).getByText("풀스펙")).toBeInTheDocument();
-    expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).toContain(`sido=${encodeURIComponent("서울특별시")}`);
+    expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).not.toContain("sido=");
+    expect(screen.getAllByRole("button", { name: "전체", pressed: true }).length).toBeGreaterThan(0); // 지역 [전체]가 눌린 상태
   });
 
   it("조건은 [공간 찾기]를 눌러야 바뀌고, 결과가 없으면 [조건 초기화]로 돌아간다", async () => {

@@ -1,8 +1,9 @@
 /**
  * 메인 바닥글 (mockup/home.html · partner.html 의 .footer). 안쪽 화면 바닥글(shared/layout/Footer)보다 크다.
  * 주소는 specs/plan.md 6장. 아직 화면이 없는 곳(회사 소개 등)은 목업처럼 자리만 둔다.
- * 사업자 정보는 목업대로 "내용 미정" 표시 (D-49: 지어내지 않는다).
+ * 사업자·고객센터 정보는 shared/site/company.ts 한 곳에서 읽는다. 빈 칸은 "준비 중" (D-49: 지어내지 않는다, 11/25).
  */
+import { COMPANY, PENDING, bizRows, hasCompanyInfo } from "../../shared/site/company";
 import { Link } from "react-router-dom";
 import { HomeIcon, type HomeIconName } from "./icons";
 import { cx } from "./cx";
@@ -102,10 +103,8 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
           </nav>
           <div className={s.footerCs}>
             <h3>고객센터</h3>
-            <p className={s.footerTel}>
-              <span className={s.tbd}>내용 미정</span>
-            </p>
-            <p>운영 시간은 팀이 정해요</p>
+            <p className={s.footerTel}>{COMPANY.tel ?? <span className={s.tbd}>{PENDING}</span>}</p>
+            <p>{COMPANY.csHours ?? "운영 시간 준비 중"}</p>
             <Link className={cx(s.pill, s.pillDark)} to="/inquiries/new">
               1:1 문의하기
             </Link>
@@ -120,9 +119,14 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
         </div>
         <div className={s.footerBiz}>
           <p>
-            <span>상호 · 대표 · 사업자등록번호 · 통신판매업 신고</span>
-            <span className={s.tbd}>내용 미정</span>
+            {bizRows().map(([k, v], i) => (
+              <span key={k}>
+                {i > 0 && " · "}
+                {k} {v === PENDING ? <span className={s.tbd}>{v}</span> : v}
+              </span>
+            ))}
           </p>
+          {!hasCompanyInfo() && <p className={s.footerNotice}>포트폴리오·시연용 서비스입니다. 실제 결제는 이루어지지 않습니다.</p>}
           <p className={s.footerNotice}>
             STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니며, 업체가 등록한 서비스 정보와 거래에 대한 책임은 각 업체에 있어요.
           </p>
