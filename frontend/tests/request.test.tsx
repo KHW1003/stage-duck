@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "../src/App";
@@ -62,16 +62,14 @@ function renderPage() {
   );
 }
 
-const setValue = (el: HTMLElement, value: string) => fireEvent.change(el, { target: { value } });
-
 /** AC-F2-07 대표 요청: 11월 28일(토) 19~21시, 80명, 리허설 17시, 광주 동구 */
 async function fillStep1(user: ReturnType<typeof userEvent.setup>, audience = "80") {
   await user.type(await screen.findByLabelText(/^공연명/), "가을밤 밴드 공연");
   await user.click(screen.getByRole("radio", { name: "밴드" }));
   pickDate(screen.getByLabelText(/^공연 날짜/), "2026-11-28");
-  setValue(screen.getByLabelText(/^리허설 시작/), "17:00");
-  setValue(screen.getByLabelText(/^공연 시작/), "19:00");
-  setValue(screen.getByLabelText(/^공연 종료/), "21:00");
+  await pickOption(screen.getByRole("combobox", { name: "리허설 시작" }), "17:00");
+  await pickOption(screen.getByRole("combobox", { name: "공연 시작" }), "19:00");
+  await pickOption(screen.getByRole("combobox", { name: "공연 종료" }), "21:00");
   await user.clear(screen.getByLabelText(/^예상 관객/));
   await user.type(screen.getByLabelText(/^예상 관객/), audience);
   await pickOption(screen.getByRole("combobox", { name: "시·도" }), "광주광역시");
@@ -146,6 +144,20 @@ describe("요청서 쓰기 (/performances/new)", () => {
     expect(calls.map((c) => `${c.method} ${c.url}`)).toContain("POST /api/v1/performances/41/publish");
   });
 
+  it("공연 시간은 30분 단위로만 고르고, 공연 시작은 리허설보다 늦은 시각만 나온다", async () => {
+    const user = userEvent.setup();
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderPage();
+
+    await user.click(await screen.findByRole("combobox", { name: "리허설 시작" }));
+    const all = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(all).toHaveLength(48);
+    expect(all.every((t) => /^\d\d:(00|30)$/.test(t!))).toBe(true);
+    expect([all[0], all[47]]).toEqual(["00:00", "23:30"]);
+    await user.click(screen.getByRole("option", { name: "17:30" }));
+    await user.click(screen.getByRole("combobox", { name: "공연 시작" }));
+    expect(screen.getAllByRole("option")[0]).toHaveTextContent("18:00");
+  });
   it("#65 리허설 시작 칸에 설치·철수 순서 안내가 있다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderPage();

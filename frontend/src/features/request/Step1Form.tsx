@@ -23,7 +23,11 @@ interface Props {
   phoneHint?: string;
 }
 
-type TextKey = "title" | "showDate" | "rehearsalStart" | "showStart" | "showEnd" | "audience" | "sigungu" | "contactPhone";
+type TimeKey = "rehearsalStart" | "showStart" | "showEnd";
+type TextKey = "title" | "audience" | "sigungu" | "contactPhone" | TimeKey;
+
+/** 공연 시간은 30분 단위로 고른다 (11/25). 00:00 ~ 23:30 */
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(i >> 1).padStart(2, "0")}:${i % 2 ? "30" : "00"}`);
 
 const FORM_ICON: Record<string, KitIconName> = { BAND: "music", THEATER: "ticket", TALK_EVENT: "mic", RELIGIOUS: "church", ETC: "more" };
 
@@ -36,6 +40,14 @@ export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint 
     onChange: (e: ChangeEvent<HTMLInputElement>) => onChange({ ...value, [key]: e.target.value }),
     "aria-invalid": errors[key] ? true : undefined,
     "aria-describedby": [key === "rehearsalStart" ? f("time-hint") : "", errors[key] ? f(`${key}-err`) : ""].filter(Boolean).join(" ") || undefined,
+  });
+  // after 보다 늦은 시각만 보여 준다. 예전에 저장한 17:15 같은 값은 바꾸기 전까지 남긴다
+  const time = (key: TimeKey, after = "") => ({
+    ...text(key),
+    className: "rq-time",
+    placeholder: "시각",
+    options: [...new Set([...TIMES.filter((t) => t > after), ...(value[key] ? [value[key]] : [])])].sort().map((t) => ({ value: t, label: t })),
+    onChange: (v: string) => onChange({ ...value, [key]: v }),
   });
   const setLineup = (lineup: Form["lineup"]) => onChange({ ...value, lineup });
 
@@ -140,11 +152,11 @@ export function Step1Form({ value, onChange, errors, minDate, onNext, phoneHint 
           <Row label="시간" required>
             <span className="form-table__inline">
               <span className="small muted">리허설</span>
-              <input className="input" type="time" step={60} aria-label="리허설 시작" {...text("rehearsalStart")} />
+              <Select aria-label="리허설 시작" {...time("rehearsalStart")} />
               <span className="small muted">공연</span>
-              <input className="input" type="time" step={60} aria-label="공연 시작" {...text("showStart")} />
+              <Select aria-label="공연 시작" {...time("showStart", value.rehearsalStart)} />
               <span>~</span>
-              <input className="input" type="time" step={60} aria-label="공연 종료" {...text("showEnd")} />
+              <Select aria-label="공연 종료" {...time("showEnd", value.showStart)} />
             </span>
             <Err id={f("rehearsalStart-err")} msg={errors.rehearsalStart} />
             <Err id={f("showStart-err")} msg={errors.showStart} />
