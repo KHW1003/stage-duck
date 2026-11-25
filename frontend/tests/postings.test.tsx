@@ -138,14 +138,24 @@ describe("공고 목록 (/supplier/postings)", () => {
 });
 
 describe("공고 상세 (/supplier/postings/:stageId)", () => {
+  it("11/25 내 단계가 아직 대기면 요청서는 보이고 [견적서 쓰기]는 잠긴 채 안내 문구가 붙는다", async () => {
+    mockServer({ ...ME, "GET /api/v1/postings/2": { status: 200, body: { ...DETAIL, status: "WAITING" } } });
+    renderAt("/supplier/postings/2");
+
+    expect(await screen.findByRole("heading", { level: 2, name: /가을밤 밴드 공연/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "견적서 쓰기" })).toBeDisabled();
+    expect(screen.getAllByText(/앞 단계가 확정되면 이 단계 모집이 열려요/).length).toBeGreaterThan(0);
+  });
+
   it("AC-F3-03 요청서 내용과 앞 단계에서 확정된 공간의 입실 시각·기본 장비·전원이 보인다", async () => {
     mockServer({ ...ME, "GET /api/v1/postings/2": { status: 200, body: { ...DETAIL, ...OWNER_SECRET } } });
     renderAt("/supplier/postings/2");
 
-    expect(await screen.findByRole("heading", { level: 1, name: /가을밤 밴드 공연/ })).toBeInTheDocument();
-    expect(screen.getByText(/리허설 17:00/)).toBeInTheDocument();
-    expect(screen.getByText(/공연 19:00~21:00/)).toBeInTheDocument();
-    expect(screen.getByText(/관객 80명/)).toBeInTheDocument();
+    // 11/25: 요청서 기본 정보는 큰 카드(PostingBrief)로 보인다
+    expect(await screen.findByRole("heading", { level: 2, name: /가을밤 밴드 공연/ })).toBeInTheDocument();
+    expect(screen.getByText("리허설 17:00")).toBeInTheDocument();
+    expect(screen.getByText(/19:00 ~ 21:00/)).toBeInTheDocument();
+    expect(screen.getByText(/^80명/)).toBeInTheDocument();
     expect(screen.getByText("가을밤밴드 · 이용 2 · 반려 1")).toBeInTheDocument();
 
     const prior = screen.getByRole("region", { name: "앞 단계에서 확정된 공간" });

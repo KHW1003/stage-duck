@@ -18,7 +18,7 @@ import { DoneView, type DoneAction } from "../shared/ui/DoneView";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { MoneyText } from "../shared/ui/MoneyText";
 import { usePosting, useSendQuote } from "../features/quote/api";
-import { dateLabel, hm, nicknameOf, stageTag, userCounts } from "../features/quote/labels";
+import { isQuotable, PostingBrief } from "../features/quote/PostingBrief";
 import { QuoteForm } from "../features/quote/QuoteForm";
 import { useSupplierTermsReview } from "../features/supplier/termsReview";
 import { SupplierTermsFlow } from "./SupplierTermsReview";
@@ -122,30 +122,20 @@ function Writer({ stageId, again }: { stageId: number; again: string }) {
 
   return (
     <>
-      <PageTop
-        title={p ? `견적서 쓰기 · ${p.title}` : "견적서 쓰기"}
-        crumbs={crumbs}
-        desc={
-          p && (
-            <>
-              <span className="sd-num">
-                {stageTag(p)} · {dateLabel(p.showDate)} · 리허설 {hm(p.rehearsalStart)} · 공연 {hm(p.showStart)}~{hm(p.showEnd)} · {p.sido}{" "}
-                {p.sigungu} · 관객 {p.audience}명 · 요청서 v{p.performanceVersion}
-              </span>
-              <br />
-              <span className="sd-num">
-                {nicknameOf(p)} · {userCounts(p)}
-              </span>
-            </>
-          )
-        }
-      />
+      <PageTop title="견적서 쓰기" crumbs={crumbs} />
       <div className={`sd-container ${styles.wrap}`}>
         {posting.isPending && <p className="sd-sr-only">불러오는 중이에요</p>}
-        {hidden && <Notice title="볼 수 없는 공고예요" desc="마감됐거나, 내 부문·지역의 공고가 아니거나, 아직 내 단계가 열리지 않았어요." />}
+        {hidden && <Notice title="볼 수 없는 공고예요" desc="마감됐거나 내 부문의 공고가 아니에요." />}
         {!hidden && <ErrorNotice error={posting.error} />}
         {notOpen && <Notice title="지금은 견적서를 보낼 수 없는 공고예요" desc={(send.error as ApiError).body.message} />}
-        {p && !notOpen && <QuoteForm posting={p} sending={send.isPending} error={send.error} onSubmit={submit} />}
+        {p && <PostingBrief p={p} withNeeds />}
+        {p && !notOpen && isQuotable(p) && <QuoteForm posting={p} sending={send.isPending} error={send.error} onSubmit={submit} />}
+        {p && !isQuotable(p) && (
+          // 모집 전: 양식은 보이되 잠근다 (안내 문구는 위 카드)
+          <fieldset className={styles.locked} disabled aria-label="견적서 양식 (모집 전이라 잠겨 있어요)">
+            <QuoteForm posting={p} sending={false} error={null} onSubmit={() => undefined} />
+          </fieldset>
+        )}
       </div>
       {draftToSend && (
         <SupplierTermsFlow
