@@ -142,6 +142,26 @@ export function noticeTitle(body: string | null): string {
   return NOTICE_TITLES.find(([head]) => body?.startsWith(head))?.[1] ?? "안내";
 }
 
+/**
+ * 안내 문장을 자연스러운 줄로 나눈다 (11/25 해원). 문장마다 한 줄, 긴 문장은 이음말(하여·해서·지나·고) 뒤에서 한 번 더 나눈다.
+ * 예) "결제 마감이 지나 공연이 자동으로 취소됐어요." → ["결제 마감이 지나", "공연이 자동으로 취소됐어요."]
+ */
+const JOIN_AT = /^(.{6,}?(?:하여|해서|지나|으며|는데|지만)) (.{6,})$/;
+export function noticeLines(body: string): string[] {
+  return body
+    .split(/(?<=[.!?])\s+/)
+    .flatMap((s) => {
+      const m = s.length > 18 ? JOIN_AT.exec(s) : null;
+      return m ? [m[1], m[2]] : [s];
+    })
+    .filter(Boolean);
+}
+
+function noticeWhen(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} ${msgTime(iso)}`;
+}
+
 function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   m: ChatMsg; mine: boolean; read: boolean; partner: string; meId: number; room: Room; role: Props["role"]; onLeave: () => void;
   acts: MsgActions;
@@ -171,14 +191,34 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
     // 상태 안내 카드 (FR-CHAT-02, 11/25): 공연 취소·확정 취소·다시 조율 등 — 채팅창 끝까지 검은 띠
     if (m.type === "NOTICE") {
       return (
+        // 11/25 해원 시안 P3: 검은 상자 · 제목 줄 · 줄바꿈한 본문 · 아이콘 정보 줄
         <div className="c-card c-card--notice" role="status">
           <div className="c-card__head">
-            <span>{noticeTitle(m.body)}</span>
-            <span className="c-card__time">{msgTime(m.createdAt)}</span>
+            <Ico name="info" sm />
+            <span>{noticeTitle(m.body) === "안내" ? "안내" : `${noticeTitle(m.body)} 안내`}</span>
           </div>
           <div className="c-card__body">
-            <p className="c-card__meta">{partner} · {STAGE_NAME[room.stageType]}</p>
-            <p className="c-card__text">{m.body ?? "안내"}</p>
+            <p className="c-card__text" aria-label={m.body ?? "안내"}>
+              {noticeLines(m.body ?? "안내").map((line, i) => (
+                <span key={i} className="c-card__line">
+                  {line}
+                </span>
+              ))}
+            </p>
+          </div>
+          <div className="c-card__info">
+            <span>
+              <Ico name="building" sm />
+              {partner}
+            </span>
+            <span>
+              <Ico name="layers" sm />
+              {STAGE_NAME[room.stageType]}
+            </span>
+            <span className="c-card__time">
+              <Ico name="clock" sm />
+              {noticeWhen(m.createdAt)}
+            </span>
           </div>
         </div>
       );

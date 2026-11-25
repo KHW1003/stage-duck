@@ -797,9 +797,10 @@ describe("사진·파일 보내기", () => {
     });
     const card = await within(panel).findByRole("status");
     expect(card).toHaveClass("c-card--notice");
-    expect(within(card).getByText("공연 취소")).toBeInTheDocument();
-    expect(within(card).getByText("13:31")).toBeInTheDocument();
-    expect(within(card).getByText("업체 D · 장비")).toBeInTheDocument();
+    expect(within(card).getByText("공연 취소 안내")).toBeInTheDocument(); // 11/25 시안 P3
+    expect(within(card).getByText("11.13 13:31")).toBeInTheDocument();
+    expect(within(card).getByText("업체 D")).toBeInTheDocument();
+    expect(within(card).getByText("장비")).toBeInTheDocument();
     expect(within(card).getByText("사용자가 공연을 취소했어요.")).toBeInTheDocument();
   });
 });
