@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errors import invalid_state, not_found
+from app.chat import service as chat_service
 from app.models.payment import Cancellation, LedgerEntry, Order
 from app.models.request import Performance, Stage
 from app.models.supplier import Supplier
@@ -33,6 +34,11 @@ class CancelQuote:
     amounts: calc.CancelAmounts
     by_supplier: list[tuple[int, str, int]]  # (업체 id, 상호, 위약금 몫)
 
+
+# 채팅 안내 카드(NOTICE) 문구 — 사용자·업체 둘 다 보므로 누가 했는지만 담담하게 (FR-CHAT-02)
+NOTICE_USER_CANCEL = "사용자가 공연을 취소했어요."
+NOTICE_SUPPLIER_CANCEL = "업체 사정으로 확정이 취소됐어요. 이 단계는 다시 모집해요."
+NOTICE_SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소됐어요."
 
 def _owned(db: Session, user: User, performance_id: int, *, lock: bool = False) -> Performance:
     perf = db.get(Performance, performance_id, with_for_update=lock)
@@ -125,6 +131,7 @@ def cancel_by_user(
     c = _record(db, perf, order, q, requested_by="USER", fault_supplier_id=None, actor_id=user.id, now=now)
     request_service.performance_cancelled(db, perf.id, actor_id=user.id)  # 공연도 취소로 (2번 약속)
     _notify_user_cancel(db, perf, q)
+    chat_service.post_cancel_notice(db, perf.id, NOTICE_USER_CANCEL)  # 채팅방에도 실시간 안내 (3번 약속)
     db.commit()
     return c, q
 
@@ -156,6 +163,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
     if perf is None or supplier is None:
         raise not_found()
     told: list[int] = []  # 공연이 통째로 취소될 때 알릴 남은 확정 업체
+    whole = False  # 공연이 통째로 취소됐는가 (채팅 안내를 모든 방에)
     order = _live_order(db, performance_id, lock=True)
     if order is not None and order.status in PAID_STATUSES:
         if supplier.id not in {ln.supplier_id for ln in order.lines}:
@@ -172,6 +180,7 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
                       f"새 결제 마감 {deadline.label(deadline.deadline_for(db, perf))}")
         else:
             request_service.performance_cancelled(db, perf.id, actor_id=user.id)
+            whole = True
             refund = "전액 환불 예정 · 공연까지 남은 날이 적어 다시 모집할 수 없으므로 공연이 취소되었습니다"
             told = list(db.scalars(select(Supplier.user_id).where(
                 Supplier.id.in_({ln.supplier_id for ln in order.lines} - {supplier.id}))))
@@ -190,6 +199,10 @@ def cancel_by_supplier(db: Session, user: User, performance_id: int, *, reason: 
         request_service.reopen_stage(db, mine[0].stage_id, actor_id=user.id)
         stage_ids = [ln.stage_id for ln in mine]
         refund = f"결제 전이라 환불할 금액은 없습니다 · 결제 마감이 {SUPPLIER_CANCEL_EXTRA_HOURS}시간 늘었습니다 · 해당 단계만 다시 모집하실 수 있습니다"
+    if whole:
+        chat_service.post_cancel_notice(db, perf.id, NOTICE_SUPPLIER_CANCEL_ALL)
+    else:
+        chat_service.post_cancel_notice(db, perf.id, NOTICE_SUPPLIER_CANCEL, supplier_id=supplier.id)
     # #45 사용자에게 CANCELLED_BY_SUPPLIER (경고 알림은 policy._warn 이 업체에게 따로 보낸다)
     stage_types = sorted({db.get(Stage, sid).stage_type for sid in stage_ids})
     notification.notify(
