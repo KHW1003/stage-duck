@@ -188,6 +188,21 @@ describe("업체 메인 (/partner)", () => {
     expect(screen.getByRole("link", { name: "사용자 홈" })).toHaveAttribute("href", "/");
   });
 
+  it("바닥글 바로가기는 계정이 열 수 있는 화면만 건다 (업체: 사용자 전용 없음, 사용자: 업체 전용 없음)", async () => {
+    mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
+    const { unmount } = renderAt("/partner");
+    const links = () => within(screen.getByRole("navigation", { name: "푸터 메뉴" })).getAllByRole("link").map((a) => a.getAttribute("href"));
+    await waitFor(() => expect(links()).toContain("/supplier/offers"));
+    expect(links()).not.toContain("/performances/new");
+    expect(links()).not.toContain("/mypage");
+    unmount();
+
+    mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
+    renderAt("/partner");
+    await waitFor(() => expect(links()).toContain("/mypage"));
+    expect(links().filter((h) => h?.startsWith("/supplier/"))).toEqual([]);
+  });
+
   it("심사 중 업체는 내 신청 내용과 함께 심사 화면을 본다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: PENDING }, "GET /api/v1/supplier/application": { status: 200, body: APP } });
     renderAt("/partner");

@@ -29,7 +29,7 @@ export function HomeLayout() {
       <main>
         <SuspensionGate />
       </main>
-      <HomeFooter partner={partner} />
+      <HomeFooter partner={partner} partnerLinks={partner && kind !== "user"} />
       {!me.isPending && <MobileTabBar kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />}
       {me.data && me.data.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
     </div>
