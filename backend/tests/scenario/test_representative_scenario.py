@@ -99,8 +99,8 @@ def test_representative_scenario_venue_equipment_skip_engineer_pay(db):
     perf_id = perf["id"]  # 계약 예시 없음
     user.post(f"/performances/{perf_id}/publish")
 
-    # AC-F3-01: 공연장 단계일 때 장비 업체에게는 공고가 보이지 않는다
-    assert all(p["performanceId"] != perf_id for p in d.get("/postings"))
+    # AC-F3-01: 공연장 단계일 때 장비 업체에게는 공고가 대기(읽기만)로 보인다 (11/25)
+    assert all(p["status"] == "WAITING" for p in d.get("/postings") if p["performanceId"] == perf_id)
 
     # ---- 3·4. 공연장 C 견적서 → 비교 화면의 검사 결과 (3번 T3-01, 4번 T4-02) -------------------------
     venue_posting = next(p for p in c.get("/postings") if p["performanceId"] == perf_id)
