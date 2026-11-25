@@ -551,6 +551,8 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
    - 알약 모양 모서리 없음, 움직임은 0.2초 안 + 떠오르기 없음, 움직임 줄이기 설정이면 멈춤 */
 .search__field .search__select { height: var(--sd-touch); padding: 0; border: 0; background: transparent; font-size: var(--sd-text-nav); font-weight: 600; }
 .search__field .search__select:focus-visible { outline: 0; }
+/* 고르기 칸을 누르거나 펼쳤을 때 공통 Select 의 포커스 띠·진한 테두리가 칸 안에 생기지 않게 (11/25 해원). 포커스 표시는 칸 전체의 옅은 바탕(:focus-within)이 맡는다 */
+.search__field .search__select:focus, .search__field .search__select[aria-expanded="true"] { outline: 0; border: 0; box-shadow: none; }
 .hero__actions .btn { min-height: var(--sd-button-lg); }
 .pill { height: var(--sd-touch); }
 .chip, .slider__ctrl { border-radius: var(--sd-r-box); }
