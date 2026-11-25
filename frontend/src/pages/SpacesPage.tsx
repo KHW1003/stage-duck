@@ -190,7 +190,7 @@ export function SpacesPage() {
             <p className="desc">
               {condSummary(applied, tile)} <b>{venues.isPending ? "…" : `${results.length}곳`}</b> {results.length > 0 && <span className="tag">업체 확인 전</span>}
             </p>
-            <div className="filters" role="group" aria-label="정렬">
+            <div className="sort-text" role="group" aria-label="정렬">
               {SORTS.map((s) => (
                 <button key={s.key} type="button" aria-pressed={sort === s.key} onClick={() => setSort(s.key)}>
                   {s.label}
