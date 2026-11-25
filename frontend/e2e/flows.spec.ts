@@ -48,9 +48,11 @@ test("공간 찾기: 처음엔 지역 전체로 모든 공간, 광주로 와도 
   await expect(cards).toHaveCount(3);
   await expect(cards.first()).toContainText("공간 B"); // 대관료 낮은 순 B → C → A
 
+  await page.getByRole("button", { name: /상세 조건/ }).click(); // 11/25: 조건표는 접혀 있다
   await page.getByLabel("관객 수").fill("300");
   await page.getByRole("button", { name: "공간 찾기" }).click();
   await expect(page.getByText("조건에 맞는 공간이 없어요")).toBeVisible();
+  await page.getByRole("button", { name: /상세 조건/ }).click(); // [공간 찾기]를 누르면 다시 접힌다
   await page.getByLabel("관객 수").fill("");
   await page.getByRole("button", { name: "공간 찾기" }).click();
   await expect(cards).toHaveCount(3);
