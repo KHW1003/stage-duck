@@ -422,3 +422,26 @@ def invalidate_pending_cards(db: Session, stage_id: int) -> None:
 
     # now 는 기록용 — decided_at 에만 쓴다. 약속 모양(db, stage_id)에 now 인자가 없어서 여기서 한 번만 읽는다.
     invalidate_for_stage(db, stage_id, now=datetime.now())
+
+
+def post_cancel_notice(db: Session, performance_id: int, body: str, *, supplier_id: int | None = None) -> int:
+    """[약속 3 → 4] 공연(계약) 취소를 채팅 안내 카드(NOTICE)로 남긴다 (FR-CHAT-02 안내 카드). 남긴 방 수를 돌려준다.
+
+    그 공연에서 채팅을 시작한(started_at) 방에만 — supplier_id 를 주면 그 업체 방만. 커밋하지 않는다 —
+    부른 쪽이 커밋하면 두 참여자에게 message.created 로 실시간 도착한다.
+    쓰는 곳: 4번 payment.cancel(사용자·업체 사정 취소), payment.deadline(결제 마감 자동 취소).
+    """
+    stmt = (
+        select(ChatRoom)
+        .join(Stage, Stage.id == ChatRoom.stage_id)
+        .where(Stage.performance_id == performance_id, ChatRoom.started_at.is_not(None))
+        .order_by(ChatRoom.id)
+    )
+    if supplier_id is not None:
+        stmt = stmt.where(ChatRoom.supplier_id == supplier_id)
+    rooms = list(db.scalars(stmt))
+    for room in rooms:
+        message = ChatMessage(room_id=room.id, sender_user_id=None, type="NOTICE", body=body)
+        db.add(message)
+        _publish_message(db, room, message)
+    return len(rooms)
