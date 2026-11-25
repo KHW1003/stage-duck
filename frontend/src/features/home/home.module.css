@@ -625,3 +625,10 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
   .now-facts > div:nth-child(n + 3) { border-top: 1px solid var(--sd-line); }
   .now-line { padding: 4px 14px; }
 }
+
+/* 안쪽 화면(AppLayout)에서도 메인 바닥글을 그대로 쓴다 (11/25 해원: 바닥글 통일). .root 밖이라 같은 값을 여기서 준다 */
+.footer-host { --sd-page-pad: 42px; font-family: var(--sd-font); font-size: var(--sd-text-body); line-height: 1.6; word-break: normal; -webkit-font-smoothing: antialiased; }
+@media (max-width: 760px) { .footer-host { --sd-page-pad: 20px; } }
+@media (max-width: 560px) { .footer-host { --sd-page-pad: 16px; } }
+/* 바닥글 바로가기 묶음: 4칸 (서비스·업체·고객지원·내 계정) */
+.footer__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
