@@ -47,7 +47,8 @@
 .cond-slide { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .25s ease, visibility 0s linear .25s; }
 .cond-slide[data-open] { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .25s ease, visibility 0s; }
 .cond-slide__inner { min-height: 0; overflow: hidden; }
-.cond-slide[data-open] .cond-slide__inner { padding: 0 18px 18px; border: 1px solid var(--sd-line-strong); border-top: 0; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
+/* 여백·테두리는 열림 여부와 상관없이 안쪽 form 에 둔다. 열림에만 주면 닫히는 순간 여백이 빠져 내용이 왼쪽으로 밀렸다 (11/25) */
+.cond-slide__inner > form { padding: 0 18px 18px; border: 1px solid var(--sd-line-strong); border-top: 0; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
 @media (prefers-reduced-motion: reduce) { .cond-slide, .cond-slide[data-open], .cond-toggle__chev { transition: none; } }
 @media (max-width: 760px) { .cond-toggle__sum { display: none; } .cond-toggle__act { margin-left: auto; } }
 
