@@ -109,3 +109,11 @@
   .todo { flex-direction: column; align-items: stretch; }
   .todo .btn { justify-content: center; }
 }
+
+/* 취소·공고 내림 공연 (11/25): D-day 대신 상태 표시, 섭외 진행은 기록으로 흐리게 */
+.perf-ended-tag { border-color: var(--sd-line-strong); background: var(--sd-band); color: var(--sd-muted); font-weight: 700; }
+.perf-ended { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 32px; padding: 16px 18px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
+.perf-ended > .icon { flex: none; margin-top: 3px; color: var(--sd-muted); }
+.perf-ended b { font-size: var(--sd-text-body); }
+.perf-ended p { margin-top: 2px; color: var(--sd-muted); }
+.perf-ended-steps .st-box, .perf-ended-steps .steps { opacity: .5; filter: grayscale(1); }
