@@ -3,10 +3,10 @@
 {% block body %}
 <div class="sd-login">
   <div class="sd-login__box">
-    <img class="sd-login__logo" src="/admin-static/logo.webp" alt="STAGE DUCK 로고 — 기타를 든 오리">
+    <img class="sd-login__logo" src="/admin-static/logo.svg" alt="STAGE DUCK">
+    <p class="sd-login__sub">관리자 화면</p>
     <form class="sd-login__card" action="{{ url_for('admin:login') }}" method="POST" autocomplete="off">
-      <h1 class="sd-login__title">STAGE DUCK</h1>
-      <p class="sd-login__sub">관리자 화면</p>
+      <h1 class="sd-login__title">관리자 로그인</h1>
       <div class="mb-3">
         <label class="form-label" for="sd-username">이메일</label>
         <input id="sd-username" name="username" type="email" inputmode="email"

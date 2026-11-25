@@ -1,0 +1,58 @@
+{#- 관리자 화면 뼈대 (11/25 해원: 구조 개편). SQLAdmin 원본 layout 대신 쓴다.
+    왼쪽: 흰 글자 로고 + 묶음별 메뉴(처리할 일 숫자 배지) / 위: 화면 제목 + 사이트 보기·로그아웃 / 본문.
+    메뉴·숫자는 nav.py 의 sd_nav(request). 블록 이름(content_header·content·flash·secret_modal)은 원본과 같게 둔다. -#}
+{% extends "sqladmin/base.html" %}
+{% block body %}
+<div class="sd-shell">
+  <aside class="sd-side" aria-label="관리자 메뉴">
+    <a class="sd-side__brand" href="{{ url_for('admin:index') }}">
+      <img src="/admin-static/logo-on-dark.svg" alt="STAGE DUCK" width="132" height="18">
+      <span>관리자</span>
+    </a>
+    <nav class="sd-side__nav">
+      <a class="sd-side__link{% if request.url.path.rstrip('/') == '/admin' %} is-active{% endif %}" href="{{ url_for('admin:index') }}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i><span>처리할 일</span>
+      </a>
+      {% for group in sd_nav(request) %}
+      <p class="sd-side__group">{{ group.title }}</p>
+      {% for item in group.items %}
+      <a class="sd-side__link{% if item.active %} is-active{% endif %}" href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>
+        <i class="fa-solid {{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span>
+        {% if item.badge %}<b class="sd-side__badge" aria-label="처리할 일 {{ item.badge }}건">{{ item.badge }}</b>{% endif %}
+      </a>
+      {% endfor %}
+      {% endfor %}
+    </nav>
+  </aside>
+  <div class="sd-main{% if model_view is defined and model_view %} is-model{% endif %}">
+    <header class="sd-top">
+      <div class="sd-top__title">
+        {% block content_header %}
+        {#- 목록·상세는 SQLAdmin 이 title 을 비워 두므로 화면 이름(name_plural)을 제목으로 -#}
+        <h1 class="page-title">{{ title or (model_view.name_plural if model_view is defined and model_view else '') }}</h1>
+        {% if subtitle %}<p class="page-pretitle">{{ subtitle }}</p>{% endif %}
+        {% endblock %}
+      </div>
+      <div class="sd-top__actions">
+        <a class="sd-top__btn" href="/" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>사이트 보기</a>
+        {% if admin.authentication_backend %}
+        <a class="sd-top__btn" href="{{ request.url_for('admin:logout') }}"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>로그아웃</a>
+        {% endif %}
+      </div>
+    </header>
+    <div class="page-body sd-body">
+      <div class="container-fluid">
+        <div class="row row-deck row-cards">
+          {% block content %} {% endblock %}
+          {% block flash %}
+          {% include 'sqladmin/flash.html' %}
+          {% endblock %}
+          {% block secret_modal %}
+          {% include 'sqladmin/secret_modal.html' %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

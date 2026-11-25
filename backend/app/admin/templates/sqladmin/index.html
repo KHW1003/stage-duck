@@ -1,19 +1,35 @@
-{#- 관리자 첫 화면. 메뉴로 가는 바로가기만 둔다 (숫자 집계는 만들지 않는다). -#}
+{#- 관리자 첫 화면 "처리할 일" (11/25 해원: 구조 개편). 지금 처리해야 할 수와 최근 항목만. 읽기 전용 (nav.py sd_dashboard). -#}
 {% extends "sqladmin/layout.html" %}
+{% block content_header %}
+<h1 class="page-title">처리할 일</h1>
+<p class="page-pretitle">업체 심사, 신고·제재, 1:1 문의를 처리해요. 컨펌·결제는 관리자가 대신 처리하지 않아요.</p>
+{% endblock %}
 {% block content %}
-<div class="col-12 sd-index">
-  <div class="sd-home">
-    <img src="/admin-static/logo.webp" alt="STAGE DUCK 로고 — 기타를 든 오리">
-    <div>
-      <h2>STAGE DUCK 관리자</h2>
-      <p>업체 심사, 신고·경고, 거래 이력을 처리해요. 컨펌·결제는 관리자가 대신 처리하지 않아요.</p>
-    </div>
-  </div>
-  <div class="sd-shortcuts">
-    {% for view in admin.views if view.is_model and view.is_visible(request) and view.is_accessible(request) %}
-    <a class="sd-shortcut" href="{{ url_for('admin:list', identity=view.identity) }}">
-      <div><b>{{ view.name_plural }}</b><span>목록 열기</span></div>
+{% set d = sd_dashboard(request) %}
+<div class="col-12 sd-dash">
+  <div class="sd-todo">
+    {% for t in d.todo %}
+    <a class="sd-todo__item{% if t.hot %} is-hot{% endif %}" href="{{ t.url }}">
+      <span>{{ t.label }}</span>
+      <b>{{ t.count }}<small>건</small></b>
     </a>
+    {% endfor %}
+  </div>
+  <p class="sd-totals">{% for k, v in d.totals %}<span>{{ k }} <b>{{ v }}</b></span>{% endfor %}</p>
+  <div class="sd-lists">
+    {% for l in d.lists %}
+    <section class="sd-list">
+      <div class="sd-list__head"><h2>{{ l.title }}</h2><a href="{{ l.more }}">전체 보기</a></div>
+      {% if l.rows %}
+      <ul>
+        {% for text, at, url in l.rows %}
+        <li><a href="{{ url }}"><span>{{ text }}</span><time>{{ at.strftime('%m.%d %H:%M') if at else '' }}</time></a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="sd-list__empty">{{ l.empty }}</p>
+      {% endif %}
+    </section>
     {% endfor %}
   </div>
 </div>
