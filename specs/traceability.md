@@ -54,7 +54,7 @@ API 경로의 `/api/v1`은 생략했다.
 | F2-08 | 장비 "이미 있어요" → 장비 단계 없음 | REQ-02 | POST /performances/{id}/publish | stages | /performances/new | BE, FE |
 | F2-09 | 장비 칸 기본값 없음 | REQ-02 | — | performances.needs | /performances/new | FE |
 | F2-10 | 엔지니어 작업 0개면 다음 불가 | REQ-02 | POST /performances (`VALIDATION_FAILED`) | performances.needs | /performances/new | BE, FE |
-| F2-11 | 공연장 단계 공고는 장비·엔지니어에게 안 보임 | REQ-03 | GET /postings | stages, supplier_categories | /supplier/postings | BE |
+| F2-11 | 공연장 단계 공고는 장비·엔지니어에게 `모집 전`(견적서 불가) | REQ-03 | GET /postings | stages, supplier_categories | /supplier/postings | BE |
 | F2-12 | 심사 중 업체에게 공고 안 보임 | REQ-03 | GET /postings | suppliers.review_status | /supplier/postings | BE |
 | F2-13 | 리허설 변경 → v2, v1 보관, 재확인 | REQ-04 | PUT /performances/{id} | performance_versions, stages.status=RECHECK | /performances/:id | BE |
 | F2-14 | 남의 견적서 안 보임 | QUOTE-01 | GET /postings/{id}, GET /quotes/{id} | — | /supplier/postings/:id | BE |
@@ -69,8 +69,8 @@ API 경로의 `/api/v1`은 생략했다.
 
 | AC | 요약 | FR | API | 테이블 | 화면 | 테스트 |
 |---|---|---|---|---|---|---|
-| F3-01 | 공연장 컨펌 전 장비 업체에게 공고 없음 | ASSIGN-01 | GET /postings | stages.open_guard | /supplier/postings | BE |
-| F3-02 | 컨펌 → [다음 단계로] → 장비 공고 노출 | ASSIGN-01, CHAT-04 | POST /stages/{id}/advance | stages | [다음 단계로] 화면 | BE, E2E |
+| F3-01 | 공연장 컨펌 전 장비 업체에게 공고 `모집 전`, 견적서 409 | ASSIGN-01 | GET /postings, POST /stages/{id}/quotes | stages.status | /supplier/postings | BE |
+| F3-02 | 컨펌 → [다음 단계로] → 장비 공고 `모집 중` (견적서 가능) | ASSIGN-01, CHAT-04 | POST /stages/{id}/advance | stages | [다음 단계로] 화면 | BE, E2E |
 | F3-03 | 장비 업체가 공연장 정보 확인 | ASSIGN-02 | GET /postings/{stageId} | quote_versions.venue_snapshot | /supplier/postings/:id | BE |
 | F3-04 | 전부 구했어요 → 남은 단계 건너뜀·동의 기록 | ASSIGN-03 | POST /performances/{id}/declare-all-secured | stages.skip_ack_at | 전부 구했어요 팝업 | BE, FE |
 | F3-05 | 풀스펙 컨펌 → 건너뛰기 제안 | ASSIGN-03 | POST /confirm-requests/{id}/accept (`next.suggestSkip`) | quotes.is_full_spec | [다음 단계로] 화면 | BE |
