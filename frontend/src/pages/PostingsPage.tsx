@@ -28,7 +28,7 @@ function Row({ p }: { p: PostingSummary }) {
       <td>
         <span className={styles.title}>{p.title}</span>
         <span className={styles.tag}>{stageTag(p)}</span>
-        {!isQuotable(p) && <span className={styles.tagWait}>모집 전</span>}
+        <span className={isQuotable(p) ? styles.tag : styles.tagWait}>{isQuotable(p) ? "견적 가능" : "모집 전"}</span>
         <small>
           {p.sido} {p.sigungu}
         </small>

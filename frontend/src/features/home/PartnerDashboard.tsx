@@ -15,6 +15,7 @@ import { useReceivedOffers, type ReceivedOffer } from "../offer/api";
 import { useSupplierReservations, useSupplierWarnings, type SupplierReservation } from "../payment/api";
 import { STAGE_NAME, hm } from "../performance/labels";
 import { usePostings } from "../quote/api";
+import { isQuotable } from "../quote/PostingBrief";
 import { useMe } from "../../shared/auth/useMe";
 import { Ico, type KitIconName } from "../../shared/ui/Ico";
 import s from "./partner-dashboard.module.css";
@@ -266,7 +267,7 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
     { label: "답할 견적 요청", value: offers.isLoading ? null : pending.length, sub: soonCount ? `24시간 안 마감 ${soonCount}건` : "마감 임박 없음", tone: soonCount ? "warn" : undefined, to: "/supplier/offers" },
     { label: "안 읽은 메시지", value: rooms.isLoading ? null : unread, sub: `대화 ${roomList.length}개`, to: "/partner?chat=list" },
     { label: "30일 안 공연", value: reservations.isLoading ? null : in30, sub: upcoming[0] ? `가장 가까운 공연 ${dLabel(upcoming[0].showDate, today)}` : "예정된 공연 없음", to: "/supplier/reservations" },
-    { label: "모집 중 공고", value: postings.isLoading ? null : (postings.data ?? []).length, sub: "내 부문 · 견적을 보낼 수 있는 공고", to: "/supplier/postings" },
+    { label: "모집 중 공고", value: postings.isLoading ? null : (postings.data ?? []).filter(isQuotable).length, sub: "내 부문 · 견적을 보낼 수 있는 공고", to: "/supplier/postings" },
   ];
 
   return (
@@ -345,7 +346,7 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
             {postings.isLoading ? (
               <Skeleton rows={4} />
             ) : newPostings.length === 0 ? (
-              <p className={s.empty}>지금 모집 중인 공고가 없어요.</p>
+              <p className={s.empty}>지금 볼 수 있는 공고가 없어요.</p>
             ) : (
               <table className={s.table}>
                 <thead>
@@ -378,9 +379,13 @@ export function PartnerDashboard({ company, today = new Date() }: { company: str
                         <span className={s.dday}>{dLabel(p.showDate, today)}</span>
                       </td>
                       <td className={s.right}>
-                        <Link className={s.action} to={`/supplier/postings/${p.stageId}/quote`}>
-                          견적 쓰기
-                        </Link>
+                        {isQuotable(p) ? (
+                          <Link className={s.action} to={`/supplier/postings/${p.stageId}/quote`}>
+                            견적 쓰기
+                          </Link>
+                        ) : (
+                          <span className={s.pSub}>모집 전</span>
+                        )}
                       </td>
                     </tr>
                   ))}
