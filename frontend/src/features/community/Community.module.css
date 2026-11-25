@@ -159,3 +159,8 @@
   .searchInput { flex: 1 1 160px; width: 0; min-width: 0; } /* 자리가 모자라면 다음 줄로 */
   .chip input { left: 0; max-width: 100%; } /* 보이지 않는 사진 고르기 칸이 칩 밖으로 나가지 않게 */
 }
+
+/* 커뮤니티 표 맨 위 공지 줄 (11/25 해원: 살짝 연한 회색) */
+.noticeRow td { background: var(--sd-band); }
+.noticeRow a { font-weight: 600; }
+.noticeTag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-meta); font-weight: 700; }
