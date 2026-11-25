@@ -595,3 +595,40 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
 @media (max-width: 1279px) {
   .logo .partner-chip { display: none; } /* 파란 파트너 로고로 업체 화면인 걸 알 수 있다. 메뉴와 겹치지 않게 좁은 화면에서는 뺀다 */
 }
+
+/* ── 내가 준비하는 공연 카드 다듬기 (11/25 해원) ── */
+.now--card { justify-content: center; gap: 0; }
+.now-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.now-top .now__label { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.now-top .now__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sd-blue); }
+.now-dday { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: var(--sd-r-label); background: var(--sd-blue); color: var(--sd-on-blue); font-size: var(--sd-text-desc); font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.now .now-title { margin-top: 10px; font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
+.now-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 18px 0 0; background: var(--sd-bg); border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); }
+.now-facts > div { min-width: 0; padding: 12px 16px; }
+.now-facts > div + div { border-left: 1px solid var(--sd-line); }
+.now-facts dt { font-size: var(--sd-text-small); color: var(--sd-muted); }
+.now-facts dd { margin: 4px 0 0; font-size: var(--sd-text-body); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-prog-head { display: flex; justify-content: space-between; align-items: baseline; margin-top: 24px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.now-prog-head b { color: var(--sd-ink); font-weight: 700; }
+.now--card .now__progress { height: 6px; margin: 8px 0 14px; }
+.now-line { display: grid; margin: 0; padding: 4px 20px; list-style: none; background: var(--sd-bg); border: 1px solid var(--sd-line); border-radius: var(--sd-r-card); }
+.now-line > li { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 0; }
+.now-line > li + li { border-top: 1px solid var(--sd-line); }
+.now-line b { display: block; font-size: var(--sd-text-card); }
+.now-line small { display: block; margin-top: 2px; font-size: var(--sd-text-desc); color: var(--sd-muted); }
+.now-dot { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--sd-accent); color: var(--sd-blue); font-size: var(--sd-text-desc); font-weight: 700; }
+.now-dot svg { width: 16px; height: 16px; stroke-width: 2.6; }
+.now-line .is-done .now-dot { background: var(--sd-blue); color: var(--sd-on-blue); }
+.now-line .is-skip .now-dot { background: var(--sd-info-soft); color: var(--sd-info-text); }
+.now-line .is-current .now-dot { background: var(--sd-bg); border: 2px solid var(--sd-blue); }
+.now-line .is-wait .now-dot { background: var(--sd-soft); color: var(--sd-muted); border: 1px dashed var(--sd-line-strong); }
+.now-line .is-wait b { color: var(--sd-muted); }
+.now-more-btn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--sd-touch); margin-top: 16px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-desc); font-weight: 700; transition: background .15s, border-color .15s; }
+.now-more-btn:hover { border-color: var(--sd-blue); color: var(--sd-blue); }
+@media (max-width: 560px) {
+  .now .now-title { font-size: 22px; }
+  .now-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .now-facts > div:nth-child(3) { border-left: 0; }
+  .now-facts > div:nth-child(n + 3) { border-top: 1px solid var(--sd-line); }
+  .now-line { padding: 4px 14px; }
+}
