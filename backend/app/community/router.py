@@ -9,6 +9,7 @@ from app.auth.tokens import read_access_token
 from app.community import service
 from app.community.schemas import (
     AuthorOut,
+    CommentEditIn,
     CommentIn,
     CommentOut,
     CommentSavedOut,
@@ -69,6 +70,7 @@ def _comment(c: FreeComment, post: FreePost, me: User | None, names: dict, liked
         id=c.id, author=AuthorOut(name=author.name, kind=author.kind), body=c.body if show else None, status=c.status,
         blind_reason=c.blind_reason if mine else None, is_post_author=c.author_user_id == post.author_user_id,
         is_mine=mine, helpful_count=c.helpful_count, my_helpful=c.id in liked, created_at=c.created_at,
+        edited_at=c.edited_at,
         replies=replies or [],
     )
 
@@ -164,6 +166,18 @@ def unbookmark(post_id: int, user: User = Depends(writer), db: Session = Depends
     """AC-F4-17: 저장 취소."""
     service.set_bookmark(db, user, post_id, on=False)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@extra_router.put("/free-comments/{comment_id}", response_model=CommentSavedOut)
+def update_comment(
+    comment_id: int, body: CommentEditIn, user: User = Depends(writer), db: Session = Depends(get_db), now: datetime = Depends(get_now)
+) -> CommentSavedOut:
+    """FR-COMM-03: 본인 댓글·답글 고치기 (남의 댓글 404, 처리 전 신고가 있으면 409). 연락처 모양은 경고만."""
+    comment, warn = service.update_comment(db, user, comment_id, body.body, now=now)
+    post = db.get(FreePost, comment.post_id)
+    liked = service.my_helpfuls(db, user, "COMMENT", [comment.id])
+    out = _comment(comment, post, user, service.authors(db, [comment]), liked)
+    return CommentSavedOut(**out.model_dump(), contact_warning=warn)
 
 
 @extra_router.delete("/free-comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -21,7 +21,7 @@ from app.files.service import attach_files
 from app.models.community import COMMENT_MAX, FreeBookmark, FreeComment, FreeHelpful, FreePost
 from app.models.supplier import Supplier
 from app.models.user import User
-from app.policy.service import warn
+from app.policy.service import has_open_report, warn
 
 PAGE_SIZE = 20
 RATE_LIMIT = timedelta(minutes=1)  # AC-F4-16
@@ -210,13 +210,17 @@ def is_bookmarked(db: Session, user: User | None, post_id: int) -> bool:
     ) is not None
 
 
-def add_comment(db: Session, user: User, post_id: int, body: str, parent_id: int | None, *, now: datetime) -> tuple[FreeComment, bool]:
-    """AC-F4-14: 댓글·답글 (500자, 10초에 1개). 답글의 답글은 400 VALIDATION_FAILED (field parentId). (댓글, 연락처 경고)"""
-    post = _visible_post(db, post_id, lock=True)
+def _check_comment(body: str) -> None:
     if not body:
         raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": "body", "reason": "댓글을 적어 주세요."}])
     if len(body) > COMMENT_MAX:
         raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": "body", "reason": f"댓글은 {COMMENT_MAX}자까지 적을 수 있어요."}])
+
+
+def add_comment(db: Session, user: User, post_id: int, body: str, parent_id: int | None, *, now: datetime) -> tuple[FreeComment, bool]:
+    """AC-F4-14: 댓글·답글 (500자, 10초에 1개). 답글의 답글은 400 VALIDATION_FAILED (field parentId). (댓글, 연락처 경고)"""
+    post = _visible_post(db, post_id, lock=True)
+    _check_comment(body)
     if parent_id is not None:
         parent = db.get(FreeComment, parent_id)
         if parent is None or parent.post_id != post.id:
@@ -243,11 +247,30 @@ def add_comment(db: Session, user: User, post_id: int, body: str, parent_id: int
     return comment, has_contact_pattern(body)
 
 
-def delete_comment(db: Session, user: User, comment_id: int) -> None:
-    """작성자만 (남의 댓글 404). DELETED 로 남겨 "삭제된 댓글이에요" — 답글은 그대로 (FR-COMM-03)."""
+def _my_comment(db: Session, user: User, comment_id: int) -> FreeComment:
     comment = db.scalar(select(FreeComment).where(FreeComment.id == comment_id, FreeComment.author_user_id == user.id).with_for_update())
     if comment is None or comment.status != "ACTIVE":
         raise not_found()
+    return comment
+
+
+def update_comment(db: Session, user: User, comment_id: int, body: str, *, now: datetime) -> tuple[FreeComment, bool]:
+    """FR-COMM-03: 본인 댓글·답글 고치기 (활성 댓글만, 알림은 다시 보내지 않는다). (댓글, 연락처 경고)"""
+    comment = _my_comment(db, user, comment_id)
+    _visible_post(db, comment.post_id)
+    _check_comment(body)
+    if has_open_report(db, "FREE_COMMENT", comment.id):
+        raise invalid_state("신고를 확인하고 있는 댓글이라 지금은 고칠 수 없어요. 확인이 끝난 뒤 다시 해 주세요.")
+    if body != comment.body:
+        comment.body, comment.edited_at = body, now
+    db.commit()
+    db.refresh(comment)
+    return comment, has_contact_pattern(body)
+
+
+def delete_comment(db: Session, user: User, comment_id: int) -> None:
+    """작성자만 (남의 댓글 404). DELETED 로 남겨 "삭제된 댓글이에요" — 답글은 그대로 (FR-COMM-03)."""
+    comment = _my_comment(db, user, comment_id)
     comment.status = "DELETED"
     db.commit()
 

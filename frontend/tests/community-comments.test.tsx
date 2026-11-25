@@ -15,7 +15,7 @@ const USER: Me = {
 function comment(over: Partial<FreeComment> = {}): FreeComment {
   return {
     id: 31, author: { name: "업체 D", kind: "SUPPLIER" }, body: "17시 리허설 괜찮아요", status: "ACTIVE", blindReason: null,
-    isPostAuthor: false, isMine: false, helpfulCount: 2, myHelpful: false, createdAt: "2026-11-16T14:42:00", replies: [], ...over,
+    isPostAuthor: false, isMine: false, helpfulCount: 2, myHelpful: false, createdAt: "2026-11-16T14:42:00", editedAt: null, replies: [], ...over,
   };
 }
 
@@ -191,5 +191,58 @@ describe("커뮤니티 댓글 (#101)", () => {
     renderAt("/community/9");
 
     expect(await screen.findByText(/사유: 업체 홍보/)).toBeInTheDocument();
+  });
+
+  it("FR-COMM-03 내 댓글은 [수정]으로 고쳐 PUT 으로 보내고, 남의 댓글에는 [수정]이 없다", async () => {
+    const user = userEvent.setup();
+    const routes: Record<string, Reply> = {
+      ...ME,
+      "GET /api/v1/free-posts/9": { status: 200, body: post({ comments: [comment({ isMine: true }), comment({ id: 40, body: "남의 댓글" })] }) },
+      "PUT /api/v1/free-comments/31": { status: 200, body: { ...comment({ isMine: true, body: "18시도 괜찮아요" }), contactWarning: true } },
+    };
+    const calls = mockServer(routes);
+    renderAt("/community/9");
+
+    const mine = (await screen.findByText("17시 리허설 괜찮아요")).closest("li")!;
+    expect(within(screen.getByText("남의 댓글").closest("li")!).queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
+    expect(screen.queryByText("(수정됨)")).not.toBeInTheDocument();
+    await user.click(within(mine).getByRole("button", { name: "수정" }));
+    const box = within(mine).getByLabelText("댓글 고치기");
+    expect(box).toHaveValue("17시 리허설 괜찮아요");
+    expect(within(mine).getByRole("button", { name: "저장" })).toBeDisabled(); // 바뀐 것이 없다
+
+    await user.clear(box);
+    await user.type(box, "18시도 괜찮아요");
+    routes["GET /api/v1/free-posts/9"] = {
+      status: 200, body: post({ comments: [comment({ isMine: true, body: "18시도 괜찮아요", editedAt: "2026-11-16T15:00:00" })] }),
+    };
+    await user.click(within(mine).getByRole("button", { name: "저장" }));
+
+    expect(await screen.findByText("(수정됨)")).toBeInTheDocument();
+    expect(calls.find((c) => c.method === "PUT")).toMatchObject({ url: "/api/v1/free-comments/31", body: { body: "18시도 괜찮아요" } });
+    expect(screen.queryByLabelText("댓글 고치기")).not.toBeInTheDocument();
+    expect(screen.getByText(/전화번호나 계좌번호로 보이는/)).toBeInTheDocument();
+  });
+
+  it("FR-COMM-03 고치기를 취소하면 그대로고, 서버가 막으면 그 문구를 보인다", async () => {
+    const user = userEvent.setup();
+    const message = "신고를 확인하고 있는 댓글이라 지금은 고칠 수 없어요. 확인이 끝난 뒤 다시 해 주세요.";
+    const calls = mockServer({
+      ...ME,
+      "GET /api/v1/free-posts/9": { status: 200, body: post({ comments: [comment({ isMine: true })] }) },
+      "PUT /api/v1/free-comments/31": { status: 409, body: { code: "INVALID_STATE", message, fieldErrors: [] } },
+    });
+    renderAt("/community/9");
+
+    await user.click(await screen.findByRole("button", { name: "수정" }));
+    await user.click(screen.getByRole("button", { name: "취소" }));
+    expect(screen.getByText("17시 리허설 괜찮아요")).toBeInTheDocument();
+    expect(calls.some((c) => c.method === "PUT")).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "수정" }));
+    await user.type(screen.getByLabelText("댓글 고치기"), "!");
+    await user.click(within(screen.getByLabelText("댓글 고치기").closest("form")!).getByRole("button", { name: "저장" }));
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(screen.getByLabelText("댓글 고치기")).toHaveValue("17시 리허설 괜찮아요!");
   });
 });

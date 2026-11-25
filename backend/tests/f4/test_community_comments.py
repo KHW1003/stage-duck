@@ -247,3 +247,100 @@ def test_ac_f4_15_admin_blind_action_from_sqladmin(client, db, clock, admin_clie
     assert res.status_code == 302
     db.expire_all()
     assert (db.get(FreeComment, comment_id).status, db.get(User, writer.id).warning_count) == ("BLINDED", 1)
+
+
+# ---- 댓글·답글 고치기 (FR-COMM-03, 11/25 해원 승인) -----------------------------------------
+
+
+def _edit(client, comment_id, body="고친 댓글"):
+    return client.put(f"/api/v1/free-comments/{comment_id}", json={"body": body})
+
+
+def test_author_edits_comment_and_reply_and_mark_is_shown(client, db, clock):
+    user = login_as(client, make_user(db))
+    post_id = _post(user, clock)
+    first = _comment(user, clock, post_id).json()
+    assert first["editedAt"] is None
+    reply = _comment(user, clock, post_id, body="답글", parent_id=first["id"]).json()["id"]
+
+    res = _edit(user, first["id"], "  고친 댓글  ")
+    assert res.status_code == 200, res.text
+    assert (res.json()["body"], res.json()["contactWarning"]) == ("고친 댓글", False)
+    assert _edit(user, reply, "고친 답글").status_code == 200
+
+    out = _detail(client, post_id)
+    [top] = out["comments"]
+    assert out["commentCount"] == 2
+    assert (top["body"], top["createdAt"]) == ("고친 댓글", first["createdAt"]) and top["editedAt"]
+    assert top["replies"][0]["body"] == "고친 답글" and top["replies"][0]["editedAt"]
+
+
+def test_edit_rules_length_contact_and_same_body(client, db, clock):
+    user = login_as(client, make_user(db))
+    cid = _comment(user, clock, _post(user, clock)).json()["id"]
+
+    for body in ("", "   ", "가" * 501):
+        res = _edit(user, cid, body)
+        assert (res.status_code, res.json()["code"]) == (400, "VALIDATION_FAILED")
+    assert _edit(user, cid, "17시 추천해요").json()["editedAt"] is None  # 그대로 저장하면 (수정됨)을 붙이지 않는다
+    assert _edit(user, cid, "가" * 500).status_code == 200
+    assert _edit(user, cid, "연락 주세요 010-1234-5678").json()["contactWarning"] is True
+
+
+def test_edit_does_not_notify_again(client, db, clock):
+    from app.models.notification import Notification
+
+    owner = make_user(db)
+    post_id = _post(login_as(client, owner), clock)
+    other = login_as(client, make_user(db))
+    cid = _comment(other, clock, post_id).json()["id"]
+    before = len(db.scalars(select(Notification)).all())
+    assert before >= 1
+    _edit(other, cid)
+    db.expire_all()
+    assert len(db.scalars(select(Notification)).all()) == before
+
+
+def test_others_and_visitors_cannot_edit(client, db, clock):
+    owner = login_as(client, make_user(db))
+    cid = _comment(owner, clock, _post(owner, clock)).json()["id"]
+    res = _edit(login_as(client, make_user(db)), cid)
+    assert (res.status_code, res.json()["code"]) == (404, "NOT_FOUND")
+    assert _edit(login_as(client, make_user(db)), 999999).status_code == 404
+    client.cookies.clear()
+    assert _edit(client, cid).status_code in (401, 403)
+    db.expire_all()
+    assert db.get(FreeComment, cid).body == "17시 추천해요"
+
+
+@pytest.mark.parametrize("status", ["DELETED", "BLINDED"])
+def test_deleted_or_blinded_comment_cannot_be_edited(client, db, clock, status):
+    user = login_as(client, make_user(db))
+    cid = _comment(user, clock, _post(user, clock)).json()["id"]
+    db.get(FreeComment, cid).status = status
+    db.commit()
+    assert _edit(user, cid).status_code == 404
+
+
+def test_comment_on_deleted_post_cannot_be_edited(client, db, clock):
+    user = login_as(client, make_user(db))
+    post_id = _post(user, clock)
+    cid = _comment(user, clock, post_id).json()["id"]
+    db.get(FreePost, post_id).status = "DELETED"
+    db.commit()
+    assert _edit(user, cid).status_code == 404
+
+
+@pytest.mark.parametrize("status,code", [("OPEN", 409), ("DISMISSED", 200), ("WARNED", 200)])
+def test_comment_with_open_report_cannot_be_edited(client, db, clock, status, code):
+    """신고된 내용을 바꿔 처리를 피하지 못하게, 처리 전 신고가 있으면 막는다."""
+    from app.models.policy import Report
+
+    user = login_as(client, make_user(db))
+    cid = _comment(user, clock, _post(user, clock)).json()["id"]
+    db.add(Report(reporter_user_id=make_user(db).id, target_type="FREE_COMMENT", target_id=cid, reason="광고", status=status))
+    db.commit()
+    res = _edit(user, cid)
+    assert res.status_code == code
+    if code == 409:
+        assert res.json()["code"] == "INVALID_STATE"

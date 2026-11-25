@@ -70,6 +70,7 @@ class CommentOut(BaseModel):
     helpful_count: int
     my_helpful: bool
     created_at: datetime
+    edited_at: datetime | None  # 고쳤으면 "(수정됨)"
     replies: list["CommentOut"] = []
 
 
@@ -82,6 +83,12 @@ class CommentIn(BaseModel):
 
     body: str = ""
     parent_id: int | None = None
+
+
+class CommentEditIn(BaseModel):
+    model_config = _IN
+
+    body: str = ""
 
 
 class HelpfulIn(BaseModel):
