@@ -1,22 +1,22 @@
-/* 가입 화면 약관 모달 (TermsModal.tsx). 뒤는 어둡게, 가운데 A4 폭 종이를 화면 높이(100vh) 그대로. tmm- 로 시작한다. */
+/* 가입 화면 약관 모달 (TermsModal.tsx). 뒤는 어둡게, 가운데 A4 폭 종이를 화면 높이에서 위아래 10px 여백. tmm- 로 시작한다. */
 .tmm-layer {
   position: fixed;
   inset: 0;
   z-index: var(--sd-z-modal);
   display: flex;
   justify-content: center;
-  padding: 0;
+  padding: 10px 0;
   background: rgb(17 19 23 / .62);
   animation: tmm-fade .15s ease-out;
 }
-.tmm { position: relative; display: flex; flex-direction: column; width: min(794px, 100%); height: 100vh; height: 100dvh; }
+.tmm { position: relative; display: flex; flex-direction: column; width: min(794px, 100%); height: calc(100vh - 20px); height: calc(100dvh - 20px); }
 .tmm-paper {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   background: var(--sd-bg);
   color: var(--sd-ink);
-  border-radius: 0;
+  border-radius: 4px;
   box-shadow: 0 12px 40px rgb(0 0 0 / .35);
   overscroll-behavior: contain;
 }
