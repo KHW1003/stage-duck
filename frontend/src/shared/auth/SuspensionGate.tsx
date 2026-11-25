@@ -36,7 +36,7 @@ export function SuspensionGate() {
   if (!me || allowed) return <Outlet />;
   if (me.status !== "SUSPENDED") return me.supplierReviewStatus === "SUSPENDED" ? <SupplierSuspended me={me} /> : <Outlet />;
   return (
-    <div className="container main">
+    <div className="container main" data-sd-area="content">
       <ErrorView kind="suspended" rows={suspendedRows(me)} />
     </div>
   );
@@ -45,7 +45,7 @@ export function SuspensionGate() {
 function SupplierSuspended({ me }: { me: Me }) {
   const reason = useApplication().data?.rejectReason;
   return (
-    <div className="container main">
+    <div className="container main" data-sd-area="content">
       <ErrorView
         kind="suspended"
         desc="업체 이용이 정지되어 공고·견적서·채팅을 쓸 수 없어요. 정지에 대해 궁금한 점은 1:1 문의로 알려 주세요."

@@ -137,7 +137,8 @@ test("견적서: 공고 목록 → 상세 → 견적서 보내기 → 자동 검
   await expectNoHorizontalScroll(sup);
   await sup.getByRole("link", { name: "견적서 쓰기" }).click();
 
-  await expect(sup.getByRole("heading", { level: 1, name: `견적서 쓰기 · ${title}` })).toBeVisible();
+  await expect(sup.getByRole("heading", { level: 1, name: "견적서 쓰기" })).toBeVisible(); // 11/25 제목에서 공연명을 뺐다 (#321)
+  await expect(sup.getByRole("heading", { name: title })).toBeVisible();
   await sup.getByRole("textbox", { name: "견적서 이름" }).fill("기본형");
   await choose(sup, "공간", /공간 C/);
   await choose(sup, "입실 시각", "15:00");
