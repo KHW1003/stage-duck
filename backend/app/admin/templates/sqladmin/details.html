@@ -18,7 +18,10 @@
               {% set value, formatted_value = model_view.get_detail_value(model, name, request) %}
               {% set render_as_link = name not in model_view._non_link_related_fields %}
               {% if name in model_view._relation_names %}
-              {% if is_list( value ) %}
+              {#- 11/25: 목록 값을 글자 하나로 바꾼 경우(업체 분야: 공연장, 장비)는 그 글자 그대로 -#}
+              {% if is_list( value ) and not is_list( formatted_value ) %}
+              <td>{{ formatted_value }}</td>
+              {% elif is_list( value ) %}
               <td>
                 {% for elem, formatted_elem in zip(value, formatted_value) %}
                 {% if render_as_link and model_view.show_compact_lists %}

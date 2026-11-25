@@ -104,7 +104,7 @@ def test_warn_report_on_post_target_points_to_blind(db, admin_user):
 def test_admin_report_warn_action(admin_client, db):
     target = make_user(db)
     rid = _report(db, make_user(db), target)
-    assert "신고 경고" in admin_client.get(f"/admin/report/action/warn?pks={rid}").text
+    assert "신고된 회원에게 경고" in admin_client.get(f"/admin/report/action/warn?pks={rid}").text
     res = admin_client.post(f"/admin/reason?op=report_warn&pks={rid}&back=report", data={"reason": "확인됨"}, follow_redirects=False)
     assert res.status_code == 302
     db.expire_all()
