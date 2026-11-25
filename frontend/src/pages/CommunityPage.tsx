@@ -1,7 +1,8 @@
 /**
  * 커뮤니티 목록 (/community, #100). 방문자도 본다 (AC-F4-12). 목업 community.html 시안 A 표 목록.
  * 말머리 탭(AC-F4-13)·정렬·검색·쪽 넘기기. 조건은 화면 상태로만 들고, 서버 데이터는 TanStack Query 로 읽는다.
- * 말머리별 글 수·고정 공지 줄은 서버가 주지 않아 넣지 않았다 (공지는 #103).
+ * 말머리별 글 수는 서버가 주지 않아 넣지 않았다.
+ * 11/25 해원: 첫 쪽(검색 안 할 때) 표 맨 위에 공지사항 줄을 연한 회색으로 둔다. 고정 공지 우선, 없으면 최근 2개.
  */
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -14,6 +15,7 @@ import { CATEGORIES, CATEGORY_LABEL, authorLabel, loginPath, shortDate } from ".
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { Select } from "../shared/ui/Select";
+import { NOTICE_CATEGORY, useNotices } from "../features/support/api";
 
 const SORTS: { value: ListParams["sort"]; label: string }[] = [
   { value: "latest", label: "최신순" },
@@ -26,6 +28,9 @@ export function CommunityPage() {
   const [params, setParams] = useState<ListParams>(DEFAULT_PARAMS);
   const [draft, setDraft] = useState({ field: DEFAULT_PARAMS.field, q: "" });
   const posts = useFreePosts(params);
+  const notices = useNotices(1);
+  const pinned = notices.data?.items.filter((n) => n.isPinned) ?? [];
+  const noticeRows = params.page === 1 && !params.q ? (pinned.length ? pinned.slice(0, 3) : (notices.data?.items ?? []).slice(0, 2)) : [];
   usePageMeta("커뮤니티");
   const today = new Date();
   const writeTo = me.data ? "/community/write" : loginPath("/community/write");
@@ -113,7 +118,7 @@ export function CommunityPage() {
             {params.q ? "찾는 글이 없어요. 다른 말로 찾아보세요." : "아직 글이 없어요. 첫 글을 남겨 보세요."}
           </p>
         )}
-        {posts.data && posts.data.items.length > 0 && (
+        {posts.data && (posts.data.items.length > 0 || noticeRows.length > 0) && (
           <table className={styles.table}>
             <thead>
               <tr>
@@ -126,6 +131,20 @@ export function CommunityPage() {
               </tr>
             </thead>
             <tbody>
+              {noticeRows.map((n) => (
+                <tr key={`notice-${n.id}`} className={styles.noticeRow}>
+                  <td className={styles.num}>
+                    <span className={styles.noticeTag}>공지</span>
+                  </td>
+                  <td className={styles.cat}>[{NOTICE_CATEGORY[n.category]}]</td>
+                  <td>
+                    <Link to={`/notices/${n.id}`}>{n.title}</Link>
+                  </td>
+                  <td className={styles.small}>STAGE DUCK</td>
+                  <td className={`${styles.small} sd-num`}>{shortDate(n.publishedAt, today)}</td>
+                  <td className={`${styles.num} sd-num`} aria-label="조회 수 없음">-</td>
+                </tr>
+              ))}
               {posts.data.items.map((p) => (
                 <tr key={p.id}>
                   <td className={`${styles.num} sd-num`}>{p.id}</td>
