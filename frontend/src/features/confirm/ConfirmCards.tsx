@@ -69,7 +69,7 @@ export function ConfirmRequestCard({ id, role, partner, onLeave }: { id: number;
             내역서를 먼저 열어 확인해 주세요.
           </p>
         )}
-        {open && !user && <p className="c-card__note">사용자가 내역서를 확인하고 확정하면 알려 드려요.</p>}
+        {open && !user && <p className="c-card__note">뮤지션이 내역서를 확인하고 확정하면 알려 드려요.</p>}
         {(accept.error || renegotiate.error) && <ErrorNotice error={accept.error ?? renegotiate.error} />}
       </div>
       <div className="c-card__foot">

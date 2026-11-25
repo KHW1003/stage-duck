@@ -104,11 +104,11 @@ def send_card(db: Session, user: User, quote_id: int, *, now: datetime) -> CardV
     if room is None:
         raise not_found()
     if room.started_at is None:
-        raise AppError(403, "CHAT_NOT_STARTED", "사용자가 채팅을 시작하면 최종 견적을 보낼 수 있어요.")
+        raise AppError(403, "CHAT_NOT_STARTED", "뮤지션이 채팅을 시작하면 최종 견적을 보낼 수 있어요.")
     for old in db.scalars(select(ConfirmRequest).where(ConfirmRequest.room_id == room.id, ConfirmRequest.status == "PENDING")):
         _expire(db, old, now)
         if old.status == "PENDING":
-            raise invalid_state("이미 보낸 최종 견적이 있어요. 사용자가 답하거나 기한이 지나면 다시 보낼 수 있어요.")
+            raise invalid_state("이미 보낸 최종 견적이 있어요. 뮤지션이 답하거나 기한이 지나면 다시 보낼 수 있어요.")
     version = db.scalar(select(QuoteVersion).where(QuoteVersion.quote_id == quote.id, QuoteVersion.version == quote.current_version))
     expires = now + timedelta(hours=CARD_HOURS)
     from app.payment.deadline import deadline_for  # 4번 결제 마감 (D-57): 카드 만료 = min(48시간, 결제 마감)
@@ -254,7 +254,7 @@ def _close_others(db: Session, stage: Stage, chosen: Quote, actor_id: int, now: 
             for card in db.scalars(select(ConfirmRequest).where(ConfirmRequest.room_id == room.id, ConfirmRequest.status == "PENDING")):
                 card.status, card.decided_at = "INVALIDATED", now
                 _publish(db, room, card)
-            _system(db, room, "NOTICE", None, "사용자가 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.")
+            _system(db, room, "NOTICE", None, "뮤지션이 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.")
         supplier_user_id = db.scalar(select(Supplier.user_id).where(Supplier.id == quote.supplier_id))
         notification.notify(
             db, supplier_user_id, "NOT_SELECTED", link=f"/supplier/postings/{stage.id}",
@@ -270,7 +270,7 @@ def renegotiate(db: Session, user: User, card_id: int, *, now: datetime) -> Card
         db.commit()
         raise invalid_state("이미 답했거나 기한이 지난 최종 견적이에요.")
     view.card.status, view.card.decided_at = "RENEGOTIATE", now
-    _system(db, view.room, "NOTICE", None, "사용자가 다시 조율하기를 원합니다. 견적서를 고쳐 새 최종 견적을 보내 주시기 바랍니다.")
+    _system(db, view.room, "NOTICE", None, "뮤지션이 다시 조율하기를 원합니다. 견적서를 고쳐 새 최종 견적을 보내 주시기 바랍니다.")
     _publish(db, view.room, view.card)
     db.commit()
     return view

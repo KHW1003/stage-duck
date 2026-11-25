@@ -61,7 +61,7 @@ function Updated({ p, quote, result }: { p: PostingDetail; quote: QuoteOut; resu
     <div className={`sd-container ${styles.wrap}`}>
       <DoneView
         title={`v${result.version}로 고쳤어요`}
-        desc="사용자의 내 공연에 보이는 견적서가 새 버전으로 바뀌었어요. 이전 버전은 이력에 남아요."
+        desc="뮤지션의 내 공연에 보이는 견적서가 새 버전으로 바뀌었어요. 이전 버전은 이력에 남아요."
         rows={[
           ["공고", p.title],
           ["견적서 이름", quote.label],

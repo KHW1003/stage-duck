@@ -14,8 +14,8 @@ const SIGNUP = "/signup/supplier";
 
 const WHY: { icon: HomeIconName; title: string; desc: string }[] = [
   { icon: "filter", title: "내 부문 공고만 도착", desc: "공연장·장비·엔지니어 중 내 부문과 활동 지역, 지금 열린 단계에 맞는 공고만 보여요." },
-  { icon: "card", title: "결제금 보관 후 정산", desc: "사용자가 결제한 금액은 STAGE DUCK이 보관하고, 공연이 끝나면 업체에 정산돼요." },
-  { icon: "house", title: "업체 찾기로 홍보", desc: "장비 목록과 현장 사진으로 업체를 소개하면, 사용자가 먼저 견적을 요청할 수 있어요." },
+  { icon: "card", title: "결제금 보관 후 정산", desc: "뮤지션이 결제한 금액은 STAGE DUCK이 보관하고, 공연이 끝나면 업체에 정산돼요." },
+  { icon: "house", title: "업체 찾기로 홍보", desc: "장비 목록과 현장 사진으로 업체를 소개하면, 뮤지션이 먼저 견적을 요청할 수 있어요." },
 ];
 
 const STEPS = [
@@ -26,9 +26,9 @@ const STEPS = [
 ];
 
 const FEES = [
-  { label: "업체가 내는 돈", value: "없어요", desc: "입점비·월 이용료 없음 · 플랫폼 이용료는 사용자가 내요" },
+  { label: "업체가 내는 돈", value: "없어요", desc: "입점비·월 이용료 없음 · 플랫폼 이용료는 뮤지션이 내요" },
   { label: "정산", value: "공연이 끝난 뒤", desc: "견적서 금액 그대로 · 정산 일정은 팀이 정해요" },
-  { label: "사용자가 취소하면", value: "시점별 위약금", desc: "업체 금액 비율대로 나눠 받아요" },
+  { label: "뮤지션이 취소하면", value: "시점별 위약금", desc: "업체 금액 비율대로 나눠 받아요" },
 ];
 
 const STATS = [

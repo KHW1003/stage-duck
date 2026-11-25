@@ -108,7 +108,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(await screen.findByRole("link", { name: "내 공연" })).toHaveAttribute("aria-current", "page");
   });
 
-  it("사용자는 내 공연 메뉴와 자기 닉네임을 본다", async () => {
+  it("뮤지션은 내 공연 메뉴와 자기 닉네임을 본다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/");
     expect(await screen.findByRole("link", { name: "내 공연" })).toHaveAttribute("href", "/me/performances");
@@ -116,14 +116,14 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
   });
 
-  it("로고를 누르면 메인으로 간다 — 사용자도 내 공연이 아니라 / (11/19 피드백)", async () => {
+  it("로고를 누르면 메인으로 간다 — 뮤지션도 내 공연이 아니라 / (11/19 피드백)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/me/performances");
     const logo = (await screen.findAllByRole("img", { name: "STAGE DUCK" }))[0]; // 머리 로고 (바닥글에도 있다)
     expect(logo.closest("a")).toHaveAttribute("href", "/");
   });
 
-  it("사용자 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (없는 주소로 가는 견적함·최종 담당표는 뺐다)", async () => {
+  it("뮤지션 메뉴·계정 메뉴는 목업 v4(layout.js)와 같은 항목·순서다 (없는 주소로 가는 견적함·최종 담당표는 뺐다)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/");
     await screen.findByRole("button", { name: /광주밴드/ });
@@ -133,7 +133,7 @@ describe("레이아웃 머리 메뉴 (역할별)", () => {
     await userEvent.click(screen.getByRole("button", { name: /광주밴드/ }));
     expect(screen.getAllByRole("menuitem").map((a) => a.textContent)).toEqual(["마이페이지", "관심 업체", "1:1 문의", "알림", "로그아웃"]);
     expect(screen.getByRole("menuitem", { name: "1:1 문의" })).toHaveAttribute("href", "/inquiries");
-    expect(screen.getByText("사용자 계정")).toBeInTheDocument();
+    expect(screen.getByText("뮤지션 계정")).toBeInTheDocument();
   });
 
   it("승인 업체는 내 예약에서 맡은 공연과 담당표·현장 준비 링크를 본다", async () => {
@@ -214,7 +214,7 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
     expect(screen.queryByText("내 공연 화면")).not.toBeInTheDocument();
   });
 
-  it("로그인한 사용자는 자기 화면을 본다", async () => {
+  it("로그인한 뮤지션은 자기 화면을 본다", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: USER } });
     renderAt("/me/performances");
     expect(await screen.findByText("내 공연 화면")).toBeInTheDocument();
@@ -263,7 +263,7 @@ describe("보호 라우트 (FR-AUTH-07)", () => {
       `계정${USER.email}`,
       "정지일11월 13일",
       "마지막 경고채팅에서 계좌 이체 유도 (외부 거래)",
-      "진행 중인 섭외관리자가 확인한 뒤 사용자에게 안내해요",
+      "진행 중인 섭외관리자가 확인한 뒤 뮤지션에게 안내해요",
     ]);
   });
 

@@ -17,14 +17,14 @@ export function SupplierReviews({ supplierId }: { supplierId: number }) {
           <Ico name="talk" />
           이용 후기 {first ? <em>{first.count}</em> : null}
         </h2>
-        <p>결제하고 공연을 마친 사용자만 쓸 수 있어요.</p>
+        <p>결제하고 공연을 마친 뮤지션만 쓸 수 있어요.</p>
       </div>
       {q.isError && <ErrorNotice error={q.error} />}
       {first && first.count === 0 && (
         <div className="empty">
           <Ico name="talk" />
           <b>아직 후기가 없어요</b>
-          <p>이 업체와 공연을 마친 사용자의 후기가 여기에 보여요.</p>
+          <p>이 업체와 공연을 마친 뮤지션의 후기가 여기에 보여요.</p>
         </div>
       )}
       {first && first.count > 0 && first.average !== null && (

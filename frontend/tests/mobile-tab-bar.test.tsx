@@ -71,7 +71,7 @@ describe("모바일 아래 탭", () => {
     expect(links(screen.getByRole("dialog", { name: "찾기" }))).toEqual([["공간 찾기", "/venues"], ["업체 찾기", "/board"], ["업체신가요?", "/partner"]]);
   });
 
-  it("사용자: 마이 판 맨 위는 내 공연, 안 읽은 수는 한 번만 부른다", async () => {
+  it("뮤지션: 마이 판 맨 위는 내 공연, 안 읽은 수는 한 번만 부른다", async () => {
     const urls = mockServer(USER);
     renderAt("/mypage");
     const nav = await bar();

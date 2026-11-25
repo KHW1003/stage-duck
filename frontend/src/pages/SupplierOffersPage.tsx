@@ -61,7 +61,7 @@ function DeclineModal({ offer, onClose }: { offer: ReceivedOffer; onClose: () =>
           </label>
         ))}
       </fieldset>
-      <p className="field__hint mt-8">사용자에게는 사유만 보여요.</p>
+      <p className="field__hint mt-8">뮤지션에게는 사유만 보여요.</p>
       {decline.error && (
         <div className="mt-12">
           <ErrorNotice error={decline.error} />
@@ -79,7 +79,7 @@ export function SupplierOffersPage() {
 
   return (
     <>
-      <KitPageTop title="받은 견적 요청" crumbs={[{ label: "공고 목록", to: "/supplier/postings" }, { label: "받은 견적 요청" }]} desc="사용자가 우리 업체를 골라 보낸 요청이에요. 48시간 안에 견적서를 보내거나 거절해 주세요." />
+      <KitPageTop title="받은 견적 요청" crumbs={[{ label: "공고 목록", to: "/supplier/postings" }, { label: "받은 견적 요청" }]} desc="뮤지션이 우리 업체를 골라 보낸 요청이에요. 48시간 안에 견적서를 보내거나 거절해 주세요." />
       <main className="container main">
         {offers.isPending && <p className="sd-sr-only">불러오는 중이에요</p>}
         {offers.isError && !notApproved && <ErrorNotice error={offers.error} />}
@@ -88,7 +88,7 @@ export function SupplierOffersPage() {
           <div className="empty">
             <Ico name="mail" />
             <b>받은 견적 요청이 없어요</b>
-            <p>업체 찾기에 소개 글을 올려 두면 사용자가 먼저 견적을 요청할 수 있어요.</p>
+            <p>업체 찾기에 소개 글을 올려 두면 뮤지션이 먼저 견적을 요청할 수 있어요.</p>
             <Link className="btn btn--sm mt-12" to="/supplier/posts">
               내 소개 글
             </Link>

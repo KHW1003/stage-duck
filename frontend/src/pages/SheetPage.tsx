@@ -112,7 +112,7 @@ export function SheetPage() {
                   <ul className="contacts">
                     {s.contacts.map((c) => (
                       <li key={`${c.role}-${c.name}`}>
-                        <p className="contacts__role">{c.role === "USER" ? "사용자" : c.role}</p>
+                        <p className="contacts__role">{c.role === "USER" ? "뮤지션" : c.role}</p>
                         <p className="contacts__name">{c.name}</p>
                         <dl>
                           {c.realName && (<><dt>이름</dt><dd>{c.realName}</dd></>)}
@@ -125,7 +125,7 @@ export function SheetPage() {
                 ) : (
                   <p className="notice">결제가 완료되면 서로의 연락처가 여기에 표시됩니다.</p>
                 )}
-                <p className="field__hint mt-12">이 공연에서 확정된 업체와 사용자만 볼 수 있습니다.</p>
+                <p className="field__hint mt-12">이 공연에서 확정된 업체와 뮤지션만 볼 수 있습니다.</p>
               </aside>
             </div>
           </>

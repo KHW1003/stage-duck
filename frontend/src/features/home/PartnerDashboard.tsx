@@ -161,7 +161,7 @@ function buildTodos(
     });
   }
   if (noPost) {
-    list.push({ key: "post-new", tone: "muted", label: "소개 글", title: "업체 찾기에 소개 글이 없어요", sub: "소개 글이 있어야 사용자가 먼저 찾아와요", action: "소개 글 쓰기", to: "/supplier/posts" });
+    list.push({ key: "post-new", tone: "muted", label: "소개 글", title: "업체 찾기에 소개 글이 없어요", sub: "소개 글이 있어야 뮤지션이 먼저 찾아와요", action: "소개 글 쓰기", to: "/supplier/posts" });
   } else if (bumpable > 0) {
     list.push({ key: "post-bump", tone: "pass", label: "소개 글", title: `소개 글 ${bumpable}개를 끌어올릴 수 있어요`, sub: "7일에 한 번, 목록 맨 위로 올라가요", action: "끌어올리기", to: "/supplier/posts" });
   }

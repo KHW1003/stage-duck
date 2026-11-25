@@ -45,7 +45,7 @@ export function CommunityPage() {
     <>
       <PageTop
         title="커뮤니티"
-        desc="공연을 준비하는 사용자끼리 묻고 나누는 곳이에요. 전화번호·계좌번호는 적지 말아 주세요."
+        desc="공연을 준비하는 뮤지션끼리 묻고 나누는 곳이에요. 전화번호·계좌번호는 적지 말아 주세요."
         actions={
           <>
             {me.data && (

@@ -160,7 +160,7 @@ def received_offers(db: Session, user: User, *, now: datetime) -> list[ReceivedO
         out.append(ReceivedOffer(
             offer=offer, stage_type=stage.stage_type, stage_open=opened is not None and opened.stage_id == stage.id,
             performance_id=perf.id, title=perf.title, show_date=perf.show_date, sido=perf.sido, sigungu=perf.sigungu,
-            audience=perf.audience, nickname=nickname or "사용자",
+            audience=perf.audience, nickname=nickname or "뮤지션",
         ))
     return out
 

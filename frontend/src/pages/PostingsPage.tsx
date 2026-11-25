@@ -66,7 +66,7 @@ export function PostingsPage() {
         {postings.data && postings.data.length === 0 && (
           <div className={styles.notice} role="status">
             <b>지금 볼 수 있는 공고가 없어요</b>
-            <p>사용자가 내 부문이 필요한 요청서를 올리면 공고가 보여요.</p>
+            <p>뮤지션이 내 부문이 필요한 요청서를 올리면 공고가 보여요.</p>
           </div>
         )}
         {postings.data && postings.data.length > 0 && (
@@ -76,7 +76,7 @@ export function PostingsPage() {
                 <tr>
                   <th scope="col">공연 날짜</th>
                   <th scope="col">공고</th>
-                  <th scope="col">사용자</th>
+                  <th scope="col">뮤지션</th>
                   <th scope="col">
                     <span className="sd-sr-only">상세 보기</span>
                   </th>
@@ -93,7 +93,7 @@ export function PostingsPage() {
         <ul className={styles.bullets}>
           <li>"모집 전" 공고는 앞 단계가 아직 확정되지 않은 공고예요. 요청서는 볼 수 있고, 견적서는 단계가 열린 뒤 보낼 수 있어요. 열리면 알림이 가요.</li>
           <li>심사 중이거나 정지된 업체는 공고를 볼 수 없어요.</li>
-          <li>사용자 연락처는 결제 뒤 최종 담당표에서 공개돼요.</li>
+          <li>뮤지션 연락처는 결제 뒤 최종 담당표에서 공개돼요.</li>
         </ul>
       </div>
     </>

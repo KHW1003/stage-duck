@@ -44,7 +44,7 @@ function Hit({ text, q }: { text: string; q: string }) {
 
 const NOTE = {
   USER: "견적서를 보고 [채팅 시작]을 누르면 그 업체와 대화가 여기에 생겨요.",
-  SUPPLIER: "공고에 견적서를 보내면 그 사용자와의 대화가 여기에 생겨요.",
+  SUPPLIER: "공고에 견적서를 보내면 그 뮤지션과의 대화가 여기에 생겨요.",
 };
 
 export function ChatList({ rooms, role, filter, onFilter, searching, onSearching, onOpen, onPin, onRead, onClose, loadError }: Props) {

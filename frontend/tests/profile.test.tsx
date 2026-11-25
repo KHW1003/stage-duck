@@ -160,7 +160,7 @@ describe("업체 프로필 (/suppliers/:id)", () => {
   });
 });
 
-describe("사용자 프로필 부품 (UserProfileCard)", () => {
+describe("뮤지션 프로필 부품 (UserProfileCard)", () => {
   it("AC-F5-16 닉네임·사진·가입일·이용 횟수·반려 횟수만 보인다", () => {
     render(<UserProfileCard profile={{ ...PROFILE, profileImageUrl: "/media/profile/2026/11/p_t.webp" }} />);
     expect(screen.getByText("가을밤밴드")).toBeInTheDocument();
@@ -264,7 +264,7 @@ describe("마이페이지 (/mypage)", () => {
     await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ profileFileId: 51 }));
   });
 
-  it("마이페이지는 사용자만: 방문자는 로그인으로, 업체는 찾을 수 없음", async () => {
+  it("마이페이지는 뮤지션만: 방문자는 로그인으로, 업체는 찾을 수 없음", async () => {
     mockServer(GUEST);
     const first = renderAt("/mypage");
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/login?next=/mypage"));

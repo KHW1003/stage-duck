@@ -92,7 +92,7 @@ export function ApplicationForm({ initial, resubmit }: Props) {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>사업자 정보</h2>
-        <p className={styles.sectionDesc}>관리자만 봐요. 다른 사용자에게는 공개하지 않아요.</p>
+        <p className={styles.sectionDesc}>관리자만 봐요. 다른 회원에게는 공개하지 않아요.</p>
         <div className={styles.row2}>
           <Field label={business ? "상호" : "활동명"} required error={err("companyName")}>
             {(c) => <Input {...c} {...text("companyName")} />}

@@ -64,7 +64,7 @@ export function NextStagePanel({ performance }: { performance: PerformanceDetail
           onConfirm={() => send("SKIP_NEXT")}
         >
           <p>
-            건너뛰면 {nextName} 업체를 따로 모집하지 않아요. 건너뛴 부분의 일정·장비·인력은 직접 준비해야 하고, 그 책임은 사용자에게 있어요.
+            건너뛰면 {nextName} 업체를 따로 모집하지 않아요. 건너뛴 부분의 일정·장비·인력은 직접 준비해야 하고, 그 책임은 뮤지션에게 있어요.
           </p>
         </ConfirmModal>
       )}

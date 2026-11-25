@@ -130,7 +130,7 @@ describe("로그인 (/login)", () => {
   });
 });
 
-describe("사용자 가입 (/signup)", () => {
+describe("뮤지션 가입 (/signup)", () => {
   it("약관 [보기]는 화면을 옮기지 않고 A4 모달로 열고, 넣은 값은 그대로 남는다 · [동의하고 닫기]는 체크해 준다", async () => {
     mockServer({});
     renderAt("/signup");
@@ -410,7 +410,7 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
   });
 
-  it("사용자는 공연장 단계가 열린 내 공연만 고르고, 견적 요청 창을 열고 Esc 로 닫는다", async () => {
+  it("뮤지션은 공연장 단계가 열린 내 공연만 고르고, 견적 요청 창을 열고 Esc 로 닫는다", async () => {
     const perf = (id: number, title: string, status: string) => ({
       id, title, form: "BAND", status: "PUBLISHED", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00", showEnd: "21:00:00",
       audience: 80, sido: "광주", sigungu: "동구", currentVersion: 1, nextAction: "WAIT_QUOTES", nextStageId: 1,

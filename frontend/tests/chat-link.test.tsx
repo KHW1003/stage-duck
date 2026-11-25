@@ -43,7 +43,7 @@ const where = () => screen.getByTestId("where").textContent;
 
 afterEach(() => vi.unstubAllGlobals());
 
-it.each([["사용자", USER, "/me/performances"], ["업체", SUPPLIER, "/partner"]] as const)("메일 채팅 링크: %s는 첫 화면에서 그 방의 채팅 창이 열린다", async (_, me, home) => {
+it.each([["뮤지션", USER, "/me/performances"], ["업체", SUPPLIER, "/partner"]] as const)("메일 채팅 링크: %s는 첫 화면에서 그 방의 채팅 창이 열린다", async (_, me, home) => {
   const urls = setup("/chats/31", me);
   expect(await screen.findByRole("dialog", { name: "채팅" })).toBeInTheDocument();
   await waitFor(() => expect(where()).toBe(home));

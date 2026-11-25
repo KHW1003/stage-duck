@@ -19,8 +19,8 @@ function sheet(over: Partial<Sheet> = {}): Sheet {
     paid: true, paidAt: "2026-11-13T15:20:00",
     schedule: [
       { time: "15:00", title: "공간 C 입실", who: "업체 C" },
-      { time: "17:00", title: "리허설 · 사운드체크", who: "사용자" },
-      { time: "19:00", title: "공연 시작", who: "사용자" },
+      { time: "17:00", title: "리허설 · 사운드체크", who: "뮤지션" },
+      { time: "19:00", title: "공연 시작", who: "뮤지션" },
     ],
     lines: [
       { stageType: "VENUE", status: "CONFIRMED", companyName: "업체 C", scope: "대관 · 기본 마이크 2", amount: 500000 },
@@ -62,7 +62,7 @@ describe("최종 담당표 (/performances/:id/sheet)", () => {
 
     const timeline = await screen.findByRole("list", { name: "당일 일정" });
     expect(within(timeline).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "15:00공간 C 입실업체 C", "17:00리허설 · 사운드체크사용자", "19:00공연 시작사용자",
+      "15:00공간 C 입실업체 C", "17:00리허설 · 사운드체크뮤지션", "19:00공연 시작뮤지션",
     ]);
     expect(screen.getByRole("cell", { name: "건너뜀" })).toBeInTheDocument();
     const contacts = screen.getByRole("complementary", { name: "연락처" });

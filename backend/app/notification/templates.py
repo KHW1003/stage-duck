@@ -10,8 +10,8 @@ TEMPLATES: dict[str, tuple[str, str, str | None]] = {
     "SUPPLIER_REJECTED": ("ADMIN", "입점 신청이 반려되었습니다", "사유: {reason}"),
     "POSTING_OPENED": ("POSTING", "새 공고가 열렸습니다", "{title} · {date} · {stage}"),
     "POSTING_UPDATED": ("POSTING", "공고 내용이 변경되었습니다 (v{version})", "{title}"),
-    "POSTING_CLOSED": ("POSTING", "사용자가 공고를 내렸습니다", "{title}"),
-    "NOT_SELECTED": ("POSTING", "사용자가 다른 업체와 진행하기로 했습니다", "{title} · 견적서 마감"),
+    "POSTING_CLOSED": ("POSTING", "뮤지션이 공고를 내렸습니다", "{title}"),
+    "NOT_SELECTED": ("POSTING", "뮤지션이 다른 업체와 진행하기로 했습니다", "{title} · 견적서 마감"),
     # 3.2 견적·채팅
     "QUOTE_RECEIVED": ("QUOTE_CHAT", "{company}에서 견적서를 보냈습니다", "{stage} · {amount}원"),
     "QUOTE_UPDATED": ("QUOTE_CHAT", "{company}에서 견적서를 수정했습니다 (v{version})", "{stage} · {amount}원"),
@@ -27,7 +27,7 @@ TEMPLATES: dict[str, tuple[str, str, str | None]] = {
     # 3.4 결제·취소
     "INVOICE_READY": ("PAYMENT", "통합 청구서가 발행되었습니다", "합계 {amount}원 · 결제하시면 섭외가 확정됩니다"),
     "PAID": ("PAYMENT", "결제가 완료되어 섭외가 확정되었습니다", "{title} · 최종 담당표를 확인해 주십시오"),
-    "CANCELLED_BY_USER": ("PAYMENT", "사용자가 공연을 취소했습니다", "{title} · {penalty}"),
+    "CANCELLED_BY_USER": ("PAYMENT", "뮤지션이 공연을 취소했습니다", "{title} · {penalty}"),
     "CANCELLED_BY_SUPPLIER": ("PAYMENT", "{company} 사정으로 {stage} 단계가 취소되었습니다", "{refund}"),
     "SETTLEMENT_SCHEDULED": ("PAYMENT", "공연이 종료되어 정산 예정입니다", "{title} · {amount}원"),
     # 3.5 운영

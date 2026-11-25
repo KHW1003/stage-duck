@@ -118,7 +118,7 @@ describe("메인 (/)", () => {
     expect(screen.getByTestId("where")).toHaveTextContent("/venues?sido=%EA%B4%91%EC%A3%BC&audience=50%7E150%EB%AA%85");
   });
 
-  it("로그인한 사용자는 진행 중인 공연의 단계(컨펌·지금·대기)를 본다", async () => {
+  it("로그인한 뮤지션은 진행 중인 공연의 단계(컨펌·지금·대기)를 본다", async () => {
     const mine: MyPerformances = { active: [PERF], draft: [], past: [] };
     mockServer({ "GET /api/v1/me": { status: 200, body: USER }, "GET /api/v1/performances?mine=true": { status: 200, body: mine } });
     renderAt("/");
@@ -185,10 +185,10 @@ describe("업체 메인 (/partner)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: /공연이 필요한 곳에/ })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "입점은 3단계예요." })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "입점 신청하기" })[0]).toHaveAttribute("href", "/signup/supplier");
-    expect(screen.getByRole("link", { name: "사용자 홈" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "뮤지션 홈" })).toHaveAttribute("href", "/");
   });
 
-  it("바닥글 바로가기는 계정이 열 수 있는 화면만 건다 (업체: 사용자 전용 없음, 사용자: 업체 전용 없음)", async () => {
+  it("바닥글 바로가기는 계정이 열 수 있는 화면만 건다 (업체: 뮤지션 전용 없음, 뮤지션: 업체 전용 없음)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
     const { unmount } = renderAt("/partner");
     const links = () => within(screen.getByRole("navigation", { name: "푸터 메뉴" })).getAllByRole("link").map((a) => a.getAttribute("href"));

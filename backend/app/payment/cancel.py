@@ -36,7 +36,7 @@ class CancelQuote:
 
 
 # 채팅 안내 카드(NOTICE) 문구 — 사용자·업체 둘 다 보므로 누가 했는지만 담담하게 (FR-CHAT-02)
-NOTICE_USER_CANCEL = "사용자가 공연을 취소했습니다."
+NOTICE_USER_CANCEL = "뮤지션이 공연을 취소했습니다."
 NOTICE_SUPPLIER_CANCEL = "업체 사정으로 확정이 취소되었습니다. 이 단계는 다시 모집합니다."
 NOTICE_SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소되었습니다."
 
@@ -95,7 +95,7 @@ def _record(db: Session, perf: Performance, order: Order | None, q: CancelQuote,
                    for sid, _, share in q.by_supplier if share)
         if a.refund_total:
             db.add(LedgerEntry(order_id=order.id, supplier_id=None, entry_type="REFUND", amount=-a.refund_total,
-                               memo="사용자 환불 예정"))
+                               memo="뮤지션 환불 예정"))
     c = Cancellation(performance_id=perf.id, order_id=order.id if order else None, requested_by=requested_by,
                      fault_supplier_id=fault_supplier_id, phase=a.phase, rate_percent=a.rate_percent,
                      penalty_total=a.penalty_total, refund_total=a.refund_total, created_at=now)

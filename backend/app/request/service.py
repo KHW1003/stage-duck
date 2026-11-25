@@ -380,7 +380,7 @@ def _require_ack(acknowledgement: str | None, notice_version: str | None) -> str
     if acknowledgement != SKIP_ACK or not notice_version:
         raise AppError(
             400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.",
-            [{"field": "acknowledgement", "reason": "건너뛰면 그 부분의 일정·장비 책임이 사용자에게 있다는 안내에 동의해 주세요."}],
+            [{"field": "acknowledgement", "reason": "건너뛰면 그 부분의 일정·장비 책임이 뮤지션에게 있다는 안내에 동의해 주세요."}],
         )
     return notice_version
 
@@ -631,7 +631,7 @@ def advance(
 
     if action == "SKIP_NEXT":
         version = _require_ack(acknowledgement, notice_version)
-        _move_stage(db, nxt, "SKIPPED", user.id, reason="사용자가 건너뜀 (책임 고지 동의)")
+        _move_stage(db, nxt, "SKIPPED", user.id, reason="뮤지션이 건너뜀 (책임 고지 동의)")
         nxt.skip_ack_at = now
         nxt.skip_ack_text_version = version
     else:

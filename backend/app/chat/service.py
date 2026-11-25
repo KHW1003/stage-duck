@@ -22,7 +22,7 @@ from app.models.supplier import Supplier
 from app.models.user import User
 from app.supplier import service as supplier_service
 
-DEFAULT_PARTNER_NAME = "사용자"  # 닉네임이 없는 사용자
+DEFAULT_PARTNER_NAME = "뮤지션"  # 닉네임이 없는 사용자
 
 
 def _bad(field: str, message: str) -> AppError:
@@ -205,7 +205,7 @@ def start_chat(db: Session, user: User, room_id: int, *, now: datetime) -> ChatR
         supplier_user_id = db.scalar(select(Supplier.user_id).where(Supplier.id == room.supplier_id))
         notification.notify(
             db, supplier_user_id, "CHAT_STARTED", link=f"/chats/{room.id}",
-            params={"nickname": user.nickname or "사용자", "title": stage.performance.title,
+            params={"nickname": user.nickname or "뮤지션", "title": stage.performance.title,
                     "stage": notification.stage_label(stage.stage_type)},
             payload={"roomId": room.id}, actor_id=user.id,
         )
@@ -249,7 +249,7 @@ def send_message(db: Session, user: User, room_id: int, body: MessageIn, *, now:
     elif body.file_id is None:
         raise _bad("fileId", "보낼 사진이나 파일을 골라 주세요.")
     if user.role == "SUPPLIER" and room.started_at is None:
-        raise AppError(403, "CHAT_NOT_STARTED", "사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")
+        raise AppError(403, "CHAT_NOT_STARTED", "뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.")
 
     file_id = None
     if body.file_id is not None:
