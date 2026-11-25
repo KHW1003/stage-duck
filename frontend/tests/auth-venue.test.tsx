@@ -353,6 +353,12 @@ describe("공간 찾기 (/venues)", () => {
     expect(within(cards[0]).getByText("17:00 입실")).toBeInTheDocument();
     expect(within(cards[2]).getByText("풀스펙")).toBeInTheDocument();
     expect(urls.find((u) => u.startsWith("/api/v1/venues?"))).not.toContain("sido=");
+    // 11/25: 조건표는 처음엔 접혀 있고 [상세 조건]을 누르면 펼쳐진다
+    const toggle = screen.getByRole("button", { name: /상세 조건/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: "공간 찾기" })).not.toBeInTheDocument();
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getAllByRole("button", { name: "전체", pressed: true }).length).toBeGreaterThan(0); // 지역 [전체]가 눌린 상태
   });
 
@@ -362,6 +368,7 @@ describe("공간 찾기 (/venues)", () => {
     mockVenues();
     renderAt("/venues");
     await waitFor(() => expect(cards()).toBe(3));
+    await userEvent.click(screen.getByRole("button", { name: /상세 조건/ }));
     await userEvent.type(screen.getByLabelText("관객 수"), "300");
     expect(cards()).toBe(3);
     await userEvent.click(screen.getByRole("button", { name: "공간 찾기" }));
