@@ -75,7 +75,6 @@ export function BoardPage() {
     <>
       <PageTop
         title="업체 찾기"
-        crumbs={[{ label: "업체 찾기" }]}
         desc="승인된 업체가 부문마다 글을 하나씩 올려요. 마음에 드는 업체는 저장해 두고, 그 단계가 열리면 견적을 요청해요."
       />
       <div className={styles.tabBar}>
