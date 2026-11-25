@@ -793,7 +793,7 @@ describe("사진·파일 보내기", () => {
     lastSocket().open();
     lastSocket().emit("message.created", {
       roomId: 31,
-      message: { id: 123, type: "NOTICE", body: "사용자가 공연을 취소했어요.", attachmentUrl: null, refId: null, senderId: null, contactWarning: false, createdAt: "2026-11-13T13:31:00+09:00" },
+      message: { id: 123, type: "NOTICE", body: "사용자가 공연을 취소했어요.", attachmentUrl: null, refId: null, senderId: null, contactWarning: false, createdAt: "2026-11-13T13:31:00" },
     });
     const card = await within(panel).findByRole("status");
     expect(card).toHaveClass("c-card--notice");
