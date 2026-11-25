@@ -79,7 +79,7 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
         <div className={s.footerTop}>
           <div className={s.footerBrand}>
             <Link className={s.logo} to={partner ? "/partner" : "/"}>
-              <img className={s.logoImg} src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
+              <img className={s.logoImg} src={partner ? "/logo-partner-on-dark.svg" : "/logo-on-dark.svg"} alt="STAGE DUCK" />
             </Link>
             <p>
               작은 공연의 시작부터 끝까지.
