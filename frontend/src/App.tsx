@@ -1,4 +1,4 @@
-import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ErrorToast, showErrorToast } from "./shared/ui/ErrorToast";
 import { ScrollOnNavigate } from "./shared/layout/ScrollOnNavigate";
@@ -47,7 +47,9 @@ import { RequestPage } from "./pages/RequestPage";
 import { SupplierOnboardingPage } from "./pages/SupplierOnboardingPage";
 import { SupplierSignupPage } from "./pages/SupplierSignupPage";
 import { SupplierProfilePage } from "./pages/SupplierProfilePage";
+import { ApiError } from "./shared/api/client";
 import { RequireAuth } from "./shared/auth/RequireAuth";
+import { syncStatus } from "./shared/auth/SuspensionGate";
 import { AppLayout } from "./shared/layout/AppLayout";
 import { NotFound } from "./shared/layout/NotFound";
 
@@ -134,13 +136,22 @@ export function AppRoutes() {
   );
 }
 
+/** 서버가 막으면(401·403) 정지된 것인지 확인한다 */
+function checkBlocked(error: Error) {
+  if (error instanceof ApiError && (error.status === 401 || error.status === 403)) void syncStatus(queryClient);
+}
+
 /** meta.errorToast 가 붙은 동작이 실패하면 화면 아래 알림으로 (ErrorToast.tsx) */
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: checkBlocked }),
   mutationCache: new MutationCache({
     onError: (error, _v, _c, mutation) => {
+      checkBlocked(error);
       if (mutation.options.meta?.errorToast) showErrorToast(error);
     },
   }),
+  // 막힌 요청(401·403)은 다시 보내도 같다
+  defaultOptions: { queries: { retry: (n, e) => n < 3 && !(e instanceof ApiError && (e.status === 401 || e.status === 403)) } },
 });
 
 export default function App() {

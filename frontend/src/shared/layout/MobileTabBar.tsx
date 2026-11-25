@@ -132,8 +132,8 @@ export function MobileTabBar({ kind, me }: { kind: LayoutKind; me: Me | null }) 
         {!review && sheetTab("find", "search", "찾기", inFind)}
         {me ? (
           <>
-            {!review && <ChatTab />}
-            <NotificationTab current={under(pathname, NOTIFICATIONS_PATH)} count={!review} />
+            {!review && me.status !== "SUSPENDED" && <ChatTab />}
+            <NotificationTab current={under(pathname, NOTIFICATIONS_PATH)} count={!review && me.status !== "SUSPENDED"} />
             {sheetTab("my", "user", "마이", inMy)}
           </>
         ) : (

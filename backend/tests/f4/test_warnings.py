@@ -1,4 +1,6 @@
 """F4 경고·정지 — AC-F4-08."""
+import re
+
 import pytest
 from sqlalchemy import select
 
@@ -55,6 +57,23 @@ def test_ac_f4_08_admin_warn_action(admin_client, db):
     db.expire_all()
     assert db.get(User, user.id).status == "SUSPENDED"
 
+
+def test_ac_f4_08_double_click_warns_once(admin_client, db):
+    """[처리]를 두 번 눌러 같은 요청이 두 번 와도, 같은 회원이 두 번 골라져도 경고는 한 번만 (CLAUDE.md 13)."""
+    user = make_user(db)
+    url = f"/admin/reason?op=user_warn&pks={user.id},{user.id}&back=user"
+    form_id = re.search(r'name="formId" value="(\w+)"', admin_client.get(url).text).group(1)
+    for _ in range(2):
+        res = admin_client.post(url, data={"reason": "외부 거래 유도", "formId": form_id}, follow_redirects=False)
+        assert res.status_code == 302
+    db.expire_all()
+    assert db.get(User, user.id).warning_count == 1
+
+    # 화면을 새로 열면 다시 경고할 수 있다
+    form_id = re.search(r'name="formId" value="(\w+)"', admin_client.get(url).text).group(1)
+    admin_client.post(url, data={"reason": "외부 거래 유도", "formId": form_id}, follow_redirects=False)
+    db.expire_all()
+    assert db.get(User, user.id).warning_count == 2
 
 def test_ac_f4_08_suspension_reason_returns_latest_own_suspension(db, admin_user):
     """정지 사유 조회 (1번 #24 로그인 안내용)."""
