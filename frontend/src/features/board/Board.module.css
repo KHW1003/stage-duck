@@ -101,8 +101,10 @@
    커뮤니티 글 상세는 본문(--sd-doc-width)을 가운데에 둔다. 소개 글 상세는 오른쪽 칸을 그대로 두고,
    경로·본문의 왼쪽 선만 커뮤니티 본문 왼쪽 선에 맞춰 가운데 쪽으로 들인다 (오른쪽 칸은 침범하지 않는다).
    들이는 폭 = (칸 안쪽 폭 - 문서 폭) / 2. 칸 안쪽 폭은 컨테이너 쿼리 단위(cqw)로 잰다 */
-.detail { container-type: inline-size; }
-.detail > .crumb, .detail .withAside > article { margin-left: max(0px, calc((100cqw - var(--sd-doc-width)) / 2)); }
+/* 11/25 해원: 소개 글 본문 상자를 양옆 50px씩 넓힌다 — 화면 칸을 100px 넓혀 오른쪽 업체 칸을 50px 밀고, 왼쪽 들임은 50px 줄인다 */
+.detail { container-type: inline-size; --post-widen: 50px; }
+.detail:global(.sd-container) { max-width: calc(var(--sd-page-width) + var(--post-widen) * 2 + var(--sd-page-pad) * 2); }
+.detail > .crumb, .detail .withAside > article { margin-left: max(0px, calc((100cqw - var(--sd-doc-width)) / 2 - var(--post-widen))); }
 @media (max-width: 760px) {
   .detail > .crumb, .detail .withAside > article { margin-left: 0; }
 }
@@ -115,7 +117,8 @@
 .adSticky { position: static; } /* 광고는 따라오지 않는다 (11/23 해원) */
 .sideAd { margin-top: 16px; }
 /* 광고는 칸 밖 여백(페이지 좌우 여백 포함)까지 쓴다. 본문 상자 바깥 여백 = (화면 폭 - 880) / 2 가 광고 180 + 간격 20 + 끝 여백 16 보다 좁으면 숨김 → 1312px 미만 (미디어 쿼리는 변수를 못 써서 숫자) */
-@media (max-width: 1311px) { .adRail { display: none; } }
+/* 본문 상자가 50px 넓어져(11/25) 왼쪽 광고 자리가 그만큼 줄었다 → 1412px 미만이면 숨김 */
+@media (max-width: 1411px) { .adRail { display: none; } }
 @media (max-width: 760px) {
   .detailCard { min-height: 0; padding: 24px 0; border: 0; border-radius: 0; }
 }
