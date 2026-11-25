@@ -43,7 +43,7 @@ export interface VenueDetail extends Omit<VenueListItem, "companyName"> {
   equipment: { category: string; name: string; quantity: number }[];
 }
 
-export type VenueSortParam = "fee" | "capacity" | "latest";
+export type VenueSortParam = "fee" | "capacity" | "latest" | "views"; // views: 조회수 많은 순 (11/25, 메인 공간 예시)
 
 export interface VenueQuery {
   sido?: string;

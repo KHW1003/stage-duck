@@ -106,7 +106,7 @@ def list_venues(
     min_capacity: int | None = Query(None, alias="minCapacity", ge=1, le=500),
     venue_type: Literal["CONCERT_HALL", "CULTURE_SPACE", "ROOFTOP", "GARDEN", "WAREHOUSE", "ETC"] | None = Query(None, alias="type"),
     band_allowed: bool | None = Query(None, alias="bandAllowed"),
-    sort: Literal["fee", "capacity", "latest"] = "latest",
+    sort: Literal["fee", "capacity", "latest", "views"] = "latest",
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=50),
     db: Session = Depends(get_db),
@@ -125,5 +125,6 @@ def list_venues(
 def get_venue(venue_id: int, db: Session = Depends(get_db)) -> VenuePublicOut:
     """공간 상세 — 조건의 null 은 미확인. 업체 연락처는 없음 (결제 뒤 담당표에서만)."""
     venue, name = service.get_public_venue(db, venue_id)
+    service.count_venue_view(db, venue)
     data = VenueOut.model_validate(venue).model_dump()
     return VenuePublicOut(**data, supplier_id=venue.supplier_id, company_name=name)
