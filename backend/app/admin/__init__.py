@@ -14,6 +14,7 @@ from sqladmin import Admin
 from app.admin.display import ko_gettext, ko_ngettext
 
 from app.admin.auth import AdminAuth
+from app.admin.nav import sd_dashboard, sd_nav
 from app.admin.views import (
     DemoToolView,
     FreeCommentAdmin,
@@ -47,15 +48,17 @@ def setup_admin(app: FastAPI) -> Admin:
         app,
         engine,
         title="STAGE DUCK 관리자",
-        logo_url=f"{STATIC_URL}/logo.webp",
-        logo_width=56,
-        logo_height=56,
+        logo_url=f"{STATIC_URL}/logo-on-dark.svg",
+        logo_width=132,
+        logo_height=18,
         favicon_url=f"{STATIC_URL}/logo.webp",
         authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret),
         templates_dir=TEMPLATES_DIR,
     )
     # SQLAdmin 기본 문구를 한국어로. 저장 버튼은 눌린 값(번역된 글자)을 application.gettext 로 비교하므로 같이 바꾼다
     admin.templates.env.install_gettext_callables(ko_gettext, ko_ngettext, newstyle=True)
+    # 구조 개편 (11/25): 왼쪽 메뉴 묶음·첫 화면 처리할 일 (nav.py)
+    admin.templates.env.globals.update(sd_nav=sd_nav, sd_dashboard=sd_dashboard)
     sqladmin_app.gettext = ko_gettext
     for view in (SupplierAdmin, UserAdmin, ReportAdmin, SanctionAdmin, StatusHistoryAdmin, FreePostAdmin, FreeCommentAdmin, PrPostAdmin, PerformanceAdmin, NoticeAdmin, InquiryAdmin):
         admin.add_view(view)
