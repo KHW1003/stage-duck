@@ -1,16 +1,13 @@
 /**
- * 메인 머리 (mockup/home.html · partner.html 의 .gnb). 안쪽 화면 머리(shared/layout/Gnb)와 모양이 다르다:
+ * 메인의 방문자 머리 (mockup/home.html · partner.html 의 .gnb). 안쪽 화면 머리(shared/layout/Gnb)와 모양이 다르다:
  * 로고 왼쪽 · 메뉴 가운데 · 오른쪽 둥근 버튼들.
  * - 방문자(메인): 업체신가요? · 로그인 · 검색 / 방문자(업체 메인): 사용자 홈 · 로그인 · 입점 신청
- * - 로그인: 알림 · 검색 · 아바타. 알림·아바타를 누르면 안쪽 화면과 같은 알림 패널·계정 메뉴가 열린다
+ * - 로그인한 사람은 이 머리 대신 안쪽 화면 머리(Gnb)를 본다
  * - 760px 이하: 목업은 메뉴를 숨기기만 해서, 검색 아이콘 자리에 메뉴 버튼을 두고 여닫는 판을 더했다
  *   (모바일에서 메뉴로 갈 길이 없어지지 않게. 공간 찾기는 메뉴 판 안에 있다)
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import type { Me } from "../../shared/api/types";
-import type { LayoutKind } from "../../shared/auth/useMe";
-import { AccountMenu, NotificationBell } from "../../shared/layout/Gnb";
 import { useHideOnScroll, useMobile } from "../../shared/layout/useMobile";
 import { MENUS } from "../../shared/layout/menus";
 import { HomeIcon } from "./icons";
@@ -18,18 +15,15 @@ import { cx } from "./cx";
 import s from "./home.module.css";
 
 interface Props {
-  kind: LayoutKind;
-  me: Me | null;
   /** 업체 메인(/partner) 머리: 업체 로고·업체 메뉴 */
   partnerPage?: boolean;
 }
 
-export function HomeGnb({ kind, me, partnerPage = false }: Props) {
-  const partner = partnerPage || kind === "partner" || kind === "partner-review";
-  const menu = partnerPage && !me ? MENUS.partner : MENUS[kind];
+export function HomeGnb({ partnerPage = false }: Props) {
+  const menu = partnerPage ? MENUS.partner : MENUS.guest;
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const tabs = useMobile() && kind !== "admin"; // 아래 탭(MobileTabBar)이 메뉴를 대신한다
+  const tabs = useMobile(); // 아래 탭(MobileTabBar)이 메뉴를 대신한다
   const { ref, hidden } = useHideOnScroll(tabs);
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
@@ -40,61 +34,26 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
     return () => document.removeEventListener("keydown", close);
   }, [open]);
 
-  const name = me ? (me.nickname ?? me.name) : "";
   return (
     <header ref={ref} className={cx(s.gnb, tabs && s.gnbTabbed, tabs && "m-head")} data-scroll-hidden={hidden || undefined}>
       <div className={s.gnbInner}>
         <Link className={s.logo} to={partnerPage && !tabs ? "/partner" : "/"} aria-label={partnerPage && !tabs ? "STAGE DUCK 파트너 홈" : "STAGE DUCK 홈"}>
-          <img className={cx(s.logoImg, tabs && "m-word")} src={partner ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
-          {partner && <span className={s.partnerChip}>파트너</span>}
+          <img className={cx(s.logoImg, tabs && "m-word")} src={partnerPage ? "/logo-partner.svg" : "/logo.svg"} alt="STAGE DUCK" />
+          {partnerPage && <span className={s.partnerChip}>파트너</span>}
         </Link>
-        {menu.length > 0 && (
-          <nav id="home-menu" className={cx(s.gnbMenu, open && s.gnbMenuOpen)} aria-label={partnerPage ? "업체 메뉴" : "주 메뉴"}>
-            {/* 모바일(560px 아래)은 로고를 숨기니 메뉴 맨 위에 홈을 둔다 (11/23) */}
-            <Link className={s.gnbHome} to={partnerPage ? "/partner" : "/"} onClick={() => setOpen(false)}>
-              홈
+        <nav id="home-menu" className={cx(s.gnbMenu, open && s.gnbMenuOpen)} aria-label={partnerPage ? "업체 메뉴" : "주 메뉴"}>
+          {/* 모바일(560px 아래)은 로고를 숨기니 메뉴 맨 위에 홈을 둔다 (11/23) */}
+          <Link className={s.gnbHome} to={partnerPage ? "/partner" : "/"} onClick={() => setOpen(false)}>
+            홈
+          </Link>
+          {menu.map((m) => (
+            <Link key={m.label} to={m.to}>
+              {m.label}
             </Link>
-            {menu.map((m) =>
-              m.external ? (
-                <a key={m.label} href={m.to}>
-                  {m.label}
-                </a>
-              ) : (
-                <Link key={m.label} to={m.to}>
-                  {m.label}
-                </Link>
-              ),
-            )}
-          </nav>
-        )}
-        <div className={cx(s.gnbRight, me && s.gnbRightMember)}>
-          {me ? (
-            <>
-              {me.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && (
-                <NotificationBell
-                  trigger={({ open: o, toggle }) => (
-                    <button type="button" className={s.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={o} onClick={toggle}>
-                      <HomeIcon name="bell" />
-                    </button>
-                  )}
-                />
-              )}
-              {!partnerPage && (
-                <button type="button" className={cx(s.iconBtn, s.gnbSearch)} aria-label="검색" onClick={() => navigate("/venues")}>
-                  <HomeIcon name="search" />
-                </button>
-              )}
-              <AccountMenu
-                me={me}
-                kind={kind}
-                trigger={({ open: o, toggle }) => (
-                  <button type="button" className={s.avatar} aria-label={`${name} 계정 메뉴`} aria-haspopup="menu" aria-expanded={o} onClick={toggle} style={me.avatarUrl ? { backgroundImage: `url('${me.avatarUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
-                    {me.avatarUrl ? null : name.slice(0, 1)}
-                  </button>
-                )}
-              />
-            </>
-          ) : partnerPage ? (
+          ))}
+        </nav>
+        <div className={s.gnbRight}>
+          {partnerPage ? (
             <>
               <Link className={s.gnbText} to="/">
                 사용자 홈
@@ -119,18 +78,16 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
               </button>
             </>
           )}
-          {menu.length > 0 && (
-            <button
-              type="button"
-              className={cx(s.iconBtn, s.gnbMenuBtn)}
-              aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
-              aria-expanded={open}
-              aria-controls="home-menu"
-              onClick={() => setOpen((v) => !v)}
-            >
-              <HomeIcon name={open ? "close" : "menu"} />
-            </button>
-          )}
+          <button
+            type="button"
+            className={cx(s.iconBtn, s.gnbMenuBtn)}
+            aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={open}
+            aria-controls="home-menu"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <HomeIcon name={open ? "close" : "menu"} />
+          </button>
         </div>
       </div>
     </header>
