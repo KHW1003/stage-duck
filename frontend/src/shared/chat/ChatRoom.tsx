@@ -129,6 +129,19 @@ function useLongPress(onLong: () => void) {
   };
 }
 
+/** 안내 카드 제목 — 서버가 남기는 안내 문장(payment.cancel·deadline, confirm.service)의 앞부분으로 고른다. 모르는 문장은 "안내" */
+const NOTICE_TITLES: [string, string][] = [
+  ["사용자가 공연을 취소", "공연 취소"],
+  ["업체 사정으로 공연이 취소", "공연 취소"],
+  ["업체 사정으로 확정이 취소", "확정 취소"],
+  ["결제 마감이 지나", "자동 취소"],
+  ["사용자가 다시 조율", "다시 이야기하기"],
+  ["사용자가 다른 업체와 진행", "견적 마감"],
+];
+export function noticeTitle(body: string | null): string {
+  return NOTICE_TITLES.find(([head]) => body?.startsWith(head))?.[1] ?? "안내";
+}
+
 function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
   m: ChatMsg; mine: boolean; read: boolean; partner: string; meId: number; room: Room; role: Props["role"]; onLeave: () => void;
   acts: MsgActions;
@@ -155,7 +168,22 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
     // #43 최종 견적 카드 · 확정 완료 카드 (refId = 카드 번호)
     if (m.type === "CONFIRM_REQUEST" && m.refId) return <ConfirmRequestCard id={m.refId} role={role} partner={partner} onLeave={onLeave} />;
     if (m.type === "CONFIRMED" && m.refId) return <ConfirmedCard id={m.refId} role={role} onLeave={onLeave} />;
-    const text = m.type === "CONFIRM_REQUEST" ? "최종 견적이 도착했어요" : m.type === "CONFIRMED" ? "확정했어요" : (m.body ?? "안내");
+    // 상태 안내 카드 (FR-CHAT-02, 11/25): 공연 취소·확정 취소·다시 조율 등 — 채팅창 끝까지 검은 띠
+    if (m.type === "NOTICE") {
+      return (
+        <div className="c-card c-card--notice" role="status">
+          <div className="c-card__head">
+            <span>{noticeTitle(m.body)}</span>
+            <span className="c-card__time">{msgTime(m.createdAt)}</span>
+          </div>
+          <div className="c-card__body">
+            <p className="c-card__meta">{partner} · {STAGE_NAME[room.stageType]}</p>
+            <p className="c-card__text">{m.body ?? "안내"}</p>
+          </div>
+        </div>
+      );
+    }
+    const text = m.type === "CONFIRM_REQUEST" ? "최종 견적이 도착했어요" : "확정했어요";
     return <span className="room__sys">{text}</span>;
   }
   let content;

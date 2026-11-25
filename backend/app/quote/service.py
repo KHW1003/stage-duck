@@ -332,7 +332,7 @@ def quote_counts(db: Session, stage_ids: list[int]) -> dict[int, int]:
 
 # ---------------------------------------------------------------------------
 # 공고 목록·상세 (T3-01 #41, AC-F2-11·12·14, AC-F3-01·03, AC-F4-07, AC-F5-12)
-# 보이는 조건은 2번 request.service(open_postings_for·posting_visible)가 정한다.
+# 보이는 조건은 2번 request.service(readable_postings_for·posting_readable·posting_visible)가 정한다.
 # 요청서 내용은 견적서 API처럼 2번 stages·performances 를, 닉네임은 1번 users 를 **읽기 전용으로 참조**만 한다.
 # 연락처(contact_phone)·실명·이메일은 넣지 않는다 (CLAUDE.md 20).
 # ---------------------------------------------------------------------------
@@ -348,12 +348,14 @@ def _user_counts(db: Session, user_ids: set[int]) -> dict[int, dict[str, Any]]:
 
 
 def list_postings(db: Session, user: User, *, sido: str | None) -> list[dict[str, Any]]:
-    """AC-F2-11·12, AC-F3-01, AC-F4-07: 내 승인 부문 × 지금 열린 단계 공고. 공연일 임박 순.
+    """AC-F2-11·12, AC-F3-01, AC-F4-07: 내 승인 부문 × 지금 열린 단계 + 아직 대기 중인 단계 공고. 공연일 임박 순.
+
+    대기(WAITING) 공고는 요청서만 미리 읽고 견적서는 단계가 열린 뒤 보낸다 (11/25 해원).
 
     심사 중·정지 업체는 403 대신 빈 목록이다 (AC-F2-12 "보이지 않는다").
     """
     supplier = supplier_service.get_application(db, user)
-    postings = request_service.open_postings_for(db, supplier, sido=sido)
+    postings = request_service.readable_postings_for(db, supplier, sido=sido)
     perf_ids = {p.performance_id for p in postings}
     owners = dict(db.execute(select(Performance.id, Performance.user_id).where(Performance.id.in_(perf_ids))).all())
     users = _user_counts(db, set(owners.values()))
@@ -361,9 +363,9 @@ def list_postings(db: Session, user: User, *, sido: str | None) -> list[dict[str
 
 
 def get_posting(db: Session, user: User, stage_id: int) -> dict[str, Any]:
-    """AC-F3-03, AC-F2-14, AC-F5-12: 공고 상세 + 앞 단계 확정 정보. 나에게 안 보이는 공고는 404."""
+    """AC-F3-03, AC-F2-14, AC-F5-12: 공고 상세 + 앞 단계 확정 정보. 나에게 안 보이는 공고는 404. 대기 단계도 읽을 수 있다."""
     supplier = supplier_service.get_application(db, user)
-    if not request_service.posting_visible(db, stage_id, supplier):
+    if not request_service.posting_readable(db, stage_id, supplier):
         raise not_found()
     stage = db.get(Stage, stage_id)  # 읽기 전용 참조 (2번 stages·performances)
     perf = stage.performance

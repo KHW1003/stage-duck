@@ -53,6 +53,14 @@ export function SpacesPage() {
   const [applied, setApplied] = useState<Cond>(initial);
   const [tile, setTile] = useState<VenueTypeCode | null>(null);
   const [sort, setSort] = useState<Sort>("price");
+  // 11/25 해원: 조건표가 자리를 많이 차지해 기본은 접고 [상세 조건]을 누르면 아래로 펼친다
+  const [open, setOpen] = useState(false);
+  const activeCount =
+    (applied.region !== "전체" ? 1 : 0) +
+    (Number(applied.audience) > 0 ? 1 : 0) +
+    (applied.types.length < TILE_TYPES.length ? 1 : 0) +
+    applied.conditions.length +
+    (applied.date ? 1 : 0);
 
   const venues = useVenues(toQuery(applied, sort));
   const list = venues.data?.items ?? [];
@@ -82,10 +90,23 @@ export function SpacesPage() {
               </button>
             ))}
           </div>
+          <button type="button" className="cond-toggle" aria-expanded={open} aria-controls="cond-panel" onClick={() => setOpen((o) => !o)}>
+            <Ico name="sliders" sm />
+            <b>상세 조건</b>
+            {activeCount > 0 && <span className="cond-toggle__count">{activeCount}</span>}
+            <span className="cond-toggle__sum">{condSummary(applied, null)}{applied.date ? ` · ${applied.date}` : ""}</span>
+            <span className="cond-toggle__act">
+              {open ? "접기" : "펼치기"}
+              <Ico name="down" sm className="cond-toggle__chev" />
+            </span>
+          </button>
+          <div id="cond-panel" className="cond-slide" data-open={open || undefined} {...(open ? {} : { inert: "" })}>
+          <div className="cond-slide__inner">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               setApplied(draft);
+              setOpen(false);
             }}
           >
             <div className="cond">
@@ -160,6 +181,8 @@ export function SpacesPage() {
               </button>
             </div>
           </form>
+          </div>
+          </div>
         </section>
 
         <section className="sec" aria-live="polite">

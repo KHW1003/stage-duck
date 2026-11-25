@@ -35,7 +35,7 @@ class OpenStage:
     stage_id: int
     performance_id: int
     stage_type: str  # VENUE · EQUIPMENT · ENGINEER
-    status: str  # OPEN · NEGOTIATING
+    status: str  # OPEN · NEGOTIATING (readable_postings_for 는 WAITING 도)
     performance_version: int  # 지금 공고의 요청서 버전 (CHK-12, 견적서 based_on_perf_version)
 
 
@@ -530,12 +530,16 @@ def _visible_stage_types(supplier: Supplier) -> set[str]:
     return {CATEGORY_STAGE[c.category] for c in supplier.categories}
 
 
-def _posting_stmt(stage_types: set[str]):
+#: 업체가 요청서를 읽을 수 있는 단계 상태: 모집 중 + 아직 차례가 안 온 대기 (11/25 해원: 단계가 아니어도 요청서는 미리 본다)
+READABLE_STATUSES = (*OPEN_STATUSES, "WAITING")
+
+
+def _posting_stmt(stage_types: set[str], statuses: tuple[str, ...] = OPEN_STATUSES):
     return (
         select(Stage, Performance)
         .join(Performance, Performance.id == Stage.performance_id)
         .where(
-            Stage.status.in_(OPEN_STATUSES),
+            Stage.status.in_(statuses),
             Stage.stage_type.in_(stage_types),
             Performance.status.in_(POSTED),
         )
@@ -550,16 +554,33 @@ def posting_visible(db: Session, stage_id: int, supplier: Supplier) -> bool:
     return db.execute(_posting_stmt(stage_types).where(Stage.id == stage_id)).first() is not None
 
 
+def posting_readable(db: Session, stage_id: int, supplier: Supplier) -> bool:
+    """[약속 2 → 3] 이 업체가 이 단계 요청서를 읽을 수 있는가. 모집 중 + 대기(앞 단계 확정 전). 견적서 보내기는 posting_visible."""
+    stage_types = _visible_stage_types(supplier)
+    if not stage_types:
+        return False
+    return db.execute(_posting_stmt(stage_types, READABLE_STATUSES).where(Stage.id == stage_id)).first() is not None
+
+
+def readable_postings_for(db: Session, supplier: Supplier, *, sido: str | None = None) -> list[OpenPosting]:
+    """[약속 2 → 3] 업체가 요청서를 읽을 수 있는 공고 목록: 열린 단계 + 아직 대기 중인 단계 (11/25 해원). 견적서는 열린 단계만."""
+    return _postings(db, supplier, sido=sido, statuses=READABLE_STATUSES)
+
+
 def open_postings_for(db: Session, supplier: Supplier, *, sido: str | None = None) -> list[OpenPosting]:
     """[약속 2 → 3] 이 업체에게 보이는 공고 목록 (GET /postings). 공연일 임박 순, sido 가 있으면 그 지역만.
 
     보이는 조건 (AC-F2-11·12, FR-REQ-03): 승인·정상 업체 × 자기 부문의 단계 × 그 단계가 지금 열림(OPEN·NEGOTIATING)
     × 요청서가 게시·배정 중. 내린 공고·초안은 안 보인다.
     """
+    return _postings(db, supplier, sido=sido, statuses=OPEN_STATUSES)
+
+
+def _postings(db: Session, supplier: Supplier, *, sido: str | None, statuses: tuple[str, ...]) -> list[OpenPosting]:
     stage_types = _visible_stage_types(supplier)
     if not stage_types:
         return []
-    stmt = _posting_stmt(stage_types).order_by(Performance.show_date, Stage.id)
+    stmt = _posting_stmt(stage_types, statuses).order_by(Performance.show_date, Stage.id)
     if sido:
         stmt = stmt.where(Performance.sido == sido)
     return [

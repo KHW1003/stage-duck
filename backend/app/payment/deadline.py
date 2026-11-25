@@ -13,6 +13,7 @@ from datetime import date, datetime, time, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.chat import service as chat_service
 from app.models.notification import Notification
 from app.models.payment import Cancellation, Order
 from app.models.request import Performance, Stage
@@ -24,6 +25,7 @@ IMMINENT_HOURS = 48
 IMMINENT_DAYS = 13
 LAST_DAY_BEFORE_SHOW = 5
 SUPPLIER_CANCEL_EXTRA_HOURS = 48
+NOTICE_EXPIRED = "결제 마감이 지나 공연이 자동으로 취소됐어요."  # 채팅 안내 카드 (FR-CHAT-02)
 WAITING_PERF = ("ASSIGNING", "AWAITING_PAYMENT")  # 처음 컨펌 뒤 결제 전
 
 
@@ -128,6 +130,7 @@ def expire(db: Session, perf: Performance, now: datetime) -> bool:
     rejection.record_rejection(db, perf.id, now=now)
     cancel._record(db, perf, order, q, requested_by="SYSTEM", fault_supplier_id=None, actor_id=None, now=now)
     request_service.performance_cancelled(db, perf.id, actor_id=None)
+    chat_service.post_cancel_notice(db, perf.id, NOTICE_EXPIRED)  # 채팅방에도 실시간 안내 (3번 약속)
     notification.notify(db, perf.user_id, "HOLD_EXPIRED", link=f"/performances/{perf.id}", params={"title": perf.title},
                         payload={"performanceId": perf.id})
     notification.notify_many(db, supplier_users, "HOLD_EXPIRED", link="/supplier/reservations", params={"title": perf.title},

@@ -101,7 +101,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
           {me ? (
             <>
               {kind === "admin" && <span className={styles.envTag}>테스트 환경</span>}
-              {(kind === "user" || kind === "partner") && <NotificationBell />}
+              {me.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && <NotificationBell />}
               <AccountMenu me={me} kind={kind} />
             </>
           ) : (
@@ -164,9 +164,9 @@ export function Popover({
 
 type Trigger = (p: { open: boolean; toggle: () => void }) => ReactNode;
 
-/** 알림 종 + 패널 (#45). 메인 머리(features/home)는 trigger 로 목업 모양 버튼만 바꿔 같은 패널을 쓴다.
+/** 알림 종 + 패널 (#45).
  *  종에는 안 읽은 수(99개 넘으면 99+), 패널에는 최근 5개 + [모두 읽음] + [알림 전체 보기] (notifications.md 6장) */
-export function NotificationBell({ trigger }: { trigger?: Trigger }) {
+export function NotificationBell() {
   const unread = useUnreadCount(true);
   const count = unread.data?.count ?? 0;
   const badge = count > 0 && (
@@ -174,13 +174,11 @@ export function NotificationBell({ trigger }: { trigger?: Trigger }) {
       {count > 99 ? "99+" : count}
     </span>
   );
-  const draw: Trigger =
-    trigger ??
-    (({ open, toggle }) => (
-      <button type="button" className={styles.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
-        <Icon name="bell" />
-      </button>
-    ));
+  const draw: Trigger = ({ open, toggle }) => (
+    <button type="button" className={styles.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
+      <Icon name="bell" />
+    </button>
+  );
   return (
     <Popover
       button={(p) => (
@@ -225,13 +223,13 @@ function NotificationPanel({ unread, close }: { unread: number; close: () => voi
   );
 }
 
-/** 계정 메뉴. 메인 머리(features/home)는 trigger 로 목업의 동그란 아바타 버튼을 쓴다 */
-export function AccountMenu({ me, kind, trigger }: { me: Me; kind: LayoutKind; trigger?: Trigger }) {
+/** 계정 메뉴 */
+export function AccountMenu({ me, kind }: { me: Me; kind: LayoutKind }) {
   const logout = useLogout();
   const name = me.nickname ?? me.name;
   return (
     <Popover
-      button={trigger ?? (({ open, toggle }) => (
+      button={({ open, toggle }) => (
         <button type="button" className={styles.user} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
           <span className={styles.avatar} aria-hidden="true" style={me.avatarUrl ? { backgroundImage: `url('${me.avatarUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
             {me.avatarUrl ? null : name.slice(0, 1)}
@@ -239,7 +237,7 @@ export function AccountMenu({ me, kind, trigger }: { me: Me; kind: LayoutKind; t
           <span className={styles.userName}>{name}</span>
           <Icon name="down" size="sm" />
         </button>
-      ))}
+      )}
     >
       <div className={styles.dropdown} role="menu">
         <div className={styles.dropdownHead}>

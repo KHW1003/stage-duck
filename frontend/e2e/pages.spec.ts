@@ -38,6 +38,7 @@ test("/venues 중간 폭(761·768·1024·1100px)에서 가로 넘침이 없다",
   for (const width of [761, 768, 1024, 1100]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/venues");
+    await page.getByRole("button", { name: /상세 조건/ }).click(); // 11/25: 조건표는 접혀 있다 (#326). 펼쳐서 잰다
     await expect(page.getByRole("group", { name: "지역" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expectNoHorizontalScroll(page);

@@ -14,6 +14,7 @@
 .actionCell { text-align: right; white-space: nowrap; }
 
 .tag { display: inline-block; margin-left: 6px; padding: 2px 6px; border: 1px solid var(--sd-blue); border-radius: var(--sd-r-tag); color: var(--sd-blue); font-size: var(--sd-text-small); font-weight: 600; vertical-align: middle; }
+.tagWait { display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: var(--sd-r-tag); background: var(--sd-warn-soft); color: var(--sd-warn-text); font-size: var(--sd-text-small); font-weight: 600; vertical-align: middle; }
 
 .notice { padding: 14px 16px; border-left: 3px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-band); font-size: var(--sd-text-desc); line-height: 1.7; }
 .noticeActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -43,6 +44,35 @@
 .sideSec + .sideSec { border-top: 1px solid var(--sd-line); }
 .sideGray { background: var(--sd-th); }
 .sideTitle { margin-bottom: 8px; font-size: var(--sd-text-card); font-weight: 700; }
+
+/* 요청서 기본 정보 큰 카드 (PostingBrief, 11/25 해원: 견적서 쓸 때 크고 한눈에) */
+.brief { margin-bottom: 32px; padding: 24px 28px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-card); background: var(--sd-bg); }
+.briefHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.briefStage, .briefOpen, .briefWait { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--sd-r-tag); font-size: var(--sd-text-small); font-weight: 700; }
+.briefStage { background: var(--sd-blue); color: #fff; }
+.briefOpen { border: 1px solid var(--sd-blue); color: var(--sd-blue); }
+.briefWait { background: var(--sd-warn-soft); color: var(--sd-warn-text); }
+.briefVer { margin-left: auto; color: var(--sd-muted); font-size: var(--sd-text-small); }
+.briefTitle { margin-top: 12px; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.35; overflow-wrap: anywhere; }
+.briefWho { margin-top: 4px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+.briefGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 20px 0 0; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); overflow: hidden; }
+.briefGrid > div { padding: 16px 18px; }
+.briefGrid > div + div { border-left: 1px solid var(--sd-line); }
+.briefGrid dt { color: var(--sd-muted); font-size: var(--sd-text-small); }
+.briefGrid dd { margin: 6px 0 0; font-size: 20px; font-weight: 700; line-height: 1.3; }
+.briefGrid dd small { display: block; margin-top: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); font-weight: 500; }
+.briefNotice { margin-top: 16px; padding: 14px 16px; border-radius: var(--sd-r-box); background: var(--sd-warn-soft); color: var(--sd-warn-text); font-size: var(--sd-text-desc); line-height: 1.7; }
+.briefNeeds { margin-top: 20px; }
+.briefNeedsTitle { margin-bottom: 10px; font-size: var(--sd-text-card); font-weight: 700; }
+/* 모집 전에는 견적서 양식을 잠근다 (fieldset disabled) */
+.locked { min-width: 0; margin: 0; padding: 0; border: 0; opacity: .55; }
+@media (max-width: 760px) {
+  .brief { padding: 20px; }
+  .briefTitle { font-size: 22px; }
+  .briefGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .briefGrid > div:nth-child(3) { border-left: 0; }
+  .briefGrid > div:nth-child(n + 3) { border-top: 1px solid var(--sd-line); }
+}
 
 @media (max-width: 760px) {
   .withAside { grid-template-columns: 1fr; gap: 32px; }

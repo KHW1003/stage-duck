@@ -107,6 +107,16 @@ async function sendChat(page: Page, text: string) {
 const lastCard = (page: Page, kind: "최종 견적" | "확정 완료"): Locator =>
   panel(page).locator(".c-card").filter({ has: page.locator(".c-card__head > span:first-child", { hasText: new RegExp(`^${kind}$`) }) }).last();
 
+/** 고르기 칸은 화면이 굴러가면 닫힌다 → 먼저 가운데로 굴려 두고, 굴림이 끝난 다음 누른다 */
+async function choose(page: Page, name: string, option: string | RegExp) {
+  const combo = page.getByRole("combobox", { name });
+  await combo.evaluate((e) => {
+    e.scrollIntoView({ block: "center", behavior: "instant" });
+    return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+  });
+  await combo.click();
+  await page.getByRole("option", { name: option }).click();
+}
 test("견적서: 공고 목록 → 상세 → 견적서 보내기 → 자동 검사 결과 → [견적서 고치기]로 v2 (AC-F2-15·16·20)", async ({ page, browser }, info) => {
   const title = `견적서 흐름 (${info.project.name})`;
   const userErrors = collectErrors(page);
@@ -127,12 +137,12 @@ test("견적서: 공고 목록 → 상세 → 견적서 보내기 → 자동 검
   await expectNoHorizontalScroll(sup);
   await sup.getByRole("link", { name: "견적서 쓰기" }).click();
 
-  await expect(sup.getByRole("heading", { level: 1, name: `견적서 쓰기 · ${title}` })).toBeVisible();
+  await expect(sup.getByRole("heading", { level: 1, name: "견적서 쓰기" })).toBeVisible(); // 11/25 제목에서 공연명을 뺐다 (#321)
+  await expect(sup.getByRole("heading", { name: title })).toBeVisible();
   await sup.getByRole("textbox", { name: "견적서 이름" }).fill("기본형");
-  await sup.getByRole("combobox", { name: "공간" }).click();
-  await sup.getByRole("option", { name: /공간 C/ }).click();
-  await sup.getByLabel("입실 시각").fill("15:00");
-  await sup.getByLabel("설치 가능 시각").fill("15:00");
+  await choose(sup, "공간", /공간 C/);
+  await choose(sup, "입실 시각", "15:00");
+  await choose(sup, "설치 가능 시각", "15:00");
   await sup.getByRole("textbox", { name: "대관료" }).fill("500000");
   await expect(sup.getByTestId("quote-total")).toHaveText("500,000원"); // 화면 합계 (서버가 다시 확인)
   await expectNoHorizontalScroll(sup);

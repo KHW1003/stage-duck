@@ -37,13 +37,15 @@ interface Props {
   kind: ErrorKind;
   /** 500: 문의할 때 알려 줄 오류 번호 (서버 traceId) */
   traceId?: string | null;
+  /** 기본 설명 대신 쓸 글 */
+  desc?: string;
   /** suspended: 계정·정지일 같은 요약 줄 */
   rows?: [string, ReactNode][];
   /** 다시 시도 (기본: 새로 고침) */
   onRetry?: () => void;
 }
 
-export function ErrorView({ kind, traceId, rows, onRetry }: Props) {
+export function ErrorView({ kind, desc, traceId, rows, onRetry }: Props) {
   const navigate = useNavigate();
   // 내 정보는 이미 받아 둔 값만 읽는다. 여기서 다시 불러오면 내 정보 오류 화면이 "불러오는 중 ↔ 오류"를 되풀이한다
   const home = HOME[layoutKindOf(useQueryClient().getQueryData<Me | null>(ME_KEY))];
@@ -68,7 +70,7 @@ export function ErrorView({ kind, traceId, rows, onRetry }: Props) {
         </p>
       )}
       <h1>{t.title}</h1>
-      <p>{t.desc}</p>
+      <p>{desc ?? t.desc}</p>
       {rows && rows.length > 0 && (
         <table className="info-table">
           <tbody>

@@ -233,6 +233,8 @@ export function PerformancePage() {
   if (perf.isPending) return <p className="sd-sr-only">불러오는 중이에요</p>;
   if (!perf.data) return <ErrorNotice error={perf.error} />;
   const p = perf.data;
+  // 11/25: 취소·공고 내림이면 D-day 대신 상태 표시, 섭외 진행은 흐리게 하고 안내를 붙인다
+  const ended = p.status === "CANCELLED" ? "취소됨" : p.status === "WITHDRAWN" ? "공고 내림" : null;
   const group = p.status === "DRAFT" ? "작성 중" : ["COMPLETED", "CANCELLED", "WITHDRAWN"].includes(p.status) ? "지난 공연" : "진행 중";
 
   return (
@@ -249,7 +251,7 @@ export function PerformancePage() {
                 <li>{group}</li>
               </ol>
               <h1>
-                {p.title} <DDay showDate={p.showDate} point />
+                {p.title} {ended ? <span className="tag perf-ended-tag">{ended}</span> : <DDay showDate={p.showDate} point />}
               </h1>
               <div className="page-top__meta">
                 <span>
@@ -285,19 +287,29 @@ export function PerformancePage() {
       </div>
 
       <main className="container main">
-        <DeadlineNotice deadline={p.paymentDeadline} what={p.status === "AWAITING_PAYMENT" ? "결제" : "남은 업체 선택과 결제"} />
+        {ended && (
+          <div className="perf-ended" role="status">
+            <Ico name="info" />
+            <div>
+              <b>{p.status === "CANCELLED" ? "취소된 공연입니다." : "공고를 내린 공연입니다."}</b>
+              <p>더 이상 업체 섭외나 결제가 진행되지 않습니다. 아래 섭외 진행과 요청서는 기록으로만 남아 있습니다.</p>
+            </div>
+          </div>
+        )}
+        {!ended && <DeadlineNotice deadline={p.paymentDeadline} what={p.status === "AWAITING_PAYMENT" ? "결제" : "남은 업체 선택과 결제"} />}
         {(p.status === "CONFIRMED" || p.status === "COMPLETED") && <PerformanceReviews performanceId={p.id} />}
-        <section className="sec">
+        <section className={ended ? "sec perf-ended-steps" : "sec"}>
           <div className="sec-head">
             <h2>
               <Ico name="layers" />
               섭외 진행
             </h2>
+            {ended && <span className="tag perf-ended-tag">{ended}</span>}
           </div>
           <div className="st-box">
             <RqSteps stages={p.stages} />
           </div>
-          {p.nextAction === "PAY" && (
+          {!ended && p.nextAction === "PAY" && (
             <div className="todo">
               <Ico name="receipt" />
               <div className="grow">

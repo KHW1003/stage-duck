@@ -87,37 +87,51 @@ export function NowPanel({ perf }: { perf: PerformanceSummary | null }) {
   const stages = [...perf.stages].sort((a, b) => a.seq - b.seq);
   const done = stages.filter((st) => rowState(st) === "done").length;
   const badge = dDay(perf.showDate);
+  const facts: [string, string][] = [
+    ["지역", perf.sido],
+    ["공연일", dateLabel(perf.showDate)],
+    ["리허설", hm(perf.rehearsalStart)],
+    ["공연", hm(perf.showStart)],
+  ];
+  // 11/25 해원: 카드 다듬기 — 정보 칸 · 진행 머리줄 · 이어진 단계 목록 · 아래 버튼
   return (
-    <div className={s.now}>
-      <div className={s.nowHead}>
-        <div>
-          <p className={s.nowLabel}>내가 준비하는 공연</p>
-          <h2>{perf.title}</h2>
-          <p className={s.nowMeta}>
-            {perf.sido} · {dateLabel(perf.showDate)} · 리허설 {hm(perf.rehearsalStart)} · 공연 {hm(perf.showStart)}
-          </p>
-        </div>
-        {badge && <span className={cx(s.badge, s.badgeBlue)}>{badge}</span>}
+    <div className={cx(s.now, s.nowCard)}>
+      <div className={s.nowTop}>
+        <p className={s.nowLabel}>내가 준비하는 공연</p>
+        {badge && <span className={s.nowDday}>{badge}</span>}
+      </div>
+      <h2 className={s.nowTitle}>{perf.title}</h2>
+      <dl className={s.nowFacts}>
+        {facts.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className={s.nowProgHead}>
+        <span>섭외 진행</span>
+        <b>
+          {done}/{stages.length} 단계 {done === stages.length ? "완료" : "진행 중"}
+        </b>
       </div>
       <div className={s.nowProgress} aria-label={`${stages.length}단계 중 ${done}단계 컨펌`}>
         <span style={{ width: `${stages.length ? (done / stages.length) * 100 : 0}%` }} />
       </div>
-      <ol className={s.nowSteps}>
+      <ol className={s.nowLine}>
         {stages.map((st, i) => {
           const state = rowState(st);
+          const skipped = st.status === "SKIPPED";
           return (
-            <li key={st.id} className={cx(s.stepRow, ROW_CLASS[state])}>
-              <span className={s.stepRowNo}>{i + 1}</span>
+            <li key={st.id} className={cx(ROW_CLASS[state], skipped && s.isSkip)}>
+              <span className={s.nowDot} aria-hidden="true">
+                {state === "done" ? <HomeIcon name="check" /> : i + 1}
+              </span>
               <div>
                 <b>{STAGE_NAME[st.stageType]}</b>
                 <small>{rowText(st, stages[i - 1])}</small>
               </div>
-              {state === "done" && (
-                <span className={cx(s.status, s.statusPass)}>
-                  <HomeIcon name="pass" />
-                  {st.status === "SKIPPED" ? "건너뜀" : "컨펌"}
-                </span>
-              )}
+              {state === "done" && <span className={cx(s.status, skipped ? s.statusInfo : s.statusPass)}>{skipped ? "건너뜀" : "컨펌"}</span>}
               {state === "current" && (
                 <Link className={cx(s.btn, s.btnSm, s.btnPrimary)} to={`/performances/${perf.id}`}>
                   {st.status === "RECHECK" ? "확인하기" : "비교하기"}
@@ -128,7 +142,7 @@ export function NowPanel({ perf }: { perf: PerformanceSummary | null }) {
           );
         })}
       </ol>
-      <Link className={s.nowMore} to="/me/performances">
+      <Link className={s.nowMoreBtn} to="/me/performances">
         공연 현황 전체 보기 <span aria-hidden="true">→</span>
       </Link>
     </div>

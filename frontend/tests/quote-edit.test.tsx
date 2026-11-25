@@ -128,7 +128,7 @@ describe("견적서 고치기 (/supplier/quotes/:quoteId/edit)", () => {
     expect(await screen.findByLabelText("1번 품목 이름")).toHaveValue("추가 마이크·밴드 음향");
     expect(screen.getByLabelText("1번 수량")).toHaveValue("2");
     expect(screen.getByLabelText("운반비")).toHaveValue("150,000");
-    expect(screen.getByLabelText("설치 시작")).toHaveValue("15:00");
+    expect(screen.getByLabelText("설치 시작")).toHaveTextContent("15:00");
     expect(screen.getByLabelText(/설치 포함/)).toBeChecked();
     expect(screen.getByLabelText(/운반 포함/)).not.toBeChecked();
     expect(screen.getByTestId("quote-total")).toHaveTextContent("1,250,000원");

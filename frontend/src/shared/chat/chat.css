@@ -212,3 +212,10 @@ html.chat-open { overflow: hidden; scrollbar-gutter: stable; }   /* 창이 열�
 /* 말풍선 + 읽음·시간 한 줄 (11/25): 답장 인용이 넓어도 시간은 말풍선에 붙는다 */
 .chat-panel .msg__line { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; min-width: 0; }
 .chat-panel .msg--me .msg__line { flex-direction: row-reverse; }
+/* 상태 안내 카드 (11/25): 내 말풍선 색 검은 띠, 채팅창 끝까지(양옆 여백 16px 무시), 위아래만 연회색 1px, 높이 같게 */
+.chat-panel .c-card--notice { align-self: stretch; width: auto; margin-inline: -16px; border: 0; border-top: 1px solid var(--sd-line); border-bottom: 1px solid var(--sd-line); border-radius: 0; background: var(--sd-ink); color: #fff; }
+.chat-panel .c-card--notice .c-card__head { padding: 8px 16px 0; font-size: var(--sd-text-meta); color: rgba(255, 255, 255, .72); }
+.chat-panel .c-card--notice .c-card__time { font-weight: 400; color: rgba(255, 255, 255, .6); }
+.chat-panel .c-card--notice .c-card__body { min-height: 44px; padding: 2px 16px 8px; display: flex; flex-direction: column; justify-content: center; }
+.chat-panel .c-card--notice .c-card__meta { margin: 0; font-size: var(--sd-text-meta); color: rgba(255, 255, 255, .6); }
+.chat-panel .c-card--notice .c-card__text { margin: 2px 0 0; font-size: var(--sd-text-small); font-weight: 600; line-height: 1.4; color: #fff; }
