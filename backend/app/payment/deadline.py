@@ -25,7 +25,7 @@ IMMINENT_HOURS = 48
 IMMINENT_DAYS = 13
 LAST_DAY_BEFORE_SHOW = 5
 SUPPLIER_CANCEL_EXTRA_HOURS = 48
-NOTICE_EXPIRED = "결제 마감이 지나 공연이 자동으로 취소됐어요."  # 채팅 안내 카드 (FR-CHAT-02)
+NOTICE_EXPIRED = "결제 마감이 지나 공연이 자동으로 취소되었습니다."  # 채팅 안내 카드 (FR-CHAT-02)
 WAITING_PERF = ("ASSIGNING", "AWAITING_PAYMENT")  # 처음 컨펌 뒤 결제 전
 
 

@@ -21,10 +21,10 @@ from tests.f5.test_cancel import _at, _paid
 from tests.f5.test_payment_deadline import _awaiting
 from tests.f5.test_order import NOW, _fixed_now, _fixed_today, _ready  # noqa: F401 (픽스처)
 
-USER_CANCEL = "사용자가 공연을 취소했어요."
-SUPPLIER_CANCEL = "업체 사정으로 확정이 취소됐어요. 이 단계는 다시 모집해요."
-SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소됐어요."
-EXPIRED = "결제 마감이 지나 공연이 자동으로 취소됐어요."
+USER_CANCEL = "사용자가 공연을 취소했습니다."
+SUPPLIER_CANCEL = "업체 사정으로 확정이 취소되었습니다. 이 단계는 다시 모집합니다."
+SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소되었습니다."
+EXPIRED = "결제 마감이 지나 공연이 자동으로 취소되었습니다."
 
 
 def _rooms(db, perf_id: int, supplier_ids) -> tuple[dict[int, int], int]:

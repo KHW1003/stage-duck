@@ -198,9 +198,11 @@ function Bubble({ m, mine, read, partner, meId, room, role, onLeave, acts }: {
             <span>{noticeTitle(m.body) === "안내" ? "안내" : `${noticeTitle(m.body)} 안내`}</span>
           </div>
           <div className="c-card__body">
-            <p className="c-card__text" aria-label={m.body ?? "안내"}>
+            <p className="c-card__text">
+              {/* 줄 사이에 공백을 둬 문단 글자(복사·검색·스크린리더)가 서버 문장 그대로 이어지게 */}
               {noticeLines(m.body ?? "안내").map((line, i) => (
                 <span key={i} className="c-card__line">
+                  {i > 0 && " "}
                   {line}
                 </span>
               ))}

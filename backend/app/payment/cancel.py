@@ -36,9 +36,9 @@ class CancelQuote:
 
 
 # 채팅 안내 카드(NOTICE) 문구 — 사용자·업체 둘 다 보므로 누가 했는지만 담담하게 (FR-CHAT-02)
-NOTICE_USER_CANCEL = "사용자가 공연을 취소했어요."
-NOTICE_SUPPLIER_CANCEL = "업체 사정으로 확정이 취소됐어요. 이 단계는 다시 모집해요."
-NOTICE_SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소됐어요."
+NOTICE_USER_CANCEL = "사용자가 공연을 취소했습니다."
+NOTICE_SUPPLIER_CANCEL = "업체 사정으로 확정이 취소되었습니다. 이 단계는 다시 모집합니다."
+NOTICE_SUPPLIER_CANCEL_ALL = "업체 사정으로 공연이 취소되었습니다."
 
 def _owned(db: Session, user: User, performance_id: int, *, lock: bool = False) -> Performance:
     perf = db.get(Performance, performance_id, with_for_update=lock)

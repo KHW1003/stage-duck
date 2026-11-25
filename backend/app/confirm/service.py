@@ -254,7 +254,7 @@ def _close_others(db: Session, stage: Stage, chosen: Quote, actor_id: int, now: 
             for card in db.scalars(select(ConfirmRequest).where(ConfirmRequest.room_id == room.id, ConfirmRequest.status == "PENDING")):
                 card.status, card.decided_at = "INVALIDATED", now
                 _publish(db, room, card)
-            _system(db, room, "NOTICE", None, "사용자가 다른 업체와 진행하기로 했어요. 이 공고의 견적서는 마감됐어요.")
+            _system(db, room, "NOTICE", None, "사용자가 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.")
         supplier_user_id = db.scalar(select(Supplier.user_id).where(Supplier.id == quote.supplier_id))
         notification.notify(
             db, supplier_user_id, "NOT_SELECTED", link=f"/supplier/postings/{stage.id}",
@@ -270,7 +270,7 @@ def renegotiate(db: Session, user: User, card_id: int, *, now: datetime) -> Card
         db.commit()
         raise invalid_state("이미 답했거나 기한이 지난 최종 견적이에요.")
     view.card.status, view.card.decided_at = "RENEGOTIATE", now
-    _system(db, view.room, "NOTICE", None, "사용자가 다시 조율하고 싶어 해요. 견적서를 고쳐 새 최종 견적을 보내 주세요.")
+    _system(db, view.room, "NOTICE", None, "사용자가 다시 조율하기를 원합니다. 견적서를 고쳐 새 최종 견적을 보내 주시기 바랍니다.")
     _publish(db, view.room, view.card)
     db.commit()
     return view

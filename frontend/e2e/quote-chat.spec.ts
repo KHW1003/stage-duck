@@ -299,7 +299,7 @@ test("확정: 최종 견적 보내기 → 내역서를 열기 전엔 [확정하�
 
   // AC-F3-13: 같은 단계 업체 B 의 방에 "다른 업체와 진행하기로 했어요"
   await other.goto(`/supplier/postings?chat=${b.chatRoomId}`);
-  await expect(panel(other).getByText("사용자가 다른 업체와 진행하기로 했어요", { exact: false })).toBeVisible();
+  await expect(panel(other).getByText("사용자가 다른 업체와 진행하기로 하여", { exact: false })).toBeVisible();
   await expectNoHorizontalScroll(other);
 
   expect(userErrors).toEqual([]);
