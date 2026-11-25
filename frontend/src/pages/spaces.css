@@ -37,7 +37,7 @@
 /* 상세 조건 접기·펼치기 (11/25 해원: 기본은 접고, 누르면 아래로 미끄러지듯 펼친다) */
 .cond-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 0 18px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-box); background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-desc); text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
 .cond-toggle:hover { background: var(--sd-hover); }
-.cond-toggle[aria-expanded="true"] { border-color: var(--sd-ink); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cond-toggle[aria-expanded="true"] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .cond-toggle b { font-size: var(--sd-text-body); white-space: nowrap; }
 .cond-toggle__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--sd-blue); color: #fff; font-size: var(--sd-text-meta); font-weight: 700; }
 .cond-toggle__sum { flex: 1; min-width: 0; overflow: hidden; color: var(--sd-muted); white-space: nowrap; text-overflow: ellipsis; }
@@ -47,6 +47,15 @@
 .cond-slide { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .25s ease, visibility 0s linear .25s; }
 .cond-slide[data-open] { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .25s ease, visibility 0s; }
 .cond-slide__inner { min-height: 0; overflow: hidden; }
-.cond-slide[data-open] .cond-slide__inner { padding: 0 18px 18px; border: 1px solid var(--sd-ink); border-top: 0; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
+.cond-slide[data-open] .cond-slide__inner { padding: 0 18px 18px; border: 1px solid var(--sd-line-strong); border-top: 0; border-radius: 0 0 var(--sd-r-box) var(--sd-r-box); }
 @media (prefers-reduced-motion: reduce) { .cond-slide, .cond-slide[data-open], .cond-toggle__chev { transition: none; } }
 @media (max-width: 760px) { .cond-toggle__sum { display: none; } .cond-toggle__act { margin-left: auto; } }
+
+/* 정렬은 테두리 없이 글자만 (11/25 해원). 고른 것은 진한 굵은 글자, 사이는 가는 세로줄 */
+.sort-text { display: flex; align-items: center; }
+.sort-text button { min-height: var(--sd-touch); padding: 0 10px; border: 0; background: none; color: var(--sd-muted); font-size: var(--sd-text-desc); cursor: pointer; }
+.sort-text button + button { position: relative; }
+.sort-text button + button::before { content: ""; position: absolute; left: 0; top: 50%; height: 12px; border-left: 1px solid var(--sd-line-strong); transform: translateY(-50%); }
+.sort-text button:hover { color: var(--sd-ink); }
+.sort-text button[aria-pressed="true"] { color: var(--sd-ink); font-weight: 700; }
+.sort-text button:last-child { padding-right: 0; }
