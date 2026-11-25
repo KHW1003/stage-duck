@@ -7,6 +7,7 @@
 from collections.abc import Callable
 from datetime import datetime
 from urllib.parse import urlencode
+from uuid import uuid4
 
 from markupsafe import Markup
 from sqladmin import BaseView, action, expose
@@ -34,7 +35,7 @@ from app.support import service as support_service
 
 def _pks(request: Request) -> list[int]:
     raw = request.query_params.get("pks", "")
-    return [int(pk) for pk in raw.split(",") if pk.strip().isdigit()]
+    return list(dict.fromkeys(int(pk) for pk in raw.split(",") if pk.strip().isdigit()))  # 같은 행이 두 번 오면 한 번만
 
 
 def _run_for_each(pks: list[int], fn: Callable, **kwargs) -> tuple[int, list[str]]:
@@ -402,6 +403,10 @@ class InquiryAdmin(SdModelView, model=Inquiry):
         return _to_reason_form(request, "inquiry_answer", self.identity)
 
 
+# 이미 처리한 사유 화면의 번호. shortcut: 서버 프로세스 하나의 메모리 (--workers 1), 워커를 늘리면 DB 로 옮긴다
+_USED_FORMS: set[str] = set()
+
+
 class ReasonView(BaseView):
     """반려·정지·경고 사유 입력 화면. 메뉴에는 보이지 않는다."""
 
@@ -422,6 +427,12 @@ class ReasonView(BaseView):
 
         if request.method == "POST":
             form = await request.form()
+            # [처리]를 두 번 누르면 같은 번호가 또 온다 → 경고가 두 번 쌓이지 않게 한 번만 (CLAUDE.md 13)
+            form_id = str(form.get("formId", ""))
+            if form_id and form_id in _USED_FORMS:
+                flash(request, "이미 처리한 요청이라 다시 처리하지 않았어요.", "info")
+                return _back(request, back) if back else RedirectResponse(request.url_for("admin:index"), status_code=302)
+            _USED_FORMS.add(form_id)
             reason = str(form.get("reason", ""))
             done, errors = await run_in_threadpool(
                 _run_for_each, pks, fn, actor_id=current_admin_id(request), reason=reason
@@ -430,7 +441,7 @@ class ReasonView(BaseView):
             return _back(request, back) if back else RedirectResponse(request.url_for("admin:index"), status_code=302)
 
         return await self.templates.TemplateResponse(
-            request, "reason.html", {"title": title, "pks": pks}
+            request, "reason.html", {"title": title, "pks": pks, "form_id": uuid4().hex}
         )
 
 

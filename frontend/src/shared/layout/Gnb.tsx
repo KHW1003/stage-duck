@@ -101,7 +101,7 @@ export function Gnb({ kind, me }: { kind: LayoutKind; me: Me | null }) {
           {me ? (
             <>
               {kind === "admin" && <span className={styles.envTag}>테스트 환경</span>}
-              {(kind === "user" || kind === "partner") && <NotificationBell />}
+              {me.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && <NotificationBell />}
               <AccountMenu me={me} kind={kind} />
             </>
           ) : (

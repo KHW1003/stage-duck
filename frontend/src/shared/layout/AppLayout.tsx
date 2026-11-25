@@ -8,8 +8,9 @@
  * - 오류 화면 (mockup-v4 error.html): 화면이 깨지면 500, 인터넷이 끊기면 "연결 끊김".
  *   연결 끊김은 화면을 지우지 않고 가려 두기만 해서, 다시 연결되면 쓰던 내용이 그대로 남아 있다
  */
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { ChatWidget } from "../chat/ChatWidget";
+import { SuspensionGate } from "../auth/SuspensionGate";
 import { layoutKindOf, useMe } from "../auth/useMe";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Footer } from "./Footer";
@@ -36,7 +37,7 @@ export function AppLayout() {
         )}
         <div hidden={!online}>
           <ErrorBoundary resetKey={pathname}>
-            <Outlet />
+            <SuspensionGate />
           </ErrorBoundary>
         </div>
       </main>

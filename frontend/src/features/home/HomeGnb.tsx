@@ -70,7 +70,7 @@ export function HomeGnb({ kind, me, partnerPage = false }: Props) {
         <div className={cx(s.gnbRight, me && s.gnbRightMember)}>
           {me ? (
             <>
-              {(kind === "user" || kind === "partner") && (
+              {me.status !== "SUSPENDED" && (kind === "user" || kind === "partner") && (
                 <NotificationBell
                   trigger={({ open: o, toggle }) => (
                     <button type="button" className={s.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={o} onClick={toggle}>
