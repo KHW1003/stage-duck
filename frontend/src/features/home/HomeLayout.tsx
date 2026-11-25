@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import { SuspensionGate } from "../../shared/auth/SuspensionGate";
 import { layoutKindOf, useMe } from "../../shared/auth/useMe";
 import { ChatWidget } from "../../shared/chat/ChatWidget";
+import { Gnb } from "../../shared/layout/Gnb";
 import { MobileTabBar } from "../../shared/layout/MobileTabBar";
 import { HomeFooter } from "./HomeFooter";
 import { HomeGnb } from "./HomeGnb";
@@ -23,7 +24,8 @@ export function HomeLayout() {
 
   return (
     <div className={s.root} data-theme={partner ? "partner" : undefined} data-layout={kind}>
-      <HomeGnb kind={kind} me={kind === "guest" ? null : (me.data ?? null)} partnerPage={partnerPage} />
+      {/* 로그인하면 안쪽 화면과 같은 머리 — 화면을 옮겨도 로고·파트너 표시·이름이 움직이지 않게 (11/25) */}
+      {kind === "guest" ? <HomeGnb partnerPage={partnerPage} /> : <Gnb kind={kind} me={me.data ?? null} />}
       <main>
         <SuspensionGate />
       </main>

@@ -5,8 +5,6 @@
 
 /* 목업 body·전역 규칙을 이 화면 안으로 (안쪽 화면 값 data-sd-area="content" 를 쓰지 않는다) */
 .root {
-  --sd-page-pad: 42px;
-  --sd-gnb-height: 72px;
   --sd-logo-mark: 28px;
   min-height: 100vh;
   display: flex;
@@ -64,7 +62,6 @@
 .icon-btn svg { width: 21px; height: 21px; stroke-width: 2; }
 .icon-btn:hover { background: var(--sd-soft); }
 .icon-btn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--sd-conflict-text); border: 2px solid var(--sd-bg); }
-.avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--sd-line); border-radius: 50%; cursor: pointer; background: var(--sd-accent); color: var(--sd-blue); font-weight: 700; font-size: var(--sd-text-desc); }
 
 /* 2. 히어로 */
 .hero { padding: var(--sd-hero-top) 0 var(--sd-hero-bottom); }
@@ -269,7 +266,6 @@
 
 /* 반응형 — 태블릿 (760px 이하) */
 @media (max-width: 760px) {
-  .root { --sd-page-pad: 20px; }
   .gnb__inner { grid-template-columns: auto 1fr; }
   .gnb__menu { display: none; }
   .gnb__text { display: none; }
@@ -530,9 +526,6 @@ a.icon-btn, a.avatar { display: inline-grid; place-items: center; }
   .gnb__menu--open a { display: flex; align-items: center; min-height: var(--sd-touch); padding: 0 var(--sd-page-pad); font-size: var(--sd-text-body); }
   .gnb__menu--open a::after { display: none; }
   .gnb__menu--open a:hover { background: var(--sd-soft); }
-}
-@media (max-width: 560px) {
-  .gnb__right--member { gap: 6px; } /* 알림·아바타·메뉴 세 개가 375px 에 들어가게 */
 }
 
 /* 로그인 · 진행 중인 공연이 없을 때 (11/19 피드백): 진행 순서 미리보기 + 은은한 배경 */
