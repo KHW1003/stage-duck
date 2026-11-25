@@ -40,11 +40,11 @@ test("비밀번호가 틀리면 서버 문구가 보인다", async ({ page }) =>
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test("공간 찾기: 처음은 서울, 광주로 바꿔 찾고, 없으면 초기화로 돌아오고, 카드를 누르면 상세로 간다", async ({ page }) => {
+test("공간 찾기: 처음엔 지역 전체로 모든 공간, 광주로 와도 같고, 없으면 초기화로 돌아오고, 카드를 누르면 상세로 간다", async ({ page }) => {
   await page.goto("/venues");
-  await expect(page.getByText("조건에 맞는 공간이 없어요")).toBeVisible(); // 시연 공간은 모두 광주, 처음 지역은 서울
-  await page.goto("/venues?sido=광주"); // 메인에서 지역을 골라 온 것과 같다
   const cards = page.locator("a.item-card");
+  await expect(cards).toHaveCount(3); // 처음 지역은 전체 (11/25) — 시연 공간 3곳 모두
+  await page.goto("/venues?sido=광주"); // 메인에서 지역을 골라 온 것과 같다
   await expect(cards).toHaveCount(3);
   await expect(cards.first()).toContainText("공간 B"); // 대관료 낮은 순 B → C → A
 

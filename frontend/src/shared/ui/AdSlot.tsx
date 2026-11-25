@@ -68,13 +68,7 @@ const ADS: Ad[] = [
 function Extra({ v }: { v: Variant }) {
   switch (v) {
     case "sound":
-      return (
-        <span className={s.sticker}>
-          당일
-          <br />
-          출고
-        </span>
-      );
+      return null; // 빨간 원 스티커 "당일 출고"는 뺐다 (11/25 해원: 촌스러운 빨간 동그라미)
     case "room":
       return (
         <span className={s.coupon}>
@@ -86,7 +80,7 @@ function Extra({ v }: { v: Variant }) {
       return (
         <>
           <span className={s.rec}>
-            <i /> REC <em>00:03:27</em>
+            REC <em>00:03:27</em>
           </span>
           <span className={s.frame} />
         </>
@@ -112,7 +106,7 @@ function Extra({ v }: { v: Variant }) {
     case "studio":
       return <span className={s.onAir}>ON AIR</span>;
     case "lesson":
-      return <span className={s.stamp}>1:1</span>;
+      return null; // 빨간 이중 원 도장 "1:1"은 뺐다 (11/25 해원)
   }
 }
 

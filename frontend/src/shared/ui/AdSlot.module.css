@@ -29,7 +29,6 @@
 /* 소리창고: 노란 큰 영문, 비스듬한 원형 스티커 */
 .sound .head { color: var(--sd-ad-yellow); letter-spacing: .02em; }
 .sound .cta { background: var(--sd-ad-yellow); }
-.sticker { position: absolute; top: 46px; right: -2px; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: var(--sd-ad-red); color: var(--sd-on-blue); font-size: var(--sd-text-small); font-weight: 900; line-height: 1.15; text-align: center; transform: rotate(14deg); box-shadow: 0 0 0 3px var(--sd-ad-ink); }
 
 /* 합주곳간: 민트 강조, 점선으로 자른 쿠폰 */
 .room .head::first-line { color: var(--sd-ad-mint); }
@@ -47,7 +46,6 @@
 
 /* 무대기록: 녹화 화면처럼 REC 표시 + 네 모서리 틀 */
 .rec { display: inline-flex; align-items: center; gap: 5px; font-size: var(--sd-text-tiny); font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
-.rec i { width: 8px; height: 8px; border-radius: 50%; background: var(--sd-ad-red); animation: ad-blink 1.2s steps(2, start) infinite; }
 .rec em { font-style: normal; opacity: .8; }
 .frame { position: absolute; inset: 52px 0 130px; pointer-events: none; opacity: .85;
   background:
@@ -61,7 +59,6 @@
     linear-gradient(var(--sd-on-blue), var(--sd-on-blue)) bottom right / 2px 16px no-repeat; }
 .rect .frame { inset: 14px 14px 14px 55%; }
 .film .cta { background: var(--sd-ad-red); color: var(--sd-on-blue); }
-@keyframes ad-blink { to { visibility: hidden; } }
 
 /* 든든행사보험: 남색 판 + 체크 목록 */
 .insure .shade { background: linear-gradient(180deg, color-mix(in srgb, var(--sd-ad-navy) 30%, transparent) 0%, color-mix(in srgb, var(--sd-ad-navy) 92%, transparent) 60%); }
@@ -95,10 +92,5 @@
 .lesson .brand { background: var(--sd-ad-ink); color: var(--sd-ad-cream); }
 .lesson .cta { background: var(--sd-ad-ink); color: var(--sd-ad-cream); }
 .lesson .note { opacity: .55; }
-.stamp { position: absolute; top: 60px; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; margin-left: -27px; border: 3px double var(--sd-ad-red); border-radius: 50%; color: var(--sd-ad-red); font-size: var(--sd-text-sub); font-weight: 900; transform: rotate(-12deg); background: color-mix(in srgb, var(--sd-ad-cream) 85%, transparent); }
 .rect.lesson .shade { background: linear-gradient(90deg, color-mix(in srgb, var(--sd-ad-cream) 96%, transparent) 0%, color-mix(in srgb, var(--sd-ad-cream) 85%, transparent) 55%, transparent 100%); }
-.rect .stamp { top: auto; bottom: 20px; left: auto; right: 24px; margin: 0; }
 
-@media (prefers-reduced-motion: reduce) {
-  .rec i { animation: none; }
-}
