@@ -15,7 +15,7 @@ function columns(partner: boolean): Col[] {
     {
       title: "서비스",
       links: [
-        { label: "공연 요청서 쓰기", to: "/performances/new" },
+        ...(partner ? [] : [{ label: "공연 요청서 쓰기", to: "/performances/new" }]), // 사용자 전용 화면
         { label: "공간 찾기", to: "/venues" },
         { label: "업체 찾기", to: "/board" },
         { label: "커뮤니티", to: "/community" },
@@ -53,7 +53,6 @@ function columns(partner: boolean): Col[] {
             { label: "받은 견적 요청", to: "/supplier/offers" },
             { label: "예약 현황", to: "/supplier/reservations" },
             { label: "업체 정보", to: "/supplier/profile" },
-            { label: "마이페이지", to: "/mypage" },
           ]
         : [
             { label: "내 공연 현황", to: "/me/performances" },
@@ -72,7 +71,8 @@ const LEGAL = [
   { label: "제휴 문의", to: "/inquiries/new" },
 ];
 
-export function HomeFooter({ partner = false }: { partner?: boolean }) {
+/** partnerLinks: 바로가기는 계정 기준 — 업체 메인을 보는 사용자에게 업체 전용 화면(404)을 걸지 않는다 */
+export function HomeFooter({ partner = false, partnerLinks = partner }: { partner?: boolean; partnerLinks?: boolean }) {
   return (
     <footer className={s.footer}>
       <div className={s.wrap}>
@@ -90,7 +90,7 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
             </p>
           </div>
           <nav className={s.footerCols} aria-label="푸터 메뉴">
-            {columns(partner).map((c) => (
+            {columns(partnerLinks).map((c) => (
               <div key={c.title}>
                 <h3>{c.title}</h3>
                 {c.links.map((l) => (
