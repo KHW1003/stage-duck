@@ -100,7 +100,7 @@ export function SpacesSection() {
         </div>
         <SpaceSearch />
         <div className={s.listHead}>
-          <span>공간 예시 {spaces.length}곳</span>
+          <span>지금 가장 핫한 공연장</span>{/* 11/25 해원: 조회수 많은 순 3곳 */}
           <span className={s.muted}>시연용 공간 · 금액은 부가세 포함</span>
         </div>
         <div className={s.spaceGrid}>
