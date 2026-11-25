@@ -77,12 +77,6 @@ def _reason_button(label: str, op: str, identity: str, pk: int) -> str:
     return f'<a class="sd-row-action sd-row-action--main" href="/admin/reason?{query}">{label}</a>'
 
 
-def _action_button(label: str, identity: str, name: str, pk: int, confirm: str) -> str:
-    """사유가 필요 없는 액션을 그 행 하나에 바로 (확인 창을 한 번 띄운다)."""
-    return (f'<a class="sd-row-action" href="/admin/{identity}/action/{name}?pks={pk}" '
-            f'onclick="return confirm(\'{confirm}\')">{label}</a>')
-
-
 class SupplierAdmin(SdModelView, model=Supplier):
     """업체 심사 — AC-F1-19, AC-F1-20."""
 
@@ -124,13 +118,9 @@ class SupplierAdmin(SdModelView, model=Supplier):
         ) if m.business_doc_file_id else NONE,
     }
 
-    @action(name="approve", label="승인", confirmation_message="선택한 업체를 승인할까요?")
+    @action(name="approve", label="승인")
     async def approve(self, request: Request) -> Response:
-        done, errors = await run_in_threadpool(
-            _run_for_each, _pks(request), supplier_service.approve, actor_id=current_admin_id(request)
-        )
-        _report(request, "승인", done, errors)
-        return _back(request, self.identity)
+        return _to_reason_form(request, "supplier_approve", self.identity)
 
     @action(name="reject", label="반려")
     async def reject(self, request: Request) -> Response:
@@ -140,13 +130,9 @@ class SupplierAdmin(SdModelView, model=Supplier):
     async def suspend(self, request: Request) -> Response:
         return _to_reason_form(request, "supplier_suspend", self.identity)
 
-    @action(name="unsuspend", label="정지 해제", confirmation_message="선택한 업체의 정지를 풀까요?")
+    @action(name="unsuspend", label="정지 해제")
     async def unsuspend(self, request: Request) -> Response:
-        done, errors = await run_in_threadpool(
-            _run_for_each, _pks(request), supplier_service.unsuspend, actor_id=current_admin_id(request)
-        )
-        _report(request, "정지 해제", done, errors)
-        return _back(request, self.identity)
+        return _to_reason_form(request, "supplier_unsuspend", self.identity)
 
 
 class UserAdmin(SdModelView, model=User):
@@ -259,7 +245,7 @@ class PrPostAdmin(SdModelView, model=PrPost):
     column_formatters = {PrPost.category: code(), PrPost.supplier_id: ref(supplier_name),
                          PrPost.status: badge(POST_STATUS), "buttons": lambda m, a: Markup(
         _reason_button("블라인드", "pr_post_blind", "pr-post", m.id) if m.status == "ACTIVE"
-        else _action_button("블라인드 해제", "pr-post", "unblind", m.id, "이 글의 블라인드를 풀까요?") if m.status == "BLINDED"
+        else _reason_button("블라인드 해제", "pr_post_unblind", "pr-post", m.id) if m.status == "BLINDED"
         else "")}
     column_formatters_detail = column_formatters
     column_searchable_list = [PrPost.title]
@@ -269,13 +255,9 @@ class PrPostAdmin(SdModelView, model=PrPost):
     async def blind(self, request: Request) -> Response:
         return _to_reason_form(request, "pr_post_blind", self.identity)
 
-    @action(name="unblind", label="블라인드 해제", confirmation_message="선택한 글의 블라인드를 풀까요?")
+    @action(name="unblind", label="블라인드 해제")
     async def unblind(self, request: Request) -> Response:
-        done, errors = await run_in_threadpool(
-            _run_for_each, _pks(request), policy_service.unblind_post, actor_id=current_admin_id(request)
-        )
-        _report(request, "블라인드 해제", done, errors)
-        return _back(request, self.identity)
+        return _to_reason_form(request, "pr_post_unblind", self.identity)
 
 
 class PerformanceAdmin(SdModelView, model=Performance):
@@ -404,8 +386,11 @@ class FreeCommentAdmin(SdModelView, model=FreeComment):
         return _to_reason_form(request, "free_comment_blind", self.identity)
 
 
-# 사유가 필요한 액션: 액션 이름 → (화면 제목, 서비스 함수)
+# 확인 화면을 거치는 액션 (GET 링크만으로 실행되지 않게 처리는 POST 로만 한다): 액션 이름 → (화면 제목, 서비스 함수)
 REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
+    "supplier_approve": ("업체 승인", supplier_service.approve),
+    "supplier_unsuspend": ("업체 정지 해제", supplier_service.unsuspend),
+    "pr_post_unblind": ("업체 소개 글 블라인드 해제", policy_service.unblind_post),
     "supplier_reject": ("업체 반려", supplier_service.reject),
     "supplier_suspend": ("업체 정지", supplier_service.suspend),
     "user_warn": ("회원에게 경고 (3회가 되면 자동 정지)", policy_service.warn),
@@ -416,6 +401,7 @@ REASON_ACTIONS: dict[str, tuple[str, Callable]] = {
     "free_comment_blind": ("커뮤니티 댓글 블라인드 (작성자 경고 1회)", community_service.blind_comment),
     "inquiry_answer": ("1:1 문의 답변 쓰기", support_service.answer_inquiry),
 }
+NO_REASON = frozenset({"supplier_approve", "supplier_unsuspend", "pr_post_unblind"})  # 사유 없이 확인만
 
 
 class InquiryAdmin(SdModelView, model=Inquiry):
@@ -481,15 +467,16 @@ class ReasonView(BaseView):
                 flash(request, "이미 처리한 요청이라 다시 처리하지 않았어요.", "info")
                 return _back(request, back) if back else RedirectResponse(request.url_for("admin:index"), status_code=302)
             _USED_FORMS.add(form_id)
-            reason = str(form.get("reason", ""))
+            extra = {} if op in NO_REASON else {"reason": str(form.get("reason", ""))}
             done, errors = await run_in_threadpool(
-                _run_for_each, pks, fn, actor_id=current_admin_id(request), reason=reason
+                _run_for_each, pks, fn, actor_id=current_admin_id(request), **extra
             )
             _report(request, title, done, errors)
             return _back(request, back) if back else RedirectResponse(request.url_for("admin:index"), status_code=302)
 
         return await self.templates.TemplateResponse(
-            request, "reason.html", {"title": title, "pks": pks, "form_id": uuid4().hex, "is_answer": op == "inquiry_answer"}
+            request, "reason.html", {"title": title, "pks": pks, "form_id": uuid4().hex, "is_answer": op == "inquiry_answer",
+             "needs_reason": op not in NO_REASON}
         )
 
 

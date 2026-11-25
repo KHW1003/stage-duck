@@ -55,6 +55,8 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		X-Frame-Options "DENY"
+		# 스크립트·이미지는 막지 않는다 (관리자 화면의 인라인 스크립트). 끼워 넣기·가짜 폼 전송·base 바꿔치기만 막는다
+		Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
 		-Server
 	}
 

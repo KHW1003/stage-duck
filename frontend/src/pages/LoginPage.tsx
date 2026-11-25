@@ -65,7 +65,9 @@ export function LoginPage() {
       {
         onSuccess: (res) => {
           writeSaved(remember ? email.trim() : null);
-          navigate(from ?? res.landing, { replace: true });
+          // 관리자 화면(/admin)은 React 라우트가 아니라 서버 화면(SQLAdmin)이라 새로 불러야 열린다
+          if (res.role === "ADMIN") window.location.replace(res.landing);
+          else navigate(from ?? res.landing, { replace: true });
         },
       },
     );

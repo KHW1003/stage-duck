@@ -70,9 +70,24 @@ def test_suspend_and_unsuspend(db, admin_user):
 def test_ac_f1_19_admin_approve_action(admin_client, db):
     s = make_supplier(db)
 
-    res = admin_client.get(f"/admin/supplier/action/approve?pks={s.id}", follow_redirects=False)
+    page = admin_client.get(f"/admin/supplier/action/approve?pks={s.id}")
+    assert page.status_code == 200 and "업체 승인" in page.text and "textarea" not in page.text
+    db.expire_all()
+    assert db.get(Supplier, s.id).review_status == "PENDING"  # 링크를 연 것만으로는 처리하지 않는다 (CSRF)
 
+    res = admin_client.post(f"/admin/reason?op=supplier_approve&pks={s.id}&back=supplier", follow_redirects=False)
     assert res.status_code == 302
+    db.expire_all()
+    assert db.get(Supplier, s.id).review_status == "APPROVED"
+
+
+def test_admin_unsuspend_needs_confirm_page(admin_client, db):
+    s = make_supplier(db, review_status="SUSPENDED")
+    page = admin_client.get(f"/admin/supplier/action/unsuspend?pks={s.id}")
+    assert page.status_code == 200 and "정지 해제" in page.text
+    db.expire_all()
+    assert db.get(Supplier, s.id).review_status == "SUSPENDED"
+    admin_client.post(f"/admin/reason?op=supplier_unsuspend&pks={s.id}&back=supplier", follow_redirects=False)
     db.expire_all()
     assert db.get(Supplier, s.id).review_status == "APPROVED"
 
