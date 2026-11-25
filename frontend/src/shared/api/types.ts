@@ -456,6 +456,8 @@ export interface FreeComment {
   helpfulCount: number;
   myHelpful: boolean;
   createdAt: string;
+  /** 고쳤으면 "(수정됨)" */
+  editedAt: string | null;
   replies: FreeComment[];
 }
 

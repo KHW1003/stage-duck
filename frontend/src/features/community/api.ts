@@ -86,6 +86,15 @@ export function useAddComment(postId: number) {
   });
 }
 
+export function useEditComment() {
+  const refresh = useRefresh();
+  return useMutation({
+    mutationFn: (v: { id: number; body: string }) =>
+      api<FreeCommentSaved>(`/free-comments/${v.id}`, { method: "PUT", body: JSON.stringify({ body: v.body }) }),
+    onSuccess: refresh,
+  });
+}
+
 export function useDeleteComment() {
   const refresh = useRefresh();
   return useMutation({ mutationFn: (id: number) => api<void>(`/free-comments/${id}`, { method: "DELETE" }), onSuccess: refresh });

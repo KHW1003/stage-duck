@@ -164,3 +164,4 @@
 .noticeRow td { background: var(--sd-band); }
 .noticeRow a { font-weight: 600; }
 .noticeTag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); background: var(--sd-bg); color: var(--sd-ink); font-size: var(--sd-text-meta); font-weight: 700; }
+.commentEditButtons { display: flex; gap: 8px; }

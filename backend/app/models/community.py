@@ -66,6 +66,7 @@ class FreeComment(Base):
     blind_reason: Mapped[str | None] = mapped_column(String(500))
     helpful_count: Mapped[int] = mapped_column(UInt, nullable=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime3, nullable=False, server_default=func.now())
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime3)  # 고쳤으면 "(수정됨)"
 
     author: Mapped[User] = relationship()
 

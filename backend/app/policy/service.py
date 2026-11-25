@@ -136,6 +136,13 @@ def suspension_summary(db: Session, user_id: int) -> SuspensionSummary | None:
     return SuspensionSummary(suspended_at=last.created_at, reason=last.reason, last_warning_reason=warning)
 
 
+def has_open_report(db: Session, target_type: str, target_id: int) -> bool:
+    """처리 전(OPEN) 신고가 있는지. 커뮤니티 댓글 고치기를 막을 때 쓴다."""
+    return db.scalar(
+        select(Report.id).where(Report.target_type == target_type, Report.target_id == target_id, Report.status == "OPEN").limit(1)
+    ) is not None
+
+
 def report(db: Session, *, reporter_id: int, target_type: str, target_id: int, reason: str | None) -> int:
     """[약속 4 → 1·3] 신고를 남기고 신고 id 를 돌려준다. 처리(경고·기각)는 관리자가 한다 (FR-POL-04).
 
