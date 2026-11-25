@@ -430,7 +430,8 @@ function SignupForm({ initial, provider }: { initial: Form; provider?: Provider 
           type={reading.type}
           label={reading.label}
           onClose={() => setReading(null)}
-          onAgree={() => setTerms((t) => ({ ...t, [reading.key]: true }))}
+          agreed={terms[reading.key]}
+          onAgreeChange={(on) => setTerms((t) => ({ ...t, [reading.key]: on }))}
         />
       )}
     </>
