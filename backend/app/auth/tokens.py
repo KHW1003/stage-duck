@@ -21,10 +21,17 @@ REFRESH_COOKIE = "refresh_token"
 CSRF_COOKIE = "csrf_token"
 STATE_COOKIE = "oauth_state"
 SIGNUP_COOKIE = "signup_token"
+ADMIN_SESSION_COOKIE = "session"  # SQLAdmin 세션 쿠키 (SessionMiddleware 기본 이름)
 SOCIAL_COOKIE_MINUTES = 10  # 동의 화면 → 콜백, 콜백 → 추가 정보 완료까지 쓸 수 있는 시간
 REFRESH_PATH = "/api/v1/auth"
 ALGORITHM = "HS256"
 ACCESS, REFRESH, SIGNUP = "access", "refresh", "signup"
+
+
+def secure_cookies() -> bool:
+    """https 로 여는 서버인지. 시연 서버는 APP_ENV=test 지만 https 라서 주소도 본다."""
+    settings = get_settings()
+    return settings.app_env == "prod" or settings.public_base_url.startswith("https://")
 
 
 def _encode(user_id: int, typ: str, lifetime: timedelta, now: datetime | None) -> str:
@@ -65,6 +72,11 @@ def issue_refresh_token(user_id: int, *, now: datetime | None = None) -> str:
 
 def read_access_token(token: str | None) -> int | None:
     return _decode(token, ACCESS)
+
+
+def read_access_claims(token: str | None) -> tuple[int, int] | None:
+    """(사용자 id, iat). 관리자 화면이 비밀번호를 바꾸기 전에 발급된 쿠키를 거를 때 쓴다."""
+    return _claims(token, ACCESS)
 
 
 def read_refresh_token(token: str | None) -> int | None:
@@ -109,7 +121,7 @@ def _set_social_cookie(response: Response, name: str, value: str) -> None:
         max_age=SOCIAL_COOKIE_MINUTES * 60,
         path=REFRESH_PATH,
         httponly=True,
-        secure=get_settings().app_env == "prod",
+        secure=secure_cookies(),
         samesite="lax",  # 네이버·카카오에서 돌아오는 이동(GET)에도 쿠키가 실려야 한다
     )
 
@@ -123,16 +135,16 @@ def set_signup_cookie(response: Response, token: str) -> None:
 
 
 def clear_social_cookie(response: Response, name: str) -> None:
-    response.delete_cookie(name, path=REFRESH_PATH, httponly=True, secure=get_settings().app_env == "prod", samesite="lax")
+    response.delete_cookie(name, path=REFRESH_PATH, httponly=True, secure=secure_cookies(), samesite="lax")
 
 
 def set_login_cookies(response: Response, user_id: int) -> None:
-    """로그인 쿠키 세 개를 붙인다. Secure 는 운영(https)에서만 — 로컬·테스트는 http 라서 켜면 쿠키가 안 돌아온다.
+    """로그인 쿠키 세 개를 붙인다. Secure 는 https 에서만 — 로컬·테스트는 http 라서 켜면 쿠키가 안 돌아온다.
 
     csrf_token 은 refresh 와 같은 기간을 둔다 — access 가 만료된 뒤에도 /auth/refresh 를 CSRF 헤더와 함께 부를 수 있게.
     """
     settings = get_settings()
-    secure = settings.app_env == "prod"
+    secure = secure_cookies()
     access_age = settings.access_token_minutes * 60
     refresh_age = settings.refresh_token_days * 24 * 60 * 60
     response.set_cookie(
@@ -153,9 +165,9 @@ def set_login_cookies(response: Response, user_id: int) -> None:
 
 
 def clear_login_cookies(response: Response) -> None:
-    """FR-AUTH-06 로그아웃: 세 쿠키를 지운다 (붙일 때와 같은 path 로)."""
-    settings = get_settings()
-    secure = settings.app_env == "prod"
+    """FR-AUTH-06 로그아웃: 세 쿠키와 관리자 화면 세션을 지운다 (붙일 때와 같은 path 로)."""
+    secure = secure_cookies()
     response.delete_cookie(ACCESS_COOKIE, httponly=True, secure=secure, samesite="lax")
     response.delete_cookie(REFRESH_COOKIE, path=REFRESH_PATH, httponly=True, secure=secure, samesite="lax")
     response.delete_cookie(CSRF_COOKIE, httponly=False, secure=secure, samesite="lax")
+    response.delete_cookie(ADMIN_SESSION_COOKIE, httponly=True, secure=secure, samesite="lax")

@@ -42,7 +42,8 @@ from app.core import scheduler  # noqa: E402
 
 def create_app() -> FastAPI:
     check_secrets(get_settings())  # 서버(Docker)에서 약한 서명 키로 뜨지 않게 (config.py)
-    app = FastAPI(title="STAGE DUCK API", version="0.1.0")
+    docs = {"openapi_url": None, "docs_url": None, "redoc_url": None} if get_settings().require_strong_secrets else {}
+    app = FastAPI(title="STAGE DUCK API", version="0.1.0", **docs)  # 서버(Docker)에서는 API 문서를 열지 않는다
     register_error_handlers(app)
     app.add_middleware(CSRFMiddleware)  # #24: /api/v1 의 POST·PUT·PATCH·DELETE 는 X-CSRF-Token 필요 (해원 승인)
 

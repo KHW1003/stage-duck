@@ -64,7 +64,8 @@ def request_reset(db: Session, email: str, *, now: datetime) -> str | None:
         )
     )
     db.commit()
-    return _send(email, token)
+    link = _send(email, token)
+    return None if user.role == "ADMIN" else link  # 관리자 링크는 메일(로그)로만. 화면에 주면 남이 관리자 비밀번호를 바꿀 수 있다
 
 
 RESET_SUBJECT = "[STAGE DUCK] 비밀번호 재설정 링크"

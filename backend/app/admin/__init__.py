@@ -15,6 +15,7 @@ from app.admin.display import ko_gettext, ko_ngettext
 
 from app.admin.auth import AdminAuth
 from app.admin.nav import sd_dashboard, sd_nav
+from app.auth.tokens import secure_cookies
 from app.admin.views import (
     DemoToolView,
     FreeCommentAdmin,
@@ -52,7 +53,7 @@ def setup_admin(app: FastAPI) -> Admin:
         logo_width=132,
         logo_height=18,
         favicon_url=f"{STATIC_URL}/logo.webp",
-        authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret),
+        authentication_backend=AdminAuth(secret_key=get_settings().admin_session_secret, https_only=secure_cookies()),
         templates_dir=TEMPLATES_DIR,
     )
     # SQLAdmin 기본 문구를 한국어로. 저장 버튼은 눌린 값(번역된 글자)을 application.gettext 로 비교하므로 같이 바꾼다

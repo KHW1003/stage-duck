@@ -76,6 +76,10 @@ def test_admin_blind_and_unblind_actions(admin_client, db, supplier):
     assert res.status_code == 302
     db.expire_all()
     assert post.status == "BLINDED"
-    assert admin_client.get(f"/admin/pr-post/action/unblind?pks={post.id}", follow_redirects=False).status_code == 302
+    assert "블라인드 해제" in admin_client.get(f"/admin/pr-post/action/unblind?pks={post.id}").text
+    db.expire_all()
+    assert post.status == "BLINDED"  # 링크를 연 것만으로는 처리하지 않는다 (CSRF)
+    res = admin_client.post(f"/admin/reason?op=pr_post_unblind&pks={post.id}&back=pr-post", follow_redirects=False)
+    assert res.status_code == 302
     db.expire_all()
     assert post.status == "ACTIVE"
