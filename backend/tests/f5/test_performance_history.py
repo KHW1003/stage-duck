@@ -27,7 +27,7 @@ def test_ac_f5_13_history_in_time_order(client, db, admin_client):
     # 공연 목록에서 한 번 눌러 이력 화면으로 간다
     assert f"/admin/performance-history?pk={perf_id}" in admin_client.get("/admin/performance/list").text
     res = admin_client.get(f"/admin/performance-history?pk={perf_id}")
-    assert res.status_code == 200 and f"공연 #{perf_id}" in res.text and "PUBLISHED" in res.text
+    assert res.status_code == 200 and f"공연 #{perf_id}" in res.text and "공고 중" in res.text  # 11/25: 코드 대신 한글
 
 
 def test_unknown_performance_is_not_found(db):

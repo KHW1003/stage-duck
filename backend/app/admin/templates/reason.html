@@ -6,14 +6,14 @@
       <h3 class="card-title">{{ title }}</h3>
     </div>
     <div class="card-body">
-      <p>대상: {{ pks | join(", ") }} ({{ pks | length }}건)</p>
+      <p class="text-secondary">선택한 항목 {{ pks | length }}건{% if pks | length <= 5 %} (번호 {{ pks | join(", ") }}){% endif %}을 처리해요.</p>
       <form method="post" onsubmit="this.querySelector('[type=submit]').disabled = true">
         <input type="hidden" name="formId" value="{{ form_id }}">
         <div class="mb-3">
-          <label class="form-label" for="reason">사유 (필수 — 상대방 화면과 이력에 남아요)</label>
+          <label class="form-label" for="reason">{% if is_answer %}답변 내용 (회원에게 그대로 보여요){% else %}사유 (꼭 적어 주세요. 상대방에게 보이고 처리 기록에 남아요){% endif %}</label>
           <textarea class="form-control" id="reason" name="reason" rows="3" maxlength="500" required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">처리</button>
+        <button type="submit" class="btn btn-primary">{% if is_answer %}답변 등록{% else %}처리하기{% endif %}</button>
         <a href="javascript:history.back()" class="btn btn-secondary">취소</a>
       </form>
     </div>

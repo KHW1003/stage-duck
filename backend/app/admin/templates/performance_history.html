@@ -3,21 +3,21 @@
 <div class="col-12">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">공연 #{{ performance_id }} 거래 이력</h3>
+      <h3 class="card-title">{{ performance_title }} — 거래 이력</h3>
     </div>
     <div class="card-body">
-      <p>공연·단계·견적서의 모든 상태 변경을 시간순으로 보여 줘요. 읽기 전용이에요.</p>
+      <p class="text-secondary">이 공연의 요청서·섭외 단계·견적서·청구서 상태가 바뀐 기록을 시간 순서대로 보여 줘요. 보기만 할 수 있어요.</p>
       {% if rows %}
       <table class="table table-sm">
-        <thead><tr><th>시각</th><th>대상</th><th>번호</th><th>이전</th><th>이후</th><th>처리한 사람</th><th>사유</th></tr></thead>
+        <thead><tr><th>시각</th><th>무엇이</th><th>이전 상태</th><th>바뀐 상태</th><th>바꾼 사람</th><th>사유</th></tr></thead>
         <tbody>
         {% for r in rows %}
-        <tr><td>{{ r.created_at }}</td><td>{{ r.entity_type }}</td><td>{{ r.entity_id }}</td><td>{{ r.from_status or "-" }}</td><td>{{ r.to_status }}</td><td>{{ r.actor_user_id or "자동" }}</td><td>{{ r.reason or "" }}</td></tr>
+        <tr><td>{{ r.at }}</td><td>{{ r.what }}</td><td>{{ r.from_status }}</td><td>{{ r.to_status }}</td><td>{{ r.actor }}</td><td>{{ r.reason }}</td></tr>
         {% endfor %}
         </tbody>
       </table>
       {% else %}
-      <p>아직 상태 변경이 없어요.</p>
+      <p class="text-secondary">아직 상태가 바뀐 기록이 없어요.</p>
       {% endif %}
     </div>
   </div>
