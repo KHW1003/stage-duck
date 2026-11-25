@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import type { Me, MyPerformances, PerformanceDetail, PerformanceSummary } from "../src/shared/api/types";
+import { pickOption } from "./pickOption";
 
 /** 내 공연 목록·상세·다음 단계·요청서 수정 (#40, #38 화면) — AC-F5-02, AC-F3-02, AC-F3-04 */
 
@@ -330,8 +331,8 @@ describe("요청서 수정 (/performances/:id/edit)", () => {
     renderAt("/performances/5/edit");
 
     expect(await screen.findByLabelText(/^공연명/)).toHaveValue("가을밤 밴드 공연");
-    expect(screen.getByLabelText(/^리허설 시작/)).toHaveValue("17:00");
-    fireEvent.change(screen.getByLabelText(/^리허설 시작/), { target: { value: "16:00" } });
+    expect(screen.getByLabelText(/^리허설 시작/)).toHaveTextContent("17:00");
+    await pickOption(screen.getByRole("combobox", { name: "리허설 시작" }), "16:00");
     await user.click(screen.getByRole("button", { name: "다음 단계" }));
     await screen.findByRole("heading", { name: /필요한 것/ });
     for (const radio of screen.getAllByRole("radio", { name: /필요해요|이미 있어요/ })) expect(radio).toBeDisabled();
