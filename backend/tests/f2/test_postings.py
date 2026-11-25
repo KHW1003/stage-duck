@@ -2,6 +2,7 @@
 
 AC-F2-11·12·14, AC-F3-01·03, AC-F4-07, AC-F5-12.
 """
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -95,6 +96,23 @@ def test_ac_f3_01_equipment_waiting_before_venue_confirmed(db, venue_snapshot):
 
     assert _venue_confirmed(db, perf_id) == eq_stage
     assert [(p["stageId"], p["status"]) for p in _list(equipment)] == [(eq_stage, "OPEN")]
+
+
+@pytest.mark.parametrize("open_type", ["VENUE", "EQUIPMENT", "ENGINEER"])
+def test_ac_f3_01_quote_only_for_open_category(db, venue_snapshot, open_type):
+    """AC-F3-01: 세 부문 중 열린 단계의 업체만 견적서를 보낸다. 아직 차례가 아니거나 다른 부문이면 409."""
+    _, perf_id = _publish(db)
+    types = ["VENUE", "EQUIPMENT", "ENGINEER"]
+    _set_stages(db, perf_id, **{t: "OPEN" if t == open_type else "CONFIRMED" if types.index(t) < types.index(open_type) else "WAITING" for t in types})
+    for mine in types:
+        c = _as(_approved(db, *(("EQUIPMENT", "INSTALL") if mine == "EQUIPMENT" else (mine,))).user)
+        for target in types:
+            body = _venue_body() if target == "VENUE" else _quote_body()
+            res = c.post(f"/api/v1/stages/{_stage_id(db, perf_id, target)}/quotes", json=body)
+            want = 201 if mine == target == open_type else 409
+            assert res.status_code == want, (mine, target, res.text)
+            if want == 409:
+                assert res.json()["code"] == "STAGE_NOT_OPEN"
 
 
 def test_postings_sido_filter_and_show_date_order(db):

@@ -230,7 +230,8 @@ describe("업체 메인 (/partner)", () => {
       },
       "GET /api/v1/postings": {
         status: 200,
-        body: [{ stageId: 21, performanceId: 7, stageType: "EQUIPMENT", status: "OPEN", performanceVersion: 1, title: "봄맞이 버스킹", showDate: future, sido: "광주광역시", sigungu: "서구", nickname: "봄밴드", rejectionCount: 0, usageCount: 0 }],
+        body: [{ stageId: 21, performanceId: 7, stageType: "EQUIPMENT", status: "OPEN", performanceVersion: 1, title: "봄맞이 버스킹", showDate: future, sido: "광주광역시", sigungu: "서구", nickname: "봄밴드", rejectionCount: 0, usageCount: 0 },
+          { stageId: 22, performanceId: 8, stageType: "EQUIPMENT", status: "WAITING", performanceVersion: 1, title: "차례 전 공연", showDate: future, sido: "광주광역시", sigungu: "서구", nickname: "봄밴드", rejectionCount: 0, usageCount: 0 }],
       },
       "GET /api/v1/supplier/reservations": {
         status: 200,
@@ -259,6 +260,11 @@ describe("업체 메인 (/partner)", () => {
     expect(within(kpis).getByRole("link", { name: /안 읽은 메시지\s*2/ })).toBeInTheDocument();
     // 새 공고 · 다가오는 공연 · 계정 · 알림
     expect(screen.getByRole("link", { name: "봄맞이 버스킹" })).toHaveAttribute("href", "/supplier/postings/21");
+    // 차례 전(WAITING) 공고: 요청서는 열고 견적 쓰기는 없다. "모집 중 공고" 수에도 넣지 않는다
+    const wait = screen.getByRole("row", { name: /차례 전 공연/ });
+    expect(within(wait).getByText("모집 전")).toBeInTheDocument();
+    expect(within(wait).queryByRole("link", { name: "견적 쓰기" })).not.toBeInTheDocument();
+    expect(within(kpis).getByRole("link", { name: /모집 중 공고\s*1(?!\d)/ })).toBeInTheDocument();
     expect(screen.getByText("재즈 트리오 공연")).toBeInTheDocument();
     expect(screen.getByText("1회 · 3회면 이용 정지")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /견적 요청이 왔어요/ })).toHaveAttribute("href", "/supplier/offers");

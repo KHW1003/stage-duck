@@ -104,6 +104,18 @@ describe("공고 목록 (/supplier/postings)", () => {
     expect(within(row).getByRole("link", { name: "상세" })).toHaveAttribute("href", "/supplier/postings/2");
   });
 
+  it("공고 목록: 분류 옆에 지금 견적을 보낼 수 있는지(견적 가능 / 모집 전) 보인다", async () => {
+    const body = [POSTING, { ...POSTING, stageId: 3, title: "겨울 공연", stageType: "ENGINEER", status: "WAITING" }];
+    mockServer({ ...ME, "GET /api/v1/postings": { status: 200, body } });
+    renderAt("/supplier/postings");
+
+    const open = await screen.findByRole("row", { name: /가을밤 밴드 공연/ });
+    expect(within(open).getByText("견적 가능")).toBeInTheDocument();
+    const wait = screen.getByRole("row", { name: /겨울 공연/ });
+    expect(within(wait).getByText("모집 전")).toBeInTheDocument();
+    expect(within(wait).queryByText("견적 가능")).not.toBeInTheDocument();
+  });
+
   it("AC-F2-12 볼 수 있는 공고가 없으면 빈 화면 문구가 보인다", async () => {
     mockServer({ ...ME, "GET /api/v1/postings": { status: 200, body: [] } });
     renderAt("/supplier/postings");
