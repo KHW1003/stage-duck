@@ -17,6 +17,7 @@ import { Field, Input, type ControlProps } from "../../shared/ui/Field";
 import { ErrorNotice, fieldErrorOf } from "../../shared/ui/ErrorText";
 import { formatWon, MoneyText } from "../../shared/ui/MoneyText";
 import { Select } from "../../shared/ui/Select";
+import { TimeSelect } from "../../shared/ui/TimeSelect";
 import { useMyVenues } from "./api";
 import styles from "./Quote.module.css";
 
@@ -366,17 +367,17 @@ export function QuoteForm(props: Props) {
                   {(c) => <Select {...c} value={f.venueId} options={venueOptions} onChange={(venueId) => set({ venueId })} placeholder="내 공간 고르기" />}
                 </Field>
                 <Field label="입실 시각" required error={errorOf("checkinTime")}>
-                  {(c) => <Input {...c} type="time" step={60} value={f.checkinTime} onChange={(e) => set({ checkinTime: e.target.value })} />}
+                  {(c) => <TimeSelect {...c} value={f.checkinTime} onChange={(checkinTime) => set({ checkinTime })} />}
                 </Field>
                 <Field label="설치 가능 시각" required hint="이 시각부터 장비를 들여와도 돼요" error={errorOf("setupAvailableTime")}>
-                  {(c) => <Input {...c} type="time" step={60} value={f.setupAvailableTime} onChange={(e) => set({ setupAvailableTime: e.target.value })} />}
+                  {(c) => <TimeSelect {...c} value={f.setupAvailableTime} onChange={(setupAvailableTime) => set({ setupAvailableTime })} />}
                 </Field>
               </div>
             )}
 
             <div className={styles.row3}>
               <Field label="설치 시작" hint={posting.stageType === "EQUIPMENT" ? "이 시각에 설치를 시작해요" : undefined} error={errorOf("setupStart")}>
-                {(c) => <Input {...c} type="time" step={60} value={f.setupStart} onChange={(e) => set({ setupStart: e.target.value })} />}
+                {(c) => <TimeSelect {...c} optional value={f.setupStart} onChange={(setupStart) => set({ setupStart })} />}
               </Field>
               <Field label="설치 걸리는 시간 (분)" error={errorOf("setupMinutes")}>
                 {(c) => <NumberInput {...c} value={f.setupMinutes} onChange={(setupMinutes) => set({ setupMinutes })} />}

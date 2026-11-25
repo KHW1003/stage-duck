@@ -8,6 +8,7 @@ import { useId, type ReactNode } from "react";
 import type { EngineerNeed, EquipmentNeed, PerformanceNeeds, VenueNeed } from "../../shared/api/types";
 import type { KitIconName } from "../../shared/ui/kitIcons";
 import { Ico } from "../../shared/ui/Ico";
+import { TimeSelect } from "../../shared/ui/TimeSelect";
 import { CONDITIONS, MUST_HAVE, SERVICES, TASKS, VENUE_TYPES } from "./codes";
 import { Checks, Err, Hint, Row } from "./FormRow";
 import type { Errors } from "./validate";
@@ -66,9 +67,9 @@ export function Step2Form({ value, onChange, errors, onBack, onNext, lockNeeded 
         </Row>
         <Row label="입실 · 퇴실">
           <span className="form-table__inline">
-            <input className="input" type="time" step={60} aria-label="입실 희망" value={value.venue.checkinWish ?? ""} onChange={(e) => venue({ checkinWish: e.target.value || null })} />
+            <TimeSelect optional className="rq-time" aria-label="입실 희망" value={value.venue.checkinWish ?? ""} onChange={(v) => venue({ checkinWish: v || null })} />
             <span>~</span>
-            <input className="input" type="time" step={60} aria-label="퇴실 희망" value={value.venue.checkoutWish ?? ""} onChange={(e) => venue({ checkoutWish: e.target.value || null })} />
+            <TimeSelect optional className="rq-time" aria-label="퇴실 희망" value={value.venue.checkoutWish ?? ""} onChange={(v) => venue({ checkoutWish: v || null })} />
             <label className="check">
               <input type="checkbox" checked={value.venue.proposalWanted} onChange={(e) => venue({ proposalWanted: e.target.checked })} />
               업체 제안 받기
