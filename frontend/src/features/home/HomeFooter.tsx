@@ -1,21 +1,12 @@
 /**
- * 메인 바닥글 (mockup/home.html · partner.html 의 .footer). 안쪽 화면 바닥글(shared/layout/Footer)보다 크다.
- * 주소는 specs/plan.md 6장. 아직 화면이 없는 곳(회사 소개 등)은 목업처럼 자리만 둔다.
+ * 바닥글 (mockup/home.html · partner.html 의 .footer). 11/25 해원: 메인·안쪽 화면 모두 이 바닥글 하나로 통일.
+ * 주소는 specs/plan.md 6장. 화면이 없는 곳(회사 소개·채용·SNS 계정)은 가짜 링크라 넣지 않는다.
  * 사업자·고객센터 정보는 shared/site/company.ts 한 곳에서 읽는다. 빈 칸은 "준비 중" (D-49: 지어내지 않는다, 11/25).
  */
 import { COMPANY, PENDING, bizRows, hasCompanyInfo } from "../../shared/site/company";
 import { Link } from "react-router-dom";
-import { HomeIcon, type HomeIconName } from "./icons";
 import { cx } from "./cx";
 import s from "./home.module.css";
-
-const SNS: { label: string; icon: HomeIconName }[] = [
-  { label: "인스타그램", icon: "instagram" },
-  { label: "유튜브", icon: "youtube" },
-  { label: "네이버 블로그", icon: "blog" },
-  { label: "카카오톡 채널", icon: "kakao" },
-  { label: "X", icon: "x" },
-];
 
 type Col = { title: string; links: { label: string; to: string }[] };
 
@@ -24,20 +15,27 @@ function columns(partner: boolean): Col[] {
     {
       title: "서비스",
       links: [
+        { label: "공연 요청서 쓰기", to: "/performances/new" },
         { label: "공간 찾기", to: "/venues" },
-        { label: "공연 요청", to: "/performances/new" },
         { label: "업체 찾기", to: "/board" },
+        { label: "커뮤니티", to: "/community" },
         { label: "이용 방법", to: "/#flow" },
       ],
     },
     {
       title: "업체",
-      links: [
-        { label: "입점 신청", to: partner ? "/signup/supplier" : "/partner" },
-        { label: "업체 이용 가이드", to: "/guide/supplier" },
-        { label: "정산 안내", to: "/guide/supplier" },
-        { label: partner ? "이용료 안내" : "플랫폼 이용료 안내", to: "/faq" },
-      ],
+      links: partner
+        ? [
+            { label: "공고 보기", to: "/supplier/postings" },
+            { label: "업체 이용 가이드", to: "/guide/supplier" },
+            { label: "정산·이용료 안내", to: "/guide/supplier" },
+            { label: "업체 메인", to: "/partner" },
+          ]
+        : [
+            { label: "업체로 입점하기", to: "/partner" },
+            { label: "업체 이용 가이드", to: "/guide/supplier" },
+            { label: "정산·이용료 안내", to: "/guide/supplier" },
+          ],
     },
     {
       title: "고객지원",
@@ -49,12 +47,20 @@ function columns(partner: boolean): Col[] {
       ],
     },
     {
-      title: "회사",
-      links: [
-        { label: "회사 소개", to: "/" },
-        { label: "제휴 문의", to: "/inquiries/new" },
-        { label: "채용", to: "/" },
-      ],
+      title: "내 계정",
+      links: partner
+        ? [
+            { label: "받은 견적 요청", to: "/supplier/offers" },
+            { label: "예약 현황", to: "/supplier/reservations" },
+            { label: "업체 정보", to: "/supplier/profile" },
+            { label: "마이페이지", to: "/mypage" },
+          ]
+        : [
+            { label: "내 공연 현황", to: "/me/performances" },
+            { label: "내 문의", to: "/me/inquiries" },
+            { label: "저장한 글", to: "/community/saved" },
+            { label: "마이페이지", to: "/mypage" },
+          ],
     },
   ];
 }
@@ -63,8 +69,7 @@ const LEGAL = [
   { label: "이용약관", to: "/terms/service" },
   { label: "개인정보처리방침", to: "/terms/privacy", strong: true },
   { label: "업체 이용약관", to: "/terms/supplier" },
-  { label: "안전 결제 이용약관", to: "/terms/service" },
-  { label: "청소년 보호정책", to: "/terms/service" },
+  { label: "제휴 문의", to: "/inquiries/new" },
 ];
 
 export function HomeFooter({ partner = false }: { partner?: boolean }) {
@@ -79,15 +84,10 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
             <p>
               작은 공연의 시작부터 끝까지.
               <br />
-              공간·음향·엔지니어를 한 번에 비교하세요.
+              요청서 한 장으로 공연장 → 장비 → 엔지니어를
+              <br />
+              차례로 비교하고 한 번에 결제하세요.
             </p>
-            <div className={s.sns}>
-              {SNS.map((n) => (
-                <a key={n.label} href="#" aria-label={n.label} onClick={(e) => e.preventDefault()}>
-                  <HomeIcon name={n.icon} />
-                </a>
-              ))}
-            </div>
           </div>
           <nav className={s.footerCols} aria-label="푸터 메뉴">
             {columns(partner).map((c) => (
@@ -106,7 +106,7 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
             <p className={s.footerTel}>{COMPANY.tel ?? <span className={s.tbd}>{PENDING}</span>}</p>
             <p>{COMPANY.csHours ?? "운영 시간 준비 중"}</p>
             <Link className={cx(s.pill, s.pillDark)} to="/inquiries/new">
-              1:1 문의하기
+              1:1 문의 남기기
             </Link>
           </div>
         </div>
@@ -128,7 +128,7 @@ export function HomeFooter({ partner = false }: { partner?: boolean }) {
           </p>
           {!hasCompanyInfo() && <p className={s.footerNotice}>포트폴리오·시연용 서비스입니다. 실제 결제는 이루어지지 않습니다.</p>}
           <p className={s.footerNotice}>
-            STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니며, 업체가 등록한 서비스 정보와 거래에 대한 책임은 각 업체에 있어요.
+            STAGE DUCK은 통신판매중개자로서 거래 당사자가 아니며, 업체가 등록한 서비스 정보와 거래에 대한 책임은 각 업체에 있습니다. 결제금은 공연이 끝날 때까지 STAGE DUCK이 보관한 뒤 업체에 정산합니다.
           </p>
           <p className={s.footerCopy}>© 2026 STAGE DUCK. All rights reserved.</p>
         </div>

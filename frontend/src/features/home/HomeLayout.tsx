@@ -26,7 +26,7 @@ export function HomeLayout() {
       <main>
         <Outlet />
       </main>
-      <HomeFooter partner={partnerPage} />
+      <HomeFooter partner={partner} />
       {!me.isPending && <MobileTabBar kind={kind} me={kind === "guest" ? null : (me.data ?? null)} />}
       {me.data && (kind === "user" || kind === "partner") && <ChatWidget me={me.data} />}
     </div>
