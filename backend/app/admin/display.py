@@ -42,7 +42,7 @@ POST_STATUS = {**STATUS, "ACTIVE": ("게시 중", "ok")}
 
 CODES: dict[str, str] = {
     # 역할 · 사업자 유형
-    "USER": "사용자", "SUPPLIER": "업체", "ADMIN": "관리자",
+    "USER": "뮤지션", "SUPPLIER": "업체", "ADMIN": "관리자",
     "INDIVIDUAL": "개인", "SOLE_PROPRIETOR": "개인사업자", "CORPORATION": "법인",
     # 업체 분야
     "VENUE": "공연장", "EQUIPMENT": "장비", "INSTALL": "설치", "ENGINEER": "엔지니어",

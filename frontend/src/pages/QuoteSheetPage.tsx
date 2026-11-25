@@ -237,7 +237,7 @@ function SendCardBox({ quoteId }: { quoteId: number }) {
     return (
       <p className="qs-done" role="status">
         <Ico name="pass" sm />
-        최종 견적을 보냈어요. 사용자가 확정하면 알려 드려요.
+        최종 견적을 보냈어요. 뮤지션이 확정하면 알려 드려요.
       </p>
     );
   }
@@ -246,7 +246,7 @@ function SendCardBox({ quoteId }: { quoteId: number }) {
       <button className="btn btn--primary btn--block mt-8" type="button" disabled={send.isPending} onClick={() => send.mutate()}>
         최종 견적 보내기
       </button>
-      <p className="field__hint mt-8">지금 버전으로 고정돼요. 사용자는 48시간 안에 확정할 수 있어요.</p>
+      <p className="field__hint mt-8">지금 버전으로 고정돼요. 뮤지션은 48시간 안에 확정할 수 있어요.</p>
       {send.error && <ErrorNotice error={send.error} />}
     </>
   );

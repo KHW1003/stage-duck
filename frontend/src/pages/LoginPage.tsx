@@ -75,7 +75,7 @@ export function LoginPage() {
     <AuthSplit>
       <div className="login">
         <h1>로그인</h1>
-        <p>사용자와 업체 모두 같은 화면에서 로그인해요.</p>
+        <p>뮤지션과 업체 모두 같은 화면에서 로그인해요.</p>
         <form className="login__form stack" style={{ ["--gap" as string]: "14px" }} onSubmit={submit} noValidate>
           <input
             className="input login__input"
@@ -149,7 +149,7 @@ export function LoginPage() {
           처음이면 추가 정보 화면으로 이어져요.
         </p>
         <div className="login__links">
-          <Link to="/signup">사용자 가입</Link>
+          <Link to="/signup">뮤지션 가입</Link>
           <Link to="/signup/supplier">업체 입점 신청</Link>
         </div>
       </div>

@@ -88,9 +88,9 @@ def build_schedule(perf: Performance, versions: dict[str, tuple[str, QuoteVersio
             add(_plus(start, qv.setup_minutes), "장비 설치 완료", name)
         if qv.teardown_minutes:
             add(_plus(perf.show_end, qv.teardown_minutes), "철수 완료", name)
-    add(perf.rehearsal_start, "리허설 · 사운드체크", "사용자")
-    add(perf.show_start, "공연 시작", "사용자")
-    add(perf.show_end, "공연 끝 · 철수 시작", "사용자")
+    add(perf.rehearsal_start, "리허설 · 사운드체크", "뮤지션")
+    add(perf.show_start, "공연 시작", "뮤지션")
+    add(perf.show_end, "공연 끝 · 철수 시작", "뮤지션")
     return [item for _, item in sorted(items, key=lambda x: x[0])]
 
 

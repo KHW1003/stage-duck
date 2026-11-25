@@ -12,7 +12,7 @@ import { Ico } from "../shared/ui/Ico";
 import "../features/support/support.css";
 
 const TABS: { key: FaqTab; label: string }[] = [
-  { key: "user", label: "사용자" },
+  { key: "user", label: "뮤지션" },
   { key: "supplier", label: "업체" },
 ];
 

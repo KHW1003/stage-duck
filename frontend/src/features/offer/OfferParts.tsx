@@ -154,7 +154,7 @@ export function OfferPicker({ supplierId, companyName, stageTypes, next }: { sup
   if (!user) {
     return (
       <div className="offer-pick">
-        <p className="small muted">공연을 준비하는 사용자로 로그인하면 견적을 요청할 수 있어요.</p>
+        <p className="small muted">공연을 준비하는 뮤지션으로 로그인하면 견적을 요청할 수 있어요.</p>
         <Link className="btn btn--primary btn--lg btn--block mt-12" to={`/login?next=${next}`}>
           로그인
         </Link>

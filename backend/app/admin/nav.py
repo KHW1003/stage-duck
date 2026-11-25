@@ -106,7 +106,7 @@ def sd_dashboard(request: Request) -> dict:
             {"label": "답변 대기 문의", "count": counts["inquiry"], "url": link("inquiry"), "hot": counts["inquiry"] > 0},
             {"label": "진행 중 공연", "count": counts["performance"], "url": link("performance"), "hot": False},
         ],
-        "totals": [("회원(사용자)", counts["users"]), ("승인된 업체", counts["suppliers"])],
+        "totals": [("회원(뮤지션)", counts["users"]), ("승인된 업체", counts["suppliers"])],
         "lists": [
             {"title": "심사 대기 업체", "more": link("supplier"), "empty": "심사를 기다리는 업체가 없어요.",
              "rows": [(r.company_name, r.created_at, detail("supplier", r.id)) for r in pending]},

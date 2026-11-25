@@ -169,7 +169,7 @@ afterEach(() => {
 });
 
 describe("채팅 버튼과 목록", () => {
-  it("로그인한 사용자에게 오른쪽 아래 채팅 버튼(안 읽은 수)이 있고, 누르면 목록 창이 뜬다", async () => {
+  it("로그인한 뮤지션에게 오른쪽 아래 채팅 버튼(안 읽은 수)이 있고, 누르면 목록 창이 뜬다", async () => {
     mockServer(AS_USER);
     renderAt("/faq");
     const fab = await screen.findByRole("button", { name: "채팅 열기 · 안 읽은 대화 1개" });
@@ -309,7 +309,7 @@ describe("채팅 버튼과 목록", () => {
 });
 
 describe("대화방", () => {
-  it("AC-F3-06 사용자는 시작 전 방에서 [채팅 시작]을 누른다", async () => {
+  it("AC-F3-06 뮤지션은 시작 전 방에서 [채팅 시작]을 누른다", async () => {
     const calls = mockServer({
       ...AS_USER,
       "GET /api/v1/chat-rooms/34/messages": { status: 200, body: { messages: [msg(80, null, null, { type: "QUOTE", refId: 400 })], partnerLastReadMessageId: null } },
@@ -336,7 +336,7 @@ describe("대화방", () => {
     await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
     const panel = screen.getByRole("dialog", { name: "채팅" });
     await user.click(await within(panel).findByText("가을밤밴드"));
-    expect(await within(panel).findByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).toBeInTheDocument();
+    expect(await within(panel).findByText("뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.")).toBeInTheDocument();
     expect(within(panel).queryByRole("textbox", { name: "메시지" })).not.toBeInTheDocument();
     expect(within(panel).queryByRole("button", { name: "채팅 시작" })).not.toBeInTheDocument();
   });
@@ -354,7 +354,7 @@ describe("대화방", () => {
     await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
     const panel = screen.getByRole("dialog", { name: "채팅" });
     await user.click(await within(panel).findByText("가을밤밴드"));
-    await within(panel).findByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.");
+    await within(panel).findByText("뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.");
 
     routes["GET /api/v1/chat-rooms"] = { status: 200, body: [room(34, "가을밤밴드", 80, null, { startedAt: "2026-11-13T14:00:00+09:00" })] };
     lastSocket().open();
@@ -363,7 +363,7 @@ describe("대화방", () => {
       body: "가을밤 공연 · 장비", link: "/chats/34", createdAt: "2026-11-13T14:00:00+09:00",
     });
     expect(await within(panel).findByRole("textbox", { name: "메시지" })).toBeInTheDocument();
-    expect(within(panel).queryByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).not.toBeInTheDocument();
+    expect(within(panel).queryByText("뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.")).not.toBeInTheDocument();
   });
 
   it("11/24 답장: 말풍선의 꺾인 화살표 → 입력창 위 인용 → replyToId 로 보내고, 말풍선 위에 원문을 보여 준다", async () => {
@@ -742,7 +742,7 @@ describe("사진·파일 보내기", () => {
     await user.click(await screen.findByRole("button", { name: /채팅 열기/ }));
     const panel = screen.getByRole("dialog", { name: "채팅" });
     await user.click(await within(panel).findByText("가을밤밴드"));
-    await within(panel).findByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.");
+    await within(panel).findByText("뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.");
     expect(within(panel).queryByRole("button", { name: "사진 보내기" })).not.toBeInTheDocument();
     expect(within(panel).queryByRole("button", { name: "파일 보내기" })).not.toBeInTheDocument();
     expect(within(panel).queryByLabelText("사진 고르기")).not.toBeInTheDocument();
@@ -793,7 +793,7 @@ describe("사진·파일 보내기", () => {
     lastSocket().open();
     lastSocket().emit("message.created", {
       roomId: 31,
-      message: { id: 123, type: "NOTICE", body: "사용자가 공연을 취소했습니다.", attachmentUrl: null, refId: null, senderId: null, contactWarning: false, createdAt: "2026-11-13T13:31:00" },
+      message: { id: 123, type: "NOTICE", body: "뮤지션이 공연을 취소했습니다.", attachmentUrl: null, refId: null, senderId: null, contactWarning: false, createdAt: "2026-11-13T13:31:00" },
     });
     const card = await within(panel).findByRole("status");
     expect(card).toHaveClass("c-card--notice");
@@ -801,6 +801,6 @@ describe("사진·파일 보내기", () => {
     expect(within(card).getByText("11.13 13:31")).toBeInTheDocument();
     expect(within(card).getByText("업체 D")).toBeInTheDocument();
     expect(within(card).getByText("장비")).toBeInTheDocument();
-    expect(within(card).getByText("사용자가 공연을 취소했습니다.")).toBeInTheDocument();
+    expect(within(card).getByText("뮤지션이 공연을 취소했습니다.")).toBeInTheDocument();
   });
 });

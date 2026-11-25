@@ -198,7 +198,7 @@ describe("공고 상세 (/supplier/postings/:stageId)", () => {
     expect(screen.getByRole("link", { name: "공고 목록으로" })).toHaveAttribute("href", "/supplier/postings");
   });
 
-  it("AC-F5-12 결제 전에는 사용자 연락처·실명이 목록·상세 어디에도 없다", async () => {
+  it("AC-F5-12 결제 전에는 뮤지션 연락처·실명이 목록·상세 어디에도 없다", async () => {
     mockServer({
       ...ME,
       "GET /api/v1/postings": { status: 200, body: [{ ...POSTING, ...OWNER_SECRET }] },

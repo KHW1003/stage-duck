@@ -152,7 +152,7 @@ def supplier_reviews(db: Session, supplier_id: int, *, before: int | None) -> di
             "id": r.id,
             "rating": r.rating,
             "content": r.content,
-            "nickname": nick or "탈퇴한 사용자",
+            "nickname": nick or "탈퇴한 회원",
             "stage_type": st,
             "show_month": f"{d.year}년 {d.month}월",
             "created_at": r.created_at,

@@ -108,7 +108,7 @@ function Detail({ p }: { p: PostingDetail }) {
               <p className={styles.sideTitle}>
                 {stageTag(p)} · {quotable ? STAGE_STATUS[p.status] : "모집 전"}
               </p>
-              <p className={styles.desc}>다른 업체 견적서는 보이지 않아요. 사용자 연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>
+              <p className={styles.desc}>다른 업체 견적서는 보이지 않아요. 뮤지션 연락처는 결제 뒤 최종 담당표에서 공개돼요.</p>
             </div>
             <div className={styles.sideSec}>
               {quotable ? (

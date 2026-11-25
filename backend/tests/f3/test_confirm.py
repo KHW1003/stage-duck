@@ -207,7 +207,7 @@ def test_ac_f3_13_other_quotes_closed_notified_and_no_rejection(client, db):
     assert "NOT_SELECTED" in types_e
     assert "CONFIRMED" in list(db.scalars(select(Notification.type).where(Notification.user_id == supplier.user_id)))
     notice = db.scalar(select(ChatMessage.body).where(ChatMessage.type == "NOTICE"))
-    assert notice.startswith("사용자가 다른 업체와 진행하기로 하여")
+    assert notice.startswith("뮤지션이 다른 업체와 진행하기로 하여")
     assert db.scalar(select(func.count()).select_from(RejectionEvent)) == 0
 
 

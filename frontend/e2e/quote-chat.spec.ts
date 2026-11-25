@@ -184,7 +184,7 @@ test("채팅: [채팅 시작] → 새로고침 없이 오가는 메시지·읽�
 
   // AC-F3-06: 사용자가 시작하기 전에는 업체 입력창이 막혀 있다
   await sup.goto(`/supplier/postings?chat=${chatRoomId}`);
-  await expect(panel(sup).getByText("사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.")).toBeVisible();
+  await expect(panel(sup).getByText("뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.")).toBeVisible();
   await expect(panel(sup).getByRole("textbox", { name: "메시지" })).toHaveCount(0);
 
   // 사용자: 둥근 버튼(휴대폰은 아래 탭) → 목록 → 방 → [채팅 시작]
@@ -266,7 +266,7 @@ test("확정: 최종 견적 보내기 → 내역서를 열기 전엔 [확정하�
   // 업체: 견적서 문서 화면에서 [최종 견적 보내기]
   await sup.goto(`/quotes/${c.quoteId}`);
   await sup.getByRole("button", { name: "최종 견적 보내기" }).click();
-  await expect(sup.getByText("최종 견적을 보냈어요. 사용자가 확정하면 알려 드려요.")).toBeVisible();
+  await expect(sup.getByText("최종 견적을 보냈어요. 뮤지션이 확정하면 알려 드려요.")).toBeVisible();
   await expectNoHorizontalScroll(sup);
 
   // 사용자: 열어 둔 방에 새로고침 없이 최종 견적 카드. AC-F3-10 내역서를 열기 전엔 [확정하기] 꺼짐
@@ -299,7 +299,7 @@ test("확정: 최종 견적 보내기 → 내역서를 열기 전엔 [확정하�
 
   // AC-F3-13: 같은 단계 업체 B 의 방에 "다른 업체와 진행하기로 했어요"
   await other.goto(`/supplier/postings?chat=${b.chatRoomId}`);
-  await expect(panel(other).getByText("사용자가 다른 업체와 진행하기로 하여", { exact: false })).toBeVisible();
+  await expect(panel(other).getByText("뮤지션이 다른 업체와 진행하기로 하여", { exact: false })).toBeVisible();
   await expectNoHorizontalScroll(other);
 
   expect(userErrors).toEqual([]);

@@ -66,7 +66,7 @@ function Forgot({ onSent }: { onSent: (email: string, demoLink: string | null) =
       <p className="pw__note">네이버로 가입했다면 비밀번호가 없어요. 로그인 화면에서 [네이버로 로그인]을 눌러 주세요.</p>
       <div className="pw__links">
         <Link to="/login">로그인</Link>
-        <Link to="/signup">사용자 가입</Link>
+        <Link to="/signup">뮤지션 가입</Link>
       </div>
     </div>
   );

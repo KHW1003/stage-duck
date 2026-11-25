@@ -265,7 +265,7 @@ describe("내 소개 글 쓰기 (/supplier/posts)", () => {
     expect(await screen.findByLabelText(/제목/)).toHaveAccessibleDescription("제목을 적어 주세요.");
   });
 
-  it("사용자는 이 화면이 있는지조차 모른다 (CLAUDE.md 10)", async () => {
+  it("뮤지션은 이 화면이 있는지조차 모른다 (CLAUDE.md 10)", async () => {
     mockServer(AS_USER);
     renderAt("/supplier/posts");
     expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();

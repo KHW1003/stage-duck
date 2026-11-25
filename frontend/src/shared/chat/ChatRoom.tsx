@@ -131,12 +131,12 @@ function useLongPress(onLong: () => void) {
 
 /** 안내 카드 제목 — 서버가 남기는 안내 문장(payment.cancel·deadline, confirm.service)의 앞부분으로 고른다. 모르는 문장은 "안내" */
 const NOTICE_TITLES: [string, string][] = [
-  ["사용자가 공연을 취소", "공연 취소"],
+  ["뮤지션이 공연을 취소", "공연 취소"],
   ["업체 사정으로 공연이 취소", "공연 취소"],
   ["업체 사정으로 확정이 취소", "확정 취소"],
   ["결제 마감이 지나", "자동 취소"],
-  ["사용자가 다시 조율", "다시 이야기하기"],
-  ["사용자가 다른 업체와 진행", "견적 마감"],
+  ["뮤지션이 다시 조율", "다시 이야기하기"],
+  ["뮤지션이 다른 업체와 진행", "견적 마감"],
 ];
 export function noticeTitle(body: string | null): string {
   return NOTICE_TITLES.find(([head]) => body?.startsWith(head))?.[1] ?? "안내";
@@ -727,7 +727,7 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
         ) : (
           <div className="composer composer--locked">
             <Ico name="lock" sm />
-            사용자가 채팅을 시작하면 메시지를 보낼 수 있어요.
+            뮤지션이 채팅을 시작하면 메시지를 보낼 수 있어요.
           </div>
         )}
       </div>

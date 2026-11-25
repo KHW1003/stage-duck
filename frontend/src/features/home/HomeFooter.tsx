@@ -15,7 +15,7 @@ function columns(partner: boolean): Col[] {
     {
       title: "서비스",
       links: [
-        ...(partner ? [] : [{ label: "공연 요청서 쓰기", to: "/performances/new" }]), // 사용자 전용 화면
+        ...(partner ? [] : [{ label: "공연 요청서 쓰기", to: "/performances/new" }]), // 뮤지션 전용 화면
         { label: "공간 찾기", to: "/venues" },
         { label: "업체 찾기", to: "/board" },
         { label: "커뮤니티", to: "/community" },

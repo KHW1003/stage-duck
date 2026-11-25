@@ -165,7 +165,7 @@ describe("확정 완료 카드 (AC-F3-14)", () => {
 });
 
 describe("내역서에서 확정·최종 견적 보내기", () => {
-  it("사용자가 카드에서 열면 열람을 기록하고, [확정하기] 뒤 [통합 결제하기]", async () => {
+  it("뮤지션이 카드에서 열면 열람을 기록하고, [확정하기] 뒤 [통합 결제하기]", async () => {
     const user = userEvent.setup();
     const calls = mockServer({
       "GET /api/v1/me": { status: 200, body: USER },
@@ -192,7 +192,7 @@ describe("내역서에서 확정·최종 견적 보내기", () => {
       "GET /api/v1/me": { status: 200, body: SUPPLIER },
       "GET /api/v1/quotes/77": { status: 200, body: QUOTE },
       "POST /api/v1/quotes/77/confirm-requests": [
-        { status: 409, body: { code: "INVALID_STATE", message: "이미 보낸 최종 견적이 있어요. 사용자가 답하거나 기한이 지나면 다시 보낼 수 있어요.", fieldErrors: [] } },
+        { status: 409, body: { code: "INVALID_STATE", message: "이미 보낸 최종 견적이 있어요. 뮤지션이 답하거나 기한이 지나면 다시 보낼 수 있어요.", fieldErrors: [] } },
         { status: 201, body: CARD },
       ],
     });
@@ -200,7 +200,7 @@ describe("내역서에서 확정·최종 견적 보내기", () => {
     await user.click(await screen.findByRole("button", { name: "최종 견적 보내기" }));
     expect(await screen.findByText(/이미 보낸 최종 견적이 있어요/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "최종 견적 보내기" }));
-    expect(await screen.findByText("최종 견적을 보냈어요. 사용자가 확정하면 알려 드려요.")).toBeInTheDocument();
+    expect(await screen.findByText("최종 견적을 보냈어요. 뮤지션이 확정하면 알려 드려요.")).toBeInTheDocument();
     expect(calls.filter((c) => c.key === "POST /api/v1/quotes/77/confirm-requests")).toHaveLength(2);
   });
 });
@@ -238,7 +238,7 @@ describe("확정이 막힐 때 (AC-F3-11·12)", () => {
     expect(screen.queryByRole("button", { name: "확정하기" })).not.toBeInTheDocument();
   });
 
-  it("AC-F3-12 만료 카드: 사용자는 버튼 없이 만료 안내, 업체는 새 최종 견적을 보낼 수 있다는 안내와 내역서 링크", async () => {
+  it("AC-F3-12 만료 카드: 뮤지션은 버튼 없이 만료 안내, 업체는 새 최종 견적을 보낼 수 있다는 안내와 내역서 링크", async () => {
     mockServer({ "GET /api/v1/confirm-requests/41": { status: 200, body: { ...VIEWED, status: "EXPIRED" } } });
     const a = renderEl(<ConfirmRequestCard id={41} role="USER" partner="업체 D" onLeave={() => {}} />);
     expect(await screen.findByText("만료")).toBeInTheDocument();
@@ -277,7 +277,7 @@ function chatRoom(partnerName: string) {
     pinnedAt: null, unreadCount: 0, lastMessage: { id: 200, type: "CONFIRM_REQUEST", body: null, createdAt: "2026-11-19T10:00:00+09:00" },
   };
 }
-const NOTICE = "사용자가 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.";
+const NOTICE = "뮤지션이 다른 업체와 진행하기로 하여 이 공고의 견적서는 마감되었습니다.";
 /** 안내 카드는 문장을 줄마다 나눠 그린다(11/25 시안 P3) — 문단 전체 글자로 찾는다 */
 const noticeText = (_: string, el: Element | null) => !!el?.classList.contains("c-card__text") && el.textContent === NOTICE;
 function roomServer(me: Me, partner: string, messages: unknown[], card: unknown) {

@@ -206,7 +206,7 @@ function SignupForm({ initial, provider }: { initial: Form; provider?: Provider 
             rows={[
               ["닉네임", done.nickname, true],
               ["이메일", done.email],
-              ["가입 유형", social ? `사용자 (${providerLabel} 로그인)` : "사용자 (공연을 준비해요)"],
+              ["가입 유형", social ? `뮤지션 (${providerLabel} 로그인)` : "뮤지션 (공연을 준비해요)"],
             ]}
             next="요청서를 한 번만 쓰면 공연장부터 차례로 견적서를 받을 수 있어요."
             actions={[

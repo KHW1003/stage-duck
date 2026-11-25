@@ -64,6 +64,6 @@ function suspendedRows(me: Me): [string, string][] {
     ["계정", me.email],
     ["정지일", `${Number(m)}월 ${Number(d)}일`],
     ["마지막 경고", s.lastWarningReason ?? s.reason],
-    ["진행 중인 섭외", "관리자가 확인한 뒤 사용자에게 안내해요"],
+    ["진행 중인 섭외", "관리자가 확인한 뒤 뮤지션에게 안내해요"],
   ];
 }

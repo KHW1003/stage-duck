@@ -56,7 +56,7 @@ export function HomeGnb({ partnerPage = false }: Props) {
           {partnerPage ? (
             <>
               <Link className={s.gnbText} to="/">
-                사용자 홈
+                뮤지션 홈
               </Link>
               <Link className={s.pill} to="/login">
                 로그인

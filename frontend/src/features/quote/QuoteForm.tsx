@@ -255,7 +255,7 @@ function toBody(f: FormState, isVenue: boolean): QuoteIn {
 
 const INCLUDE_OPTIONS: { key: keyof Includes; label: string; hint?: string }[] = [
   { key: "equipment", label: "장비 포함" },
-  { key: "engineer", label: "엔지니어 포함", hint: "사용자에게 엔지니어 단계 건너뛰기를 제안해요" },
+  { key: "engineer", label: "엔지니어 포함", hint: "뮤지션에게 엔지니어 단계 건너뛰기를 제안해요" },
   { key: "install", label: "설치 포함" },
   { key: "transport", label: "운반 포함" },
 ];
@@ -486,7 +486,7 @@ export function QuoteForm(props: Props) {
             </div>
           )}
           <div className={styles.row4}>
-            <Field label="업체할인" hint="항목 합계보다 클 수 없어요. 사용자에게는 − 금액으로 보여요." error={errorOf("discountAmount")}>
+            <Field label="업체할인" hint="항목 합계보다 클 수 없어요. 뮤지션에게는 − 금액으로 보여요." error={errorOf("discountAmount")}>
               {(c) => <NumberInput {...c} money value={f.discount} onChange={(discount) => set({ discount })} />}
             </Field>
           </div>

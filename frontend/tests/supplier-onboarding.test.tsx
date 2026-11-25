@@ -165,7 +165,7 @@ describe("입점 신청 2단계 (/supplier/onboarding)", () => {
     expect(screen.getByText("업체 D")).toBeInTheDocument();
   });
 
-  it("사용자 계정은 입점 화면을 볼 수 없다 (찾을 수 없어요)", async () => {
+  it("뮤지션 계정은 입점 화면을 볼 수 없다 (찾을 수 없어요)", async () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: { ...SUPPLIER, role: "USER", nickname: "광주밴드" } } });
     renderAt("/supplier/onboarding");
     expect(await screen.findByRole("heading", { name: "화면을 찾을 수 없어요" })).toBeInTheDocument();

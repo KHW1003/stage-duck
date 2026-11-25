@@ -75,7 +75,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("메인 화면의 채팅 위젯", () => {
   it.each([
-    ["사용자", "/", USER],
+    ["뮤지션", "/", USER],
     ["승인 업체", "/partner", SUPPLIER],
   ])("%s는 %s 에서도 채팅 버튼이 보인다", async (_, path, me) => {
     mockServer(me);

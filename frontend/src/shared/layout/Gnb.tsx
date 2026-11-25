@@ -25,7 +25,7 @@ import styles from "./Gnb.module.css";
 function roleText(kind: LayoutKind, me: Me): string {
   switch (kind) {
     case "user":
-      return "사용자 계정";
+      return "뮤지션 계정";
     case "partner":
       return "업체 계정 · 승인";
     case "partner-review":
