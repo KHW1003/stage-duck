@@ -104,3 +104,18 @@ def test_list_item_has_checkin_and_condition_fields(client, db, seeded):
     assert c["externalEquipmentAllowed"] is True
     assert c["externalEngineerAllowed"] is None and c["hasParking"] is None
     assert items["공간 A"]["hasWaitingRoom"] is True
+
+
+def test_detail_counts_views_and_sort_by_views(client, db, seeded):
+    """11/25: 공간 상세를 열 때마다 조회 수 +1, sort=views 는 조회수 많은 순 (같으면 최근 등록 먼저)."""
+    names = {v.name: v.id for v in db.query(Venue).all()}
+    for _ in range(3):
+        assert client.get(f"{URL}/{names['공간 C']}").status_code == 200
+    client.get(f"{URL}/{names['공간 A']}")
+    db.expire_all()
+    assert db.get(Venue, names["공간 C"]).view_count == 3
+    assert db.get(Venue, names["공간 A"]).view_count == 1
+    items = [i["name"] for i in client.get(URL, params={"sido": "광주광역시", "sort": "views"}).json()["items"]]
+    assert items[:2] == ["공간 C", "공간 A"]
+    # 숨김·없는 공간은 세지 않고 404
+    assert client.get(f"{URL}/999").status_code == 404

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -298,7 +298,11 @@ def list_venues(
     if band_allowed is not None:
         q = q.where(Venue.band_allowed.is_(band_allowed))
     total = db.scalar(select(func.count()).select_from(q.subquery()))
-    order = {"fee": (Venue.rental_fee, Venue.id), "capacity": (Venue.max_capacity.desc(), Venue.id)}.get(sort, (Venue.id,))
+    order = {
+        "fee": (Venue.rental_fee, Venue.id),
+        "capacity": (Venue.max_capacity.desc(), Venue.id),
+        "views": (Venue.view_count.desc(), Venue.id.desc()),  # 조회수 같으면 최근 등록 먼저
+    }.get(sort, (Venue.id,))
     rows = db.execute(q.order_by(*order).offset((page - 1) * size).limit(size)).all()
     return [(v, name) for v, name in rows], total
 
@@ -314,6 +318,12 @@ def get_public_venue(db: Session, venue_id: int) -> tuple[Venue, str]:
     if row is None:
         raise not_found()
     return row[0], row[1]
+
+
+def count_venue_view(db: Session, venue: Venue) -> None:
+    """공간 상세를 열 때마다 조회 수 +1 (11/25). 동시에 열어도 빠지지 않게 DB 에서 더한다."""
+    db.execute(update(Venue).where(Venue.id == venue.id).values(view_count=Venue.view_count + 1))
+    db.commit()
 
 
 def update_venue(db: Session, user: User, venue_id: int, body: VenueIn) -> Venue:

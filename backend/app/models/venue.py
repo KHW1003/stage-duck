@@ -47,6 +47,8 @@ class Venue(Base):
     has_parking: Mapped[bool | None] = mapped_column(Boolean)
     hall_registered: Mapped[bool | None] = mapped_column(Boolean)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="ACTIVE")
+    # 공간 상세 조회 수 (11/25 해원: 메인 "공간 예시"를 조회수 많은 순으로). 상세 GET 마다 +1
+    view_count: Mapped[int] = mapped_column(UInt, nullable=False, server_default="0")
 
     equipment: Mapped[list["VenueEquipment"]] = relationship(
         cascade="all, delete-orphan", order_by="VenueEquipment.id", lazy="selectin"

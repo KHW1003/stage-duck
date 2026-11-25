@@ -82,7 +82,8 @@ export function toSample(v: VenueListItem): SpaceSample & { id: number } {
 }
 
 export function SpacesSection() {
-  const venues = useVenues({ sort: "latest", size: 3 });
+  // 11/25 해원: 조회수 많은 공간 3곳 (같으면 최근 등록 먼저)
+  const venues = useVenues({ sort: "views", size: 3 });
   const live = venues.data?.items.length ? venues.data.items.slice(0, 3).map(toSample) : null;
   const spaces: (SpaceSample & { id?: number })[] = live ?? SPACES;
   return (

@@ -162,6 +162,7 @@ erDiagram
 | hall_registered | BOOLEAN | NULL | 공연법상 공연장 등록, 선택 |
 | ~~photo_url~~ | | | → `venue_photos` (uploads.md) |
 | status | VARCHAR(20) | DEFAULT 'ACTIVE', CHECK IN ('ACTIVE','HIDDEN') | 관리자 숨김 |
+| view_count | INT UNSIGNED | NOT NULL DEFAULT 0 | 공간 상세 조회 수. 상세 GET 마다 +1, 메인 공간 예시 정렬 (11/25, 0030) |
 
 ### venue_equipment
 `id PK, venue_id FK, category, name, quantity` — 기본 제공 장비.
