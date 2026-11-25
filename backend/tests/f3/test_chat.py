@@ -358,3 +358,28 @@ def test_room_list_has_latest_quote_version_for_quote_button(client, db):
     assert row["latestQuoteVersionId"] == quote_card["refId"]
     supplier_row = next(r for r in d.get(f"{API}/chat-rooms").json() if r["roomId"] == room_id)
     assert supplier_row["latestQuoteVersionId"] == quote_card["refId"]
+
+
+def test_room_list_has_partner_photo(client, db):
+    """11/25: 채팅 목록 한 줄에 상대 사진 — 사용자는 업체 대표 이미지, 업체는 사용자 프로필 사진."""
+    from app.models import StoredFile, Supplier, User
+    from app.models.chat import ChatRoom
+    import uuid
+
+    user, d, room_id, _, supplier = _room(client, db)
+    room = db.get(ChatRoom, room_id)
+
+    def photo(owner_id, purpose):
+        f = StoredFile(owner_user_id=owner_id, purpose=purpose, visibility="PUBLIC", status="ATTACHED",
+                       storage_key=f"public/x/{uuid.uuid4().hex}.webp", thumb_key=f"public/x/{uuid.uuid4().hex}_t.webp",
+                       original_name="p.jpg", mime_type="image/webp", size_bytes=1)
+        db.add(f)
+        db.flush()
+        return f.id
+
+    db.get(Supplier, room.supplier_id).image_file_id = photo(supplier.user_id, "SUPPLIER_IMAGE")
+    db.get(User, room.user_id).profile_file_id = photo(room.user_id, "PROFILE")
+    db.commit()
+    mine = next(r for r in user.get(f"{API}/chat-rooms").json() if r["roomId"] == room_id)
+    theirs = next(r for r in d.get(f"{API}/chat-rooms").json() if r["roomId"] == room_id)
+    assert mine["partnerImageUrl"] and theirs["partnerImageUrl"] and mine["partnerImageUrl"] != theirs["partnerImageUrl"]

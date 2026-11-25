@@ -233,8 +233,8 @@ export function AccountMenu({ me, kind, trigger }: { me: Me; kind: LayoutKind; t
     <Popover
       button={trigger ?? (({ open, toggle }) => (
         <button type="button" className={styles.user} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
-          <span className={styles.avatar} aria-hidden="true">
-            {name.slice(0, 1)}
+          <span className={styles.avatar} aria-hidden="true" style={me.avatarUrl ? { backgroundImage: `url('${me.avatarUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+            {me.avatarUrl ? null : name.slice(0, 1)}
           </span>
           <span className={styles.userName}>{name}</span>
           <Icon name="down" size="sm" />

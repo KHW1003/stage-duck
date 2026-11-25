@@ -154,7 +154,7 @@ export function ChatList({ rooms, role, filter, onFilter, searching, onSearching
                       }}
                     >
                       <span className="chat-item__av">
-                        <Avatar name={r.partnerName} />
+                        <Avatar name={r.partnerName} src={r.partnerImageUrl} />
                         {r.pinnedAt && (
                           <span className="chat-item__pin" role="img" aria-label="고정됨">
                             <PinIcon />

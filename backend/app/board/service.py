@@ -53,6 +53,7 @@ def _out(db: Session, post: PrPost) -> PrPostOut:
         price_range=post.price_range,
         bumped_at=post.bumped_at,
         created_at=post.created_at,
+        supplier_image_url=files.avatar_url(db, post.supplier.image_file_id),
     )
 
 

@@ -70,6 +70,9 @@ export function useChangeSupplierImage() {
       }
       return api<SupplierProfile>("/supplier/profile", { method: "PATCH", body: JSON.stringify({ imageFileId }) });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile", "supplier"] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["profile", "supplier"] });
+      void queryClient.invalidateQueries({ queryKey: ME_KEY }); // 머리줄 계정 버튼 사진도 바로 (11/25)
+    },
   });
 }

@@ -353,3 +353,23 @@ def test_fr_profile_01_only_approved_supplier_can_change_image(client, db):
     user = make_user(db)
     login_as(client, user)
     assert client.patch(SUP_URL, json={"imageFileId": None}).status_code == 404
+
+
+def test_photo_shows_everywhere_me_chat_favorites_board(client, db):
+    """11/25: 프로필 사진·업체 대표 이미지를 바꾸면 /me(머리줄)·관심 업체·소개 글 상세 응답에 그 사진 주소가 나온다."""
+    s = make_supplier(db, review_status="APPROVED")
+    img = _file(db, s.user.id, "SUPPLIER_IMAGE")
+    login_as(client, s.user)
+    url = client.patch(SUP_URL, json={"imageFileId": img.id}).json()["imageUrl"]
+    assert client.get("/api/v1/me").json()["avatarUrl"] == url
+    post = _post(db, s, "VENUE")
+
+    user = make_user(db)
+    photo = _file(db, user.id, "PROFILE")
+    login_as(client, user)
+    mine = client.patch(ME_URL, json={"profileFileId": photo.id}).json()["profileImageUrl"]
+    assert client.get("/api/v1/me").json()["avatarUrl"] == mine
+    assert client.post("/api/v1/favorites", json={"supplierId": s.id}).status_code == 204
+    fav = next(f for f in client.get("/api/v1/favorites").json() if f["supplierId"] == s.id)
+    assert fav["imageUrl"] == url
+    assert client.get(f"/api/v1/pr-posts/{post.id}").json()["supplierImageUrl"] == url

@@ -129,11 +129,17 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
     )
     stages = {s.id: s for s in db.scalars(select(Stage).where(Stage.id.in_({r.stage_id for r in rooms})))}
     if supplier_id is None:
-        names = dict(db.execute(select(Supplier.id, Supplier.company_name).where(Supplier.id.in_({r.supplier_id for r in rooms}))).all())
+        rows = db.execute(select(Supplier.id, Supplier.company_name, Supplier.image_file_id).where(Supplier.id.in_({r.supplier_id for r in rooms}))).all()
+        names = {sid: name for sid, name, _ in rows}
         partner = {r.id: names[r.supplier_id] for r in rooms}
+        photos = {sid: files_service.avatar_url(db, img) for sid, _, img in rows}
+        partner_photo = {r.id: photos.get(r.supplier_id) for r in rooms}
     else:
-        names = dict(db.execute(select(User.id, User.nickname).where(User.id.in_({r.user_id for r in rooms}))).all())
+        rows = db.execute(select(User.id, User.nickname, User.profile_file_id).where(User.id.in_({r.user_id for r in rooms}))).all()
+        names = {uid: nick for uid, nick, _ in rows}
         partner = {r.id: names.get(r.user_id) or DEFAULT_PARTNER_NAME for r in rooms}
+        photos = {uid: files_service.avatar_url(db, img) for uid, _, img in rows}
+        partner_photo = {r.id: photos.get(r.user_id) for r in rooms}
 
     rows = []
     for room in rooms:
@@ -150,6 +156,7 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
             "unread_count": unread.get(room.id, 0),
             "last_message": last,
             "latest_quote_version_id": latest_quote.get((room.stage_id, room.supplier_id)),
+            "partner_image_url": partner_photo.get(room.id),
         })
     rows.sort(key=lambda r: (r["pinned_at"] is None, -(last_ids.get(r["room_id"]) or 0), -r["room_id"]))
     return rows

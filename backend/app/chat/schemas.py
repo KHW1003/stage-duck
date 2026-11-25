@@ -114,7 +114,8 @@ class RoomOut(BaseModel):
     pinned_at: datetime | None
     unread_count: int
     last_message: LastMessageOut | None
-    latest_quote_version_id: int | None = None  # 그 방의 가장 최근 견적서 버전 → [견적서 보기] (11/25)
+    latest_quote_version_id: int | None = None
+    partner_image_url: str | None = None  # 상대 사진 (11/25)  # 그 방의 가장 최근 견적서 버전 → [견적서 보기] (11/25)
 
 
 class PinOut(BaseModel):

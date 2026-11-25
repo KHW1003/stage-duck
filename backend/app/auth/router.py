@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Cookie, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import calc, reset, service, social
@@ -272,4 +273,17 @@ def me(response: Response, user: User = Depends(current_member), db: Session = D
         supplier_review_status=review,
         landing=service.landing(db, user),
         suspension=service.suspension(db, user),
+        avatar_url=_avatar(db, user),
     )
+
+
+def _avatar(db: Session, user: User) -> str | None:
+    """사용자는 프로필 사진, 업체는 업체 대표 이미지(없으면 계정 프로필 사진)."""
+    from app.files.service import avatar_url
+    from app.models.supplier import Supplier
+
+    if user.role == "SUPPLIER":
+        image = db.scalar(select(Supplier.image_file_id).where(Supplier.user_id == user.id))
+        if image:
+            return avatar_url(db, image)
+    return avatar_url(db, user.profile_file_id)

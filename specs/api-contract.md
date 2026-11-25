@@ -71,7 +71,7 @@
 | POST | `/auth/social/complete` | `signup_token` 쿠키 | 추가 정보 + 약관 동의 → 가입 완료. 요청은 `/auth/signup` 에서 `password` 만 뺀 모양. CSRF 검사 예외 (아래 2.1) | F1-05~07 |
 | POST | `/auth/password-reset` | 🌐 | 재설정 링크 요청 `{email}` → 항상 202 `{demoLink}` (시연 서버 `APP_ENV=test`·`MAIL_BACKEND=console`만 `/password/reset?token=…`, 그 밖은 null). 같은 이메일 10분 3회 넘으면 429 `PASSWORD_RESET_RATE_LIMITED` (가입 안 한 이메일도 같은 규칙). CSRF 검사 예외 | F1-21, F1-23 |
 | POST | `/auth/password-reset/confirm` | 🌐 | `{token, password}` → 204 + 그 사용자 Refresh 전부 폐기(바꾼 시각 전에 발급된 refresh 는 `/auth/refresh` 401) + 이 브라우저 로그인 쿠키 지움. 만료·사용됨 → 400 `RESET_TOKEN_INVALID`, 비밀번호 규칙 → 400 `VALIDATION_FAILED`. CSRF 검사 예외 | F1-22 |
-| GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태 | F1-11 |
+| GET | `/me` | 로그인 | 내 정보, 역할, 업체 심사 상태. `avatarUrl` = 머리줄 계정 버튼 사진 (사용자 프로필 사진 / 업체 대표 이미지, 11/25) | F1-11 |
 | POST | `/supplier/application` | S\* | 2단계 입점 신청 (사업자 정보, 등록증 파일 id) | F1-17, F1-18 |
 | GET | `/supplier/application` | S\* | 심사 상태·반려 사유 | F1-20 |
 | PUT | `/supplier/application` | S* | 반려 후 수정·재신청 | F1-20 |
@@ -262,7 +262,7 @@
 ### 4.2 채팅
 | 메서드 | 경로 | 권한 | 설명 | AC |
 |---|---|---|---|---|
-| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순. `latestQuoteVersionId` = 그 방(단계 × 업체)의 가장 최근 견적서 버전 → 대화방 [견적서 보기] (11/25) | F3-26, F3-27 |
+| GET | `/chat-rooms` | 로그인 | 내 채팅방 목록 (안 읽은 수, 내 고정 시각 `pinnedAt`). 검색·안 읽음만·정렬은 화면에서 거름 — 정렬은 고정한 방 먼저, 각 묶음 안은 최근 대화순. `latestQuoteVersionId` = 그 방(단계 × 업체)의 가장 최근 견적서 버전 → 대화방 [견적서 보기], `partnerImageUrl` = 상대 사진 (11/25) | F3-26, F3-27 |
 | PUT · DELETE | `/chat-rooms/{roomId}/pin` | P | 상단 고정 / 고정 풀기 (나에게만). PUT → `200 { "roomId", "pinnedAt" }`, DELETE → `204`. 이미 그 상태면 그대로 같은 응답 | F3-27 |
 | POST | `/chat-rooms/{roomId}/start` | U | [채팅 시작] → `startedAt` 기록 (컨택) | F3-06 |
 | GET | `/chat-rooms/{roomId}/messages` | P | `?after={messageId}&limit=50` · 위로 올려 예전 대화는 `?before={messageId}` (그 앞의 최근 limit 개, 11/24) | F3-07 |
@@ -327,7 +327,7 @@
 |---|---|---|---|---|
 | GET | `/pr-posts` | 🌐 | `?category=&sido=&page=` — category 생략 시 전체, 최신순(끌어올린 시각). 정지 업체 글 제외 | F4-04, F4-09, F4-11 |
 | GET | `/pr-posts/mine` | S | 내 소개 글 목록 — 내린(`DELETED`) 글은 빼고, 가려진(`BLINDED`) 글은 사유와 함께 본인에게만 준다. 응답 `{items: [소개 글 상세 + status, blindReason, canBump, nextBumpAt]}` (부문 순서: 공연장·장비·엔지니어). 끌어올리기 가능 여부·시각은 서버가 계산. 업체 정보가 없으면 빈 목록, 정지 계정도 본다 | F4-10, FR-BOARD-02·03 |
-| GET | `/pr-posts/{id}` | 🌐 | 상세 | F4-04 |
+| GET | `/pr-posts/{id}` | 🌐 | 상세. `supplierImageUrl` = 글쓴 업체 대표 이미지 (11/25) | F4-04 |
 | POST | `/pr-posts` | S | 작성 — 승인 부문만(`403 CATEGORY_NOT_APPROVED`), 부문당 활성 1개(`409 ACTIVE_POST_EXISTS`), 블라인드 글 있음(`409 BLINDED_POST_EXISTS`). 연락처·외부 링크 모양이 있으면 저장은 하고 응답 `contactWarning: true` (화면이 경고) | F4-01~03, F4-10 |
 | PUT | `/pr-posts/{id}` | S(본인) | 수정 (말머리는 못 바꿈). 응답에 `contactWarning`. 블라인드 중 `409 INVALID_STATE`, 말머리 변경·칸 오류 `400 VALIDATION_FAILED`, 정지 계정 `403 ACCOUNT_SUSPENDED`, 남의 글·지운 글 `404` | F4-03, F4-10 |
 | DELETE | `/pr-posts/{id}` | S(본인) | 내리기 → `204`. 내린 글은 목록·상세에서 `404`, 부문당 1개 자리가 빈다. 가려진 글 `409 INVALID_STATE`(블라인드를 피해 가지 못하게), 정지 계정 `403 ACCOUNT_SUSPENDED`, 남의 글·내린 글 `404` (#236) | |

@@ -1,9 +1,11 @@
+import type { CSSProperties } from "react";
 /** 채팅 목록·대화방이 같이 쓰는 작은 조각 (아바타 글자, 핀 아이콘·메뉴, 시각 글) */
 
-export function Avatar({ name }: { name: string }) {
+/** 사진이 있으면 사진(kit.css .avatar 의 --img), 없으면 이름 첫 글자 (11/25: 프로필 사진이 보이는 모든 화면) */
+export function Avatar({ name, src }: { name: string; src?: string | null }) {
   return (
-    <span className="avatar" aria-hidden="true">
-      {name.slice(0, 1)}
+    <span className="avatar" aria-hidden="true" style={src ? ({ "--img": `url('${src}')` } as CSSProperties) : undefined}>
+      {src ? null : name.slice(0, 1)}
     </span>
   );
 }
