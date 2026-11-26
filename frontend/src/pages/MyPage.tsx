@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMyProfile, useUpdateMyProfile, useUploadProfilePhoto } from "../features/profile/api";
 import { DuckPicker } from "../features/profile/DuckPicker";
-import { nicknameError } from "../features/auth/rules";
+import { NICKNAME_MAX, nicknameError } from "../features/auth/rules";
 import { useDupCheck } from "../features/auth/useDupCheck";
 import "../features/profile/profile.css";
 import { UserProfileCard } from "../features/profile/UserProfileCard";
@@ -146,7 +146,7 @@ export function MyPage() {
                         id="mypage-nickname"
                         className="input profile-nick"
                         value={nickname ?? saved?.nickname ?? ""}
-                        maxLength={30}
+                        maxLength={NICKNAME_MAX}
                         aria-invalid={nickError ? true : undefined}
                         onChange={(e) => setNickname(e.target.value)}
                       />

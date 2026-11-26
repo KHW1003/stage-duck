@@ -76,7 +76,7 @@ def test_ac_f1_01_all_blank_reports_every_field(client):
         ("password", "12345678"),  # 영문 없음
         ("password", "duck123"),  # 7자 (경계)
         ("password", "a1" * 37),  # 74자 (bcrypt 한도 72 초과)
-        ("nickname", "가" * 31),  # 31자 (경계)
+        ("nickname", "가" * 16),  # 16자 (경계, 11/26 목산 요청으로 최대 30 → 15)
         ("birthDate", "2026-11-17"),  # 오늘보다 뒤
     ],
 )
@@ -90,7 +90,7 @@ def test_ac_f1_01_bad_format_is_rejected_with_reason(db, field, value):
 
 @pytest.mark.parametrize(
     ("field", "value"),
-    [("password", "duck1234"), ("password", "a1" * 36), ("nickname", "가" * 30), ("phone", "021234567")],
+    [("password", "duck1234"), ("password", "a1" * 36), ("nickname", "가" * 15), ("phone", "021234567")],
 )
 def test_ac_f1_01_boundary_values_are_accepted(db, field, value):
     service.signup(db, SignupIn.model_validate(_body(**{field: value})), now=NOW)
@@ -208,7 +208,7 @@ def test_check_available_email_and_nickname(client, db):
     assert client.post(CHECK, json={"field": "nickname", "value": "새닉네임"}).json() == {"available": True, "message": "쓸 수 있는 닉네임이에요."}
 
 
-@pytest.mark.parametrize(("field", "value", "reason"), [("email", "", "이메일을 입력해 주세요"), ("email", "abc", "이메일 형식을 확인해 주세요"), ("nickname", "가" * 31, "닉네임은 30자까지 입력할 수 있어요")])
+@pytest.mark.parametrize(("field", "value", "reason"), [("email", "", "이메일을 입력해 주세요"), ("email", "abc", "이메일 형식을 확인해 주세요"), ("nickname", "가" * 16, "닉네임은 15자까지 입력할 수 있어요")])
 def test_check_available_rejects_bad_shape(client, field, value, reason):
     res = client.post(CHECK, json={"field": field, "value": value})
     assert res.status_code == 400 and res.json()["fieldErrors"] == [{"field": field, "reason": reason}]

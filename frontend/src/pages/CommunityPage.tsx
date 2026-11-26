@@ -126,9 +126,9 @@ export function CommunityPage() {
                 <th className={styles.num}>번호</th>
                 <th className={styles.cat}>말머리</th>
                 <th>제목</th>
-                <th className={styles.small}>글쓴이</th>
-                <th className={styles.small}>날짜</th>
-                <th className={styles.num}>조회</th>
+                <th className={styles.writer}>글쓴이</th>
+                <th className={styles.date}>날짜</th>
+                <th className={`${styles.num} ${styles.views}`}>조회</th>
               </tr>
             </thead>
             <tbody>
@@ -141,9 +141,9 @@ export function CommunityPage() {
                   <td>
                     <Link to={`/notices/${n.id}`}>{n.title}</Link>
                   </td>
-                  <td className={styles.small}>STAGE DUCK</td>
-                  <td className={`${styles.small} sd-num`}>{shortDate(n.publishedAt, today)}</td>
-                  <td className={`${styles.num} sd-num`} aria-label="조회 수 없음">-</td>
+                  <td className={styles.writer}>STAGE DUCK</td>
+                  <td className={`${styles.date} sd-num`}>{shortDate(n.publishedAt, today)}</td>
+                  <td className={`${styles.num} ${styles.views} sd-num`} aria-label="조회 수 없음">-</td>
                 </tr>
               ))}
               {posts.data.items.map((p) => (
@@ -154,11 +154,11 @@ export function CommunityPage() {
                     <Link to={`/community/${p.id}`}>{p.title}</Link>
                     {p.commentCount > 0 && <span className={`${styles.commentCount} sd-num`}>[{p.commentCount}]</span>}
                   </td>
-                  <td className={styles.small}>
+                  <td className={styles.writer}>
                     <Author author={p.author} />
                   </td>
-                  <td className={`${styles.small} sd-num`}>{shortDate(p.createdAt, today)}</td>
-                  <td className={`${styles.num} sd-num`}>{p.viewCount.toLocaleString()}</td>
+                  <td className={`${styles.date} sd-num`}>{shortDate(p.createdAt, today)}</td>
+                  <td className={`${styles.num} ${styles.views} sd-num`}>{p.viewCount.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

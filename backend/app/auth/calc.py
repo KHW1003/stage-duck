@@ -8,6 +8,7 @@ MIN_AGE = 14  # FR-AUTH-01, D-15
 PHONE_RE = re.compile(r"^0\d{8,10}$")  # 숫자만, 0으로 시작, 9~11자리 (data-model: 숫자만 저장)
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PASSWORD_MIN, PASSWORD_MAX = 8, 72  # bcrypt 는 72바이트까지만 본다
+NICKNAME_MAX = 15  # 11/26 목산: 커뮤니티 목록에서 글자가 밀려서 30 → 15 (DB 칸은 VARCHAR(30) 그대로)
 
 LANDING_USER = "/me/performances"
 LANDING_SUPPLIER_APPROVED = "/supplier/postings"
@@ -89,8 +90,8 @@ def signup_field_errors(data: SignupInput, today: date, *, password_required: bo
         email = data.email.strip()
         if len(email) > 255 or not EMAIL_RE.fullmatch(email):
             add("email", "이메일 형식을 확인해 주세요")
-    if not _blank(data.nickname) and len(data.nickname.strip()) > 30:
-        add("nickname", "닉네임은 30자까지 입력할 수 있어요")
+    if not _blank(data.nickname) and len(data.nickname.strip()) > NICKNAME_MAX:
+        add("nickname", f"닉네임은 {NICKNAME_MAX}자까지 입력할 수 있어요")
     if not _blank(data.password) and not _password_ok(data.password):
         add("password", "비밀번호는 8~72자, 영문과 숫자를 함께 넣어 주세요")
     if not _blank(data.signup_purpose) and len(data.signup_purpose.strip()) > 30:

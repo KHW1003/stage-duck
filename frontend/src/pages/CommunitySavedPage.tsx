@@ -37,8 +37,8 @@ export function CommunitySavedPage() {
                 <tr>
                   <th className={styles.cat}>말머리</th>
                   <th>제목</th>
-                  <th className={styles.small}>글쓴이</th>
-                  <th className={styles.small}>날짜</th>
+                  <th className={styles.writer}>글쓴이</th>
+                  <th className={styles.date}>날짜</th>
                 </tr>
               </thead>
               <tbody>
@@ -48,10 +48,10 @@ export function CommunitySavedPage() {
                     <td>
                       <Link to={`/community/${p.id}`}>{p.title}</Link>
                     </td>
-                    <td className={styles.small}>
+                    <td className={styles.writer}>
                       <Author author={p.author} />
                     </td>
-                    <td className={`${styles.small} sd-num`}>{shortDate(p.createdAt, today)}</td>
+                    <td className={`${styles.date} sd-num`}>{shortDate(p.createdAt, today)}</td>
                   </tr>
                 ))}
               </tbody>

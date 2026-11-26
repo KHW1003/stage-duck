@@ -247,6 +247,16 @@ def test_ac_f5_16_blank_nickname_is_400(client, db, nickname):
     assert res.json()["fieldErrors"][0]["field"] == "nickname"
 
 
+def test_ac_f5_16_nickname_up_to_15_chars(client, db):
+    """11/26 목산: 닉네임 최대 15자 (가입과 같은 규칙)."""
+    user = make_user(db, nickname="가을밤밴드")
+    api = login_as(client, user)
+    assert api.patch(ME_URL, json={"nickname": "가" * 15}).status_code == 200
+    res = api.patch(ME_URL, json={"nickname": "나" * 16})
+    assert res.status_code == 400
+    assert res.json()["fieldErrors"][0] == {"field": "nickname", "reason": "닉네임은 15자까지 입력할 수 있어요."}
+
+
 def test_ac_f5_16_set_and_replace_profile_photo(client, db):
     user = make_user(db)
     first = _file(db, user.id, "PROFILE")

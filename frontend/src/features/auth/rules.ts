@@ -12,5 +12,8 @@ export const passwordError = (v: string) => (PASSWORD_RE.test(v) ? undefined : "
 /** 전화번호: 하이픈을 빼고 숫자 9~11자리 */
 export const phoneError = (v: string) => (/^\d{9,11}$/.test(v.replace(/-/g, "").trim()) ? undefined : "전화번호는 숫자 9~11자리로 적어 주세요.");
 
+/** 닉네임 최대 글자 수 (11/26 목산: 30 → 15, 서버 backend/app/auth/calc.py NICKNAME_MAX 와 같게) */
+export const NICKNAME_MAX = 15;
+
 export const nicknameError = (v: string) =>
-  !v.trim() ? "닉네임을 적어 주세요." : v.trim().length > 30 ? "닉네임은 30자까지 쓸 수 있어요." : undefined;
+  !v.trim() ? "닉네임을 적어 주세요." : v.trim().length > NICKNAME_MAX ? `닉네임은 ${NICKNAME_MAX}자까지 쓸 수 있어요.` : undefined;

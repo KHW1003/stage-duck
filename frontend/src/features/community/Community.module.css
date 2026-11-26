@@ -25,6 +25,13 @@
 .num { width: 64px; color: var(--sd-muted); }
 .cat { width: 88px; color: var(--sd-muted); }
 .small { width: 120px; color: var(--sd-muted); }
+/* 목록 글쓴이 칸을 넓히고 날짜·조회는 좁게 (11/26). 칸보다 긴 이름은 … 로 줄이고, 마우스를 올리면 전체 이름 */
+.table { table-layout: fixed; }
+.writer { width: 240px; color: var(--sd-muted); } /* 닉네임 15자 + 그림이 한 줄에 들어가는 폭 */
+.date { width: 76px; color: var(--sd-muted); }
+.views { width: 52px; }
+.writer .author { display: flex; align-items: center; min-width: 0; }
+.writer .authorName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .commentCount { margin-left: 4px; color: var(--sd-blue); } /* 목록 제목 옆 [댓글 수] — 글 화면 댓글 칸(.comments)과 이름이 겹쳐 댓글 전체가 빨갛던 것 */
 .pager { display: flex; justify-content: center; gap: 4px; padding-top: 20px; }
 .pageBtn { min-width: var(--sd-touch); min-height: var(--sd-touch); border: 0; background: none; font-size: var(--sd-text-desc); cursor: pointer; }
@@ -96,6 +103,10 @@
 @media (max-width: 760px) {
   .num { display: none; }
   .toolbar { flex-direction: column; align-items: stretch; }
+  /* 폰: 제목 칸이 남도록 글쓴이·말머리·날짜를 줄인다 (긴 이름은 …) */
+  .cat { width: 64px; }
+  .writer { width: 112px; }
+  .date { width: 52px; }
 }
 
 /* ── 디자인 검수 반영 (2026-11-23, exports/design-review 4-커뮤니티-글-상세.md) ──
