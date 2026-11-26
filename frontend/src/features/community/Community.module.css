@@ -112,7 +112,10 @@
 /* 댓글 행동(답글·삭제·신고): 보이는 크기는 작게, 누르는 영역은 44px, 글자는 본문 왼쪽 선에 맞춤 */
 .commentActions { gap: 16px; margin-top: 0; }
 .commentActions > a, .commentActions > button { min-height: var(--sd-touch); padding-inline: 0; }
-.commentInput { min-height: calc(var(--sd-touch) * 2); }
+.commentInput { min-height: calc(var(--sd-touch) * 2); resize: none; }
+/* 프로필 그림이 들어간 작성자 줄: 이름·날짜·글쓴이 표시를 한 줄 가운데에 맞춘다 (11/26) */
+.postMeta { align-items: center; }
+.commentHead > b { display: inline-flex; align-items: center; }
 .commentInput:focus { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
 .commentFormBar .count { font-size: var(--sd-text-small); }
 .commentEmpty { padding: 24px 0; color: var(--sd-muted); font-size: var(--sd-text-desc); }
