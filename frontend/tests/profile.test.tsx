@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AppRoutes } from "../src/App";
 import { UserProfileCard } from "../src/features/profile/UserProfileCard";
+import { NICKNAME_MAX, nicknameError } from "../src/features/auth/rules";
 import type { Me, PrPost, SupplierProfile, UserProfile } from "../src/shared/api/types";
 
 /** 프로필 (#33, 목업 v4 supplier.html · mypage.html) — AC-F5-15, AC-F5-16 */
@@ -290,5 +291,13 @@ describe("마이페이지 (/mypage)", () => {
     mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER_D } });
     renderAt("/mypage");
     expect(await screen.findByText(/찾을 수 없/)).toBeInTheDocument();
+  });
+});
+
+describe("닉네임 길이 (11/26)", () => {
+  it("최대 15자 — 15자는 되고 16자는 안내 문구 (서버 NICKNAME_MAX 와 같다)", () => {
+    expect(NICKNAME_MAX).toBe(15);
+    expect(nicknameError("가".repeat(15))).toBeUndefined();
+    expect(nicknameError("가".repeat(16))).toBe("닉네임은 15자까지 쓸 수 있어요.");
   });
 });

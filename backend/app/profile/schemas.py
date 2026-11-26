@@ -5,7 +5,7 @@
 """
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 from app.board.schemas import PrPostItemOut
@@ -57,7 +57,7 @@ class MyProfileIn(BaseModel):
 
     model_config = _IN
 
-    nickname: str | None = Field(default=None, max_length=30)
+    nickname: str | None = None  # 길이(15자)는 service 가 한국어 문구로 검사
     profile_file_id: int | None = None
     duck_avatar: str | None = None  # 고른 오리 "입는 것-드는 것", null 이면 자동 오리
 

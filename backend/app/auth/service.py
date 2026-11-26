@@ -79,8 +79,8 @@ def check_available(db: Session, field: str, value: str) -> tuple[bool, str]:
     else:
         if not value:
             reason = "닉네임을 입력해 주세요"
-        elif len(value) > 30:
-            reason = "닉네임은 30자까지 입력할 수 있어요"
+        elif len(value) > calc.NICKNAME_MAX:
+            reason = f"닉네임은 {calc.NICKNAME_MAX}자까지 입력할 수 있어요"
         else:
             taken = db.scalar(select(User.id).where(User.nickname == value)) is not None
             return (False, _nickname_taken().message) if taken else (True, "쓸 수 있는 닉네임이에요.")

@@ -20,7 +20,10 @@ export function Author({
         duck={author.duck}
         size={big ? 36 : 26}
       />
-      {authorLabel(author)}
+      {/* 목록에서는 칸보다 길면 … 로 줄인다 (Community.module.css .writer). title 로 전체 이름 */}
+      <span className={styles.authorName} title={authorLabel(author)}>
+        {authorLabel(author)}
+      </span>
     </span>
   );
 }

@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth.calc import NICKNAME_MAX
 from app.board import service as board
 from app.core.errors import AppError, not_found
 from app.files import service as files
@@ -115,6 +116,8 @@ def update_my_profile(db: Session, user: User, body: MyProfileIn, *, now: dateti
     if "nickname" in sent:
         if not body.nickname:
             raise _nickname_error(400, "VALIDATION_FAILED", "닉네임을 입력해 주세요.")
+        if len(body.nickname) > NICKNAME_MAX:
+            raise _nickname_error(400, "VALIDATION_FAILED", f"닉네임은 {NICKNAME_MAX}자까지 입력할 수 있어요.")
         taken = db.scalar(select(User.id).where(User.nickname == body.nickname, User.id != user.id))
         if taken is not None:
             raise _nickname_error(409, "NICKNAME_TAKEN", "이미 쓰고 있는 닉네임이에요. 다른 닉네임을 써 주세요.")
