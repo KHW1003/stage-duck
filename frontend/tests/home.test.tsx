@@ -145,6 +145,18 @@ describe("메인 (/)", () => {
     writes.forEach((a) => expect(a).toHaveAttribute("href", "/performances/new"));
     expect(screen.getByRole("link", { name: /업체 먼저 둘러보기/ })).toHaveAttribute("href", "/board");
   });
+
+  it("'이미 공간이 있어요 →'(요청서 쓰기)는 방문자에게만 보이고, 로그인한 업체에게는 숨긴다 (11/26 시연 서버 점검)", async () => {
+    mockServer({});
+    const guest = renderAt("/");
+    expect(await screen.findByRole("link", { name: /이미 공간이 있어요/ })).toHaveAttribute("href", "/performances/new");
+    guest.unmount();
+
+    mockServer({ "GET /api/v1/me": { status: 200, body: SUPPLIER } });
+    renderAt("/");
+    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.queryByRole("link", { name: /이미 공간이 있어요/ })).toBeNull());
+  });
 });
 
 describe("메인 커뮤니티 최신 글", () => {

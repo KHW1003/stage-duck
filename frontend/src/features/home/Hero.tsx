@@ -4,6 +4,7 @@
  */
 import { Link } from "react-router-dom";
 import type { PerformanceSummary } from "../../shared/api/types";
+import { useMe } from "../../shared/auth/useMe";
 import { SLIDES } from "./content";
 import { cx } from "./cx";
 import { HeroSlider } from "./HeroSlider";
@@ -25,6 +26,8 @@ const STATS = [
 
 export function Hero({ userName, perf }: Props) {
   const user = !!userName;
+  /** 로그인한 업체·관리자: 요청서는 뮤지션 전용이라 "이미 공간이 있어요 →"를 보이지 않는다 (11/26 시연 서버 점검) */
+  const other = !user && !!useMe().data;
   /** 처음 가입했거나 진행 중인 요청서가 없는 사용자: "이어서"·"받은 견적" 대신 시작 안내 (11/19 피드백) */
   const fresh = user && perf === null;
   return (
@@ -74,9 +77,11 @@ export function Hero({ userName, perf }: Props) {
               공간 먼저 둘러보기
             </Link>
           </div>
-          <Link className={s.heroSub} to={fresh ? "/board" : "/performances/new"}>
-            {fresh ? "업체 먼저 둘러보기" : user ? "새 공연 요청서 쓰기" : "이미 공간이 있어요"} <span aria-hidden="true">→</span>
-          </Link>
+          {!other && (
+            <Link className={s.heroSub} to={fresh ? "/board" : "/performances/new"}>
+              {fresh ? "업체 먼저 둘러보기" : user ? "새 공연 요청서 쓰기" : "이미 공간이 있어요"} <span aria-hidden="true">→</span>
+            </Link>
+          )}
           <dl className={s.heroStats}>
             {STATS.map((st) => (
               <div key={st.dt}>

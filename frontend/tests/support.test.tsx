@@ -166,6 +166,20 @@ describe("업체 이용 가이드 (/guide/supplier)", () => {
     expect(screen.getByRole("link", { name: "업체 가입" })).toHaveAttribute("href", "/signup/supplier");
     expect(within(document.querySelector(".guide") as HTMLElement).getByRole("link", { name: "업체 이용약관" })).toHaveAttribute("href", "/terms/supplier");
   });
+
+  it("방문자에게는 업체 화면 버튼이 보이고, 로그인한 뮤지션에게는 숨긴다 (11/26 시연 서버 점검)", async () => {
+    mockServer({});
+    const guest = renderAt("/guide/supplier");
+    expect(await screen.findByRole("link", { name: "서비스 등록" })).toHaveAttribute("href", "/supplier/onboarding");
+    guest.unmount();
+
+    mockServer({ "GET /api/v1/me": { status: 200, body: { id: 59, role: "USER", nickname: "광주밴드", landing: "/me/performances" } } });
+    renderAt("/guide/supplier");
+    expect(await screen.findByRole("link", { name: "업체 가입" })).toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.queryByRole("link", { name: "서비스 등록" })).toBeNull());
+    expect(screen.queryByRole("link", { name: "공고 목록" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "내 예약" })).toBeNull();
+  });
 });
 
 describe("약관·정책 (/terms/:type)", () => {
