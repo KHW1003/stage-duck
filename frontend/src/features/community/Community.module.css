@@ -54,7 +54,9 @@
 .reply { padding: 10px 0; }
 .commentHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--sd-text-desc); }
 /* 작성자 프로필 그림 + 이름 (11/26 오리 프로필) */
-.author { display: inline-flex; align-items: center; gap: 8px; }
+/* inline-block 이라 이 칸의 기준선 = 이름 글자의 기준선. 그림은 글자 줄 가운데에 둔다 */
+.author { display: inline-block; }
+.author > span:first-child { display: inline-grid; margin-right: 8px; vertical-align: middle; }
 .author .authorPic { --size: var(--sd-icon-photo); font-size: var(--sd-text-tiny); }
 .badge { padding: 0 6px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); color: var(--sd-muted); font-size: var(--sd-text-tiny); }
 .commentBody { margin-top: 6px; font-size: var(--sd-text-body); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
@@ -113,9 +115,8 @@
 .commentActions { gap: 16px; margin-top: 0; }
 .commentActions > a, .commentActions > button { min-height: var(--sd-touch); padding-inline: 0; }
 .commentInput { min-height: calc(var(--sd-touch) * 2); resize: none; }
-/* 프로필 그림이 들어간 작성자 줄: 이름·날짜·글쓴이 표시를 한 줄 가운데에 맞춘다 (11/26) */
-.postMeta { align-items: center; }
-.commentHead > b { display: inline-flex; align-items: center; }
+/* 프로필 그림이 들어간 작성자 줄: 이름·날짜·글쓴이 표시를 글자 기준선에 맞춘다 (11/26, 글자 크기는 그대로) */
+.postMeta, .commentHead { align-items: baseline; }
 .commentInput:focus { outline: 3px solid var(--sd-focus-ring); outline-offset: 0; border-color: var(--sd-ink); }
 .commentFormBar .count { font-size: var(--sd-text-small); }
 .commentEmpty { padding: 24px 0; color: var(--sd-muted); font-size: var(--sd-text-desc); }
