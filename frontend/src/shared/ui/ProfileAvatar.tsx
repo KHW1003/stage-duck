@@ -24,8 +24,9 @@ export function ProfileAvatar({ name, src, duck, className = "avatar", size = 48
     return <span className={className} style={style} {...a11y} />;
   }
   if (duck) {
+    // 화면별 .avatar 덮어쓰기(채팅 머리줄 반투명 바탕, 소개 글 회색 사각 바탕)가 오리 뒤에 비치지 않게 바로 적는다
     return (
-      <span className={`${className} avatar--duck`} {...a11y}>
+      <span className={`${className} avatar--duck`} style={{ background: "none", borderRadius: "50%" }} {...a11y}>
         <img className="avatar__duck" src={duckDataUrl({ ...duck, size: size * 2 < 96 ? size : size * 2 })} alt="" />
       </span>
     );
