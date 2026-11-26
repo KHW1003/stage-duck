@@ -19,20 +19,22 @@ interface Props {
 
 export function ProfileAvatar({ name, src, duck, className = "avatar", size = 48, label }: Props) {
   const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true };
+  // 프로필 그림은 사진·오리·글자 모두 동그라미 (11/26 목산). 화면별 .avatar 의 사각 모서리보다 우선하게 바로 적는다
+  const round = { borderRadius: "50%" };
   if (src) {
-    const style = { "--img": `url('${src}')`, backgroundImage: `url('${src}')`, backgroundSize: "cover", backgroundPosition: "center" } as CSSProperties;
+    const style = { ...round, "--img": `url('${src}')`, backgroundImage: `url('${src}')`, backgroundSize: "cover", backgroundPosition: "center" } as CSSProperties;
     return <span className={className} style={style} {...a11y} />;
   }
   if (duck) {
-    // 화면별 .avatar 덮어쓰기(채팅 머리줄 반투명 바탕, 소개 글 회색 사각 바탕)가 오리 뒤에 비치지 않게 바로 적는다
+    // 오리는 자기 바탕이 있어서 화면별 바탕(채팅 머리줄 반투명, 소개 글 회색)을 비운다
     return (
-      <span className={`${className} avatar--duck`} style={{ background: "none", borderRadius: "50%" }} {...a11y}>
+      <span className={`${className} avatar--duck`} style={{ ...round, background: "none" }} {...a11y}>
         <img className="avatar__duck" src={duckDataUrl({ ...duck, size: size * 2 < 96 ? size : size * 2 })} alt="" />
       </span>
     );
   }
   return (
-    <span className={className} {...a11y}>
+    <span className={className} style={round} {...a11y}>
       {name.replace(/^업체\s*/, "").slice(0, 1)}
     </span>
   );

@@ -152,12 +152,19 @@ export function OfferPicker({ supplierId, companyName, stageTypes, next }: { sup
   const stageName = stageTypes.map((t) => STAGE_LABEL[t]).join("·");
 
   if (!user) {
+    // 이미 로그인한 업체·관리자에게는 [로그인]을 보여 주지 않는다 (11/26)
     return (
       <div className="offer-pick">
-        <p className="small muted">공연을 준비하는 뮤지션으로 로그인하면 견적을 요청할 수 있어요.</p>
-        <Link className="btn btn--primary btn--lg btn--block mt-12" to={`/login?next=${next}`}>
-          로그인
-        </Link>
+        {me.data ? (
+          <p className="small muted">견적 요청은 공연을 준비하는 뮤지션 계정만 할 수 있어요.</p>
+        ) : (
+          <>
+            <p className="small muted">공연을 준비하는 뮤지션으로 로그인하면 견적을 요청할 수 있어요.</p>
+            <Link className="btn btn--primary btn--lg btn--block mt-12" to={`/login?next=${next}`}>
+              로그인
+            </Link>
+          </>
+        )}
       </div>
     );
   }

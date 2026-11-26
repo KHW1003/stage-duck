@@ -431,6 +431,16 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
   });
 
+  it("이미 로그인한 업체에게는 견적 요청 상자에 [로그인]을 보여 주지 않는다 (11/26)", async () => {
+    mockVenues({
+      "GET /api/v1/me": { status: 200, body: { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" } },
+    });
+    renderAt("/venues/3");
+    const box = await screen.findByRole("complementary", { name: "견적 요청하기" });
+    expect(await within(box).findByText("견적 요청은 공연을 준비하는 뮤지션 계정만 할 수 있어요.")).toBeInTheDocument();
+    expect(within(box).queryByRole("link", { name: "로그인" })).toBeNull();
+  });
+
   it("뮤지션은 공연장 단계가 열린 내 공연만 고르고, 견적 요청 창을 열고 Esc 로 닫는다", async () => {
     const perf = (id: number, title: string, status: string) => ({
       id, title, form: "BAND", status: "PUBLISHED", showDate: "2026-11-28", rehearsalStart: "17:00:00", showStart: "19:00:00", showEnd: "21:00:00",
