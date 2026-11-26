@@ -5,6 +5,7 @@
 from datetime import datetime
 from typing import Literal
 
+from app.profile.duck import DuckOut
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
@@ -30,6 +31,8 @@ class AuthorOut(BaseModel):
 
     name: str
     kind: Literal["USER", "SUPPLIER"]
+    avatar_url: str | None = None  # 프로필 사진 / 업체 대표 이미지 (11/26)
+    duck: DuckOut | None = None  # 사진이 없을 때 그릴 오리 (11/26)
 
 
 class FreePostSummaryOut(BaseModel):

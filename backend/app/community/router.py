@@ -44,7 +44,7 @@ def viewer(access_token: str | None = Cookie(default=None), db: Session = Depend
 
 def _summary(post: FreePost, author: service.Author) -> dict:
     return dict(
-        id=post.id, category=post.category, title=post.title, author=AuthorOut(name=author.name, kind=author.kind),
+        id=post.id, category=post.category, title=post.title, author=AuthorOut.model_validate(author),
         view_count=post.view_count, comment_count=post.comment_count, helpful_count=post.helpful_count,
         has_photos=bool(post.photos), created_at=post.created_at,
     )
@@ -67,7 +67,7 @@ def _comment(c: FreeComment, post: FreePost, me: User | None, names: dict, liked
     show = c.status == "ACTIVE" or (c.status == "BLINDED" and mine)
     author = names[c.author_user_id]
     return CommentOut(
-        id=c.id, author=AuthorOut(name=author.name, kind=author.kind), body=c.body if show else None, status=c.status,
+        id=c.id, author=AuthorOut.model_validate(author), body=c.body if show else None, status=c.status,
         blind_reason=c.blind_reason if mine else None, is_post_author=c.author_user_id == post.author_user_id,
         is_mine=mine, helpful_count=c.helpful_count, my_helpful=c.id in liked, created_at=c.created_at,
         edited_at=c.edited_at,

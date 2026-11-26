@@ -414,7 +414,13 @@ export interface FreePostSummary {
   category: FreePostCategory;
   title: string;
   /** 업체 회원이면 kind=SUPPLIER, name=상호 */
-  author: { name: string; kind: "USER" | "SUPPLIER" };
+  author: {
+    name: string;
+    kind: "USER" | "SUPPLIER";
+    /** 프로필 사진 / 업체 대표 이미지, 없으면 duck 으로 그린다 (11/26) */
+    avatarUrl?: string | null;
+    duck?: Duck | null;
+  };
   viewCount: number;
   commentCount: number;
   helpfulCount: number;
@@ -500,6 +506,9 @@ export interface PrPostItem {
   priceRange: string | null;
   thumbUrl: string | null;
   bumpedAt: string;
+  /** 글쓴 업체 대표 이미지 (11/25), 없으면 supplierDuck 으로 그린다 (11/26) */
+  supplierImageUrl?: string | null;
+  supplierDuck?: Duck | null;
 }
 
 export interface PrPostPage {
@@ -514,9 +523,6 @@ export interface PrPost extends Omit<PrPostItem, "thumbUrl"> {
   body: string;
   photos: UploadedFile[];
   createdAt: string;
-  /** 글쓴 업체 대표 이미지 (11/25) */
-  supplierImageUrl?: string | null;
-  supplierDuck?: Duck | null;
 }
 
 /** POST·PUT /pr-posts 응답 (#31, AC-F4-03): 전화번호·계좌번호·외부 링크가 있으면 저장은 하고 경고만 */

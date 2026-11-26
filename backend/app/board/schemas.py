@@ -50,6 +50,8 @@ class PrPostItemOut(BaseModel):
     price_range: str | None
     thumb_url: str | None
     bumped_at: datetime
+    supplier_image_url: str | None = None  # 업체 대표 이미지 (11/26)
+    supplier_duck: DuckOut | None = None  # 사진이 없을 때 그릴 오리 (11/26)
 
 
 class PrPostOut(BaseModel):

@@ -60,6 +60,9 @@ def _out(db: Session, post: PrPost) -> PrPostOut:
 
 def _items(db: Session, posts) -> list[PrPostItemOut]:
     covers = {f.id: f for f in _photos(db, [p.photos[0] for p in posts if p.photos])}
+    from app.profile.duck import ducks  # profile 이 board 를 import 해서 함수 안에서
+
+    duck = ducks(db, {p.supplier.user_id for p in posts})
     return [
         PrPostItemOut(
             id=p.id,
@@ -71,6 +74,8 @@ def _items(db: Session, posts) -> list[PrPostItemOut]:
             price_range=p.price_range,
             thumb_url=files.thumb_url(covers[p.photos[0]]) if p.photos and p.photos[0] in covers else None,
             bumped_at=p.bumped_at,
+            supplier_image_url=files.avatar_url(db, p.supplier.image_file_id),
+            supplier_duck=duck.get(p.supplier.user_id),
         )
         for p in posts
     ]

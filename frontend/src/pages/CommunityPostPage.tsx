@@ -14,7 +14,8 @@ import { useBookmark, useDeleteFreePost, useFreePost, useHelpful } from "../feat
 import { Comments } from "../features/community/Comments";
 import { ConfirmDelete } from "../features/community/ConfirmDelete";
 import { ReportModal } from "../features/community/ReportModal";
-import { CATEGORY_LABEL, authorLabel, loginPath, longDate } from "../features/community/labels";
+import { Author } from "../features/community/Author";
+import { CATEGORY_LABEL, loginPath, longDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { AdSlot } from "../shared/ui/AdSlot";
@@ -53,7 +54,7 @@ export function CommunityPostPage() {
           </Link>
           <h1 className={styles.postTitle}>{p.title}</h1>
           <p className={styles.postMeta}>
-            <span>{authorLabel(p.author)}</span>
+            <Author author={p.author} big />
             <span className="sd-num">{longDate(p.createdAt)}</span>
             <span className="sd-num">조회 {p.viewCount.toLocaleString()}</span>
             <span className="sd-num">댓글 {p.commentCount}</span>

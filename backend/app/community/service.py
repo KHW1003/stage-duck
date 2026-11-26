@@ -17,11 +17,12 @@ from app.chat.calc import has_contact_pattern
 from app.community import calc
 from app.community.schemas import FreePostIn
 from app.core.errors import AppError, invalid_state, not_found
-from app.files.service import attach_files
+from app.files.service import attach_files, avatar_url
 from app.models.community import COMMENT_MAX, FreeBookmark, FreeComment, FreeHelpful, FreePost
 from app.models.supplier import Supplier
 from app.models.user import User
 from app.policy.service import has_open_report, warn
+from app.profile.duck import DuckOut, ducks
 
 PAGE_SIZE = 20
 RATE_LIMIT = timedelta(minutes=1)  # AC-F4-16
@@ -33,6 +34,8 @@ SORTS = {"latest": FreePost.created_at.desc(), "comments": FreePost.comment_coun
 class Author:
     name: str
     kind: str  # USER · SUPPLIER
+    avatar_url: str | None = None
+    duck: DuckOut | None = None
 
 
 def _visible():
@@ -45,14 +48,21 @@ def _base():
 
 
 def authors(db: Session, posts: list[FreePost] | list[FreeComment]) -> dict[int, Author]:
-    """작성자 표시 이름: 업체 회원은 상호 (AC-F4-14 "업체 D · 업체"), 사용자는 닉네임. 글·댓글 모두."""
+    """작성자 표시 이름: 업체 회원은 상호 (AC-F4-14 "업체 D · 업체"), 사용자는 닉네임. 글·댓글 모두.
+    사진(업체는 대표 이미지, 사용자는 프로필 사진)과 사진이 없을 때 그릴 오리도 같이 (11/26)."""
     users = {p.author_user_id: p.author for p in posts}
     supplier_ids = [uid for uid, u in users.items() if u.role == "SUPPLIER"]
-    companies = dict(
-        db.execute(select(Supplier.user_id, Supplier.company_name).where(Supplier.user_id.in_(supplier_ids))).all()
-    ) if supplier_ids else {}
+    companies = {
+        uid: (name, image)
+        for uid, name, image in db.execute(
+            select(Supplier.user_id, Supplier.company_name, Supplier.image_file_id).where(Supplier.user_id.in_(supplier_ids))
+        )
+    } if supplier_ids else {}
+    duck = ducks(db, users)
     return {
-        uid: Author(companies[uid], "SUPPLIER") if uid in companies else Author(u.nickname or "회원", "USER")
+        uid: Author(companies[uid][0], "SUPPLIER", avatar_url(db, companies[uid][1]), duck.get(uid))
+        if uid in companies
+        else Author(u.nickname or "회원", "USER", avatar_url(db, u.profile_file_id), duck.get(uid))
         for uid, u in users.items()
     }
 

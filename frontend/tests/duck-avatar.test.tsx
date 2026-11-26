@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { duckPicks, duckSvg } from "../src/shared/ui/duck";
 import { ProfileAvatar } from "../src/shared/ui/ProfileAvatar";
+import { Author } from "../src/features/community/Author";
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 const grid = (wear: number, hold: number, skip: string[] = []) =>
@@ -50,5 +51,19 @@ describe("ProfileAvatar", () => {
     expect(drawn.querySelector(".avatar--duck img")?.getAttribute("src")).toMatch(/^data:image\/svg\+xml/);
 
     expect(render(<ProfileAvatar name="업체 D" />).container.querySelector(".avatar")).toHaveTextContent("D");
+  });
+});
+
+describe("커뮤니티 작성자 (11/26)", () => {
+  it("글·댓글 작성자 이름 옆에 사진, 없으면 오리, 둘 다 없으면 첫 글자", () => {
+    const duck = { role: "VENUE", seed: "abc", pick: null };
+    const drawn = render(<Author author={{ name: "업체 C", kind: "SUPPLIER", duck }} />).container;
+    expect(drawn).toHaveTextContent("업체 C · 업체");
+    expect(drawn.querySelector(".avatar--duck img")?.getAttribute("src")).toMatch(/^data:image\/svg\+xml/);
+
+    const photo = render(<Author author={{ name: "광주밴드", kind: "USER", avatarUrl: "/media/u_t.webp", duck }} big />).container;
+    expect((photo.querySelector(".avatar") as HTMLElement).style.backgroundImage).toContain("/media/u_t.webp");
+
+    expect(render(<Author author={{ name: "광주밴드", kind: "USER" }} />).container.querySelector(".avatar")).toHaveTextContent("광");
   });
 });
