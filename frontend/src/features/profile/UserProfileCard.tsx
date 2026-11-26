@@ -6,8 +6,9 @@
 import type { CSSProperties } from "react";
 import type { UserProfile } from "../../shared/api/types";
 import { Ico } from "../../shared/ui/Ico";
-import { initialOf, yearMonth } from "./labels";
+import { yearMonth } from "./labels";
 import "./profile.css";
+import { ProfileAvatar } from "../../shared/ui/ProfileAvatar";
 
 export function UserProfileCard({ profile }: { profile: UserProfile }) {
   const name = profile.nickname ?? "";
@@ -15,15 +16,7 @@ export function UserProfileCard({ profile }: { profile: UserProfile }) {
   return (
     <div className="summary" style={{ "--cols": 4 } as CSSProperties}>
       <div className="profile-card__who">
-        <span
-          className="avatar avatar--lg"
-          role={photo ? "img" : undefined}
-          aria-label={photo ? `${name} 프로필 사진` : undefined}
-          aria-hidden={photo ? undefined : true}
-          style={photo ? ({ "--img": `url('${photo}')` } as CSSProperties) : undefined}
-        >
-          {photo ? null : initialOf(name)}
-        </span>
+        <ProfileAvatar className="avatar avatar--lg" name={name} src={photo} duck={profile.duck} size={72} label={`${name} 프로필 사진`} />
         <div>
           <b className="profile-card__name">{name}</b>
           <span>{yearMonth(profile.joinedAt)} 가입</span>

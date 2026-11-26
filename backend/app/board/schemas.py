@@ -5,6 +5,7 @@
 from datetime import datetime
 from typing import Literal
 
+from app.profile.duck import DuckOut
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -66,6 +67,7 @@ class PrPostOut(BaseModel):
     bumped_at: datetime
     created_at: datetime
     supplier_image_url: str | None = None  # 글쓴 업체 대표 이미지 (11/25)
+    supplier_duck: DuckOut | None = None  # 사진이 없을 때 그릴 오리 (11/26)
 
 
 class PrPostSavedOut(PrPostOut):

@@ -1,3 +1,4 @@
+import type { Duck } from "../../shared/ui/duck";
 /**
  * 견적 요청(직접 오퍼)·관심 업체 API (api-contract.md 4.4, 이슈 #32, AC-F3-16~19).
  * 화면 문구는 "견적 요청" (11/19 팀 결정), 주소·코드는 명세대로 offer.
@@ -51,6 +52,7 @@ export interface Favorite {
   stageTypes: StageType[];
   /** 업체 대표 이미지 (11/25) */
   imageUrl?: string | null;
+  duck?: Duck | null;
 }
 
 export const OFFER_STATUS_LABEL: Record<OfferStatus, string> = {

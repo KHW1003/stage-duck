@@ -274,7 +274,14 @@ def me(response: Response, user: User = Depends(current_member), db: Session = D
         landing=service.landing(db, user),
         suspension=service.suspension(db, user),
         avatar_url=_avatar(db, user),
+        duck=_duck(db, user),
     )
+
+
+def _duck(db: Session, user: User):
+    from app.profile.duck import duck_of  # 1번 profile — 함수 안 import (순환 방지)
+
+    return duck_of(db, user.id)
 
 
 def _avatar(db: Session, user: User) -> str | None:

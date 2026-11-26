@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from app.board.schemas import PrPostItemOut
+from app.profile.duck import DuckOut
 from app.supplier.schemas import VenueListItem
 
 _IN = ConfigDict(populate_by_name=True, alias_generator=to_camel, str_strip_whitespace=True)
@@ -23,6 +24,7 @@ class SupplierProfileOut(BaseModel):
     id: int
     company_name: str
     image_url: str | None
+    duck: DuckOut
     categories: list[str]
     intro: str | None
     setup_minutes: int | None
@@ -44,6 +46,7 @@ class UserProfileOut(BaseModel):
     id: int
     nickname: str | None
     profile_image_url: str | None
+    duck: DuckOut
     joined_at: datetime
     usage_count: int
     rejection_count: int
@@ -56,6 +59,7 @@ class MyProfileIn(BaseModel):
 
     nickname: str | None = Field(default=None, max_length=30)
     profile_file_id: int | None = None
+    duck_avatar: str | None = None  # 고른 오리 "입는 것-드는 것", null 이면 자동 오리
 
 
 class SupplierProfileIn(BaseModel):
@@ -64,3 +68,4 @@ class SupplierProfileIn(BaseModel):
     model_config = _IN
 
     image_file_id: int | None = None
+    duck_avatar: str | None = None  # 고른 오리 "입는 것-드는 것", null 이면 자동 오리

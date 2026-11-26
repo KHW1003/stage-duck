@@ -34,6 +34,8 @@ class User(Base):
     profile_file_id: Mapped[int | None] = mapped_column(
         BigID, ForeignKey("files.id", name="fk_users_profile_file_id", use_alter=True, ondelete="SET NULL")
     )
+    # 고른 오리 프로필 "입는 것-드는 것" (11/26). NULL 이면 자동 오리 (profile/calc.py)
+    duck_avatar: Mapped[str | None] = mapped_column(String(8))
     signup_purpose: Mapped[str | None] = mapped_column(String(30))
     musician_type: Mapped[str | None] = mapped_column(String(20))
     signup_channel: Mapped[str | None] = mapped_column(String(30))

@@ -1,3 +1,4 @@
+import type { Duck } from "../ui/duck";
 /**
  * API 요청·응답 타입 (api-contract.md 와 같은 이름, camelCase). 묶음마다 자기 타입을 여기에 더한다.
  */
@@ -21,6 +22,8 @@ export interface Me {
   suspension?: Suspension | null;
   /** 머리줄 계정 버튼 사진: 사용자 프로필 사진 / 업체 대표 이미지 (11/25). 없으면 이름 첫 글자 */
   avatarUrl?: string | null;
+  /** 사진이 없을 때 그릴 오리 (11/26) */
+  duck?: Duck | null;
 }
 
 export interface Suspension {
@@ -513,6 +516,7 @@ export interface PrPost extends Omit<PrPostItem, "thumbUrl"> {
   createdAt: string;
   /** 글쓴 업체 대표 이미지 (11/25) */
   supplierImageUrl?: string | null;
+  supplierDuck?: Duck | null;
 }
 
 /** POST·PUT /pr-posts 응답 (#31, AC-F4-03): 전화번호·계좌번호·외부 링크가 있으면 저장은 하고 경고만 */
@@ -666,6 +670,8 @@ export interface ChatRoom {
   latestQuoteVersionId?: number | null;
   /** 상대 사진: 사용자가 보면 업체 대표 이미지, 업체가 보면 사용자 프로필 사진 (11/25) */
   partnerImageUrl?: string | null;
+  /** 상대 사진이 없을 때 그릴 오리 (11/26) */
+  partnerDuck?: Duck | null;
 }
 
 /** REST 메시지. senderUserId NULL = 시스템 메시지, refId 는 QUOTE 면 quote_version_id */
@@ -744,6 +750,7 @@ export interface SupplierProfile {
   id: number;
   companyName: string;
   imageUrl: string | null;
+  duck: Duck;
   categories: SupplierCategory[];
   intro: string | null;
   setupMinutes: number | null;
@@ -762,6 +769,7 @@ export interface UserProfile {
   id: number;
   nickname: string | null;
   profileImageUrl: string | null;
+  duck: Duck;
   joinedAt: string;
   usageCount: number;
   rejectionCount: number;
@@ -771,4 +779,6 @@ export interface UserProfile {
 export interface MyProfileRequest {
   nickname?: string;
   profileFileId?: number | null;
+  /** 고른 오리 "입는 것-드는 것" (11/26), null 이면 자동 오리 */
+  duckAvatar?: string | null;
 }

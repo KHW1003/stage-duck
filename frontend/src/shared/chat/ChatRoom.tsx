@@ -624,7 +624,7 @@ export function ChatRoom({ roomId, room, meId, role, onBack, onClose, onPin }: P
       <div className="chat-panel__bar chat-panel__bar--room">
         {back}
         <div className="chat-panel__who">
-          <Avatar name={room.partnerName} src={room.partnerImageUrl} />
+          <Avatar name={room.partnerName} src={room.partnerImageUrl} duck={room.partnerDuck} />
           <div>
             <b>
               {room.partnerName} <span className="tag">{STAGE_NAME[room.stageType]}</span>

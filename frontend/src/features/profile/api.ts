@@ -76,3 +76,16 @@ export function useChangeSupplierImage() {
     },
   });
 }
+
+/** 오리 고르기 (11/26): 고르면 대표 사진을 빼고 그 오리로 바로 저장 */
+export function usePickSupplierDuck() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (duckAvatar: string) =>
+      api<SupplierProfile>("/supplier/profile", { method: "PATCH", body: JSON.stringify({ imageFileId: null, duckAvatar }) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["profile", "supplier"] });
+      void queryClient.invalidateQueries({ queryKey: ME_KEY });
+    },
+  });
+}

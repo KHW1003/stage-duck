@@ -17,3 +17,11 @@
 /* 내 업체 프로필: 대표 사진 바꾸기·빼기 (11/24) */
 .profile-image-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .profile-image-actions .field__error { flex-basis: 100%; margin: 0; }
+/* 프로필 사진 바꾸기 창: 오리 고르기 (11/26) */
+.duck-picker__desc { margin: 0 0 12px; color: var(--sd-muted); font-size: var(--sd-text-desc); }
+.duck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--sd-avatar) * 1.5), 1fr)); gap: 8px; max-height: 60vh; overflow-y: auto; }
+.duck-pick { min-height: var(--sd-touch); padding: 4px; border: 1px solid var(--sd-line); border-radius: var(--sd-r-box); background: var(--sd-bg); cursor: pointer; }
+.duck-pick img { display: block; width: 100%; height: auto; }
+.duck-pick:hover { border-color: var(--sd-line-strong); }
+.duck-pick[aria-pressed="true"] { border-color: var(--sd-ink); box-shadow: 0 0 0 3px var(--sd-focus-ring); }
+.duck-pick:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
