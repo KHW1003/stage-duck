@@ -15,7 +15,7 @@ const USER: Me = {
 const SUPPLIER_D: Me = { ...USER, id: 5, role: "SUPPLIER", nickname: null, name: "업체D담당", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" };
 
 const SUPPLIER: SupplierProfile = {
-  id: 4, companyName: "업체 D", imageUrl: "/media/supplier_image/2026/11/d_t.webp", categories: ["EQUIPMENT", "INSTALL", "ENGINEER"],
+  id: 4, companyName: "업체 D", imageUrl: "/media/supplier_image/2026/11/d_t.webp", duck: { role: "EQUIPMENT", seed: "0f0f0f0f0f0f", pick: null }, categories: ["EQUIPMENT", "INSTALL", "ENGINEER"],
   intro: "관객 50~150명 밴드 공연 음향을 맡아요.", setupMinutes: 90, teardownMinutes: 60, engineerYears: 7, bandExperience: true,
   hasLiabilityInsurance: true, soundCertification: null, joinedAt: "2026-09-02T10:00:00",
   posts: [{
@@ -25,7 +25,7 @@ const SUPPLIER: SupplierProfile = {
   venues: [{ id: 7, name: "공간 D", sido: "광주광역시", sigungu: "동구", venueType: "CULTURE_SPACE", maxCapacity: 120, rentalFee: 500000 }],
 };
 
-const PROFILE: UserProfile = { id: 3, nickname: "가을밤밴드", profileImageUrl: null, joinedAt: "2026-11-02T10:00:00", usageCount: 1, rejectionCount: 2 };
+const PROFILE: UserProfile = { id: 3, nickname: "가을밤밴드", profileImageUrl: null, duck: { role: "USER", seed: "a1b2c3d4e5f6", pick: null }, joinedAt: "2026-11-02T10:00:00", usageCount: 1, rejectionCount: 2 };
 
 type Reply = { status: number; body?: unknown };
 type Call = { url: string; method: string; body: unknown };
@@ -124,7 +124,7 @@ describe("업체 프로필 (/suppliers/:id)", () => {
     expect(calls.some(({ url }) => url === "/api/v1/suppliers/5/profile")).toBe(false);
   });
 
-  it("FR-PROFILE-01 내 업체 프로필에서 대표 사진을 고르면 SUPPLIER_IMAGE 로 올리고 바로 저장한다 (남의 프로필에는 버튼 없음)", async () => {
+  it("FR-PROFILE-01 내 업체 프로필 [사진 바꾸기] 창에서 [사진 올리기]로 고르면 SUPPLIER_IMAGE 로 올리고 바로 저장한다", async () => {
     const user = userEvent.setup();
     const withImage = { ...SUPPLIER, imageUrl: "/media/supplier_image/x_t.webp" };
     const calls = mockServer({
@@ -134,7 +134,8 @@ describe("업체 프로필 (/suppliers/:id)", () => {
       "PATCH /api/v1/supplier/profile": { status: 200, body: withImage },
     });
     renderAt("/supplier/profile");
-    const input = await screen.findByLabelText("대표 사진 바꾸기");
+    await user.click(await screen.findByRole("button", { name: "사진 바꾸기" }));
+    const input = screen.getByLabelText("사진 올리기");
     await user.upload(input, new File(["x"], "logo.png", { type: "image/png" }));
     await waitFor(() => expect(calls.some((c) => c.method === "PATCH" && c.url === "/api/v1/supplier/profile")).toBe(true));
     expect(calls.find((c) => c.method === "POST" && c.url === "/api/v1/files")!.body).toMatchObject({ purpose: "SUPPLIER_IMAGE" });
@@ -146,7 +147,7 @@ describe("업체 프로필 (/suppliers/:id)", () => {
     mockServer({ "GET /api/v1/suppliers/5/profile": { status: 200, body: SUPPLIER } });
     renderAt("/suppliers/5");
     expect(await screen.findByRole("heading", { level: 1, name: "업체 D" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("대표 사진 바꾸기")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "사진 바꾸기" })).not.toBeInTheDocument();
   });
 
   it("소개 글 상세의 업체 이름을 누르면 업체 프로필로 간다", async () => {
@@ -247,7 +248,7 @@ describe("마이페이지 (/mypage)", () => {
     expect(input).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("AC-F5-16 사진을 고르면 PROFILE 로 먼저 올리고, 저장할 때 파일 번호만 보낸다", async () => {
+  it("AC-F5-16 [사진 바꾸기] 창에서 [사진 올리기]로 고르면 PROFILE 로 올리고 그 파일 번호로 바로 저장한다", async () => {
     const user = userEvent.setup();
     const calls = mockServer({
       ...AS_USER,
@@ -256,12 +257,28 @@ describe("마이페이지 (/mypage)", () => {
     });
     renderAt("/mypage");
 
-    await user.upload(await screen.findByLabelText("사진 바꾸기"), new File(["x"], "me.png", { type: "image/png" }));
-    await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
-    expect(calls.find((c) => c.method === "POST")?.body).toMatchObject({ purpose: "PROFILE" });
-
-    await user.click(screen.getByRole("button", { name: "저장" }));
+    await user.click(await screen.findByRole("button", { name: "사진 바꾸기" }));
+    await user.upload(screen.getByLabelText("사진 올리기"), new File(["x"], "me.png", { type: "image/png" }));
     await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ profileFileId: 51 }));
+    expect(calls.find((c) => c.method === "POST")?.body).toMatchObject({ purpose: "PROFILE" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "프로필 사진 바꾸기" })).not.toBeInTheDocument());
+  });
+
+  it("오리 프로필: 사진이 없으면 오리가 보이고, [사진 바꾸기]에서 오리를 고르면 사진을 빼고 그 오리로 바로 저장한다", async () => {
+    const user = userEvent.setup();
+    const calls = mockServer({
+      ...AS_USER,
+      "PATCH /api/v1/me/profile": { status: 200, body: { ...PROFILE, duck: { ...PROFILE.duck, pick: "3-1" } } },
+    });
+    const { container } = renderAt("/mypage");
+    await user.click(await screen.findByRole("button", { name: "사진 바꾸기" }));
+    const dialog = screen.getByRole("dialog", { name: "프로필 사진 바꾸기" });
+    const ducks = within(dialog).getAllByRole("button", { name: /^오리 \d+$/ });
+    expect(ducks).toHaveLength(24); // 뮤지션: 입는 것 6 × 드는 것 4
+    await user.click(ducks[13]); // 3-1
+    await waitFor(() => expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ duckAvatar: "3-1", profileFileId: null }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(container.querySelector(".avatar--duck img")?.getAttribute("src")).toMatch(/^data:image\/svg\+xml/);
   });
 
   it("마이페이지는 뮤지션만: 방문자는 로그인으로, 업체는 찾을 수 없음", async () => {

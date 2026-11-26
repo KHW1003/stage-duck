@@ -54,6 +54,7 @@ def _out(db: Session, post: PrPost) -> PrPostOut:
         bumped_at=post.bumped_at,
         created_at=post.created_at,
         supplier_image_url=files.avatar_url(db, post.supplier.image_file_id),
+        supplier_duck=_duck(db, post.supplier.user_id),
     )
 
 
@@ -282,3 +283,9 @@ def bump_post(db: Session, user: User, post_id: int, *, now: datetime) -> PrPost
     db.commit()
     db.refresh(post)
     return _out(db, post)
+
+
+def _duck(db: Session, user_id: int):
+    from app.profile.duck import duck_of  # profile 이 board 를 import 해서 함수 안에서
+
+    return duck_of(db, user_id)

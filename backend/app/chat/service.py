@@ -134,12 +134,18 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
         partner = {r.id: names[r.supplier_id] for r in rooms}
         photos = {sid: files_service.avatar_url(db, img) for sid, _, img in rows}
         partner_photo = {r.id: photos.get(r.supplier_id) for r in rooms}
+        owners = dict(db.execute(select(Supplier.id, Supplier.user_id).where(Supplier.id.in_(names))).all())
+        partner_user = {r.id: owners.get(r.supplier_id) for r in rooms}
     else:
         rows = db.execute(select(User.id, User.nickname, User.profile_file_id).where(User.id.in_({r.user_id for r in rooms}))).all()
         names = {uid: nick for uid, nick, _ in rows}
         partner = {r.id: names.get(r.user_id) or DEFAULT_PARTNER_NAME for r in rooms}
         photos = {uid: files_service.avatar_url(db, img) for uid, _, img in rows}
         partner_photo = {r.id: photos.get(r.user_id) for r in rooms}
+        partner_user = {r.id: r.user_id for r in rooms}
+    from app.profile.duck import ducks  # 1번 profile (11/26 오리 프로필)
+
+    partner_ducks = ducks(db, {u for u in partner_user.values() if u is not None})
 
     rows = []
     for room in rooms:
@@ -157,6 +163,7 @@ def list_rooms(db: Session, user: User) -> list[dict[str, Any]]:
             "last_message": last,
             "latest_quote_version_id": latest_quote.get((room.stage_id, room.supplier_id)),
             "partner_image_url": partner_photo.get(room.id),
+            "partner_duck": partner_ducks.get(partner_user.get(room.id)),
         })
     rows.sort(key=lambda r: (r["pinned_at"] is None, -(last_ids.get(r["room_id"]) or 0), -r["room_id"]))
     return rows

@@ -38,7 +38,7 @@ function withClient(ui: React.ReactNode) {
 afterEach(() => vi.unstubAllGlobals());
 
 const SUPPLIER: SupplierProfile = {
-  id: 4, companyName: "업체 D", imageUrl: null, categories: ["EQUIPMENT"], intro: null, setupMinutes: 90, teardownMinutes: null,
+  id: 4, companyName: "업체 D", imageUrl: null, duck: { role: "EQUIPMENT", seed: "0f0f0f0f0f0f", pick: null }, categories: ["EQUIPMENT"], intro: null, setupMinutes: 90, teardownMinutes: null,
   engineerYears: null, bandExperience: null, hasLiabilityInsurance: null, soundCertification: null, joinedAt: "2026-09-02T10:00:00",
   posts: [], venues: [],
 };

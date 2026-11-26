@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from sqlalchemy.orm import Session
 
+from app.profile.duck import DuckOut
 from app.auth.deps import require_role
 from app.core.db import get_db
 from app.models.supplier import Supplier
@@ -90,6 +91,7 @@ class FavoriteOut(BaseModel):
     categories: list[str]
     stage_types: list[str]  # 이 업체에게 견적을 요청할 수 있는 단계 (VENUE·EQUIPMENT·ENGINEER)
     image_url: str | None = None  # 업체 대표 이미지 (11/25)
+    duck: DuckOut | None = None  # 사진이 없을 때 그릴 오리 (11/26)
 
 
 def _offer_out(o, company_name: str) -> OfferOut:
@@ -101,11 +103,13 @@ def _offer_out(o, company_name: str) -> OfferOut:
 
 def _favorite_out(db: Session, s: Supplier) -> FavoriteOut:
     from app.files.service import avatar_url
+    from app.profile.duck import duck_of
 
     cats = sorted(c.category for c in s.categories)
     return FavoriteOut(
         supplier_id=s.id, company_name=s.company_name, categories=cats,
         stage_types=sorted({CATEGORY_STAGE[c] for c in cats}), image_url=avatar_url(db, s.image_file_id),
+        duck=duck_of(db, s.user_id),
     )
 
 

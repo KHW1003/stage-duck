@@ -156,7 +156,7 @@ def test_ac_f5_16_related_supplier_sees_only_public_fields(client, db, related, 
 
     assert res.status_code == 200, res.text
     body = res.json()
-    assert set(body) == {"id", "nickname", "profileImageUrl", "joinedAt", "usageCount", "rejectionCount"}
+    assert set(body) == {"id", "nickname", "profileImageUrl", "duck", "joinedAt", "usageCount", "rejectionCount"}  # duck: 오리 프로필 (11/26)
     assert (body["id"], body["nickname"], body["usageCount"], body["rejectionCount"]) == (user.id, "가을밤밴드", 3, 2)
     assert body["profileImageUrl"].startswith("/media/profile/")
     for secret in (user.name, user.email, user.phone):
@@ -210,7 +210,7 @@ def test_ac_f5_17_supplier_or_missing_target_is_404_even_for_admin(client, db):
 def test_ac_f5_16_me_profile_shows_what_suppliers_see(client, db):
     user = make_user(db, nickname="가을밤밴드")
     body = login_as(client, user).get(ME_URL).json()
-    assert set(body) == {"id", "nickname", "profileImageUrl", "joinedAt", "usageCount", "rejectionCount"}
+    assert set(body) == {"id", "nickname", "profileImageUrl", "duck", "joinedAt", "usageCount", "rejectionCount"}  # duck: 오리 프로필 (11/26)
     assert (body["nickname"], body["usageCount"], body["rejectionCount"]) == ("가을밤밴드", 0, 0)
 
 

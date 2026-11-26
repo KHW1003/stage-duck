@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
+from app.profile.duck import DuckOut
 from app.chat.calc import attachment_url
 
 _IN = ConfigDict(populate_by_name=True, alias_generator=to_camel)
@@ -115,6 +116,7 @@ class RoomOut(BaseModel):
     unread_count: int
     last_message: LastMessageOut | None
     latest_quote_version_id: int | None = None
+    partner_duck: DuckOut | None = None  # 상대 사진이 없을 때 그릴 오리 (11/26)
     partner_image_url: str | None = None  # 상대 사진 (11/25)  # 그 방의 가장 최근 견적서 버전 → [견적서 보기] (11/25)
 
 

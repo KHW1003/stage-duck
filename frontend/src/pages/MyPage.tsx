@@ -7,15 +7,16 @@
  * 목업과 다르게 정한 것: [비밀번호 바꾸기]·[탈퇴]·마케팅 수신 뺌,
  * 생년월일·로그인 방식은 GET /me 에 없어 뺌, 메뉴 옆 숫자는 서버 값이 없어 뺌.
  */
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMyProfile, useUpdateMyProfile, useUploadProfilePhoto } from "../features/profile/api";
-import { initialOf } from "../features/profile/labels";
+import { DuckPicker } from "../features/profile/DuckPicker";
 import { nicknameError } from "../features/auth/rules";
 import { useDupCheck } from "../features/auth/useDupCheck";
 import "../features/profile/profile.css";
 import { UserProfileCard } from "../features/profile/UserProfileCard";
-import type { MyProfileRequest, UploadedFile } from "../shared/api/types";
+import type { MyProfileRequest } from "../shared/api/types";
+import { ProfileAvatar } from "../shared/ui/ProfileAvatar";
 import { useLogout, useMe } from "../shared/auth/useMe";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { ErrorNotice, errorMessageOf, fieldErrorOf } from "../shared/ui/ErrorText";
@@ -75,7 +76,7 @@ export function MyPage() {
   const upload = useUploadProfilePhoto();
   // 입력 중인 값만 여기 둔다 (null = 아직 안 고침). 서버 값은 profile.data 그대로 쓴다
   const [nickname, setNickname] = useState<string | null>(null);
-  const [photo, setPhoto] = useState<UploadedFile | null>(null);
+  const [picking, setPicking] = useState(false);
 
   const saved = profile.data;
   const dup = useDupCheck();
@@ -86,7 +87,11 @@ export function MyPage() {
     (tried && nickname !== null ? nicknameError(nickname) : undefined) ??
     fieldErrorOf(update.error, "nickname") ??
     (nickDup?.ok === false ? nickDup.msg : undefined);
-  const photoUrl = photo?.thumbUrl ?? saved?.profileImageUrl ?? null;
+
+  /** 오리를 고르면 사진을 빼고, 사진을 올리면 그 사진으로 — 둘 다 바로 저장한다 (11/26) */
+  const close = { onSuccess: () => setPicking(false) };
+  const pickDuck = (pick: string) => update.mutate({ duckAvatar: pick, profileFileId: null }, close);
+  const uploadPhoto = (file: File) => upload.mutate(file, { onSuccess: (f) => update.mutate({ profileFileId: f.id }, close) });
 
   function save() {
     if (!saved) return;
@@ -94,12 +99,10 @@ export function MyPage() {
     setTried(true);
     if (nickname !== null && nicknameError(nickname)) return;
     if (nickname !== null && nickname.trim() !== saved.nickname) body.nickname = nickname.trim();
-    if (photo) body.profileFileId = photo.id;
     if (Object.keys(body).length === 0) return;
     update.mutate(body, {
       onSuccess: () => {
         setNickname(null);
-        setPhoto(null);
       },
     });
   }
@@ -169,30 +172,23 @@ export function MyPage() {
                   <span className="form-table__th">프로필 사진</span>
                   <span className="form-table__td">
                     <span className="form-table__inline">
-                      <span
-                        className="avatar"
-                        aria-hidden="true"
-                        style={photoUrl ? ({ "--img": `url('${photoUrl}')` } as CSSProperties) : undefined}
-                      >
-                        {photoUrl ? null : initialOf(saved?.nickname ?? null)}
-                      </span>
-                      <label className="btn btn--sm profile-photo">
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept="image/jpeg,image/png,image/webp"
-                          aria-label="사진 바꾸기"
-                          disabled={upload.isPending}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            e.target.value = "";
-                            if (file) upload.mutate(file, { onSuccess: setPhoto });
-                          }}
-                        />
+                      <ProfileAvatar name={saved?.nickname ?? ""} src={saved?.profileImageUrl} duck={saved?.duck} />
+                      <button type="button" className="btn btn--sm" disabled={!saved} onClick={() => setPicking(true)}>
                         <Ico name="upload" sm />
-                        {upload.isPending ? "올리는 중" : "사진 바꾸기"}
-                      </label>
+                        사진 바꾸기
+                      </button>
                     </span>
+                    {picking && saved && (
+                      <DuckPicker
+                        duck={saved.duck}
+                        hasPhoto={Boolean(saved.profileImageUrl)}
+                        busy={upload.isPending || update.isPending}
+                        error={upload.error ?? update.error}
+                        onPick={pickDuck}
+                        onUpload={uploadPhoto}
+                        onClose={() => setPicking(false)}
+                      />
+                    )}
                     <FieldError text={upload.isError ? errorMessageOf(upload.error) : undefined} />
                   </span>
                 </div>

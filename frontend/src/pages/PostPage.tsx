@@ -18,6 +18,7 @@ import { ErrorNotice } from "../shared/ui/ErrorText";
 import styles from "../features/board/Board.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { AdSlot } from "../shared/ui/AdSlot";
+import { ProfileAvatar } from "../shared/ui/ProfileAvatar";
 
 function Gallery({ post }: { post: PrPost }) {
   const [current, setCurrent] = useState(0);
@@ -122,13 +123,7 @@ export function PostPage() {
         <aside className={styles.side} aria-label="업체">
           <div className={styles.sideSec}>
             <div className={styles.who}>
-              <span
-                className={styles.avatar}
-                aria-hidden="true"
-                style={p.supplierImageUrl ? { backgroundImage: `url('${p.supplierImageUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-              >
-                {p.supplierImageUrl ? null : p.companyName.replace(/^업체\s*/, "").slice(0, 1)}
-              </span>
+              <ProfileAvatar className={styles.avatar} name={p.companyName} src={p.supplierImageUrl} duck={p.supplierDuck} />
               <div>
                 <b>
                   <Link to={`/suppliers/${p.supplierId}`}>{p.companyName}</Link>

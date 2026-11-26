@@ -5,6 +5,7 @@
 from datetime import date, datetime
 from typing import Literal
 
+from app.profile.duck import DuckOut
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -152,3 +153,4 @@ class MeOut(BaseModel):
     landing: str
     suspension: SuspensionOut | None = None  # 정지 계정일 때만
     avatar_url: str | None = None  # 머리줄 계정 버튼 사진: 사용자 프로필 사진 / 업체 대표 이미지 (11/25)
+    duck: DuckOut | None = None  # 사진이 없을 때 그릴 오리 (11/26)

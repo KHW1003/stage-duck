@@ -20,6 +20,7 @@ import { useMarkRead, useNotifications, useUnreadCount } from "../../features/no
 import { useHideOnScroll, useMobile } from "./useMobile";
 import { ACCOUNT_LINKS, HOME, LOGO_HOME, MENUS, NOTIFICATIONS_PATH, type MenuItem } from "./menus";
 import styles from "./Gnb.module.css";
+import { ProfileAvatar } from "../ui/ProfileAvatar";
 
 /** 계정 메뉴 머리 둘째 줄 (목업: "사용자 계정" / "업체 계정 · 승인" / "관리자 계정 · 이메일") */
 function roleText(kind: LayoutKind, me: Me): string {
@@ -231,9 +232,7 @@ export function AccountMenu({ me, kind }: { me: Me; kind: LayoutKind }) {
     <Popover
       button={({ open, toggle }) => (
         <button type="button" className={styles.user} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
-          <span className={styles.avatar} aria-hidden="true" style={me.avatarUrl ? { backgroundImage: `url('${me.avatarUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
-            {me.avatarUrl ? null : name.slice(0, 1)}
-          </span>
+          <ProfileAvatar className={styles.avatar} name={name} src={me.avatarUrl} duck={me.duck} size={34} />
           <span className={styles.userName}>{name}</span>
           <Icon name="down" size="sm" />
         </button>

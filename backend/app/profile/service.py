@@ -16,6 +16,7 @@ from app.files import service as files
 from app.models.file import StoredFile
 from app.models.supplier import CATEGORIES, Supplier
 from app.models.user import User
+from app.profile import calc, duck
 from app.profile.schemas import MyProfileIn, SupplierProfileIn, SupplierProfileOut, UserProfileOut
 from app.request import rejection
 from app.request import service as request_service
@@ -41,6 +42,7 @@ def supplier_profile(db: Session, supplier_id: int) -> SupplierProfileOut:
         id=s.id,
         company_name=s.company_name,
         image_url=_image_url(db, s.image_file_id),
+        duck=duck.duck_of(db, s.user_id),
         categories=[c for c in CATEGORIES if c in approved],
         intro=s.intro,
         setup_minutes=s.setup_minutes,
@@ -66,6 +68,7 @@ def _user_profile(db: Session, user: User, now: datetime) -> UserProfileOut:
         id=user.id,
         nickname=user.nickname,
         profile_image_url=_image_url(db, user.profile_file_id),
+        duck=duck.duck_of(db, user.id),
         joined_at=user.created_at,
         usage_count=counts["usage_count"],
         rejection_count=counts["rejection_count"],
@@ -93,10 +96,21 @@ def _nickname_error(status: int, code: str, message: str) -> AppError:
     return AppError(status, code, message, [{"field": "nickname", "reason": message}])
 
 
+def _set_duck(db: Session, user: User, body: MyProfileIn | SupplierProfileIn) -> None:
+    """고른 오리를 저장한다 (보낸 경우만). 그 계정 종류에 없는 조합은 400."""
+    if "duck_avatar" not in body.model_fields_set:
+        return
+    if not calc.valid_pick(duck.kind_of(db, user), body.duck_avatar):
+        reason = "고를 수 있는 오리가 아니에요. 목록에서 다시 골라 주세요."
+        raise AppError(400, "VALIDATION_FAILED", "입력한 내용을 확인해 주세요.", [{"field": "duckAvatar", "reason": reason}])
+    user.duck_avatar = body.duck_avatar
+
+
 def update_my_profile(db: Session, user: User, body: MyProfileIn, *, now: datetime) -> UserProfileOut:
-    """FR-PROFILE-02: 닉네임(빈칸 400, 중복 409 NICKNAME_TAKEN)·프로필 사진(내 TEMP PROFILE 파일만). 보낸 칸만 바꾼다."""
+    """FR-PROFILE-02: 닉네임(빈칸 400, 중복 409 NICKNAME_TAKEN)·프로필 사진(내 TEMP PROFILE 파일만)·오리(11/26). 보낸 칸만 바꾼다."""
     sent = body.model_fields_set
     old_photo: StoredFile | None = None
+    _set_duck(db, user, body)
 
     if "nickname" in sent:
         if not body.nickname:
@@ -125,12 +139,13 @@ def update_my_profile(db: Session, user: User, body: MyProfileIn, *, now: dateti
 
 
 def update_supplier_image(db: Session, user: User, body: SupplierProfileIn, *, now: datetime) -> SupplierProfileOut:
-    """FR-PROFILE-01: 업체 대표 이미지 바꾸기·빼기. 내가 올린 TEMP SUPPLIER_IMAGE 파일만 (남의 파일·다른 용도는 files 가 400).
+    """FR-PROFILE-01: 업체 대표 이미지 바꾸기·빼기, 오리 고르기 (11/26). 내가 올린 TEMP SUPPLIER_IMAGE 파일만 (남의 파일·다른 용도는 files 가 400).
     승인 업체만 (프로필이 공개되는 업체). 예전 사진은 DELETED 로 바꾸고 커밋 뒤 저장소에서 지운다 (내 프로필 사진과 같은 방식)."""
     supplier = supplier_service.get_application(db, user)
     if supplier.review_status != "APPROVED":
         raise not_found()
     old: StoredFile | None = None
+    _set_duck(db, user, body)
     if body.image_file_id != supplier.image_file_id:
         if body.image_file_id is not None:
             files.attach_files(db, owner_id=user.id, file_ids=[body.image_file_id], purpose="SUPPLIER_IMAGE", now=now)
@@ -139,7 +154,7 @@ def update_supplier_image(db: Session, user: User, body: SupplierProfileIn, *, n
             if old is not None:
                 old.status = "DELETED"
         supplier.image_file_id = body.image_file_id
-        db.commit()
+    db.commit()
     if old is not None:
         files.remove_stored(old)
     return supplier_profile(db, supplier.id)

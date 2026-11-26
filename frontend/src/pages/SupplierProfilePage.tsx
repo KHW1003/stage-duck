@@ -4,11 +4,12 @@
  * 전화번호·사업자 서류는 서버도 돌려주지 않는다 (CLAUDE.md 20).
  * 목업과 다르게 정한 것: "거래 n건"은 2번 함수가 생기면 붙인다, [관심 업체 저장]은 #32, 활동 지역은 서버 칸이 없어 뺐다.
  */
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PR_CATEGORY_LABEL, monthDay } from "../features/board/labels";
-import { useChangeSupplierImage, useSupplierProfile } from "../features/profile/api";
-import { categoriesLabel, initialOf, yearMonth } from "../features/profile/labels";
+import { usePickSupplierDuck, useChangeSupplierImage, useSupplierProfile } from "../features/profile/api";
+import { DuckPicker } from "../features/profile/DuckPicker";
+import { categoriesLabel, yearMonth } from "../features/profile/labels";
 import "../features/profile/profile.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import type { VenueTypeCode } from "../features/venue/api";
@@ -17,6 +18,7 @@ import { ApiError } from "../shared/api/client";
 import type { SupplierProfile } from "../shared/api/types";
 import { NotFound } from "../shared/layout/NotFound";
 import { ErrorNotice, errorMessageOf } from "../shared/ui/ErrorText";
+import { ProfileAvatar } from "../shared/ui/ProfileAvatar";
 import { Ico } from "../shared/ui/Ico";
 import { SupplierReviews } from "../features/review/SupplierReviews";
 import { useReviewSummaries } from "../features/review/api";
@@ -62,37 +64,40 @@ function InfoTable({ s }: { s: SupplierProfile }) {
   );
 }
 
-/** 내 업체 프로필에서만: 대표 이미지 바꾸기·빼기 (FR-PROFILE-01, 11/24). 고르면 바로 올리고 저장한다 */
-function ImageControls({ hasImage }: { hasImage: boolean }) {
+/** 내 업체 프로필에서만: [사진 바꾸기] → 오리 고르기·사진 올리기 (FR-PROFILE-01, 11/26), [사진 빼기] */
+function ImageControls({ s }: { s: SupplierProfile }) {
   const change = useChangeSupplierImage();
+  const pickDuck = usePickSupplierDuck();
+  const [picking, setPicking] = useState(false);
+  const close = { onSuccess: () => setPicking(false) };
+  const busy = change.isPending || pickDuck.isPending;
   return (
     <div className="profile-image-actions">
-      <label className="btn btn--sm profile-photo">
-        <input
-          type="file"
-          className="sr-only"
-          accept="image/jpeg,image/png,image/webp"
-          aria-label="대표 사진 바꾸기"
-          disabled={change.isPending}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (file) change.mutate(file);
-          }}
-        />
+      <button type="button" className="btn btn--sm" disabled={busy} onClick={() => setPicking(true)}>
         <Ico name="upload" sm />
-        {change.isPending ? "올리는 중" : "대표 사진 바꾸기"}
-      </label>
-      {hasImage && (
-        <button type="button" className="btn btn--sm btn--ghost" disabled={change.isPending} onClick={() => change.mutate(null)}>
+        사진 바꾸기
+      </button>
+      {s.imageUrl && (
+        <button type="button" className="btn btn--sm btn--ghost" disabled={busy} onClick={() => change.mutate(null)}>
           사진 빼기
         </button>
       )}
-      {change.isError && (
+      {change.isError && !picking && (
         <p className="field__error" role="alert">
           <Ico name="warn" sm />
           {errorMessageOf(change.error)}
         </p>
+      )}
+      {picking && (
+        <DuckPicker
+          duck={s.duck}
+          hasPhoto={Boolean(s.imageUrl)}
+          busy={busy}
+          error={change.error ?? pickDuck.error}
+          onPick={(pick) => pickDuck.mutate(pick, close)}
+          onUpload={(file) => change.mutate(file, close)}
+          onClose={() => setPicking(false)}
+        />
       )}
     </div>
   );
@@ -122,15 +127,7 @@ export function SupplierProfilePage({ own = false }: { own?: boolean }) {
       <div className="page-top">
         <div className="container page-top__inner">
           <div className="who">
-            <span
-              className="avatar avatar--lg"
-              role={s.imageUrl ? "img" : undefined}
-              aria-label={s.imageUrl ? `${s.companyName} 사진` : undefined}
-              aria-hidden={s.imageUrl ? undefined : true}
-              style={photoStyle(s.imageUrl)}
-            >
-              {initialOf(s.companyName)}
-            </span>
+            <ProfileAvatar className="avatar avatar--lg" name={s.companyName} src={s.imageUrl} duck={s.duck} size={72} label={s.imageUrl ? `${s.companyName} 사진` : undefined} />
             <div>
               <ol className="page-top__crumb" aria-label="현재 위치">
                 <li>
@@ -150,7 +147,7 @@ export function SupplierProfilePage({ own = false }: { own?: boolean }) {
                   </span>
                 )}
               </div>
-              {own && <ImageControls hasImage={Boolean(s.imageUrl)} />}
+              {own && <ImageControls s={s} />}
             </div>
           </div>
         </div>
