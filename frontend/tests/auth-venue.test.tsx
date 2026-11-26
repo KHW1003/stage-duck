@@ -431,6 +431,20 @@ describe("공간 상세 (/venues/:id)", () => {
     expect(within(box).getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login?next=/venues/3");
   });
 
+  it("공간 찾기의 [요청서 쓰기]는 방문자에게 보이고, 로그인한 업체에게는 숨긴다 (11/26 시연 서버 점검)", async () => {
+    mockVenues();
+    const guest = renderAt("/venues");
+    expect(await screen.findByRole("link", { name: "요청서 쓰기" })).toHaveAttribute("href", "/performances/new");
+    guest.unmount();
+
+    mockVenues({
+      "GET /api/v1/me": { status: 200, body: { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" } },
+    });
+    renderAt("/venues");
+    await screen.findAllByRole("link", { name: /공간 [ABC]/ });
+    await vi.waitFor(() => expect(screen.queryByRole("link", { name: "요청서 쓰기" })).toBeNull());
+  });
+
   it("이미 로그인한 업체에게는 견적 요청 상자에 [로그인]을 보여 주지 않는다 (11/26)", async () => {
     mockVenues({
       "GET /api/v1/me": { status: 200, body: { ...USER, id: 7, role: "SUPPLIER", nickname: null, name: "업체 D", supplierReviewStatus: "APPROVED", landing: "/supplier/postings" } },

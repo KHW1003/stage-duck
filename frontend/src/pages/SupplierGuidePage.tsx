@@ -4,6 +4,7 @@
  */
 import { Link } from "react-router-dom";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { useMe } from "../shared/auth/useMe";
 import { OUTSIDE_PAYMENT_NOTICE } from "../features/support/terms";
 import { KitPageTop } from "../shared/layout/KitPageTop";
 import { Ico } from "../shared/ui/Ico";
@@ -53,6 +54,9 @@ const STEPS: Step[] = [
 
 export function SupplierGuidePage() {
   usePageMeta("업체 이용 가이드");
+  // 로그인한 뮤지션·관리자는 업체 화면(/supplier/*)을 못 열어서 그 버튼은 숨긴다. 방문자는 누르면 로그인으로 (11/26)
+  const me = useMe().data;
+  const canOpen = (to: string) => !to.startsWith("/supplier/") || !me || me.role === "SUPPLIER";
   return (
     <>
       <KitPageTop
@@ -71,7 +75,7 @@ export function SupplierGuidePage() {
                   <b>{s.title}</b>
                   <p>{s.desc}</p>
                 </div>
-                {s.action && (
+                {s.action && canOpen(s.action.to) && (
                   <Link className="btn btn--sm" to={s.action.to}>
                     {s.action.label}
                   </Link>

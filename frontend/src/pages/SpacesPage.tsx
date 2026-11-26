@@ -7,6 +7,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { usePageMeta } from "../features/seo/usePageMeta";
+import { useMe } from "../shared/auth/useMe";
 import { useVenues, type VenueListItem, type VenueTypeCode } from "../features/venue/api";
 import { CONDITIONS, DEFAULT_COND, SORTS, condFromQuery, condSummary, filterVenues, toQuery, type Cond, type Condition, type Sort } from "../features/venue/filter";
 import { REGIONS, TILE_TYPES, TYPE_LABEL, cardSpecs, shortSido, venuePhotos, won } from "../features/venue/view";
@@ -47,6 +48,7 @@ export function VenueCard({ v }: { v: VenueListItem }) {
 
 export function SpacesPage() {
   usePageMeta("공간 찾기");
+  const me = useMe().data;
   const [query] = useSearchParams();
   const initial = useMemo(() => condFromQuery(query), [query]);
   const [draft, setDraft] = useState<Cond>(initial);
@@ -244,11 +246,14 @@ export function SpacesPage() {
               </div>
             ))}
           </div>
-          <div className="btns btns--center mt-24">
-            <Link className="btn btn--primary btn--lg spaces__cta" to="/performances/new">
-              요청서 쓰기
-            </Link>
-          </div>
+          {/* 요청서는 뮤지션 전용 — 로그인한 업체·관리자에게는 숨긴다. 방문자는 누르면 로그인으로 (11/26) */}
+          {(!me || me.role === "USER") && (
+            <div className="btns btns--center mt-24">
+              <Link className="btn btn--primary btn--lg spaces__cta" to="/performances/new">
+                요청서 쓰기
+              </Link>
+            </div>
+          )}
         </section>
       </main>
     </>
