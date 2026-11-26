@@ -4,7 +4,8 @@ import { PageTop } from "../shared/layout/PageTop";
 import { ButtonLink } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { useMyBookmarks } from "../features/community/api";
-import { CATEGORY_LABEL, authorLabel, shortDate } from "../features/community/labels";
+import { Author } from "../features/community/Author";
+import { CATEGORY_LABEL, shortDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 
@@ -47,7 +48,9 @@ export function CommunitySavedPage() {
                     <td>
                       <Link to={`/community/${p.id}`}>{p.title}</Link>
                     </td>
-                    <td className={styles.small}>{authorLabel(p.author)}</td>
+                    <td className={styles.small}>
+                      <Author author={p.author} />
+                    </td>
                     <td className={`${styles.small} sd-num`}>{shortDate(p.createdAt, today)}</td>
                   </tr>
                 ))}

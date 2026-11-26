@@ -11,7 +11,8 @@ import { PageTop } from "../shared/layout/PageTop";
 import { ButtonLink } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
 import { DEFAULT_PARAMS, useFreePosts, type ListParams } from "../features/community/api";
-import { CATEGORIES, CATEGORY_LABEL, authorLabel, loginPath, shortDate } from "../features/community/labels";
+import { Author } from "../features/community/Author";
+import { CATEGORIES, CATEGORY_LABEL, loginPath, shortDate } from "../features/community/labels";
 import styles from "../features/community/Community.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
 import { Select } from "../shared/ui/Select";
@@ -153,7 +154,9 @@ export function CommunityPage() {
                     <Link to={`/community/${p.id}`}>{p.title}</Link>
                     {p.commentCount > 0 && <span className={`${styles.commentCount} sd-num`}>[{p.commentCount}]</span>}
                   </td>
-                  <td className={styles.small}>{authorLabel(p.author)}</td>
+                  <td className={styles.small}>
+                    <Author author={p.author} />
+                  </td>
                   <td className={`${styles.small} sd-num`}>{shortDate(p.createdAt, today)}</td>
                   <td className={`${styles.num} sd-num`}>{p.viewCount.toLocaleString()}</td>
                 </tr>

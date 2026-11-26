@@ -21,6 +21,8 @@
 .card { display: block; }
 .photo { display: block; width: 100%; aspect-ratio: var(--sd-photo-ratio); border-radius: var(--sd-r-box); background: var(--sd-photo); object-fit: cover; }
 .cardMeta { margin-top: 12px; color: var(--sd-muted); font-size: var(--sd-text-small); }
+/* 업체 프로필 그림 (11/26 오리 프로필) */
+.cardMeta .cardAvatar { --size: var(--sd-icon-photo); display: inline-grid; margin-right: 6px; vertical-align: middle; font-size: var(--sd-text-tiny); }
 .cardTitle { margin-top: 2px; font-size: var(--sd-text-lg); font-weight: 700; letter-spacing: -0.3px; line-height: 1.45; }
 .card:hover .cardTitle { text-decoration: underline; text-underline-offset: 3px; }
 .specs { display: flex; flex-wrap: wrap; margin-top: 4px; color: var(--sd-muted); font-size: var(--sd-text-small); }

@@ -13,6 +13,7 @@ import type { PrPostItem } from "../shared/api/types";
 import { PageTop } from "../shared/layout/PageTop";
 import { Button } from "../shared/ui/Button";
 import { ErrorNotice } from "../shared/ui/ErrorText";
+import { ProfileAvatar } from "../shared/ui/ProfileAvatar";
 import { Select } from "../shared/ui/Select";
 import styles from "../features/board/Board.module.css";
 import { usePageMeta } from "../features/seo/usePageMeta";
@@ -38,6 +39,7 @@ function PostCard({ post, rating }: { post: PrPostItem; rating?: ReviewSummary }
         <span className={styles.photo} aria-hidden="true" />
       )}
       <p className={styles.cardMeta}>
+        <ProfileAvatar className={`avatar ${styles.cardAvatar}`} name={post.companyName} src={post.supplierImageUrl} duck={post.supplierDuck} size={26} />
         {post.companyName} · {post.sido}
         {rating && (
           <>

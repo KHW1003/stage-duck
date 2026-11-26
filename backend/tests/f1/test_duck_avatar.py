@@ -139,3 +139,32 @@ def test_duck_shows_everywhere_chat_favorites_board(client, db, monkeypatch):
     assert fan.post("/api/v1/favorites", json={"supplierId": supplier.id}).status_code == 204
     fav = next(f for f in fan.get("/api/v1/favorites").json() if f["supplierId"] == supplier.id)
     assert fav["duck"] == mine["partnerDuck"]
+
+def test_duck_shows_in_community_and_board_list(client, db):
+    """커뮤니티 글·댓글 작성자 옆, 업체 찾기 목록 카드에도 사진이 없으면 오리, 있으면 사진 (11/26)."""
+    from datetime import datetime
+
+    from app.models import PrPost
+    from app.models.community import FreeComment, FreePost
+
+    fan = make_user(db, nickname="광주밴드")
+    supplier = make_supplier(db, review_status="APPROVED", categories=["VENUE"])
+    post = FreePost(author_user_id=fan.id, category="QUESTION", title="질문", body="본문", photos=[], status="ACTIVE",
+                    created_at=datetime(2026, 11, 20, 10, 0))
+    db.add(post)
+    db.flush()
+    db.add(FreeComment(post_id=post.id, author_user_id=supplier.user_id, body="답", status="ACTIVE",
+                       created_at=datetime(2026, 11, 20, 11, 0)))
+    db.add(PrPost(supplier_id=supplier.id, category="VENUE", title="소개", body="소개", photos=[], sido="광주광역시",
+                  status="ACTIVE", bumped_at=datetime(2026, 11, 20, 10, 0)))
+    db.commit()
+
+    fan_duck = {"role": "USER", "seed": calc.duck_seed(fan.id), "pick": None}
+    venue_duck = {"role": "VENUE", "seed": calc.duck_seed(supplier.user_id), "pick": None}
+    item = client.get("/api/v1/free-posts").json()["items"][0]
+    assert item["author"] == {"name": "광주밴드", "kind": "USER", "avatarUrl": None, "duck": fan_duck}
+    detail = client.get(f"/api/v1/free-posts/{post.id}").json()
+    assert detail["author"]["duck"] == fan_duck
+    assert detail["comments"][0]["author"]["duck"] == venue_duck
+    card = client.get("/api/v1/pr-posts").json()["items"][0]
+    assert (card["supplierImageUrl"], card["supplierDuck"]) == (None, venue_duck)

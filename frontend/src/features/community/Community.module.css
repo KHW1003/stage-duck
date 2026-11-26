@@ -53,6 +53,9 @@
 .replies { margin-top: 12px; padding-left: 24px; border-left: 2px solid var(--sd-line); }
 .reply { padding: 10px 0; }
 .commentHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--sd-text-desc); }
+/* 작성자 프로필 그림 + 이름 (11/26 오리 프로필) */
+.author { display: inline-flex; align-items: center; gap: 8px; }
+.author .authorPic { --size: var(--sd-icon-photo); font-size: var(--sd-text-tiny); }
 .badge { padding: 0 6px; border: 1px solid var(--sd-line-strong); border-radius: var(--sd-r-tag); color: var(--sd-muted); font-size: var(--sd-text-tiny); }
 .commentBody { margin-top: 6px; font-size: var(--sd-text-body); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
 .commentGone { margin-top: 6px; color: var(--sd-muted); font-size: var(--sd-text-desc); }

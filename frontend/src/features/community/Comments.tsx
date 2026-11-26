@@ -9,7 +9,8 @@ import type { FreeComment, FreePost } from "../../shared/api/types";
 import { Button, ButtonLink } from "../../shared/ui/Button";
 import { ErrorNotice } from "../../shared/ui/ErrorText";
 import { useAddComment, useDeleteComment, useEditComment, useHelpful } from "./api";
-import { authorLabel, loginPath, longDate } from "./labels";
+import { Author } from "./Author";
+import { loginPath, longDate } from "./labels";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { ReportModal } from "./ReportModal";
 import styles from "./Community.module.css";
@@ -117,7 +118,9 @@ function Item({ c, post, member, reply }: { c: FreeComment; post: FreePost; memb
   return (
     <li className={reply ? styles.reply : styles.comment}>
       <p className={styles.commentHead}>
-        <b>{authorLabel(c.author)}</b>
+        <b>
+          <Author author={c.author} big />
+        </b>
         {c.isPostAuthor && <span className={styles.badge}>글쓴이</span>}
         <span className={`${styles.count} sd-num`}>{longDate(c.createdAt)}</span>
         {c.editedAt && c.body && <span className={styles.count}>(수정됨)</span>}
